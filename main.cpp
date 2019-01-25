@@ -31,7 +31,6 @@ int main() {
     glViewport(0,0,800,600);
     glfwSetFramebufferSizeCallback(window, onResize);
 
-
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     auto shaderSource = loadShader("vertex.shader");

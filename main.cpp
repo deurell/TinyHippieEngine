@@ -2,11 +2,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-
 void onResize(GLFWwindow* window, int height, int width);
+void processInput(GLFWwindow* window);
 
 int main() {
-
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -30,7 +29,11 @@ int main() {
     glfwSetFramebufferSizeCallback(window, onResize);
 
     while(!glfwWindowShouldClose(window)){
+        processInput(window);
+
+        glClearColor(0.5,0.5,0.5,1.0);
         glClear(GL_COLOR_BUFFER_BIT);
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -41,4 +44,10 @@ int main() {
 
 void onResize(GLFWwindow* window, int height, int width) {
     glViewport(0, 0, width, height);
+}
+
+void processInput(GLFWwindow* window){
+    if(glfwGetKey(window, GLFW_KEY_ESCAPE)){
+        glfwSetWindowShouldClose(window, true);
+    }
 }

@@ -30,8 +30,8 @@ public:
             fStream << fragmentFile.rdbuf();
             vertexCode = vStream.str();
             fragmentCode = fStream.str();
-        } catch(std::ifstream::failure) {
-            std::cout << "failed to load shaders from file.";
+        } catch(std::ifstream::failure& e) {
+            std::cout << "failed to load shaders from file: " << e.what();
         }
 
         const char* vCode = vertexCode.c_str();

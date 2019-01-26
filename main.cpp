@@ -63,7 +63,7 @@ int main() {
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        shader.setFloat("time", glfwGetTime());
+        shader.setFloat("time", static_cast<float>(glfwGetTime()));
         shader.setVec4f("col", 0.1f, 0.9f, 0.1f, 1.0f);
         shader.use();
         glBindVertexArray(VAO);

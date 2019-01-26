@@ -83,6 +83,10 @@ public:
     void setFloat(const std::string &name, float value) {
         glUniform1f(glGetUniformLocation(mId, name.c_str()), (float) value);
     }
+
+    void setVec4f(const std::string &name, float x, float y, float z, float w) {
+        glUniform4f(glGetUniformLocation(mId, name.c_str()), x, y, z, w);
+    }
 };
 
 #endif //GFXLAB_SHADER_H

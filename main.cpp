@@ -64,6 +64,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         shader.setFloat("time", glfwGetTime());
+        shader.setVec4f("col", 0.1f, 0.9f, 0.1f, 1.0f);
         shader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);

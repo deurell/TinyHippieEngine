@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(${gfxlab_INCLUDE_DIRS} "${gfxlab_SOURCE_DIR}/include")
 add_subdirectory( ${gfxlab_SOURCE_DIR}/glfw )
 
-add_executable(gfxlab main.cpp glad.c)
+add_executable(gfxlab main.cpp glad.c shader.h)
 
 target_link_libraries(gfxlab glfw)
 

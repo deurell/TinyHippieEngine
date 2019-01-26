@@ -1,0 +1,88 @@
+//
+// Created by Mikael Deurell on 2019-01-26.
+//
+
+#ifndef GFXLAB_SHADER_H
+#define GFXLAB_SHADER_H
+
+#include <glad/glad.h>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+
+class Shader{
+public:
+        unsigned int mId;
+
+    Shader(const std::string &vertexPath, const std::string &fragmentPath) {
+        std::string vertexCode;
+        std::string fragmentCode;
+        std::ifstream vertexFile;
+        std::ifstream fragmentFile;
+
+        vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        try {
+            vertexFile.open(vertexPath);
+            fragmentFile.open(fragmentPath);
+            std::stringstream vStream, fStream;
+            vStream << vertexFile.rdbuf();
+            fStream << fragmentFile.rdbuf();
+            vertexCode = vStream.str();
+            fragmentCode = fStream.str();
+        } catch(std::ifstream::failure) {
+            std::cout << "failed to load shaders from file.";
+        }
+
+        const char* vCode = vertexCode.c_str();
+        const char* fCode = fragmentCode.c_str();
+
+        unsigned int vertex, fragment;
+        int success;
+        char infoLog[512];
+
+        vertex = glCreateShader(GL_VERTEX_SHADER);
+        glShaderSource(vertex, 1, &vCode, nullptr);
+        glCompileShader(vertex);
+        glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
+            std::cout << "failed to compile vertex shader: " << infoLog;
+        }
+        fragment = glCreateShader(GL_FRAGMENT_SHADER);
+        glShaderSource(fragment, 1, &fCode, nullptr);
+        glCompileShader(fragment);
+        glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
+        if (!success) {
+            glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
+            std::cout << "failed to compile fragment shader: " << infoLog;
+        }
+
+        mId = glCreateProgram();
+        glAttachShader(mId, vertex);
+        glAttachShader(mId, fragment);
+        glLinkProgram(mId);
+        glGetProgramiv(mId, GL_LINK_STATUS, &success);
+        if(!success) {
+            glGetProgramInfoLog(mId, 512, nullptr, infoLog);
+            std::cout << "failed to link the shader program: " << infoLog;
+        }
+
+        glDeleteShader(vertex);
+        glDeleteShader(fragment);
+    }
+
+    void use() {
+        glUseProgram(mId);
+    }
+
+    void setInt(const std::string &name, int value) const {
+        glUniform1i(glGetUniformLocation(mId, name.c_str()), (int) value);
+    }
+
+    void setFloat(const std::string &name, float value) {
+        glUniform1f(glGetUniformLocation(mId, name.c_str()), (float) value);
+    }
+};
+
+#endif //GFXLAB_SHADER_H

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "shader.h"
 
 void onResize(GLFWwindow* window, int height, int width);
 void processInput(GLFWwindow* window);
@@ -31,47 +32,7 @@ int main() {
     glViewport(0, 0, 1920, 1080);
     glfwSetFramebufferSizeCallback(window, onResize);
 
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    auto shaderSource = loadShader("vertex.shader");
-    const char* cstr = shaderSource.c_str();
-    glShaderSource(vertexShader, 1,&cstr, nullptr);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(vertexShader, 512, nullptr, infoLog);
-        std::cout << "error compiling vertex shader\n" << infoLog << std::endl;
-    }
-
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    shaderSource = loadShader("fragment.shader");
-    cstr = shaderSource.c_str();
-    glShaderSource(fragmentShader, 1, &cstr, nullptr);
-    glCompileShader(fragmentShader);
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success) {
-        glGetShaderInfoLog(fragmentShader, 512, nullptr, infoLog);
-        std::cout << "error compiling fragment shader\n" << infoLog << success << std::endl;
-    }
-
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success) {
-        glGetProgramInfoLog(shaderProgram, 512, nullptr, infoLog);
-        std::cout << "error linking shader program\n" << infoLog << std::endl;
-    }
-
-    glUseProgram(shaderProgram);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    Shader shader("vertex.shader", "fragment.shader");
 
     float vertices[] = {
             -0.5f, -0.5f, 0.0f,
@@ -102,7 +63,7 @@ int main() {
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(shaderProgram);
+        shader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

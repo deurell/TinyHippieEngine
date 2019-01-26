@@ -6,7 +6,7 @@
 
 void onResize(GLFWwindow* window, int height, int width);
 void processInput(GLFWwindow* window);
-std::string loadShader(std::string path);
+std::string loadShader(const std::string &path);
 
 int main() {
     glfwInit();
@@ -15,7 +15,7 @@ int main() {
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(1920, 1080, "gfxlab", nullptr, nullptr);
     if(window == nullptr) {
         std::cout << "failed to create window.";
         glfwTerminate();
@@ -28,7 +28,7 @@ int main() {
         return -1;
     }
 
-    glViewport(0,0,800,600);
+    glViewport(0, 0, 1920, 1080);
     glfwSetFramebufferSizeCallback(window, onResize);
 
     unsigned int vertexShader;
@@ -87,7 +87,7 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -97,7 +97,9 @@ int main() {
     while(!glfwWindowShouldClose(window)){
         processInput(window);
 
-        glClearColor(0.5,0.5,0.5,1.0);
+        int width, height;
+        glfwGetFramebufferSize(window, &width, &height);
+        glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
 
         glUseProgram(shaderProgram);
@@ -121,9 +123,9 @@ void processInput(GLFWwindow* window){
     }
 }
 
-std::string loadShader(std::string path) {
+std::string loadShader(const std::string &path) {
     std::ifstream fileStream(path);
-    std::stringstream stringStrem;
-    stringStrem << fileStream.rdbuf();
-    return stringStrem.str();
+    std::stringstream stringStream;
+    stringStream << fileStream.rdbuf();
+    return stringStream.str();
 }

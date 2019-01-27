@@ -5,6 +5,5 @@ uniform vec4 col;
 
 void main(){
     vec4 col2 = abs(sin(time)) * col;
-
-    FragColor = vec4(col2.x, col2.y, col2.z, 1.0f);
+    FragColor = col2;
 }

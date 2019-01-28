@@ -85,10 +85,3 @@ void processInput(GLFWwindow* window){
         glfwSetWindowShouldClose(window, true);
     }
 }
-
-std::string loadShader(const std::string &path) {
-    std::ifstream fileStream(path);
-    std::stringstream stringStream;
-    stringStream << fileStream.rdbuf();
-    return stringStream.str();
-}

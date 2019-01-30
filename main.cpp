@@ -17,10 +17,18 @@ std::string loadShader(const std::string &path);
 
 int main() {
     glfwInit();
+
+#if __APPLE__
+    const char* glsl_version = "#version 150";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  // 3.2+ only
+    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // Required on Mac
+#else
+    const char* glsl_version = "#version 130";
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#endif
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
     if(window == nullptr) {
@@ -71,7 +79,7 @@ int main() {
     // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
-    ImGui_ImplOpenGL3_Init(nullptr);
+    ImGui_ImplOpenGL3_Init(glsl_version);
     float my_color[] = {0.1f, 0.9f, 0.1f, 1.0f};
 
     while(!glfwWindowShouldClose(window)){
@@ -89,7 +97,7 @@ int main() {
 
         glClear(GL_COLOR_BUFFER_BIT);
         shader.setFloat("time", (float)glfwGetTime());
-        shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[4]);
+        shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[3]);
         shader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);

@@ -9,6 +9,9 @@
 #include <sstream>
 #include "shader.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 
 void onResize(GLFWwindow* window, int height, int width);
@@ -27,7 +30,7 @@ int main() {
 #else
     const char* glsl_version = "#version 130";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #endif
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
@@ -50,9 +53,9 @@ int main() {
     Shader shader("vertex.shader", "fragment.shader");
 
     float vertices[] = {
-            -0.5f, -0.5f, 0.0f,
-            0.5f, -0.5f, 0.0f,
-            0.0f,  0.5f, 0.0f
+            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
+            0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+            0.0f,  0.5f, 0.0f, 0.5f, 1.0f,
     };
 
     unsigned int VBO, VAO;
@@ -63,20 +66,38 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Setup Dear ImGui context
+    unsigned int texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    int width, height, nChannels;
+    unsigned char *data = stbi_load("container.jpg", &width, &height, &nChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        std::cout << "failed to load texture";
+    }
+    stbi_image_free(data);
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-    //io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
 
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
@@ -99,6 +120,8 @@ int main() {
         shader.setFloat("time", (float)glfwGetTime());
         shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[3]);
         shader.use();
+
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 

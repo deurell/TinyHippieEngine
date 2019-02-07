@@ -49,14 +49,20 @@ int main() {
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, onResize);
-
     Shader shader("vertex.shader", "fragment.shader");
 
     float vertices[] = {
-            -0.5f, -0.5f, 0.0f, 0.0f, 0.0f,
-            0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
-            0.0f,  0.5f, 0.0f, 0.5f, 1.0f,
-    };
+            // vertex               // uv_coord
+            -1.0f, -1.0f, 0.0f,     0.0f, 0.0f,
+            1.0f, -1.0f, 0.0f,      1.0f, 0.0f,
+            -1.0f,  1.0f, 0.0f,     0.0f, 1.0f,
+
+            -1.0f, 1.0f, 0.0f,      0.0f, 1.0f,
+            1.0f, 1.0f, 0.0f,       1.0f, 1.0f,
+            1.0f, -1.0f, 0.0f,      1.0f, 0.0f
+            };
+
+    const int verticesCnt = sizeof(vertices)/ sizeof(float)/5;
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -84,8 +90,8 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    int width, height, nChannels;
-    unsigned char *data = stbi_load("container.jpg", &width, &height, &nChannels, 0);
+    int width, height, channelCount;
+    unsigned char *data = stbi_load("container.jpg", &width, &height, &channelCount, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -112,7 +118,7 @@ int main() {
 
         ImGui::Begin("debug window");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-
+        ImGui::Text("Vertices: %i", verticesCnt);
         ImGui::ColorEdit4("frag_col", my_color);
         ImGui::End();
 
@@ -123,14 +129,14 @@ int main() {
 
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, verticesCnt);
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-        glViewport(0, 0, width, height);
+        int frameWidth, frameHeight;
+        glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
+        glViewport(0, 0, frameWidth, frameHeight);
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
@@ -142,7 +148,7 @@ int main() {
     return 0;
 }
 
-void onResize(GLFWwindow* window, int height, int width) {
+void onResize(GLFWwindow* /*window*/, int /*height*/, int /*width*/) {
 }
 
 void processInput(GLFWwindow* window){

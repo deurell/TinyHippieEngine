@@ -35,7 +35,7 @@ int main() {
 
     GLFWwindow* window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
     if(window == nullptr) {
-        std::cout << "failed to create window.";
+        std::cout << "window create failed";
         glfwTerminate();
         return -1;
     }
@@ -43,7 +43,7 @@ int main() {
     glfwSwapInterval(1);
 
     if(!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
-        std::cout << "failed to init glad";
+        std::cout << "glad init failed";
         return -1;
     }
 
@@ -107,7 +107,7 @@ int main() {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    float my_color[] = {0.1f, 0.9f, 0.1f, 1.0f};
+    float my_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
     while(!glfwWindowShouldClose(window)){
         processInput(window);
@@ -116,7 +116,7 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("debug window");
+        ImGui::Begin("shader stats");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("Vertices: %i", verticesCnt);
         ImGui::ColorEdit4("frag_col", my_color);

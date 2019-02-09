@@ -12,7 +12,7 @@
 
 class Shader{
 public:
-        unsigned int mId;
+    unsigned int mId;
 
     Shader(const std::string &vertexPath, const std::string &fragmentPath) {
         std::string vertexCode;
@@ -63,7 +63,7 @@ public:
         glAttachShader(mId, fragment);
         glLinkProgram(mId);
         glGetProgramiv(mId, GL_LINK_STATUS, &success);
-        if(!success) {
+        if (!success) {
             glGetProgramInfoLog(mId, 512, nullptr, infoLog);
             std::cout << "failed to link the shader program: " << infoLog;
         }

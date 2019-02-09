@@ -12,8 +12,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
-
 void onResize(GLFWwindow* window, int height, int width);
 void processInput(GLFWwindow* window);
 std::string loadShader(const std::string &path);
@@ -62,7 +60,8 @@ int main() {
             1.0f, -1.0f, 0.0f,      1.0f, 0.0f
             };
 
-    const int verticesCnt = sizeof(vertices)/ sizeof(float)/5;
+    const int stride = 5;
+    const int verticesCnt = sizeof(vertices)/sizeof(float)/stride;
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -72,10 +71,10 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride*sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride*sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);

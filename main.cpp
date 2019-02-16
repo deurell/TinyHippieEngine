@@ -108,6 +108,7 @@ int main() {
     ImGui_ImplOpenGL3_Init(glsl_version);
     float my_color[] = {1.0f, 1.0f, 1.0f, 1.0f};
 
+    double last_time = glfwGetTime();
     while(!glfwWindowShouldClose(window)){
         processInput(window);
 
@@ -138,6 +139,9 @@ int main() {
         glViewport(0, 0, frameWidth, frameHeight);
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        while (glfwGetTime() < last_time + 1./60) {}
+        last_time = glfwGetTime();
     }
 
     ImGui_ImplOpenGL3_Shutdown();

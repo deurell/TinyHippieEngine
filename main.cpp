@@ -117,7 +117,7 @@ int main() {
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::Begin("shader stats");
+        ImGui::Begin("gruwl shaderlab stats");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("Vertices: %i", verticesCnt);
         ImGui::ColorEdit4("frag_col", my_color);

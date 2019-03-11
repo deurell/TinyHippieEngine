@@ -6,6 +6,7 @@ in vec2 TexCoord;
 uniform float time;
 uniform float rasterwidth;
 uniform vec4 col;
+uniform float speed;
 
 uniform sampler2D ourTexture;
 
@@ -66,7 +67,7 @@ void main() {
     vec2 uv = TexCoord;
     uv = uv * 2. -1.;
     vec2 p = TexCoord;
-    vec3 p3 = vec3(p, time * 0.2);
+    vec3 p3 = vec3(p, time * speed);
 
     float intensity = noise(vec3(p3 * 1.3) + 23.5);
     float y = abs(intensity + uv.y);

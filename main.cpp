@@ -107,8 +107,8 @@ int main() {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-    float my_color[] = {1.23f, 1.43f, 1.12f, 1.0f};
-    float rasterwidth = 0.16f;
+    float my_color[] = {0.53f, 0.33f, 0.59f, 1.0f};
+    float rasterwidth = 0.26f;
     float speed = 0.2f;
     double last_time = glfwGetTime();
     while(!glfwWindowShouldClose(window)){

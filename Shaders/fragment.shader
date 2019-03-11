@@ -4,6 +4,7 @@ out vec4 FragColor;
 in vec2 TexCoord;
 
 uniform float time;
+uniform float rasterwidth;
 uniform vec4 col;
 
 uniform sampler2D ourTexture;
@@ -69,13 +70,13 @@ void main() {
 
     float intensity = noise(vec3(p3 * 1.3) + 23.5);
     float y = abs(intensity + uv.y);
-    float g = pow(y, 0.3626);
+    float g = pow(y, rasterwidth);
 
-    vec3 col = vec3(1.45, 1.51, 1.43);
-    col = col * -g + col;
-    col = col * col;
-    col = col * col;
+    vec3 col2 = vec3(1.+col.x, 1.+col.y, 1.+col.z);
+    col2 = col2 * -g + col2;
+    col2 = col2 * col2;
+    col2 = col2 * col2;
 
-    FragColor.rgb = col;
+    FragColor.rgb = col2;
     FragColor.w = 1.;
 }

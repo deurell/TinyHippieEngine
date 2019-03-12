@@ -108,7 +108,7 @@ int main() {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     float my_color[] = {0.53f, 0.33f, 0.59f, 1.0f};
-    float rasterwidth = 0.26f;
+    float raster_width = 0.26f;
     float speed = 0.2f;
     double last_time = glfwGetTime();
     while(!glfwWindowShouldClose(window)){
@@ -121,7 +121,7 @@ int main() {
         ImGui::Begin("gruwl shaderlab stats");
         ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
         ImGui::Text("Vertices: %i", verticesCnt);
-        ImGui::SliderFloat("width", &rasterwidth, 0.0, 1.0);
+        ImGui::SliderFloat("width", &raster_width, 0.0, 1.0);
         ImGui::SliderFloat("speed", &speed, 0.0, 1.0);
         ImGui::ColorEdit4("frag_col", my_color);
         ImGui::End();
@@ -129,7 +129,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.setFloat("time", (float)glfwGetTime());
         shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[3]);
-        shader.setFloat("rasterwidth", rasterwidth);
+        shader.setFloat("rasterwidth", raster_width);
         shader.setFloat("speed", speed);
         shader.use();
 

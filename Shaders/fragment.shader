@@ -56,28 +56,27 @@ float simplex3d(vec3 p) {
     return dot(d, vec4(52.0));
 }
 
-float noise(vec3 m) {
-    return 0.3333333 * simplex3d(m)
-    + 0.4666667 * simplex3d(1.2 * m)
-    + 0.127 * simplex3d(1.3 * m)+
-    + 0.1666667 * simplex3d(1.5 * m);
+float noise(vec3 v) {
+    return 0.3333333 * simplex3d(v)
+    + 0.4666667 * simplex3d(1.2 * v)
+    + 0.127 * simplex3d(1.3 * v)+
+    + 0.1666667 * simplex3d(1.5 * v);
 }
 
 void main() {
-    vec2 uv = TexCoord;
-    uv = uv * 2. -1.;
-    vec2 p = TexCoord;
-    vec3 p3 = vec3(p, time * speed);
+    vec2 txc = TexCoord;
+    vec2 uv = txc * 2. - 1.;
+    vec3 txc_time = vec3(txc, time * speed);
 
-    float intensity = noise(vec3(p3 * 1.3) + 23.5);
+    float intensity = noise(vec3(txc_time * 1.3) + 23.5);
     float y = abs(intensity + uv.y);
     float g = pow(y, rasterwidth);
 
-    vec3 col2 = vec3(1.+col.x, 1.+col.y, 1.+col.z);
-    col2 = col2 * -g + col2;
-    col2 = col2 * col2;
-    col2 = col2 * col2;
+    vec3 color = vec3(1.+col.x, 1.+col.y, 1.+col.z);
+    color = color * -g + color;
+    color = color * color;
+    color = color * color;
 
-    FragColor.rgb = col2;
+    FragColor.rgb = color;
     FragColor.w = 1.;
 }

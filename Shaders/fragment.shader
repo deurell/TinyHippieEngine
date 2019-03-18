@@ -7,8 +7,9 @@ uniform float time;
 uniform float rasterwidth;
 uniform vec4 col;
 uniform float speed;
+uniform float mix_alpha;
 
-uniform sampler2D ourTexture;
+uniform sampler2D sampler;
 
 vec3 random3(vec3 c) {
     float j = 4096.0*sin(dot(c, vec3(17.0, 59.4, 15.0)));
@@ -77,6 +78,10 @@ void main() {
     color = color * color;
     color = color * color;
 
-    FragColor.rgb = color;
+    txc.x += 0.5*sin(0.5*time)*uv.y*0.35;
+    txc.y += 0.3*sin(0.87*time)*uv.x*0.23;
+
+    vec4 textureCol = texture(sampler,txc);
+    FragColor.rgb = mix(textureCol.xyz, color,mix_alpha);
     FragColor.w = 1.;
 }

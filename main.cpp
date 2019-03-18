@@ -33,7 +33,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 #endif
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "shader lab v0.1", nullptr, nullptr);
     if(window == nullptr) {
         std::cout << "window create failed";
         glfwTerminate();
@@ -82,6 +82,7 @@ int main() {
     glBindVertexArray(0);
 
     unsigned int texture;
+
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -110,6 +111,7 @@ int main() {
     float my_color[] = {0.53f, 0.33f, 0.59f, 1.0f};
     float raster_width = 0.26f;
     float speed = 0.2f;
+    float mix = 0.6f;
     double last_time = glfwGetTime();
     while(!glfwWindowShouldClose(window)){
         processInput(window);
@@ -124,6 +126,7 @@ int main() {
         ImGui::SliderFloat("width", &raster_width, 0.0, 1.0);
         ImGui::SliderFloat("speed", &speed, 0.0, 1.0);
         ImGui::ColorEdit4("frag_col", my_color);
+        ImGui::SliderFloat("mix", &mix, 0.0, 1.0);
         ImGui::End();
 
         glClear(GL_COLOR_BUFFER_BIT);
@@ -131,6 +134,7 @@ int main() {
         shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[3]);
         shader.setFloat("rasterwidth", raster_width);
         shader.setFloat("speed", speed);
+        shader.setFloat("mix_alpha", mix);
         shader.use();
 
         glBindTexture(GL_TEXTURE_2D, texture);

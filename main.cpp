@@ -132,7 +132,7 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT);
         shader.setFloat("time", (float)glfwGetTime());
         shader.setVec4f("col", my_color[0], my_color[1], my_color[2], my_color[3]);
-        shader.setFloat("rasterwidth", raster_width);
+        shader.setFloat("raster_width", raster_width);
         shader.setFloat("speed", speed);
         shader.setFloat("mix_alpha", mix);
         shader.use();

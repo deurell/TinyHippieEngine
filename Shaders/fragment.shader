@@ -4,7 +4,7 @@ out vec4 FragColor;
 in vec2 TexCoord;
 
 uniform float time;
-uniform float rasterwidth;
+uniform float raster_width;
 uniform vec4 col;
 uniform float speed;
 uniform float mix_alpha;
@@ -71,7 +71,7 @@ void main() {
 
     float intensity = noise(vec3(txc_time * 1.3) + 23.5);
     float y = abs(intensity + uv.y);
-    float g = pow(y, rasterwidth);
+    float g = pow(y, raster_width);
 
     vec3 color = vec3(1.+col.x, 1.+col.y, 1.+col.z);
     color = color * -g + color;

@@ -7,6 +7,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 void onResize(GLFWwindow* window, int height, int width);
 void processInput(GLFWwindow* window);

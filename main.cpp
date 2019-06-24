@@ -126,6 +126,12 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, texture2);
 
         shader.use();
+        shader.setFloat("iTime", (float)glfwGetTime());
+
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::rotate(transform, glm::radians<float>(45), glm::vec3(0.0f, 0.0f, 1.0f));
+        shader.setMat4f("transform", transform);
+
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 

@@ -45,7 +45,7 @@ int main() {
 
     glViewport(0, 0, 800, 600);
     glfwSetFramebufferSizeCallback(window, onResize);
-    Shader shader("vertex.shader", "fragment.shader");
+    Shader shader("Shaders/vertex.shader", "Shaders/fragment.shader");
 
     float vertices[] = {
             // positions          // colors           // texture coords
@@ -89,7 +89,7 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     int height, width, channels;
     stbi_set_flip_vertically_on_load(true);
-    const char* microPath = "micro.png";
+    const char* microPath = "Resources/micro.png";
     unsigned char* data = stbi_load(microPath, &width, &height, &channels,0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -103,7 +103,7 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    const char* zebraPath = "zebra.jpg";
+    const char* zebraPath = "Resources/zebra.jpg";
     data = stbi_load(zebraPath, &width, &height, &channels, 0);
     if (data) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

@@ -12,8 +12,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-
-
 void onResize(GLFWwindow* window, int height, int width);
 void processInput(GLFWwindow* window);
 std::string loadShader(const std::string &path);

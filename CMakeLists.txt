@@ -12,5 +12,16 @@ target_link_libraries(gfxlab glfw)
 
 add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/)
+add_custom_command(
+        TARGET gfxlab POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
+        COMMENT "Copying shaders" VERBATIM
+)
+
+add_custom_command(
+        TARGET gfxlab POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
+        COMMENT "Copying resources" VERBATIM
+)

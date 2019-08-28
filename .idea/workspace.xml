@@ -2,9 +2,9 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
+      <config projectName="gfxlab" targetName="uninstall" />
       <config projectName="gfxlab" targetName="gfxlab" />
       <config projectName="gfxlab" targetName="glfw" />
-      <config projectName="gfxlab" targetName="uninstall" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -14,10 +14,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6154450c-c486-414a-b473-e5cac69b38fd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitmodules" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/glfw" beforeDir="false" afterPath="$PROJECT_DIR$/glfw" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Resources/sup.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Resources/sup.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Resources/sup2.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Resources/trangia.jpg" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/fragment.shader" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/fragment.shader" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/shader.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -32,11 +36,19 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectId" id="1PP4hbmSqpko3DX905TPJgf8fYA" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="PropertiesComponent">
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Resources" />
+    <property name="settings.editor.selected.configurable" value="CPPToolchains" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/Resources" />
+    </key>
   </component>
   <component name="RunDashboard">
     <option name="ruleStates">
@@ -83,6 +95,7 @@
       <option name="presentableId" value="Default" />
       <updated>1565762517801</updated>
       <workItem from="1565762519164" duration="242000" />
+      <workItem from="1566930566038" duration="20439000" />
     </task>
     <servers />
   </component>
@@ -94,7 +107,9 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State />
+            <State>
+              <option name="COLUMN_ORDER" />
+            </State>
           </value>
         </entry>
       </map>

@@ -2,9 +2,9 @@
 <project version="4">
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="gfxlab" targetName="uninstall" />
       <config projectName="gfxlab" targetName="gfxlab" />
       <config projectName="gfxlab" targetName="glfw" />
+      <config projectName="gfxlab" targetName="uninstall" />
     </generated>
   </component>
   <component name="CMakeSettings">
@@ -14,14 +14,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6154450c-c486-414a-b473-e5cac69b38fd" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Resources/sup.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Resources/sup.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Resources/sup2.jpg" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Resources/trangia.jpg" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Resources/ski.jpg" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Shaders/fragment.shader" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/fragment.shader" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shader.h" beforeDir="false" afterPath="$PROJECT_DIR$/shader.h" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -95,8 +90,18 @@
       <option name="presentableId" value="Default" />
       <updated>1565762517801</updated>
       <workItem from="1565762519164" duration="242000" />
-      <workItem from="1566930566038" duration="20439000" />
+      <workItem from="1566930566038" duration="23254000" />
+      <workItem from="1567014533184" duration="68000" />
+      <workItem from="1567056972001" duration="5051000" />
     </task>
+    <task id="LOCAL-00001" summary="c64 dithering">
+      <created>1566979653851</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1566979653851</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -114,5 +119,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="c64 dithering" />
+    <option name="LAST_COMMIT_MESSAGE" value="c64 dithering" />
   </component>
 </project>

@@ -11,6 +11,60 @@ uniform sampler2D texture2;
 in float color;
 out vec4 frag_color;
 
+vec3 random3(vec3 c) {
+    float j = 4096.0*sin(dot(c, vec3(17.0, 59.4, 15.0)));
+    vec3 r;
+    r.z = fract(512.0*j);
+    j *= .125;
+    r.x = fract(512.0*j);
+    j *= .125;
+    r.y = fract(512.0*j);
+    return r-0.5;
+}
+
+const float F3 =  0.3333333;
+const float G3 =  0.1666667;
+
+float simplex3d(vec3 p) {
+    vec3 s = floor(p + dot(p, vec3(F3)));
+    vec3 x = p - s + dot(s, vec3(G3));
+
+    vec3 e = step(vec3(0.0), x - x.yzx);
+    vec3 i1 = e*(1.0 - e.zxy);
+    vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+
+    vec3 x1 = x - i1 + G3;
+    vec3 x2 = x - i2 + 2.0*G3;
+    vec3 x3 = x - 1.0 + 3.0*G3;
+
+    vec4 w, d;
+
+    w.x = dot(x, x);
+    w.y = dot(x1, x1);
+    w.z = dot(x2, x2);
+    w.w = dot(x3, x3);
+
+    w = max(0.6 - w, 0.0);
+
+    d.x = dot(random3(s), x);
+    d.y = dot(random3(s + i1), x1);
+    d.z = dot(random3(s + i2), x2);
+    d.w = dot(random3(s + 1.0), x3);
+
+    w *= w;
+    w *= w;
+    d *= w;
+    return dot(d, vec4(52.0));
+}
+
+float noise(vec3 v) {
+    return 0.3333333 * simplex3d(v)
+    + 0.4666667 * simplex3d(1.2 * v)
+    + 0.127 * simplex3d(1.3 * v)+
+    + 0.1666667 * simplex3d(1.5 * v);
+}
+
+
 vec3 hsv2rgb(vec3 c)
 {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -56,7 +110,7 @@ float indexValue() {
     return indexMatrix8x8[(x + y * 8)] / 64.0;
 }
 
-float colDistance(vec3 col1, vec3 col2) {
+float colDistance(vec3 col1, vec3 col2, float noise) {
     col1.x *= 3.14159265356 * 2.0;
     col2.x *= 3.14159265356 * 2.0;
 
@@ -65,7 +119,9 @@ float colDistance(vec3 col1, vec3 col2) {
     float z = pow((col1.z - col2.z),2);
     float dist = sqrt(x+y+z);
 
-
+    if(noise < 0.25) {
+        dist = abs(col1.z - col2.z);
+    }
     //float dh = min(abs(col1.x-col2.x), 1.0-abs(col1.x-col2.x));
     //float ds = abs(col1.y-col2.y);
     //float dv = abs(col1.z-col2.z);
@@ -73,8 +129,7 @@ float colDistance(vec3 col1, vec3 col2) {
     return dist;
 }
 
-vec3[2] closestColors(vec3 col) {
-
+vec3[2] closestColors(vec3 col, float noise) {
     vec3 palette[16] = vec3[](
     vec3( 0.0/255.0, 0.0/255.0, 0.0/255.0 ),
     vec3( 255.0/255.0, 255.0/255.0, 255.0/255.0 ),
@@ -100,12 +155,12 @@ vec3[2] closestColors(vec3 col) {
     vec3 temp;
     for (int i = 0; i < 16; ++i) {
         temp = rgb2hsv(palette[i]);
-        float tempDistance = colDistance(temp, col);
-        if (tempDistance < colDistance(closest, col)) {
+        float tempDistance = colDistance(temp, col, noise);
+        if (tempDistance < colDistance(closest, col, noise)) {
             secondClosest = closest;
             closest = temp;
         } else {
-            if (tempDistance < colDistance(secondClosest, col)) {
+            if (tempDistance < colDistance(secondClosest, col, noise)) {
                 secondClosest = temp;
             }
         }
@@ -115,25 +170,30 @@ vec3[2] closestColors(vec3 col) {
     return ret;
 }
 
-vec3 dither(vec3 color) {
+vec3 dither(vec3 color, float noise) {
     vec3 hslCol = rgb2hsv(color);
 
-    vec3 cs[2] = closestColors(hslCol);
+    vec3 cs[2] = closestColors(hslCol, noise);
     vec3 c1 = cs[0];
     vec3 c2 = cs[1];
     float d = indexValue();
-    float diff = colDistance(hslCol, c1) / (colDistance(hslCol, c1) + colDistance(hslCol,c2));
+    float diff = colDistance(hslCol, c1, noise) / (colDistance(hslCol, c1, noise) + colDistance(hslCol,c2, noise));
 
     vec3 resultColor = (diff < d) ? c1 : c2;
     return hsv2rgb(resultColor);
 }
 
 void main () {
-    //const vec3 weight = vec3(0.2125, 0.7154, 0.0721);
+    //vec2 txc = TexCoord;
+    //vec2 uv = txc * 2. - 1.;
+    //vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 * cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
+
+    //float sim_noise = noise(vec3(txc_time * 1.3) + 23.5);
     vec3 sourceCol = texture(texture1, TexCoord).rgb;
+    vec3 uv = vec3(TexCoord.xy,0);
+    vec3 noise = random3(uv);
     //float lum = dot(sourceCol, weight);
     //vec4 greyScale = vec4(lum, lum, lum,1);
     //FragColor = greyScale;
-
-    FragColor = vec4(dither(sourceCol),1);
+    FragColor = vec4(dither(sourceCol, noise.x), 1);
 }

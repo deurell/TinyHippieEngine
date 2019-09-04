@@ -7,7 +7,9 @@ add_subdirectory( ${gfxlab_SOURCE_DIR}/glfw)
 
 file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
 
-add_executable(gfxlab main.cpp glad.c shader.h ${imgui_src} stb_image.h)
+add_executable(gfxlab glad.c ${imgui_src} stb_image.h
+        main.cpp texture.h shader.h
+)
 
 target_link_libraries(gfxlab glfw)
 

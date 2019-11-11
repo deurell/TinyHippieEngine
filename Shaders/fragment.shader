@@ -1,19 +1,19 @@
-#version 330 core
-out vec4 FragColor;
+#version 300 es
+precision highp float;
+precision highp int;
 
+out vec4 FragColor;
 in vec3 ourColor;
 in vec2 TexCoord;
 
 uniform float iTime;
 uniform sampler2D texture1;
-uniform sampler2D texture2;
 
 in float color;
-out vec4 frag_color;
 
 vec3 random3(vec3 c) {
-  float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
-  vec3 r;
+  mediump float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
+  mediump vec3 r;
   r.z = fract(512.0 * j);
   j *= .125;
   r.x = fract(512.0 * j);
@@ -22,22 +22,22 @@ vec3 random3(vec3 c) {
   return r - 0.5;
 }
 
-const float F3 =  0.3333333;
-const float G3 =  0.1666667;
+const mediump float F3 =  0.3333333;
+const mediump float G3 =  0.1666667;
 
-float simplex3d(vec3 p) {
-  vec3 s = floor(p + dot(p, vec3(F3)));
-  vec3 x = p - s + dot(s, vec3(G3));
+mediump float simplex3d(vec3 p) {
+   vec3 s = floor(p + dot(p, vec3(F3)));
+   vec3 x = p - s + dot(s, vec3(G3));
 
-  vec3 e = step(vec3(0.0), x - x.yzx);
-  vec3 i1 = e*(1.0 - e.zxy);
-  vec3 i2 = 1.0 - e.zxy*(1.0 - e);
+   vec3 e = step(vec3(0.0), x - x.yzx);
+   vec3 i1 = e*(1.0 - e.zxy);
+   vec3 i2 = 1.0 - e.zxy*(1.0 - e);
 
-  vec3 x1 = x - i1 + G3;
-  vec3 x2 = x - i2 + 2.0*G3;
-  vec3 x3 = x - 1.0 + 3.0*G3;
+   vec3 x1 = x - i1 + G3;
+   vec3 x2 = x - i2 + 2.0*G3;
+   vec3 x3 = x - 1.0 + 3.0*G3;
 
-  vec4 w, d;
+   vec4 w, d;
 
   w.x = dot(x, x);
   w.y = dot(x1, x1);
@@ -65,34 +65,21 @@ float noise(vec3 v) {
 }
 
 
-vec3 hsv2rgb(vec3 c)
-{
-  vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-  vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+vec3 hsv2rgb(vec3 c) {
+  mediump vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+  mediump vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
   return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-vec3 rgb2hsv(vec3 c)
-{
-  vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-  vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-  vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+vec3 rgb2hsv(vec3 c) {
+   vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+   vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+   vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
 
-  float d = q.x - min(q.w, q.y);
-  float e = 1.0e-10;
+   float d = q.x - min(q.w, q.y);
+   float e = 1.0e-10;
   return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
-
-//const int indexMatrix4x4[16] = int[](0,  8,  2,  10,
-//12, 4,  14, 6,
-//3,  11, 1,  9,
-//15, 7,  13, 5);
-//
-//float indexValue() {
-//    int x = int(mod(gl_FragCoord.x, 4));
-//    int y = int(mod(gl_FragCoord.y, 4));
-//    return indexMatrix4x4[(x + y * 4)] / 16.0;
-//}
 
 const int indexMatrix8x8[64] = int[](
 0, 32, 8, 40, 2, 34, 10, 42,
@@ -105,21 +92,26 @@ const int indexMatrix8x8[64] = int[](
 63, 31, 55, 23, 61, 29, 53, 21);
 
 float indexValue() {
-  int x = int(mod(gl_FragCoord.x, 8));
-  int y = int(mod(gl_FragCoord.y, 8));
-  return indexMatrix8x8[(x + y * 8)] / 64.0;
+  float  x = mod(gl_FragCoord.x, 8.0);
+  float  y = mod(gl_FragCoord.y, 8.0);
+  return float(indexMatrix8x8[(int(x + y * 8.0))]) / 64.0;
 }
 
 float colDistance(vec3 col1, vec3 col2, float noise) {
   col1.x *= 3.14159265356 * 2.0;
   col2.x *= 3.14159265356 * 2.0;
 
-  float x = pow((sin(col1.x)*col1.y*col1.z - sin(col2.x)*col2.y*col2.z), 2);
-  float y = pow((cos(col1.x)*col1.y*col1.z - cos(col2.x) *col2.y*col2.z), 2);
-  float z = pow((col1.z - col2.z), 2);
+  float x = (sin(col1.x)*col1.y*col1.z - sin(col2.x)*col2.y*col2.z);
+  float y = (cos(col1.x)*col1.y*col1.z - cos(col2.x) *col2.y*col2.z);
+  float z = (col1.z - col2.z);
+
+  x = x*x;
+  y = y*y;
+  z = z*z;
+
   float dist = sqrt(x+y+z);
 
-  if (noise < 0.25) { //(0.5+(0.5*sin(iTime*0.50)))) {
+  if (noise < 0.25) {
     dist = abs(col1.z - col2.z);
   }
 
@@ -181,17 +173,18 @@ vec3 dither(vec3 color, float noise) {
 }
 
 void main () {
-  //vec2 txc = TexCoord;
-  //vec2 uv = txc * 2. - 1.;
-  //vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 * cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
+  vec2 txc = TexCoord;
+  vec2 uv = txc * 2. - 1.;
+  vec3 txc_time = vec3(txc.x + 0.15 * sin(-iTime*0.3), txc.y + 0.2 * cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
 
-  //float sim_noise = noise(vec3(txc_time * 1.3) + 23.5);
+  float sim_noise = noise(vec3(txc_time * 1.5));
 
   vec3 sourceCol = texture(texture1, TexCoord).rgb;
-  vec3 uv = vec3(TexCoord.xy, 0);
-  vec3 noise = random3(uv);
-  //float lum = dot(sourceCol, weight);
-  //vec4 greyScale = vec4(lum, lum, lum,1);
-  //FragColor = greyScale;
-  FragColor = vec4(dither(sourceCol, noise.x), 1);
+  vec3 uv3 = vec3(TexCoord.xy, 0);
+  vec3 noise = random3(uv3);
+  if (sim_noise < 0.5) {
+    FragColor = vec4(dither(sourceCol, sim_noise), 1);
+  } else {
+      FragColor = vec4(sourceCol, 1);
+  }
 }

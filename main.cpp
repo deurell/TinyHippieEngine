@@ -1,40 +1,43 @@
+//#define GLFW_INCLUDE_ES3
+
 #include "shader.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
+#include <emscripten.h>
 #include <fstream>
 #include <glad/glad.h>
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include "logger.h"
 #include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 void onResize(GLFWwindow *window, int height, int width);
 void processInput(GLFWwindow *window);
+void mainLoop();
+
+GLFWwindow *m_window;
+Texture *m_texture1;
+Shader *m_shader;
+unsigned int m_VAO;
 
 int main() {
   glfwInit();
 
-#if __APPLE__
-  const char *glsl_version = "#version 150";
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
-#else
-  const char *glsl_version = "#version 130";
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-#endif
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
-  if (window == nullptr) {
+  m_window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
+  if (m_window == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
     return -1;
   }
-  glfwMakeContextCurrent(window);
+
+  glfwMakeContextCurrent(m_window);
   glfwSwapInterval(1);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -43,9 +46,7 @@ int main() {
   }
 
   glViewport(0, 0, 800, 600);
-  glfwSetFramebufferSizeCallback(window, onResize);
-
-  Shader shader("Shaders/vertex.shader", "Shaders/fragment.shader");
+  glfwSetFramebufferSizeCallback(m_window, onResize);
 
   float vertices[] = {
       // positions        // colors         // texture coords
@@ -57,12 +58,12 @@ int main() {
 
   unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 
-  unsigned int VBO, VAO, EBO;
-  glGenVertexArrays(1, &VAO);
+  unsigned int VBO, EBO;
+  glGenVertexArrays(1, &m_VAO);
   glGenBuffers(1, &VBO);
   glGenBuffers(1, &EBO);
 
-  glBindVertexArray(VAO);
+  glBindVertexArray(m_VAO);
 
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
@@ -81,48 +82,44 @@ int main() {
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  Texture texture1("Resources/sup.jpg", GL_RGB);
-  Texture texture2("Resources/sup.jpg", GL_RGB);
+  m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
+  m_shader = new Shader("Shaders/vertex.shader", "Shaders/fragment.shader");
 
-  shader.use();
-  shader.setInt("texture1", 0);
-  shader.setInt("texture2", 1);
+  m_shader->use();
+  m_shader->setInt("texture1", 0);
 
-  // game loop goes here
-  double last_time = glfwGetTime();
-  while (!glfwWindowShouldClose(window)) {
-    processInput(window);
+  emscripten_set_main_loop(mainLoop, 0, true);
 
-    glClearColor(0.3, 0.3, 0.3, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture1.mId);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, texture2.mId);
-
-    shader.use();
-    shader.setFloat("iTime", (float)glfwGetTime());
-
-    glm::mat4 transform = glm::mat4(1.0f);
-    transform = glm::rotate(transform, glm::radians<float>(0),
-                            glm::vec3(0.0f, 0.0f, 1.0f));
-    shader.setMat4f("transform", transform);
-    glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-
-    int frameWidth, frameHeight;
-    glfwGetFramebufferSize(window, &frameWidth, &frameHeight);
-    glViewport(0, 0, frameWidth, frameHeight);
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-
-    while (glfwGetTime() < last_time + 1. / 60) {
-    }
-    last_time = glfwGetTime();
-  }
+  delete m_shader;
+  delete m_texture1;
   glfwTerminate();
   return 0;
+}
+
+void mainLoop() {
+  processInput(m_window);
+
+  glClearColor(0.3, 0.3, 0.3, 1);
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, m_texture1->mId);
+
+  m_shader->use();
+  m_shader->setFloat("iTime", (float)glfwGetTime());
+
+  glm::mat4 transform = glm::mat4(1.0f);
+  transform = glm::rotate(transform, glm::radians<float>(0),
+                          glm::vec3(0.0f, 0.0f, 1.0f));
+  m_shader->setMat4f("transform", transform);
+  glBindVertexArray(m_VAO);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
+
+  int frameWidth, frameHeight;
+  glfwGetFramebufferSize(m_window, &frameWidth, &frameHeight);
+  glViewport(0, 0, frameWidth, frameHeight);
+  glfwSwapBuffers(m_window);
+  glfwPollEvents();
 }
 
 void onResize(GLFWwindow * /*window*/, int /*height*/, int /*width*/) {}

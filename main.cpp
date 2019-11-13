@@ -1,4 +1,5 @@
 //#define GLFW_INCLUDE_ES3
+#define STB_IMAGE_IMPLEMENTATION
 
 #include "shader.h"
 #include "texture.h"
@@ -8,9 +9,7 @@
 #include <glad/glad.h>
 #include <iostream>
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "logger.h"
-#include "stb_image.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 

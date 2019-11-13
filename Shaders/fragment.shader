@@ -104,13 +104,9 @@ float colDistance(vec3 col1, vec3 col2, float noise) {
   float x = (sin(col1.x)*col1.y*col1.z - sin(col2.x)*col2.y*col2.z);
   float y = (cos(col1.x)*col1.y*col1.z - cos(col2.x) *col2.y*col2.z);
   float z = (col1.z - col2.z);
-
-  x = x*x;
-  y = y*y;
-  z = z*z;
-
-  float dist = sqrt(x+y+z);
-
+  vec3 v = vec3(x,y,z);
+  float dist = length(v);
+  
   if (noise < 0.25) {
     dist = abs(col1.z - col2.z);
   }
@@ -182,8 +178,8 @@ void main () {
   vec3 sourceCol = texture(texture1, TexCoord).rgb;
   vec3 uv3 = vec3(TexCoord.xy, 0);
   vec3 noise = random3(uv3);
-  if (sim_noise < 0.5) {
-    FragColor = vec4(dither(sourceCol, sim_noise), 1);
+  if (sim_noise < 0.2) {
+    FragColor = vec4(dither(sourceCol, noise.x), 1);
   } else {
       FragColor = vec4(sourceCol, 1);
   }

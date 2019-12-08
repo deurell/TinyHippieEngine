@@ -1,10 +1,13 @@
-//#define GLFW_INCLUDE_ES3
 #define STB_IMAGE_IMPLEMENTATION
 
 #include "shader.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
+
+#if Emscripten
 #include <emscripten.h>
+#endif
+
 #include <fstream>
 #include <glad/glad.h>
 #include <iostream>
@@ -25,9 +28,16 @@ unsigned int m_VAO;
 int main() {
   glfwInit();
 
+#if __APPLE__
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
+  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
+#else
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#endif
 
   m_window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
   if (m_window == nullptr) {
@@ -87,7 +97,14 @@ int main() {
   m_shader->use();
   m_shader->setInt("texture1", 0);
 
+#if EMSCRIPTEN
   emscripten_set_main_loop(mainLoop, 0, true);
+#else
+  while (!glfwWindowShouldClose(m_window)) {
+    mainLoop();
+  }
+  glfwDestroyWindow(m_window);
+#endif
 
   delete m_shader;
   delete m_texture1;

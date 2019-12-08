@@ -1,0 +1,101 @@
+The target system is: Emscripten - 1 - x86
+The host system is: Darwin - 19.0.0 - x86_64
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
+Change Dir: /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_b7bb1/fast && /Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_b7bb1.dir/build.make CMakeFiles/cmTC_b7bb1.dir/build
+Building C object CMakeFiles/cmTC_b7bb1.dir/src.c.o
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_b7bb1.dir/src.c.o   -c /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b7bb1.js
+/Applications/CMake.app/Contents/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b7bb1.dir/link.txt --verbose=1
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc  -DCMAKE_HAVE_LIBC_PTHREAD    @CMakeFiles/cmTC_b7bb1.dir/objects1.rsp  -o cmTC_b7bb1.js 
+
+
+Source file was:
+#include <pthread.h>
+
+void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+The target system is: Emscripten - 1 - x86
+The host system is: Darwin - 19.0.0 - x86_64
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
+Change Dir: /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_ecd0e/fast && /Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_ecd0e.dir/build.make CMakeFiles/cmTC_ecd0e.dir/build
+Building C object CMakeFiles/cmTC_ecd0e.dir/src.c.o
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_ecd0e.dir/src.c.o   -c /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_ecd0e.js
+/Applications/CMake.app/Contents/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ecd0e.dir/link.txt --verbose=1
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc  -DCMAKE_HAVE_LIBC_PTHREAD    @CMakeFiles/cmTC_ecd0e.dir/objects1.rsp  -o cmTC_ecd0e.js 
+
+
+Source file was:
+#include <pthread.h>
+
+void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+The target system is: Emscripten - 1 - x86
+The host system is: Darwin - 19.0.0 - x86_64
+Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
+Change Dir: /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/make cmTC_fa115/fast && /Library/Developer/CommandLineTools/usr/bin/make -f CMakeFiles/cmTC_fa115.dir/build.make CMakeFiles/cmTC_fa115.dir/build
+Building C object CMakeFiles/cmTC_fa115.dir/src.c.o
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc   -DCMAKE_HAVE_LIBC_PTHREAD   -o CMakeFiles/cmTC_fa115.dir/src.c.o   -c /Users/mikael/source/gfxlab/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_fa115.js
+/Applications/CMake.app/Contents/bin/cmake -E cmake_link_script CMakeFiles/cmTC_fa115.dir/link.txt --verbose=1
+/Users/mikael/emscripten/emsdk/upstream/emscripten/emcc  -DCMAKE_HAVE_LIBC_PTHREAD    @CMakeFiles/cmTC_fa115.dir/objects1.rsp  -o cmTC_fa115.js 
+
+
+Source file was:
+#include <pthread.h>
+
+void* test_func(void* data)
+{
+  return data;
+}
+
+int main(void)
+{
+  pthread_t thread;
+  pthread_create(&thread, NULL, test_func, NULL);
+  pthread_detach(thread);
+  pthread_join(thread, NULL);
+  pthread_atfork(NULL, NULL, NULL);
+  pthread_exit(NULL);
+
+  return 0;
+}
+
+The target system is: Emscripten - 1 - x86
+The host system is: Darwin - 19.0.0 - x86_64

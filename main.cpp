@@ -92,7 +92,8 @@ int main() {
   glEnableVertexAttribArray(2);
 
   m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
-#if (Emscripten)
+
+#if Emscripten
   std::string glslVersion = "#version 300 es\n";
 #else
   std::string glslVersion = "#version 330 core\n";
@@ -103,7 +104,7 @@ int main() {
   m_shader->use();
   m_shader->setInt("texture1", 0);
 
-#if EMSCRIPTEN
+#if Emscripten
   emscripten_set_main_loop(mainLoop, 0, true);
 #else
   while (!glfwWindowShouldClose(m_window)) {

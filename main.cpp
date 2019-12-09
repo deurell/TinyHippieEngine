@@ -92,7 +92,13 @@ int main() {
   glEnableVertexAttribArray(2);
 
   m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
-  m_shader = new Shader("Shaders/vertex.shader", "Shaders/fragment.shader");
+#if (Emscripten)
+  std::string glslVersion = "#version 300 es\n";
+#else
+  std::string glslVersion = "#version 330 core\n";
+#endif
+  m_shader = new Shader("Shaders/vertex.shader", "Shaders/fragment.shader",
+                        glslVersion);
 
   m_shader->use();
   m_shader->setInt("texture1", 0);

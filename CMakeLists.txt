@@ -5,7 +5,7 @@ project(gfxlab)
 set(CMAKE_CXX_STANDARD 17)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEmscripten=0 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
   SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
@@ -22,17 +22,16 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   add_definitions(-DIMGUI_IMPL_OPENGL_LOADER_GLAD)
   
   add_custom_command(
-          TARGET gfxlab POST_BUILD
-          COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
-          COMMENT "Copying shaders" VERBATIM
+    TARGET gfxlab POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
+    COMMENT "Copying shaders" VERBATIM
   )
-  
   add_custom_command(
-          TARGET gfxlab POST_BUILD
-          COMMAND ${CMAKE_COMMAND} -E copy_directory
-          ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
-          COMMENT "Copying resources" VERBATIM
+    TARGET gfxlab POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
+    COMMENT "Copying resources" VERBATIM
   )
 else()
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)

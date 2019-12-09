@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <sstream>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -15,7 +16,8 @@
 
 class Shader {
 public:
-  Shader(const std::string &vertexPath, const std::string &fragmentPath) {
+  Shader(const std::string &vertexPath, const std::string &fragmentPath,
+         const std::string &glslVersion) {
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vertexFile;
@@ -29,8 +31,12 @@ public:
       std::stringstream vStream, fStream;
       vStream << vertexFile.rdbuf();
       fStream << fragmentFile.rdbuf();
+
       vertexCode = vStream.str();
+      vertexCode.insert(0, glslVersion);
       fragmentCode = fStream.str();
+      fragmentCode.insert(0, glslVersion);
+
     } catch (std::ifstream::failure &e) {
       std::cout << "failed to load shaders from file: " << e.what();
     }

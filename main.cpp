@@ -94,12 +94,12 @@ int main() {
   m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
 
 #if Emscripten
-  std::string glslVersion = "#version 300 es\n";
+  std::string glslVersionString = "#version 300 es\n";
 #else
-  std::string glslVersion = "#version 330 core\n";
+  std::string glslVersionString = "#version 330 core\n";
 #endif
-  m_shader = new Shader("Shaders/vertex.shader", "Shaders/fragment.shader",
-                        glslVersion);
+  m_shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag",
+                        glslVersionString);
 
   m_shader->use();
   m_shader->setInt("texture1", 0);

@@ -1,4 +1,4 @@
-# cmake -DCMAKE_TOOLCHAIN_FILE=/Users/mikael/emscripten/emsdk/upstream/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=Debug .
+# cmake -DCMAKE_TOOLCHAIN_FILE=/Users/mikael/emscripten/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=Debug .
 cmake_minimum_required(VERSION 3.10)
 
 project(gfxlab)
@@ -34,4 +34,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
           ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
           COMMENT "Copying resources" VERBATIM
   )
+else()
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)
+  file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
 endif()

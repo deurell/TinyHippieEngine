@@ -165,7 +165,7 @@ void main() {
   vec2 uv = txc * 2. - 1.;
   vec3 txc_time =
       vec3(txc.x + 0.15 * sin(-iTime * 0.3), txc.y + 0.2 * cos(iTime * 0.4),
-           14.6 * sin(iTime * 0.012));
+           24.6 * sin(iTime * 0.012));
 
   float sim_noise = noise(vec3(txc_time * 1.5));
 

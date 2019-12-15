@@ -39,7 +39,7 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  m_window = glfwCreateWindow(800, 600, "gfxlab", nullptr, nullptr);
+  m_window = glfwCreateWindow(1024, 768, "gfxlab", nullptr, nullptr);
   if (m_window == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
@@ -54,7 +54,7 @@ int main() {
     return -1;
   }
 
-  glViewport(0, 0, 800, 600);
+  glViewport(0, 0, 1024, 768);
   glfwSetFramebufferSizeCallback(m_window, onResize);
 
   float vertices[] = {
@@ -122,7 +122,7 @@ int main() {
 void mainLoop() {
   processInput(m_window);
 
-  glClearColor(0.3, 0.3, 0.3, 1);
+  glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);

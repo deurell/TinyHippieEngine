@@ -4,7 +4,7 @@
 #include "texture.h"
 #include <GLFW/glfw3.h>
 
-#if Emscripten
+#ifdef Emscripten
 #include <emscripten.h>
 #endif
 
@@ -28,7 +28,7 @@ unsigned int m_VAO;
 int main() {
   glfwInit();
 
-#if __APPLE__
+#ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
@@ -93,7 +93,7 @@ int main() {
 
   m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
 
-#if Emscripten
+#ifdef Emscripten
   std::string glslVersionString = "#version 300 es\n";
 #else
   std::string glslVersionString = "#version 330 core\n";
@@ -104,7 +104,7 @@ int main() {
   m_shader->use();
   m_shader->setInt("texture1", 0);
 
-#if Emscripten
+#ifdef Emscripten
   emscripten_set_main_loop(mainLoop, 0, true);
 #else
   while (!glfwWindowShouldClose(m_window)) {

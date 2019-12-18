@@ -109,7 +109,7 @@ int main() {
   m_shader->setInt("texture1", 0);
 
 #ifdef Emscripten
-  emscripten_set_main_loop(mainLoop, 0, true);
+  emscripten_set_main_loop(renderLoop, 0, true);
 #else
   while (!glfwWindowShouldClose(m_window)) {
     renderLoop();

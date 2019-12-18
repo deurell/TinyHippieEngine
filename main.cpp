@@ -25,6 +25,9 @@ Texture *m_texture1;
 Shader *m_shader;
 unsigned int m_VAO;
 
+constexpr float screenWidth = 1024;
+constexpr float screenHeight = 768;
+
 int main() {
   glfwInit();
 
@@ -39,7 +42,8 @@ int main() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  m_window = glfwCreateWindow(1024, 768, "gfxlab", nullptr, nullptr);
+  m_window =
+      glfwCreateWindow(screenWidth, screenHeight, "gfxlab", nullptr, nullptr);
   if (m_window == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
@@ -54,7 +58,7 @@ int main() {
     return -1;
   }
 
-  glViewport(0, 0, 1024, 768);
+  glViewport(0, 0, screenWidth, screenHeight);
   glfwSetFramebufferSizeCallback(m_window, onResize);
 
   float vertices[] = {
@@ -122,7 +126,7 @@ int main() {
 void renderLoop() {
   processInput(m_window);
 
-  glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+  glClearColor(0.f, 0.f, 0.f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);
@@ -131,10 +135,19 @@ void renderLoop() {
   m_shader->use();
   m_shader->setFloat("iTime", (float)glfwGetTime());
 
-  glm::mat4 transform = glm::mat4(1.0f);
-  transform = glm::rotate(transform, glm::radians<float>(0.0f),
-                          glm::vec3(0.0f, 0.0f, 1.0f));
-  m_shader->setMat4f("transform", transform);
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::rotate(model, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+  m_shader->setMat4f("model", model);
+
+  glm::mat4 view = glm::mat4(1.0f);
+  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+  m_shader->setMat4f("view", view);
+
+  glm::mat4 projection = glm::mat4(1.0f);
+  projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight,
+                                0.1f, 100.0f);
+  m_shader->setMat4f("projection", projection);
+
   glBindVertexArray(m_VAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
@@ -148,7 +161,7 @@ void renderLoop() {
 void onResize(GLFWwindow * /*window*/, int /*height*/, int /*width*/) {}
 
 void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
 }

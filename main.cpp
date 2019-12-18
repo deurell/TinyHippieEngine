@@ -18,7 +18,7 @@
 
 void onResize(GLFWwindow *window, int height, int width);
 void processInput(GLFWwindow *window);
-void mainLoop();
+void renderLoop();
 
 GLFWwindow *m_window;
 Texture *m_texture1;
@@ -108,7 +108,7 @@ int main() {
   emscripten_set_main_loop(mainLoop, 0, true);
 #else
   while (!glfwWindowShouldClose(m_window)) {
-    mainLoop();
+    renderLoop();
   }
   glfwDestroyWindow(m_window);
 #endif
@@ -119,7 +119,7 @@ int main() {
   return 0;
 }
 
-void mainLoop() {
+void renderLoop() {
   processInput(m_window);
 
   glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
@@ -132,7 +132,7 @@ void mainLoop() {
   m_shader->setFloat("iTime", (float)glfwGetTime());
 
   glm::mat4 transform = glm::mat4(1.0f);
-  transform = glm::rotate(transform, glm::radians<float>(0),
+  transform = glm::rotate(transform, glm::radians<float>(0.0f),
                           glm::vec3(0.0f, 0.0f, 1.0f));
   m_shader->setMat4f("transform", transform);
   glBindVertexArray(m_VAO);

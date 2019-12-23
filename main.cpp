@@ -15,14 +15,15 @@
 #include "logger.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 
 void onResize(GLFWwindow *window, int height, int width);
 void processInput(GLFWwindow *window);
 void renderLoop();
 
 GLFWwindow *m_window;
-Texture *m_texture1;
-Shader *m_shader;
+std::unique_ptr<Texture> m_texture;
+std::unique_ptr<Shader> m_shader;
 unsigned int m_VAO;
 
 constexpr float screenWidth = 1024;
@@ -110,15 +111,15 @@ int main() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  m_texture1 = new Texture("Resources/sup.jpg", GL_RGB);
+  m_texture = std::make_unique<Texture>("Resources/sup.jpg", GL_RGB);
 
 #ifdef Emscripten
   std::string glslVersionString = "#version 300 es\n";
 #else
   std::string glslVersionString = "#version 330 core\n";
 #endif
-  m_shader = new Shader("Shaders/shader.vert", "Shaders/shader.frag",
-                        glslVersionString);
+  m_shader = std::make_unique<Shader>("Shaders/shader.vert",
+                                      "Shaders/shader.frag", glslVersionString);
 
   m_shader->use();
   m_shader->setInt("texture1", 0);
@@ -134,8 +135,6 @@ int main() {
   glfwDestroyWindow(m_window);
 #endif
 
-  delete m_shader;
-  delete m_texture1;
   glfwTerminate();
   return 0;
 }
@@ -147,7 +146,7 @@ void renderLoop() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_texture1->mId);
+  glBindTexture(GL_TEXTURE_2D, m_texture->mId);
 
   m_shader->use();
   m_shader->setFloat("iTime", (float)glfwGetTime());
@@ -167,6 +166,7 @@ void renderLoop() {
   m_shader->setMat4f("projection", projection);
 
   glBindVertexArray(m_VAO);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
   glDrawArrays(GL_TRIANGLES, 0, 36);
 
   int frameWidth, frameHeight;

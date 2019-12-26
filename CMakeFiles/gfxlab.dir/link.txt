@@ -1,1 +1,0 @@
-/Users/mikael/emscripten/emsdk/upstream/emscripten/em++   -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources   @CMakeFiles/gfxlab.dir/objects1.rsp  -o gfxlab.html 

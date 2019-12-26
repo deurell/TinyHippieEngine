@@ -1,3 +1,0 @@
-/Users/mikael/source/gfxlab/CMakeFiles/rebuild_cache.dir
-/Users/mikael/source/gfxlab/CMakeFiles/edit_cache.dir
-/Users/mikael/source/gfxlab/CMakeFiles/gfxlab.dir

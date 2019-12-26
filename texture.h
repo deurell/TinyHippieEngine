@@ -6,8 +6,8 @@
 
 class Texture {
 public:
-  Texture(const std::string &imagePath, GLint format = GL_RGB,
-          bool flipImage = true) {
+  explicit Texture(const std::string &imagePath, GLint format = GL_RGB,
+          bool flipImage = true) : mId(0) {
 
     glGenTextures(1, &mId);
     glBindTexture(GL_TEXTURE_2D, mId);
@@ -21,7 +21,7 @@ public:
     const char *path = imagePath.c_str();
     unsigned char *data = stbi_load(path, &width, &height, &channels, 0);
     if (data) {
-      glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+      glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, (GLenum)format,
                    GL_UNSIGNED_BYTE, data);
       glGenerateMipmap(GL_TEXTURE_2D);
     }

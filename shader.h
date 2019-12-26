@@ -82,11 +82,11 @@ public:
   void use() { glUseProgram(mId); }
 
   void setInt(const std::string &name, int value) const {
-    glUniform1i(glGetUniformLocation(mId, name.c_str()), (int)value);
+    glUniform1i(glGetUniformLocation(mId, name.c_str()), value);
   }
 
   void setFloat(const std::string &name, float value) {
-    glUniform1f(glGetUniformLocation(mId, name.c_str()), (float)value);
+    glUniform1f(glGetUniformLocation(mId, name.c_str()), value);
   }
 
   void setVec4f(const std::string &name, float x, float y, float z, float w) {

@@ -7,7 +7,8 @@
 class Texture {
 public:
   explicit Texture(const std::string &imagePath, GLint format = GL_RGB,
-          bool flipImage = true) : mId(0) {
+                   bool flipImage = true)
+      : mId(0) {
 
     glGenTextures(1, &mId);
     glBindTexture(GL_TEXTURE_2D, mId);
@@ -17,9 +18,15 @@ public:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
     int height, width, channels;
-    stbi_set_flip_vertically_on_load(flipImage);
-    const char *path = imagePath.c_str();
-    unsigned char *data = stbi_load(path, &width, &height, &channels, 0);
+    unsigned char *data = nullptr;
+
+    if (hasExtension(imagePath, ".basis")) {
+      // basis code goes here
+    } else {
+      stbi_set_flip_vertically_on_load(flipImage);
+      const char *path = imagePath.c_str();
+      data = stbi_load(path, &width, &height, &channels, 0);
+    }
     if (data) {
       glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, (GLenum)format,
                    GL_UNSIGNED_BYTE, data);
@@ -31,4 +38,14 @@ public:
   ~Texture() = default;
 
   unsigned int mId;
+
+private:
+  bool hasExtension(const std::string &full, const std::string &end) {
+    if (full.length() >= end.length()) {
+      return (full.compare(full.length() - end.length(), full.length(), end) ==
+              0);
+    } else {
+      return false;
+    }
+  }
 };

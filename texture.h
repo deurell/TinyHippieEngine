@@ -3,6 +3,7 @@
 #include "stb_image.h"
 #include <glad/glad.h>
 #include <string>
+#include <vector>
 
 class Texture {
 public:
@@ -22,6 +23,10 @@ public:
 
     if (hasExtension(imagePath, ".basis")) {
       // basis code goes here
+      std::ifstream imageStream(imagePath, std::ios::binary);
+      std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(imageStream), {});
+      data = reinterpret_cast<unsigned char*>(buffer.data());
+      
     } else {
       stbi_set_flip_vertically_on_load(flipImage);
       const char *path = imagePath.c_str();

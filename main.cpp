@@ -11,12 +11,14 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include "transcoder/basisu_transcoder.h"
 #include <glm/glm.hpp>
 #include <memory>
 
 void onResize(GLFWwindow *window, int height, int width);
 void processInput(GLFWwindow *window);
 void renderLoop();
+void basisInit();
 
 GLFWwindow *m_window;
 std::unique_ptr<Texture> m_texture;
@@ -26,8 +28,11 @@ unsigned int m_VAO;
 constexpr float screenWidth = 1024;
 constexpr float screenHeight = 768;
 
+std::unique_ptr<basist::etc1_global_selector_codebook> m_codebook;
+
 int main() {
   glfwInit();
+  basisInit();
 
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -100,7 +105,8 @@ int main() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  m_texture = std::make_unique<Texture>("Resources/sup.jpg", GL_RGB);
+  m_texture =
+      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGBA);
 
 #ifdef Emscripten
   std::string glslVersionString = "#version 300 es\n";
@@ -170,4 +176,10 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+}
+
+void basisInit() {
+  basist::basisu_transcoder_init();
+  m_codebook = std::make_unique<basist::etc1_global_selector_codebook>(
+      basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }

@@ -106,7 +106,7 @@ int main() {
   glEnableVertexAttribArray(1);
 
   m_texture =
-      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGBA);
+      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
 
 #ifdef Emscripten
   std::string glslVersionString = "#version 300 es\n";

@@ -13,7 +13,7 @@ class Texture {
 public:
   explicit Texture(const std::string &imagePath,
                    basist::etc1_global_selector_codebook &codeBook,
-                   GLint format = GL_RGB16, bool flipImage = true)
+                   GLint format = GL_RGB, bool flipImage = true)
       : mId(0) {
 
     glGenTextures(1, &mId);
@@ -86,7 +86,7 @@ public:
 
     if (dst_data.data()) {
       glTexImage2D(GL_TEXTURE_2D, 0, format, imageInfo.m_orig_width,
-                   imageInfo.m_orig_height, 0, GL_RGB, GL_UNSIGNED_SHORT_5_6_5,
+                   imageInfo.m_orig_height, 0, format, GL_UNSIGNED_SHORT_5_6_5,
                    dst_data.data());
       glGenerateMipmap(GL_TEXTURE_2D);
     }

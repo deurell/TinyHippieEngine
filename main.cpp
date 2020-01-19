@@ -157,7 +157,7 @@ void renderLoop() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("gruwl shaderlab stats");
+  ImGui::Begin("tiny happy hippie engine v0.2");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();
 

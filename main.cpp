@@ -92,6 +92,8 @@ int main() {
       0.5f,  0.5f,  0.5f,  1.0f, 0.0f, 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
       -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f};
 
+  const int vertexCount = sizeof(vertices) / sizeof(float) * 5;
+
   unsigned int VBO;
   glGenVertexArrays(1, &m_VAO);
   glGenBuffers(1, &VBO);
@@ -127,7 +129,6 @@ int main() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
-  (void)io;
 
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(m_window, true);
@@ -158,7 +159,6 @@ void renderLoop() {
 
   ImGui::Begin("gruwl shaderlab stats");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-  ImGui::Text("Vertices: %i", 0);
   ImGui::End();
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);

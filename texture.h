@@ -13,10 +13,13 @@ class Texture {
 public:
   explicit Texture(const std::string &imagePath,
                    basist::etc1_global_selector_codebook &codeBook,
-                   GLint format = GL_RGB, 
-                   GLint internal_format= GL_UNSIGNED_SHORT_5_6_5, 
-                   basist::transcoder_texture_format transcoder_format = basist::transcoder_texture_format::cTFRGB565)
+                   GLint format = GL_RGB,
+                   GLint internal_format = GL_UNSIGNED_SHORT_5_6_5,
+                   basist::transcoder_texture_format transcoder_format =
+                       basist::transcoder_texture_format::cTFRGB565)
       : mId(0) {
+
+    assert(hasExtension(imagePath, ".basis"));
 
     glGenTextures(1, &mId);
     glBindTexture(GL_TEXTURE_2D, mId);
@@ -58,7 +61,6 @@ public:
       const uint32_t bytes_per_slice = bytes_per_line * imageInfo.m_orig_height;
       dest_size = bytes_per_slice;
     } else {
-
       uint32_t bytes_per_block =
           basist::basis_get_bytes_per_block(transcoder_format);
       uint32_t required_size = imageInfo.m_total_blocks * bytes_per_block;

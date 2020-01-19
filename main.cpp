@@ -11,6 +11,9 @@
 #include <glad/glad.h>
 #include <iostream>
 
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
 #include "transcoder/basisu_transcoder.h"
 #include <glm/glm.hpp>
 #include <memory>
@@ -121,12 +124,24 @@ int main() {
 
   glEnable(GL_DEPTH_TEST);
 
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO &io = ImGui::GetIO();
+  (void)io;
+
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+  ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
+
 #ifdef Emscripten
   emscripten_set_main_loop(renderLoop, 0, true);
 #else
   while (!glfwWindowShouldClose(m_window)) {
     renderLoop();
   }
+  ImGui_ImplOpenGL3_Shutdown();
+  ImGui_ImplGlfw_Shutdown();
+  ImGui::DestroyContext();
   glfwDestroyWindow(m_window);
 #endif
 
@@ -136,6 +151,15 @@ int main() {
 
 void renderLoop() {
   processInput(m_window);
+
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  ImGui::Begin("gruwl shaderlab stats");
+  ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::Text("Vertices: %i", 0);
+  ImGui::End();
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -162,6 +186,9 @@ void renderLoop() {
 
   glBindVertexArray(m_VAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
+
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(m_window, &frameWidth, &frameHeight);

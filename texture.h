@@ -13,7 +13,9 @@ class Texture {
 public:
   explicit Texture(const std::string &imagePath,
                    basist::etc1_global_selector_codebook &codeBook,
-                   GLint format = GL_RGB)
+                   GLint format = GL_RGB, 
+                   GLint internal_format= GL_UNSIGNED_SHORT_5_6_5, 
+                   basist::transcoder_texture_format transcoder_format = basist::transcoder_texture_format::cTFRGB565)
       : mId(0) {
 
     glGenTextures(1, &mId);
@@ -46,8 +48,6 @@ public:
     basist::basisu_image_level_info levelInfo;
     transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo,
                                      image_index, level_index);
-
-    auto transcoder_format = basist::transcoder_texture_format::cTFRGB565;
     uint32_t dest_size = 0;
     bool unCompressed = false;
     if (basist::basis_transcoder_format_is_uncompressed(transcoder_format)) {
@@ -90,7 +90,7 @@ public:
 
     if (dst_data.data()) {
       glTexImage2D(GL_TEXTURE_2D, 0, format, imageInfo.m_orig_width,
-                   imageInfo.m_orig_height, 0, format, GL_UNSIGNED_SHORT_5_6_5,
+                   imageInfo.m_orig_height, 0, format, internal_format,
                    dst_data.data());
 
       glGenerateMipmap(GL_TEXTURE_2D);
@@ -111,6 +111,7 @@ public:
     int height, width, channels;
     stbi_set_flip_vertically_on_load(flipImage);
     const char *path = imagePath.c_str();
+
     unsigned char *data = stbi_load(path, &width, &height, &channels, 0);
     if (data) {
       glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, (GLenum)format,

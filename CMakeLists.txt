@@ -9,8 +9,6 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
-add_definitions(${CMAKE_CXX_FLAGS} "-fno-strict-aliasing")
-
 include_directories(${gfxlab_INCLUDE_DIRS} "${gfxlab_SOURCE_DIR}/include")
 file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
 file(GLOB basis_src "./transcoder/*.h" "./transcoder/*.cpp")

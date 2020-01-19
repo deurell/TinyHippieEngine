@@ -29,6 +29,9 @@ public:
     std::vector<unsigned char> buffer(
         std::istreambuf_iterator<char>(imageStream), {});
 
+    uint32_t image_index = 0;
+    uint32_t level_index = 0;
+
     auto transcoder = std::make_unique<basist::basisu_transcoder>(&codeBook);
     bool success = transcoder->start_transcoding(buffer.data(), buffer.size());
     basist::basis_texture_type textureType =
@@ -37,11 +40,12 @@ public:
         transcoder->get_total_images(buffer.data(), buffer.size());
 
     basist::basisu_image_info imageInfo;
-    transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo, 0);
+    transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
+                               image_index);
 
     basist::basisu_image_level_info levelInfo;
-    transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo, 0,
-                                     0);
+    transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo,
+                                     image_index, level_index);
 
     auto transcoder_format = basist::transcoder_texture_format::cTFRGB565;
     uint32_t dest_size = 0;
@@ -88,6 +92,7 @@ public:
       glTexImage2D(GL_TEXTURE_2D, 0, format, imageInfo.m_orig_width,
                    imageInfo.m_orig_height, 0, format, GL_UNSIGNED_SHORT_5_6_5,
                    dst_data.data());
+
       glGenerateMipmap(GL_TEXTURE_2D);
     }
   }

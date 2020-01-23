@@ -9,6 +9,10 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
+if (WIN32) 
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ITERATOR_DEBUG_LEVEL=0 -D_SECURE_SCL=0")
+endif()
+
 include_directories(${gfxlab_INCLUDE_DIRS} "${gfxlab_SOURCE_DIR}/include")
 file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
 file(GLOB basis_src "./transcoder/*.h" "./transcoder/*.cpp")

@@ -33,6 +33,13 @@ constexpr float screenHeight = 768;
 
 std::unique_ptr<basist::etc1_global_selector_codebook> m_codebook;
 
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 int main() {
   glfwInit();
   basisInit();
@@ -120,7 +127,6 @@ int main() {
 #endif
   m_shader = std::make_unique<Shader>("Shaders/shader.vert",
                                       "Shaders/shader.frag", glslVersionString);
-
   m_shader->use();
   m_shader->setInt("texture1", 0);
 
@@ -151,14 +157,20 @@ int main() {
 }
 
 void renderLoop() {
+
+  float currentFrame = glfwGetTime();
+  deltaTime = currentFrame - lastFrame;
+  lastFrame = currentFrame;
+
   processInput(m_window);
 
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("jmpea81 0.2");
+  ImGui::Begin("jmp$ea81 0.2");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::Text("Time: %.1f", ImGui::GetTime());
   ImGui::End();
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);
@@ -171,12 +183,13 @@ void renderLoop() {
   m_shader->setFloat("iTime", (float)glfwGetTime());
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
-                      glm::vec3(0.5f, 1.0f, 0.0f));
+  // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
+  //                    glm::vec3(0.5f, 1.0f, 0.0f));
   m_shader->setMat4f("model", model);
 
-  glm::mat4 view = glm::mat4(1.0f);
-  view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+  glm::mat4 view;
+  view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+
   m_shader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
@@ -203,6 +216,17 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+  const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    cameraPosition += cameraSpeed * cameraFront;
+  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    cameraPosition -= cameraSpeed * cameraFront;
+  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    cameraPosition -=
+        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    cameraPosition +=
+        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
 }
 
 void basisInit() {

@@ -1,5 +1,6 @@
 #define STB_IMAGE_IMPLEMENTATION
 
+#include "camera.h"
 #include "shader.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
@@ -26,6 +27,7 @@ void basisInit();
 GLFWwindow *m_window;
 std::unique_ptr<Texture> m_texture;
 std::unique_ptr<Shader> m_shader;
+std::unique_ptr<Camera> m_camera;
 unsigned int m_VAO;
 
 constexpr float screenWidth = 1024;
@@ -140,6 +142,9 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(m_window, true);
   ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
 
+  m_camera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 10.0f));
+  m_camera->lookAt({0.0f, 0.0f, 0.0f});
+
 #ifdef Emscripten
   emscripten_set_main_loop(renderLoop, 0, true);
 #else
@@ -188,8 +193,9 @@ void renderLoop() {
   m_shader->setMat4f("model", model);
 
   glm::mat4 view;
-  view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
-
+  // view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
+  // m_camera->rotate(glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+  view = m_camera->getView();
   m_shader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
@@ -216,17 +222,15 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  const float cameraSpeed = 2.5f * deltaTime; // adjust accordingly
+  const float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    cameraPosition += cameraSpeed * cameraFront;
+    m_camera->mPosition.z -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    cameraPosition -= cameraSpeed * cameraFront;
+    m_camera->mPosition.z += cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    cameraPosition -=
-        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    m_camera->mPosition.x -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    cameraPosition +=
-        glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    m_camera->mPosition.x += cameraSpeed;
 }
 
 void basisInit() {

@@ -25,19 +25,14 @@ void renderLoop();
 void basisInit();
 
 GLFWwindow *m_window;
-std::unique_ptr<Texture> m_texture;
-std::unique_ptr<Shader> m_shader;
-std::unique_ptr<Camera> m_camera;
-unsigned int m_VAO;
-
-constexpr float screenWidth = 1024;
-constexpr float screenHeight = 768;
-
+std::unique_ptr<Texture> mTexture;
+std::unique_ptr<Shader> mShader;
+std::unique_ptr<Camera> mCamera;
 std::unique_ptr<basist::etc1_global_selector_codebook> m_codebook;
 
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 3.0f);
-glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+unsigned int m_VAO;
+constexpr float screenWidth = 1024;
+constexpr float screenHeight = 768;
 
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -119,7 +114,7 @@ int main() {
                         (void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
 
-  m_texture =
+  mTexture =
       std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
 
 #ifdef Emscripten
@@ -127,10 +122,10 @@ int main() {
 #else
   std::string glslVersionString = "#version 330 core\n";
 #endif
-  m_shader = std::make_unique<Shader>("Shaders/shader.vert",
-                                      "Shaders/shader.frag", glslVersionString);
-  m_shader->use();
-  m_shader->setInt("texture1", 0);
+  mShader = std::make_unique<Shader>("Shaders/shader.vert",
+                                     "Shaders/shader.frag", glslVersionString);
+  mShader->use();
+  mShader->setInt("texture1", 0);
 
   glEnable(GL_DEPTH_TEST);
 
@@ -142,8 +137,8 @@ int main() {
   ImGui_ImplGlfw_InitForOpenGL(m_window, true);
   ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
 
-  m_camera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 10.0f));
-  m_camera->lookAt({0.0f, 0.0f, 0.0f});
+  mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 10.0f));
+  mCamera->lookAt({0.0f, 0.0f, 0.0f});
 
 #ifdef Emscripten
   emscripten_set_main_loop(renderLoop, 0, true);
@@ -182,26 +177,22 @@ void renderLoop() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, m_texture->mId);
+  glBindTexture(GL_TEXTURE_2D, mTexture->mId);
 
-  m_shader->use();
-  m_shader->setFloat("iTime", (float)glfwGetTime());
+  mShader->use();
+  mShader->setFloat("iTime", (float)glfwGetTime());
 
   glm::mat4 model = glm::mat4(1.0f);
-  // model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f),
-  //                    glm::vec3(0.5f, 1.0f, 0.0f));
-  m_shader->setMat4f("model", model);
+  model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 1.0f, 0.0f));
+  mShader->setMat4f("model", model);
 
-  glm::mat4 view;
-  // view = glm::lookAt(cameraPosition, cameraPosition + cameraFront, cameraUp);
-  // m_camera->rotate(glm::radians(1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-  view = m_camera->getView();
-  m_shader->setMat4f("view", view);
+  glm::mat4 view = mCamera->getView();
+  mShader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
   projection = glm::perspective(glm::radians(45.0f), screenWidth / screenHeight,
                                 0.1f, 100.0f);
-  m_shader->setMat4f("projection", projection);
+  mShader->setMat4f("projection", projection);
 
   glBindVertexArray(m_VAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -222,15 +213,16 @@ void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+
   const float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    m_camera->mPosition.z -= cameraSpeed;
+    mCamera->mPosition.z -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    m_camera->mPosition.z += cameraSpeed;
+    mCamera->mPosition.z += cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    m_camera->mPosition.x -= cameraSpeed;
+    mCamera->mPosition.x -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    m_camera->mPosition.x += cameraSpeed;
+    mCamera->mPosition.x += cameraSpeed;
 }
 
 void basisInit() {

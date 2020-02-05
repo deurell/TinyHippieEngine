@@ -10,7 +10,7 @@ public:
       : mPosition(position), mOrientation(orientation) {}
 
   glm::mat4 getView() {
-    return glm::translate(glm::mat4_cast(mOrientation), mPosition);
+    return glm::translate(glm::mat4_cast( mOrientation), mPosition);
   }
 
   void lookAt(const glm::vec3 position) {
@@ -21,6 +21,14 @@ public:
 
   void rotate(float angle, const glm::vec3 &axis) {
     mOrientation *= glm::angleAxis(angle, axis * mOrientation);
+  }
+
+  glm::mat4 getPerspectiveTransform(float fov, float aspect) {
+    return glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
+  }
+
+  glm::mat4 getOrtoTransform(float left, float right, float bottom, float up) {
+    return glm::ortho(left, right, bottom, up, 0.0f, 100.0f);
   }
 
   glm::vec3 mPosition;

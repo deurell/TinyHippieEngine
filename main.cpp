@@ -37,9 +37,7 @@ constexpr float screenHeight = 768;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-float xd = 0;
-float yd = 0;
-float zd =0;
+glm::vec3 model_translate;
 
 int main() {
   glfwInit();
@@ -175,11 +173,9 @@ void renderLoop() {
   ImGui::Begin("tiny engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
-  ImGui::InputFloat("tx", &xd);
-  ImGui::InputFloat("ty", &yd);
-  ImGui::InputFloat("tz", &zd);
+  ImGui::InputFloat3("mod", &model_translate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
-  
+
   ImGui::End();
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);
@@ -192,17 +188,19 @@ void renderLoop() {
   mShader->setFloat("iTime", (float)glfwGetTime());
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(xd,yd,zd));
-  //model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 0.0f, 0.0f));
-  //model = glm::scale(model, glm::vec3(100.0,100.0, 100.0));
+  model = glm::translate(model, model_translate);
+  // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 0.0f,
+  // 0.0f)); model = glm::scale(model, glm::vec3(100.0,100.0, 100.0));
   mShader->setMat4f("model", model);
 
   glm::mat4 view = mCamera->getView();
   mShader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
-  projection = mCamera->getPerspectiveTransform(45.0, screenWidth/screenHeight);
-  //projection = mCamera->getOrtoTransform(0.0f, screenWidth, 0.0f,  screenHeight);
+  projection =
+      mCamera->getPerspectiveTransform(45.0, screenWidth / screenHeight);
+  // projection = mCamera->getOrtoTransform(0.0f, screenWidth, 0.0f,
+  // screenHeight);
   mShader->setMat4f("projection", projection);
 
   glBindVertexArray(m_VAO);
@@ -218,7 +216,7 @@ void renderLoop() {
   glfwPollEvents();
 }
 
-void onResize(GLFWwindow * /*window*/,   int /*height*/, int /*width*/) {}
+void onResize(GLFWwindow * /*window*/, int /*height*/, int /*width*/) {}
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {

@@ -97,6 +97,9 @@ public:
 
       glGenerateMipmap(GL_TEXTURE_2D);
     }
+
+    mWidth = imageInfo.m_width;
+    mHeight = imageInfo.m_height;
   }
 
   explicit Texture(const std::string &imagePath, GLint format = GL_RGB,
@@ -121,11 +124,16 @@ public:
       glGenerateMipmap(GL_TEXTURE_2D);
     }
     stbi_image_free(data);
+
+    mWidth = width;
+    mHeight = height;
   }
 
   ~Texture() = default;
 
   unsigned int mId;
+  unsigned int mWidth;
+  unsigned int mHeight;
 
 private:
   bool hasExtension(const std::string &full, const std::string &end) {

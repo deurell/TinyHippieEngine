@@ -159,7 +159,6 @@ int main() {
 }
 
 void renderLoop() {
-
   float currentFrame = glfwGetTime();
   deltaTime = currentFrame - lastFrame;
   lastFrame = currentFrame;
@@ -175,6 +174,8 @@ void renderLoop() {
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
   ImGui::InputFloat3("mod", &model_translate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
+  ImGui::Text("tex");
+  ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
 
   ImGui::End();
 
@@ -193,13 +194,12 @@ void renderLoop() {
   // 0.0f)); model = glm::scale(model, glm::vec3(100.0,100.0, 100.0));
   mShader->setMat4f("model", model);
 
-  glm::mat4 view = mCamera->getView();
+  glm::mat4 view = mCamera->getViewMatrix();
   mShader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
-  projection =
-      mCamera->getPerspectiveTransform(45.0, screenWidth / screenHeight);
-  // projection = mCamera->getOrtoTransform(0.0f, screenWidth, 0.0f,
+  projection = mCamera->getPerspectiveMatrix(45.0, screenWidth / screenHeight);
+  // projection = mCamera->getOrtoMatrix(0.0f, screenWidth, 0.0f,
   // screenHeight);
   mShader->setMat4f("projection", projection);
 

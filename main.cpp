@@ -172,12 +172,14 @@ void renderLoop() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("jmp$ea81 0.2");
+  ImGui::Begin("tiny engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
-  ImGui::InputFloat("x", &xd);
-  ImGui::InputFloat("y", &yd);
-  ImGui::InputFloat("z", &zd);
+  ImGui::InputFloat("tx", &xd);
+  ImGui::InputFloat("ty", &yd);
+  ImGui::InputFloat("tz", &zd);
+  ImGui::InputFloat3("cam", &mCamera->mPosition.x);
+  
   ImGui::End();
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);

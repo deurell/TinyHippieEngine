@@ -198,8 +198,9 @@ void renderLoop() {
   mShader->setMat4f("view", view);
 
   glm::mat4 projection = glm::mat4(1.0f);
-  projection = mCamera->getPerspectiveMatrix(45.0, screenWidth / screenHeight);
-  // projection = mCamera->getOrtoMatrix(0.0f, screenWidth, 0.0f,
+  projection =
+      mCamera->getPerspectiveTransform(45.0, screenWidth / screenHeight);
+  // projection = mCamera->getOrtoTransform(0.0f, screenWidth, 0.0f,
   // screenHeight);
   mShader->setMat4f("projection", projection);
 

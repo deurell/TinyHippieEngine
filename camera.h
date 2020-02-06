@@ -9,8 +9,8 @@ public:
   Camera(const glm::vec3 position, const glm::quat orientation)
       : mPosition(position), mOrientation(orientation) {}
 
-  glm::mat4 getView() {
-    return glm::translate(glm::mat4_cast( mOrientation), -mPosition);
+  glm::mat4 getViewMatrix() {
+    return glm::translate(glm::mat4_cast(mOrientation), -mPosition);
   }
 
   void lookAt(const glm::vec3 position) {

@@ -27,8 +27,13 @@ void basisInit();
 GLFWwindow *m_window;
 std::unique_ptr<Texture> mTexture;
 std::unique_ptr<Shader> mShader;
+std::unique_ptr<Shader> mLightingShader;
+std::unique_ptr<Shader> mLampShader;
 std::unique_ptr<Camera> mCamera;
 std::unique_ptr<basist::etc1_global_selector_codebook> m_codebook;
+
+unsigned int mLightVAO;
+unsigned int mCubeVAO;
 
 unsigned int m_VAO;
 constexpr float screenWidth = 1024;
@@ -73,7 +78,22 @@ int main() {
   glViewport(0, 0, screenWidth, screenHeight);
   glfwSetFramebufferSizeCallback(m_window, onResize);
 
-  float vertices[] = {
+  mTexture =
+      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
+
+#ifdef Emscripten
+  std::string glslVersionString = "#version 300 es\n";
+#else
+  std::string glslVersionString = "#version 330 core\n";
+#endif
+
+  mLampShader = std::make_unique<Shader>("Shaders/lamp.vert", "Shaders/lamp.frag", glslVersionString);
+
+  mLightingShader = std::make_unique<Shader>("Shaders/light.vert",
+                                     "Shaders/light.frag", glslVersionString);
+
+
+float vertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,  -0.5f, -0.5f, 1.0f, 0.0f,
       0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,  0.5f,  -0.5f, 1.0f, 1.0f,
       -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
@@ -100,34 +120,22 @@ int main() {
 
   const int vertexCount = sizeof(vertices) / sizeof(float) * 5;
 
+  // cube
   unsigned int VBO;
-  glGenVertexArrays(1, &m_VAO);
+  glGenVertexArrays(1, &mCubeVAO);
   glGenBuffers(1, &VBO);
-
-  glBindVertexArray(m_VAO);
-
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *)0);
+  glBindVertexArray(mCubeVAO);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
 
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-
-  mTexture =
-      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
-
-#ifdef Emscripten
-  std::string glslVersionString = "#version 300 es\n";
-#else
-  std::string glslVersionString = "#version 330 core\n";
-#endif
-  mShader = std::make_unique<Shader>("Shaders/shader.vert",
-                                     "Shaders/shader.frag", glslVersionString);
-  mShader->use();
-  mShader->setInt("texture1", 0);
+  // light
+  glGenVertexArrays(1, &mLightVAO);
+  glBindVertexArray(mLightVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
+  glEnableVertexAttribArray(0);
 
   glEnable(GL_DEPTH_TEST);
 
@@ -165,6 +173,9 @@ void renderLoop() {
 
   processInput(m_window);
 
+  glClearColor(0.f, 0.f, 0.f, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -179,32 +190,27 @@ void renderLoop() {
 
   ImGui::End();
 
-  glClearColor(0.f, 0.f, 0.f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, mTexture->mId);
-
-  mShader->use();
-  mShader->setFloat("iTime", (float)glfwGetTime());
-
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, model_translate);
-  // model = glm::rotate(model, (float)glfwGetTime(), glm::vec3(0.5f, 0.0f,
-  // 0.0f)); model = glm::scale(model, glm::vec3(100.0,100.0, 100.0));
-  mShader->setMat4f("model", model);
-
+  mLightingShader->use();
+  mLightingShader->setVec3f("objectColor", 1.0f, 0.5f, 0.31f);
+  mLightingShader->setVec3f("lightColor", 1.0f, 1.0f, 1.0f);
+  glm::mat4 projection = mCamera->getPerspectiveTransform(45.0, screenWidth/screenHeight);
   glm::mat4 view = mCamera->getViewMatrix();
-  mShader->setMat4f("view", view);
+  mLightingShader->setMat4f("projection", projection);
+  mLightingShader->setMat4f("view", view);
+  glm::mat4 model = glm::mat4(1.0f);
+  mLightingShader->setMat4f("model", model);
+  glBindVertexArray(mCubeVAO);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
 
-  glm::mat4 projection = glm::mat4(1.0f);
-  projection =
-      mCamera->getPerspectiveTransform(45.0, screenWidth / screenHeight);
-  // projection = mCamera->getOrtoTransform(0.0f, screenWidth, 0.0f,
-  // screenHeight);
-  mShader->setMat4f("projection", projection);
 
-  glBindVertexArray(m_VAO);
+  mLampShader->use();
+  mLampShader->setMat4f("projection", projection);
+  mLampShader->setMat4f("view", view);
+  model = glm::mat4(1.0);
+  model = glm::translate(model, glm::vec3(0.8f, 0.8f, 1.4f));
+  model = glm::scale(model, glm::vec3(0.2f));
+  mLampShader->setMat4f("model", model);
+  glBindVertexArray(mLightVAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
 
   ImGui::Render();

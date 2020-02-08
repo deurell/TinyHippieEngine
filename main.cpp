@@ -39,6 +39,8 @@ unsigned int m_VAO;
 constexpr float screenWidth = 1024;
 constexpr float screenHeight = 768;
 
+glm::vec3 mLightPos = {1.2f, 1.0f, 2.0f};
+
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
@@ -204,22 +206,23 @@ void renderLoop() {
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
   ImGui::InputFloat3("mod", &model_translate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
+  ImGui::InputFloat3("light", &mLightPos.x);
   ImGui::Text("tex");
   ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
 
   ImGui::End();
 
-  glm::vec3 lightPos = {1.2f, 1.0f, 2.0f};
-
   mLightingShader->use();
   mLightingShader->setVec3f("objectColor", 1.0f, 0.5f, 0.31f);
   mLightingShader->setVec3f("lightColor", 1.0f, 1.0f, 1.0f);
-  mLightingShader->setVec3f("lightPos", lightPos.x, lightPos.y, lightPos.z);
+  mLightingShader->setVec3f("lightPos", mLightPos);
+  mLightingShader->setVec3f("viewPos", mCamera->mPosition);
   glm::mat4 projection = mCamera->getPerspectiveTransform(45.0, screenWidth/screenHeight);
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);
   mLightingShader->setMat4f("view", view);
   glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, model_translate);
   mLightingShader->setMat4f("model", model);
   glBindVertexArray(mCubeVAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -229,7 +232,7 @@ void renderLoop() {
   mLampShader->setMat4f("projection", projection);
   mLampShader->setMat4f("view", view);
   model = glm::mat4(1.0);
-  model = glm::translate(model, lightPos);
+  model = glm::translate(model, mLightPos);
   model = glm::scale(model, glm::vec3(0.2f));
   mLampShader->setMat4f("model", model);
   glBindVertexArray(mLightVAO);

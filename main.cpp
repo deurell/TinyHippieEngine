@@ -45,6 +45,7 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
 glm::vec3 model_translate;
+glm::vec3 obj_color = {0.3,0.8,0.3};
 
 int main() {
   glfwInit();
@@ -116,6 +117,7 @@ float vertices[] = {
     -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
     -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
     -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    
 
      0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
      0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
@@ -148,8 +150,10 @@ float vertices[] = {
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
+
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
   glEnableVertexAttribArray(1);
+  glBindVertexArray(0);
 
   // lamp
   glGenVertexArrays(1, &mLightVAO);
@@ -157,6 +161,7 @@ float vertices[] = {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
+  glBindVertexArray(0);
 
   glEnable(GL_DEPTH_TEST);
 
@@ -207,13 +212,13 @@ void renderLoop() {
   ImGui::InputFloat3("mod", &model_translate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
   ImGui::InputFloat3("light", &mLightPos.x);
+  ImGui::ColorPicker3("obj col", &obj_color.x);
   ImGui::Text("tex");
   ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
-
   ImGui::End();
 
   mLightingShader->use();
-  mLightingShader->setVec3f("objectColor", 1.0f, 0.5f, 0.31f);
+  mLightingShader->setVec3f("objectColor", obj_color);
   mLightingShader->setVec3f("lightColor", 1.0f, 1.0f, 1.0f);
   mLightingShader->setVec3f("lightPos", mLightPos);
   mLightingShader->setVec3f("viewPos", mCamera->mPosition);
@@ -223,6 +228,8 @@ void renderLoop() {
   mLightingShader->setMat4f("view", view);
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, model_translate);
+  model = glm::rotate<float>(model, ImGui::GetTime(), {0.0,1.0,0.0});
+  model = glm::rotate<float>(model, ImGui::GetTime()*-1.4, {1.0,1.0,0.0});
   mLightingShader->setMat4f("model", model);
   glBindVertexArray(mCubeVAO);
   glDrawArrays(GL_TRIANGLES, 0, 36);

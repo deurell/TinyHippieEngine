@@ -21,7 +21,7 @@ private:
   void renderLoop();
   void basisInit();
 
-  GLFWwindow *m_window;
+  GLFWwindow *mWindow;
   std::unique_ptr<Texture> mTexture;
   std::unique_ptr<Shader> mLightingShader;
   std::unique_ptr<Shader> mLampShader;

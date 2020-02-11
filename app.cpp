@@ -25,15 +25,15 @@ int App::run() {
 
 #endif
 
-  m_window =
+  mWindow =
       glfwCreateWindow(mScreenWidth, mScreenHeight, "gfxlab", nullptr, nullptr);
-  if (m_window == nullptr) {
+  if (mWindow == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
     return -1;
   }
 
-  glfwMakeContextCurrent(m_window);
+  glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -119,7 +119,7 @@ int App::run() {
   ImGuiIO &io = ImGui::GetIO();
 
   ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+  ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
   ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
 
   mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 5.0f));
@@ -128,13 +128,13 @@ int App::run() {
 #ifdef Emscripten
   emscripten_set_main_loop(renderLoop, 0, true);
 #else
-  while (!glfwWindowShouldClose(m_window)) {
+  while (!glfwWindowShouldClose(mWindow)) {
     renderLoop();
   }
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
-  glfwDestroyWindow(m_window);
+  glfwDestroyWindow(mWindow);
 #endif
 
   glfwTerminate();
@@ -146,7 +146,7 @@ void App::renderLoop() {
   mDeltaTime = currentFrame - mLastFrame;
   mLastFrame = currentFrame;
 
-  processInput(m_window);
+  processInput(mWindow);
 
   glClearColor(0.f, 0.f, 0.f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -198,9 +198,9 @@ void App::renderLoop() {
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
   int frameWidth, frameHeight;
-  glfwGetFramebufferSize(m_window, &frameWidth, &frameHeight);
+  glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);
   glViewport(0, 0, frameWidth, frameHeight);
-  glfwSwapBuffers(m_window);
+  glfwSwapBuffers(mWindow);
   glfwPollEvents();
 }
 

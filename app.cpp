@@ -26,7 +26,7 @@ int App::run() {
 #endif
 
   mWindow =
-      glfwCreateWindow(mScreenWidth, mScreenHeight, "gfxlab", nullptr, nullptr);
+      glfwCreateWindow(screen_width, screen_height, "gfxlab", nullptr, nullptr);
   if (mWindow == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
@@ -41,7 +41,7 @@ int App::run() {
     return -1;
   }
 
-  glViewport(0, 0, mScreenWidth, mScreenHeight);
+  glViewport(0, 0, screen_width, screen_height);
 
   mTexture =
       std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
@@ -172,7 +172,7 @@ void App::renderLoop() {
   mLightingShader->setVec3f("lightPos", mLightPos);
   mLightingShader->setVec3f("viewPos", mCamera->mPosition);
   glm::mat4 projection =
-      mCamera->getPerspectiveTransform(45.0, mScreenWidth / mScreenHeight);
+      mCamera->getPerspectiveTransform(45.0, screen_width / screen_height);
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);
   mLightingShader->setMat4f("view", view);

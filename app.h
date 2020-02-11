@@ -31,8 +31,8 @@ private:
   unsigned int mLightVAO;
   unsigned int mCubeVAO;
 
-  static constexpr float mScreenWidth = 1024;
-  static constexpr float mScreenHeight = 768;
+  static constexpr float screen_width = 1024;
+  static constexpr float screen_height = 768;
 
   glm::vec3 mLightPos = {1.2f, 1.0f, 2.0f};
 

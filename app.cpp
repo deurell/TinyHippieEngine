@@ -3,7 +3,6 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "transcoder/basisu_transcoder.h"
-
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -27,7 +26,7 @@ int App::run() {
 #endif
 
   m_window =
-      glfwCreateWindow(screenWidth, screenHeight, "gfxlab", nullptr, nullptr);
+      glfwCreateWindow(mScreenWidth, mScreenHeight, "gfxlab", nullptr, nullptr);
   if (m_window == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
@@ -42,7 +41,7 @@ int App::run() {
     return -1;
   }
 
-  glViewport(0, 0, screenWidth, screenHeight);
+  glViewport(0, 0, mScreenWidth, mScreenHeight);
 
   mTexture =
       std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
@@ -144,8 +143,8 @@ int App::run() {
 
 void App::renderLoop() {
   float currentFrame = glfwGetTime();
-  deltaTime = currentFrame - lastFrame;
-  lastFrame = currentFrame;
+  mDeltaTime = currentFrame - mLastFrame;
+  mLastFrame = currentFrame;
 
   processInput(m_window);
 
@@ -159,26 +158,26 @@ void App::renderLoop() {
   ImGui::Begin("tiny engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
-  ImGui::InputFloat3("mod", &model_translate.x);
+  ImGui::InputFloat3("mod", &mModelTranslate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
   ImGui::InputFloat3("light", &mLightPos.x);
-  ImGui::ColorPicker3("obj col", &obj_color.x);
+  ImGui::ColorPicker3("obj col", &mObjectColor.x);
   ImGui::Text("tex");
   ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
   ImGui::End();
 
   mLightingShader->use();
-  mLightingShader->setVec3f("objectColor", obj_color);
+  mLightingShader->setVec3f("objectColor", mObjectColor);
   mLightingShader->setVec3f("lightColor", 1.0f, 1.0f, 1.0f);
   mLightingShader->setVec3f("lightPos", mLightPos);
   mLightingShader->setVec3f("viewPos", mCamera->mPosition);
   glm::mat4 projection =
-      mCamera->getPerspectiveTransform(45.0, screenWidth / screenHeight);
+      mCamera->getPerspectiveTransform(45.0, mScreenWidth / mScreenHeight);
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);
   mLightingShader->setMat4f("view", view);
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, model_translate);
+  model = glm::translate(model, mModelTranslate);
   model = glm::rotate<float>(model, ImGui::GetTime(), {0.0, 1.0, 0.0});
   model = glm::rotate<float>(model, ImGui::GetTime() * -1.4, {1.0, 1.0, 0.0});
   mLightingShader->setMat4f("model", model);
@@ -210,7 +209,7 @@ void App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
 
-  const float cameraSpeed = 5.0f * deltaTime; // adjust accordingly
+  const float cameraSpeed = 5.0f * mDeltaTime; // adjust accordingly
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     mCamera->mPosition.z -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)

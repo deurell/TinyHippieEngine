@@ -17,8 +17,10 @@ public:
   int run();
 
 private:
+  void init();
   void processInput(GLFWwindow *window);
-  void renderLoop();
+  void render();
+
   void basisInit();
 
   GLFWwindow *mWindow;
@@ -26,7 +28,7 @@ private:
   std::unique_ptr<Shader> mLightingShader;
   std::unique_ptr<Shader> mLampShader;
   std::unique_ptr<Camera> mCamera;
-  std::unique_ptr<basist::etc1_global_selector_codebook> m_codebook;
+  std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;
 
   unsigned int mLightVAO;
   unsigned int mCubeVAO;

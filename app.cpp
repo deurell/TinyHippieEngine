@@ -9,9 +9,13 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
-int App::run() {
+void App::init() {
   glfwInit();
   basisInit();
+}
+
+int App::run() {
+  init();
 
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -44,7 +48,7 @@ int App::run() {
   glViewport(0, 0, screen_width, screen_height);
 
   mTexture =
-      std::make_unique<Texture>("Resources/sup.basis", *m_codebook, GL_RGB);
+      std::make_unique<Texture>("Resources/sup.basis", *mCodebook, GL_RGB);
 
 #ifdef Emscripten
   std::string glslVersionString = "#version 300 es\n";
@@ -126,10 +130,10 @@ int App::run() {
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
 
 #ifdef Emscripten
-  emscripten_set_main_loop(renderLoop, 0, true);
+  emscripten_set_main_loop(render, 0, true);
 #else
   while (!glfwWindowShouldClose(mWindow)) {
-    renderLoop();
+    render();
   }
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
@@ -141,7 +145,7 @@ int App::run() {
   return 0;
 }
 
-void App::renderLoop() {
+void App::render() {
   float currentFrame = glfwGetTime();
   mDeltaTime = currentFrame - mLastFrame;
   mLastFrame = currentFrame;
@@ -222,6 +226,6 @@ void App::processInput(GLFWwindow *window) {
 
 void App::basisInit() {
   basist::basisu_transcoder_init();
-  m_codebook = std::make_unique<basist::etc1_global_selector_codebook>(
+  mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }

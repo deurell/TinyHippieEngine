@@ -17,8 +17,7 @@ include_directories(${gfxlab_INCLUDE_DIRS} "${gfxlab_SOURCE_DIR}/include")
 file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
 file(GLOB basis_src "./transcoder/*.h" "./transcoder/*.cpp")
 
-add_executable(gfxlab glad.c ${imgui_src} ${basis_src} stb_image.h
-  main.cpp texture.h shader.h camera.h app.h app.cpp
+add_executable(gfxlab glad.c ${imgui_src} ${basis_src} main.cpp app.cpp
 )
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")

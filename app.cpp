@@ -176,7 +176,6 @@ void App::render() {
   ImGui::End();
 
   mLightingShader->use();
-
   mLightingShader->setVec3f("material.ambient", 1.0f, 0.5f, 0.31f);
   mLightingShader->setVec3f("material.diffuse", 1.0f, 0.5f, 0.31f);
   mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
@@ -184,7 +183,6 @@ void App::render() {
   mLightingShader->setVec3f("light.ambient", 0.2f, 0.2f, 0.2f);
   mLightingShader->setVec3f("light.diffuse", 0.5f, 0.5f, 0.5f);
   mLightingShader->setVec3f("light.specular", 1.0f, 1.0f, 1.0f);
-
   mLightingShader->setVec3f("light.position", mLightPos);
   mLightingShader->setVec3f("viewPos", mCamera->mPosition);
   glm::mat4 projection =

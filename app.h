@@ -15,11 +15,11 @@ public:
   ~App() = default;
 
   int run();
+  void render();
+  void processInput(GLFWwindow *window);
 
 private:
   void init();
-  void processInput(GLFWwindow *window);
-  void render();
 
   void basisInit();
 

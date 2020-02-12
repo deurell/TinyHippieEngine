@@ -9,6 +9,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+void renderLoopCallback(void *arg) { static_cast<App *>(arg)->render(); }
+
 void App::init() {
   glfwInit();
   basisInit();
@@ -62,7 +64,8 @@ int App::run() {
   mLightingShader = std::make_unique<Shader>(
       "Shaders/light.vert", "Shaders/light.frag", glslVersionString);
 
-  float vertices[] = {
+  float cubeVertices[] = {
+      // vertex, normal
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.5f,  -0.5f, -0.5f,
       0.0f,  0.0f,  -1.0f, 0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f,
       0.5f,  0.5f,  -0.5f, 0.0f,  0.0f,  -1.0f, -0.5f, 0.5f,  -0.5f,
@@ -99,7 +102,8 @@ int App::run() {
   glBindVertexArray(mCubeVAO);
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices,
+               GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void *)0);
   glEnableVertexAttribArray(0);
 
@@ -130,7 +134,7 @@ int App::run() {
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
 
 #ifdef Emscripten
-  emscripten_set_main_loop(render, 0, true);
+  emscripten_set_main_loop_arg(&renderLoopCallback, this, -1, 1);
 #else
   while (!glfwWindowShouldClose(mWindow)) {
     render();
@@ -138,6 +142,7 @@ int App::run() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
+
   glfwDestroyWindow(mWindow);
 #endif
 

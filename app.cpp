@@ -184,10 +184,6 @@ void App::render() {
   ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
   ImGui::End();
 
-  glm::vec3 pointLightPositions[] = {
-      glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f),
-      glm::vec3(-4.0f, 2.0f, -12.0f), glm::vec3(0.0f, 0.0f, -3.0f)};
-
   mLightingShader->use();
   mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
   mLightingShader->setInt("material.diffuse", 0);
@@ -198,7 +194,7 @@ void App::render() {
   mLightingShader->setVec3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
   mLightingShader->setVec3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
 
-  mLightingShader->setVec3f("pointLights[0].position", pointLightPositions[0]);
+  mLightingShader->setVec3f("pointLights[0].position", mPointLightPositions[0]);
   mLightingShader->setVec3f("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
   mLightingShader->setVec3f("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
   mLightingShader->setVec3f("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
@@ -206,7 +202,7 @@ void App::render() {
   mLightingShader->setFloat("pointLights[0].linear", 0.09);
   mLightingShader->setFloat("pointLights[0].quadratic", 0.032);
 
-  mLightingShader->setVec3f("pointLights[1].position", pointLightPositions[1]);
+  mLightingShader->setVec3f("pointLights[1].position", mPointLightPositions[1]);
   mLightingShader->setVec3f("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
   mLightingShader->setVec3f("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
   mLightingShader->setVec3f("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
@@ -252,9 +248,9 @@ void App::render() {
   model = glm::scale(model, glm::vec3(0.2f));
   mLampShader->setMat4f("model", model);
   glBindVertexArray(mLightVAO);
-  for (unsigned int i = 0; i < 2; i++) {
+  for (unsigned int i = 0; i < point_light_count; i++) {
     model = glm::mat4(1.0f);
-    model = glm::translate(model, pointLightPositions[i]);
+    model = glm::translate(model, mPointLightPositions[i]);
     model = glm::scale(model, glm::vec3(0.2f));
     mLampShader->setMat4f("model", model);
     glDrawArrays(GL_TRIANGLES, 0, 36);

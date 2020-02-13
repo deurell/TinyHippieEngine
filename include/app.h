@@ -38,6 +38,10 @@ private:
 
   glm::vec3 mLightPos = {1.2f, 1.0f, 2.0f};
 
+  static constexpr int point_light_count = 3;
+  glm::vec3 mPointLightPositions[point_light_count] = {
+      glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f)};
+
   float mDeltaTime = 0.0f;
   float mLastFrame = 0.0f;
 

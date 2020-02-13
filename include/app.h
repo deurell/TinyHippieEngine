@@ -41,6 +41,9 @@ private:
   float mDeltaTime = 0.0f;
   float mLastFrame = 0.0f;
 
+  float mXDeg = 0.0f;
+  float mYDeg = 0.0f;
+
   glm::vec3 mModelTranslate;
   glm::vec3 mObjectColor = {0.3, 0.8, 0.3};
 };

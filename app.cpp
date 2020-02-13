@@ -5,6 +5,7 @@
 #include "transcoder/basisu_transcoder.h"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
+#include <glm/gtx/euler_angles.hpp>
 #include <iostream>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -101,10 +102,9 @@ int App::run() {
       1.0f,  0.0f,  -0.5f, 0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f,  0.0f,
       -0.5f, 0.5f,  -0.5f, 0.0f,  1.0f,  0.0f,  0.0f,  1.0f};
 
-  // cube
-  unsigned int VBO;
   glGenVertexArrays(1, &mCubeVAO);
   glBindVertexArray(mCubeVAO);
+  unsigned int VBO;
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices,
@@ -184,15 +184,35 @@ void App::render() {
   ImGui::Image((ImTextureID)mTexture->mId, ImVec2(100, 100));
   ImGui::End();
 
+  glm::vec3 pointLightPositions[] = {
+      glm::vec3(0.7f, 0.2f, 2.0f), glm::vec3(2.3f, -3.3f, -4.0f),
+      glm::vec3(-4.0f, 2.0f, -12.0f), glm::vec3(0.0f, 0.0f, -3.0f)};
+
   mLightingShader->use();
-  mLightingShader->setVec3f("material.ambient", 1.0f, 0.5f, 0.31f);
   mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
   mLightingShader->setInt("material.diffuse", 0);
   mLightingShader->setFloat("material.shininess", 32.0f);
-  mLightingShader->setVec3f("light.ambient", 0.2f, 0.2f, 0.2f);
-  mLightingShader->setVec3f("light.diffuse", 0.5f, 0.5f, 0.5f);
-  mLightingShader->setVec3f("light.specular", 1.0f, 1.0f, 1.0f);
-  mLightingShader->setVec3f("light.position", mLightPos);
+
+  mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
+  mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
+  mLightingShader->setVec3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
+  mLightingShader->setVec3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
+
+  mLightingShader->setVec3f("pointLights[0].position", pointLightPositions[0]);
+  mLightingShader->setVec3f("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
+  mLightingShader->setVec3f("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+  mLightingShader->setVec3f("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
+  mLightingShader->setFloat("pointLights[0].constant", 1.0f);
+  mLightingShader->setFloat("pointLights[0].linear", 0.09);
+  mLightingShader->setFloat("pointLights[0].quadratic", 0.032);
+
+  mLightingShader->setVec3f("pointLights[1].position", pointLightPositions[1]);
+  mLightingShader->setVec3f("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
+  mLightingShader->setVec3f("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+  mLightingShader->setVec3f("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
+  mLightingShader->setFloat("pointLights[1].constant", 1.0f);
+  mLightingShader->setFloat("pointLights[1].linear", 0.09);
+  mLightingShader->setFloat("pointLights[1].quadratic", 0.032);
 
   mLightingShader->setVec3f("viewPos", mCamera->mPosition);
   glm::mat4 projection =
@@ -200,28 +220,45 @@ void App::render() {
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);
   mLightingShader->setMat4f("view", view);
-  glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, mModelTranslate);
-  model = glm::rotate<float>(model, ImGui::GetTime(), {0.0, 1.0, 0.0});
-  model = glm::rotate<float>(model, ImGui::GetTime() * -1.4, {1.0, 1.0, 0.0});
-  mLightingShader->setMat4f("model", model);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mTexture->mId);
 
   glBindVertexArray(mCubeVAO);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
+
+  glm::vec3 cubePositions[] = {
+      glm::vec3(0.0f, 0.0f, 0.0f),    glm::vec3(2.0f, 5.0f, -15.0f),
+      glm::vec3(-1.5f, -2.2f, -2.5f), glm::vec3(-3.8f, -2.0f, -12.3f),
+      glm::vec3(2.4f, -0.4f, -3.5f),  glm::vec3(-1.7f, 3.0f, -7.5f),
+      glm::vec3(1.3f, -2.0f, -2.5f),  glm::vec3(1.5f, 2.0f, -2.5f)};
+
+  for (unsigned int i = 0; i < 8; i++) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, cubePositions[i]);
+    float angle = 32.0f * i;
+    model =
+        glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
+    mLightingShader->setMat4f("model", model);
+
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+  }
 
   mLampShader->use();
   mLampShader->setMat4f("projection", projection);
   mLampShader->setMat4f("view", view);
-  model = glm::mat4(1.0);
+  glm::mat4 model = glm::mat4(1.0);
   model = glm::translate(model, mLightPos);
   model = glm::scale(model, glm::vec3(0.2f));
   mLampShader->setMat4f("model", model);
   glBindVertexArray(mLightVAO);
-  glDrawArrays(GL_TRIANGLES, 0, 36);
-
+  for (unsigned int i = 0; i < 2; i++) {
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, pointLightPositions[i]);
+    model = glm::scale(model, glm::vec3(0.2f));
+    mLampShader->setMat4f("model", model);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+  }
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -237,7 +274,7 @@ void App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
 
-  const float cameraSpeed = 5.0f * mDeltaTime; // adjust accordingly
+  const float cameraSpeed = 5.0f * mDeltaTime;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     mCamera->mPosition.z -= cameraSpeed;
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)

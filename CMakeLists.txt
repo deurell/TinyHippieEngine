@@ -5,9 +5,9 @@ project(gfxlab_project)
 set(CMAKE_CXX_STANDARD 17)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
   set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
-  set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  #set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
 include_directories(${gfxlab_INCLUDE_DIRS} ${gfxlab_project_SOURCE_DIR}/include ${gfxlab_project_SOURCE_DIR}/assimp-5.0.1/include)
@@ -15,6 +15,14 @@ include_directories(${gfxlab_INCLUDE_DIRS} ${gfxlab_project_SOURCE_DIR}/include 
 file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
 file(GLOB basis_src "./transcoder/*.h" "./transcoder/*.cpp")
 add_executable(gfxlab glad.c ${imgui_src} ${basis_src} main.cpp app.cpp)
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+set_target_properties(
+  gfxlab 
+    PROPERTIES 
+        SUFFIX ".html"
+)
+endif()
 
 option(ENABLE_BOOST_WORKAROUND ON)
 option(ASSIMP_BUILD_ZLIB OFF)

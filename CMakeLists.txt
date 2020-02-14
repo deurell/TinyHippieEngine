@@ -12,9 +12,33 @@ endif()
 
 include_directories(${gfxlab_INCLUDE_DIRS} ${gfxlab_project_SOURCE_DIR}/include ${gfxlab_project_SOURCE_DIR}/assimp-5.0.1/include)
 
-file(GLOB imgui_src "./imgui/*.h" "./imgui/*.cpp")
-file(GLOB basis_src "./transcoder/*.h" "./transcoder/*.cpp")
 add_executable(gfxlab glad.c ${imgui_src} ${basis_src} main.cpp app.cpp)
+
+add_library(imgui STATIC
+  imgui/imconfig.h
+  imgui/imgui_draw.cpp
+  imgui/imgui_impl_glfw.cpp
+  imgui/imgui_impl_glfw.h
+  imgui/imgui_impl_opengl3.cpp
+  imgui/imgui_impl_opengl3.h
+  imgui/imgui_internal.h
+  imgui/imgui_widgets.cpp
+  imgui/imgui.cpp
+  imgui/imgui.h
+  imgui/imstb_rectpack.h
+  imgui/imstb_textedit.h
+  imgui/imstb_truetype.h
+) 
+
+add_library(basisu STATIC
+  transcoder/basisu_file_headers.h
+  transcoder/basisu_global_selector_cb.h
+  transcoder/basisu_global_selector_palette.h
+  transcoder/basisu_transcoder_internal.h
+  transcoder/basisu_transcoder.cpp
+  transcoder/basisu_transcoder.h
+  transcoder/basisu.h
+)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
 set_target_properties(
@@ -68,4 +92,4 @@ else()
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
 endif()
 
-target_link_libraries(gfxlab ${LIBS})
+target_link_libraries(gfxlab ${LIBS} imgui basisu)

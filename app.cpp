@@ -3,6 +3,9 @@
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 #include "transcoder/basisu_transcoder.h"
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -19,6 +22,10 @@ void App::init() {
 
 int App::run() {
   init();
+
+  Assimp::Importer importer;
+  const aiScene *scene = importer.ReadFile(
+      "Resources/nanosuit.obj", aiProcess_Triangulate | aiProcess_FlipUVs);
 
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);

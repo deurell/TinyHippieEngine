@@ -32,8 +32,8 @@ uniform float iTime;
 uniform vec3 viewPos;
 uniform Material material;
 uniform DirLight dirLight;
-#define NR_POINT_LIGHTS 2
-uniform PointLight pointLights[NR_POINT_LIGHTS];
+#define POINT_LIGHTS 2
+uniform PointLight pointLights[POINT_LIGHTS];
 
 out vec4 FragColor;
 
@@ -46,7 +46,7 @@ void main() {
 
   vec3 result = CalcDirLight(dirLight, norm, viewDir);
 
-  for (int i = 0; i < NR_POINT_LIGHTS; i++) {
+  for (int i = 0; i < POINT_LIGHTS; i++) {
     result += CalcPointLight(pointLights[i], norm, FragPos, viewDir);
   }
 

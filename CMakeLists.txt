@@ -3,16 +3,15 @@ cmake_minimum_required(VERSION 3.16)
 
 project(gfxlab_project)
 set(CMAKE_CXX_STANDARD 17)
+set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-  set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
-  #set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif()
 
 include_directories(${gfxlab_INCLUDE_DIRS} ${gfxlab_project_SOURCE_DIR}/include ${gfxlab_project_SOURCE_DIR}/assimp-5.0.1/include)
 
-add_executable(gfxlab glad.c ${imgui_src} ${basis_src} main.cpp app.cpp)
+add_executable(gfxlab glad.c main.cpp app.cpp)
 
 add_library(imgui STATIC
   imgui/imconfig.h
@@ -58,7 +57,7 @@ option(ASSIMP_BUILD_TESTS OFF)
 option(ASSIMP_WERROR OFF)
 option(ASSIMP_BUILD_NO_EXPORT ON)
 option(BUILD_DOCS OFF)
-add_subdirectory(${gfxlab_project_SOURCE_DIR}/assimp-5.0.1)
+add_subdirectory(${gfxlab_project_SOURCE_DIR}/assimp)
 set(LIBS ${LIBS} assimp)
 
 if (WIN32) 
@@ -66,8 +65,9 @@ if (WIN32)
 elseif(UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(LIBS ${LIBS} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
   set (CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl")
+elseif (APPLE)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
 endif()
-
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   add_subdirectory(${gfxlab_project_SOURCE_DIR}/glfw)

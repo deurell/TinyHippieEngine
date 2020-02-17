@@ -3,6 +3,8 @@ precision highp int;
 
 struct Material {
   sampler2D diffuse;
+  vec3 diffuseFallback;
+  vec3 ambientFallback;
   vec3 specular;
   float shininess;
 };
@@ -58,9 +60,14 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
   float diff = max(dot(normal, lightDir), 0.0);
   vec3 reflectDir = reflect(-lightDir, normal);
   float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-  vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
+  vec3 ambient =
+      (material.ambientFallback == vec3(0, 0, 0))
+          ? light.ambient * vec3(texture(material.diffuse, TexCoords))
+          : light.ambient * material.ambientFallback;
   vec3 diffuse =
-      light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+      (material.diffuseFallback == vec3(0, 0, 0))
+          ? light.diffuse * diff * vec3(texture(material.diffuse, TexCoords))
+          : light.diffuse * diff * material.diffuseFallback;
   vec3 specular = light.specular * (spec * material.specular);
   return (ambient + diffuse + specular);
 }
@@ -73,9 +80,14 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
   float distance = length(light.position - fragPos);
   float attenuation = 1.0 / (light.constant + light.linear * distance +
                              light.quadratic * (distance * distance));
-  vec3 ambient = light.ambient * vec3(texture(material.diffuse, TexCoords));
+  vec3 ambient =
+      (material.ambientFallback == vec3(0, 0, 0))
+          ? light.ambient * vec3(texture(material.diffuse, TexCoords))
+          : light.ambient * material.ambientFallback;
   vec3 diffuse =
-      light.diffuse * diff * vec3(texture(material.diffuse, TexCoords));
+      (material.diffuseFallback == vec3(0, 0, 0))
+          ? light.diffuse * diff * vec3(texture(material.diffuse, TexCoords))
+          : light.diffuse * diff * material.diffuseFallback;
   vec3 specular = light.specular * (spec * material.specular);
   ambient *= attenuation;
   diffuse *= attenuation;

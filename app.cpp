@@ -195,6 +195,8 @@ void App::render() {
   mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
   mLightingShader->setInt("material.diffuse", 0);
   mLightingShader->setFloat("material.shininess", 32.0f);
+  // mLightingShader->setVec3f("material.ambientFallback", 0.3f, 0.2f, 0.5f);
+  // mLightingShader->setVec3f("material.diffuseFallback", 0.2f, 0.5f, 0.8f);
 
   mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
   mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);

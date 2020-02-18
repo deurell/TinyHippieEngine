@@ -66,7 +66,7 @@ int App::run() {
   mLightingShader = std::make_unique<Shader>(
       "Shaders/model.vert", "Shaders/model.frag", glslVersionString);
 
-  mModel = std::make_unique<Model>("Resources/nanosuit.obj");
+  mModel = std::make_unique<Model>("Resources/bridge.obj");
 
   float cubeVertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
@@ -142,7 +142,7 @@ int App::run() {
   ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
   ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
 
-  mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 0.0f, 5.0f));
+  mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
 
 #ifdef Emscripten
@@ -169,7 +169,7 @@ void App::render() {
 
   processInput(mWindow);
 
-  glClearColor(0.f, 0.f, 0.f, 1.0f);
+  glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   ImGui_ImplOpenGL3_NewFrame();
@@ -189,8 +189,8 @@ void App::render() {
   mLightingShader->use();
   mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
   mLightingShader->setFloat("material.shininess", 32.0f);
-  // mLightingShader->setVec3f("material.ambientFallback", 0.3f, 0.2f, 0.5f);
-  // mLightingShader->setVec3f("material.diffuseFallback", 0.2f, 0.5f, 0.8f);
+  //mLightingShader->setVec3f("material.ambientFallback", 0.3f, 0.2f, 0.5f);
+  //mLightingShader->setVec3f("material.diffuseFallback", 0.2f, 0.5f, 0.8f);
 
   mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
   mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
@@ -213,13 +213,13 @@ void App::render() {
   mLightingShader->setFloat("pointLights[1].linear", 0.09);
   mLightingShader->setFloat("pointLights[1].quadratic", 0.032);
 
-  mPointLightPositions[0].x = 2.0 * glm::sin(glfwGetTime());
-  mPointLightPositions[0].z = 1.0 - 1.0 * glm::sin(-1.5 * glfwGetTime());
-  mPointLightPositions[0].y = 2.0 * glm::sin(-0.5 * glfwGetTime());
+  mPointLightPositions[0].x =  4.0 * glm::sin(glfwGetTime());
+  mPointLightPositions[0].z =  2.0 * glm::sin(-1.5 * glfwGetTime());
+  mPointLightPositions[0].y =  2.0+1.0* glm::sin(-0.5 * glfwGetTime());
 
-  mPointLightPositions[1].x = -1.0 * glm::sin(0.6 * glfwGetTime());
-  mPointLightPositions[1].z = 2.0 - 1.0 * glm::sin(1.7 * glfwGetTime());
-  mPointLightPositions[1].y = 1.0 - 0.5 * glm::sin(-1.2 * glfwGetTime());
+  mPointLightPositions[1].x = 4.0 * glm::sin(0.6 * glfwGetTime());
+  mPointLightPositions[1].z = 4.0 * glm::sin(1.7 * glfwGetTime());
+  mPointLightPositions[1].y = 1.5 + 0.5 * glm::sin(-1.2 * glfwGetTime());
 
   // view/projection transformations
   glm::mat4 projection =
@@ -231,11 +231,12 @@ void App::render() {
 
   // render the loaded model
   glm::mat4 m2 = glm::mat4(1.0f);
+  m2 = glm::scale(m2, glm::vec3(0.5f, 0.5f, 0.5f));
+  m2 = glm::rotate(m2, glm::radians<float>(glfwGetTime())*10, glm::vec3(0.0, 1.0, 0.0));
   m2 = glm::translate(m2, mModelTranslate);
-  m2 = glm::scale(m2, glm::vec3(0.2f, 0.2f, 0.2f));
-  m2 = glm::rotate(m2, (float)glfwGetTime(), glm::vec3(0.0, 1.0, 0.0));
   mLightingShader->setMat4f("model", m2);
   mModel->Draw(*mLightingShader);
+
 
   glBindVertexArray(mCubeVAO);
   mLampShader->use();
@@ -268,15 +269,18 @@ void App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
 
-  const float cameraSpeed = 5.0f * mDeltaTime;
+  const float cameraSpeed = 2.0f * mDeltaTime;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    mCamera->mPosition.z -= cameraSpeed;
+    mCamera->translate(glm::vec3(0,0,-cameraSpeed));
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    mCamera->mPosition.z += cameraSpeed;
+       mCamera->translate(glm::vec3(0,0,cameraSpeed));
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    mCamera->mPosition.x -= cameraSpeed;
+        mCamera->translate(glm::vec3(-cameraSpeed,0,0));
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    mCamera->mPosition.x += cameraSpeed;
+       mCamera->translate(glm::vec3(cameraSpeed,0,0));
+  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
+    mCamera->lookAt({0.0f,0.0f,0.0f});
+
 }
 
 void App::basisInit() {

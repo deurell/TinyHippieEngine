@@ -33,8 +33,8 @@ int App::run() {
 
 #endif
 
-  mWindow =
-      glfwCreateWindow(screen_width, screen_height, "gfxlab", nullptr, nullptr);
+  mWindow = glfwCreateWindow(screen_width, screen_height, "tiny hippie engine",
+                             nullptr, nullptr);
   if (mWindow == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
@@ -176,7 +176,7 @@ void App::render() {
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
 
-  ImGui::Begin("tiny engine");
+  ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("iTime: %.1f", ImGui::GetTime());
   ImGui::InputFloat3("mod", &mModelTranslate.x);
@@ -187,19 +187,15 @@ void App::render() {
   ImGui::End();
 
   mLightingShader->use();
-  mLightingShader->setVec3f("material.specular", 0.5f, 0.5f, 0.5f);
-  mLightingShader->setFloat("material.shininess", 32.0f);
-  //mLightingShader->setVec3f("material.ambientFallback", 0.3f, 0.2f, 0.5f);
-  //mLightingShader->setVec3f("material.diffuseFallback", 0.2f, 0.5f, 0.8f);
 
   mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
   mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
   mLightingShader->setVec3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
-  mLightingShader->setVec3f("dirLight.specular", 0.5f, 0.5f, 0.5f);
+  mLightingShader->setVec3f("dirLight.specular", 0.6f, 0.6f, 0.6f);
 
   mLightingShader->setVec3f("pointLights[0].position", mPointLightPositions[0]);
   mLightingShader->setVec3f("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-  mLightingShader->setVec3f("pointLights[0].diffuse", 0.8f, 0.8f, 0.8f);
+  mLightingShader->setVec3f("pointLights[0].diffuse", 0.6f, 0.6f, 0.6f);
   mLightingShader->setVec3f("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
   mLightingShader->setFloat("pointLights[0].constant", 1.0f);
   mLightingShader->setFloat("pointLights[0].linear", 0.09);
@@ -207,19 +203,19 @@ void App::render() {
 
   mLightingShader->setVec3f("pointLights[1].position", mPointLightPositions[1]);
   mLightingShader->setVec3f("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-  mLightingShader->setVec3f("pointLights[1].diffuse", 0.8f, 0.8f, 0.8f);
+  mLightingShader->setVec3f("pointLights[1].diffuse", 0.6f, 0.6f, 0.6f);
   mLightingShader->setVec3f("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
   mLightingShader->setFloat("pointLights[1].constant", 1.0f);
   mLightingShader->setFloat("pointLights[1].linear", 0.09);
   mLightingShader->setFloat("pointLights[1].quadratic", 0.032);
 
-  mPointLightPositions[0].x =  4.0 * glm::sin(glfwGetTime());
-  mPointLightPositions[0].z =  2.0 * glm::sin(-1.5 * glfwGetTime());
-  mPointLightPositions[0].y =  2.0+1.0* glm::sin(-0.5 * glfwGetTime());
+  mPointLightPositions[0].x = 2 * glm::cos(-1.5 * glfwGetTime());
+  mPointLightPositions[0].z = 2 + 4.0 * glm::cos(1.3 * glfwGetTime());
+  mPointLightPositions[0].y = 3 + 1.5 * glm::sin(-1.1 * glfwGetTime());
 
-  mPointLightPositions[1].x = 4.0 * glm::sin(0.6 * glfwGetTime());
-  mPointLightPositions[1].z = 4.0 * glm::sin(1.7 * glfwGetTime());
-  mPointLightPositions[1].y = 1.5 + 0.5 * glm::sin(-1.2 * glfwGetTime());
+  mPointLightPositions[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
+  mPointLightPositions[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
+  mPointLightPositions[1].y = 3.0 + 1.8 * glm::sin(-0.2 * glfwGetTime());
 
   // view/projection transformations
   glm::mat4 projection =
@@ -232,11 +228,12 @@ void App::render() {
   // render the loaded model
   glm::mat4 m2 = glm::mat4(1.0f);
   m2 = glm::scale(m2, glm::vec3(0.5f, 0.5f, 0.5f));
-  m2 = glm::rotate(m2, glm::radians<float>(glfwGetTime())*10, glm::vec3(0.0, 1.0, 0.0));
   m2 = glm::translate(m2, mModelTranslate);
+  m2 = glm::rotate(m2, glm::radians<float>(glfwGetTime()) * 10,
+                   glm::vec3(0.0, 1.0, 0.0));
+
   mLightingShader->setMat4f("model", m2);
   mModel->Draw(*mLightingShader);
-
 
   glBindVertexArray(mCubeVAO);
   mLampShader->use();
@@ -271,16 +268,15 @@ void App::processInput(GLFWwindow *window) {
 
   const float cameraSpeed = 2.0f * mDeltaTime;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(0,0,-cameraSpeed));
+    mCamera->translate(glm::vec3(0, 0, -cameraSpeed));
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-       mCamera->translate(glm::vec3(0,0,cameraSpeed));
+    mCamera->translate(glm::vec3(0, 0, cameraSpeed));
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        mCamera->translate(glm::vec3(-cameraSpeed,0,0));
+    mCamera->translate(glm::vec3(-cameraSpeed, 0, 0));
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-       mCamera->translate(glm::vec3(cameraSpeed,0,0));
+    mCamera->translate(glm::vec3(cameraSpeed, 0, 0));
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    mCamera->lookAt({0.0f,0.0f,0.0f});
-
+    mCamera->lookAt({0.0f, 0.0f, 0.0f});
 }
 
 void App::basisInit() {

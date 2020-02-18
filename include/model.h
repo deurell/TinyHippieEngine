@@ -29,11 +29,10 @@ public:
                        // make sure textures aren't loaded more than once.
   vector<Mesh> meshes;
   string directory;
-  bool gammaCorrection;
 
   /*  Functions   */
   // constructor, expects a filepath to a 3D model.
-  Model(string const &path, bool gamma = false) : gammaCorrection(gamma) {
+  Model(string const &path) {
     loadModel(path);
   }
 
@@ -44,8 +43,7 @@ public:
   }
 
 private:
-  unsigned int TextureFromFile(const char *path, const string &directory,
-                               bool gamma) {
+  unsigned int TextureFromFile(const char *path, const string &directory) {
     string filename = string(path);
     filename = directory + '/' + filename;
 
@@ -208,7 +206,27 @@ private:
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
     // return a mesh object created from the extracted mesh data
-    return Mesh(vertices, indices, textures);
+
+    Mesh meshToReturn = Mesh(vertices, indices, textures);
+    aiMaterial *mat = scene->mMaterials[mesh->mMaterialIndex];
+    Material mappedMaterial;
+    aiColor3D color(0.f, 0.f, 0.f);
+    float shininess;
+
+    mat->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+    mappedMaterial.Diffuse = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_COLOR_AMBIENT, color);
+    mappedMaterial.Ambient = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_COLOR_SPECULAR, color);
+    mappedMaterial.Specular = glm::vec3(color.r, color.b, color.g);
+
+    mat->Get(AI_MATKEY_SHININESS, shininess);
+    mappedMaterial.Shininess = shininess;
+    meshToReturn.material = mappedMaterial;
+
+    return meshToReturn;
   }
 
   // checks all material textures of a given type and loads the textures if
@@ -232,7 +250,7 @@ private:
       }
       if (!skip) { // if texture hasn't been loaded already, load it
         Texture texture;
-        texture.id = TextureFromFile(str.C_Str(), this->directory, true);
+        texture.id = TextureFromFile(str.C_Str(), this->directory);
         texture.type = typeName;
         texture.path = str.C_Str();
         textures.push_back(texture);

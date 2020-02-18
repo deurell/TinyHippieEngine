@@ -28,6 +28,13 @@ struct Vertex {
   glm::vec3 Bitangent;
 };
 
+struct Material {
+  glm::vec3 Diffuse;
+  glm::vec3 Specular;
+  glm::vec3 Ambient;
+  float Shininess;
+};
+
 struct Texture {
   unsigned int id;
   string type;
@@ -40,6 +47,7 @@ public:
   vector<Vertex> vertices;
   vector<unsigned int> indices;
   vector<Texture> textures;
+  Material material;
   unsigned int VAO;
 
   /*  Functions  */
@@ -77,13 +85,20 @@ public:
         number = std::to_string(normalNr++); // transfer unsigned int to stream
       else if (name == "texture_height")
         number = std::to_string(heightNr++); // transfer unsigned int to stream
-
       // now set the sampler to the correct texture unit
       glUniform1i(glGetUniformLocation(shader.mId, (name + number).c_str()), i);
       // and finally bind the texture
       glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
+    glm::vec3 diffuse = (textures.size() == 0) ? material.Diffuse : glm::vec3(0,0,0);
+    glm::vec3 ambient = (textures.size() == 0) ? material.Ambient : glm::vec3(0,0,0);
+    
+    glUniform3f(glGetUniformLocation(shader.mId, "material.diffuseFallback"), diffuse.x, diffuse.y, diffuse.z);
+    glUniform3f(glGetUniformLocation(shader.mId, "material.ambientFallback"), ambient.x, ambient.y, ambient.z);
+    glUniform3f(glGetUniformLocation(shader.mId, "material.specular"), material.Specular.x, material.Specular.y, material.Specular.z);
+    glUniform1f(glGetUniformLocation(shader.mId, "material.shininess"), material.Shininess);
+    
     // draw mesh
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

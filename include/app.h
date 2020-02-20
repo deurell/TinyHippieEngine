@@ -51,6 +51,6 @@ private:
   float mXDeg = 0.0f;
   float mYDeg = 0.0f;
 
-  glm::vec3 mModelTranslate = {0.0f, -1.75f, 0.0f};
+  glm::vec3 mModelTranslate = {0.0f, 0.0f, 0.0f};
   glm::vec3 mObjectColor = {0.3, 0.8, 0.3};
 };

@@ -33,6 +33,7 @@ struct Material {
   glm::vec3 Specular;
   glm::vec3 Ambient;
   float Shininess;
+  unsigned int Id;
 };
 
 struct Texture {
@@ -91,14 +92,20 @@ public:
       glBindTexture(GL_TEXTURE_2D, textures[i].id);
     }
 
-    glm::vec3 diffuse = (textures.size() == 0) ? material.Diffuse : glm::vec3(0,0,0);
-    glm::vec3 ambient = (textures.size() == 0) ? material.Ambient : glm::vec3(0,0,0);
-    
-    glUniform3f(glGetUniformLocation(shader.mId, "material.diffuseFallback"), diffuse.x, diffuse.y, diffuse.z);
-    glUniform3f(glGetUniformLocation(shader.mId, "material.ambientFallback"), ambient.x, ambient.y, ambient.z);
-    glUniform3f(glGetUniformLocation(shader.mId, "material.specular"), material.Specular.x, material.Specular.y, material.Specular.z);
-    glUniform1f(glGetUniformLocation(shader.mId, "material.shininess"), material.Shininess);
-    
+    glm::vec3 diffuse =
+        (textures.size() == 0) ? material.Diffuse : glm::vec3(0, 0, 0);
+    glm::vec3 ambient =
+        (textures.size() == 0) ? material.Ambient : glm::vec3(0, 0, 0);
+
+    glUniform3f(glGetUniformLocation(shader.mId, "material.diffuseFallback"),
+                diffuse.x, diffuse.y, diffuse.z);
+    glUniform3f(glGetUniformLocation(shader.mId, "material.ambientFallback"),
+                ambient.x, ambient.y, ambient.z);
+    glUniform3f(glGetUniformLocation(shader.mId, "material.specular"),
+                material.Specular.x, material.Specular.y, material.Specular.z);
+    glUniform1f(glGetUniformLocation(shader.mId, "material.shininess"),
+                material.Shininess);
+    glUniform1i(glGetUniformLocation(shader.mId, "material.id"), material.Id);
     // draw mesh
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);

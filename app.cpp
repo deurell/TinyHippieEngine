@@ -178,7 +178,7 @@ void App::render() {
 
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-  ImGui::Text("iTime: %.1f", ImGui::GetTime());
+  ImGui::Text("iTime: %.1f", glfwGetTime());
   ImGui::InputFloat3("mod", &mModelTranslate.x);
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
   ImGui::InputFloat3("light", &mPointLightPositions[0].x);
@@ -188,6 +188,7 @@ void App::render() {
 
   mLightingShader->use();
 
+  mLightingShader->setFloat("iTime", glfwGetTime());
   mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
   mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
   mLightingShader->setVec3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);
@@ -195,7 +196,7 @@ void App::render() {
 
   mLightingShader->setVec3f("pointLights[0].position", mPointLightPositions[0]);
   mLightingShader->setVec3f("pointLights[0].ambient", 0.05f, 0.05f, 0.05f);
-  mLightingShader->setVec3f("pointLights[0].diffuse", 0.6f, 0.6f, 0.6f);
+  mLightingShader->setVec3f("pointLights[0].diffuse", 0.4f, 0.4f, 0.4f);
   mLightingShader->setVec3f("pointLights[0].specular", 1.0f, 1.0f, 1.0f);
   mLightingShader->setFloat("pointLights[0].constant", 1.0f);
   mLightingShader->setFloat("pointLights[0].linear", 0.09);
@@ -203,19 +204,19 @@ void App::render() {
 
   mLightingShader->setVec3f("pointLights[1].position", mPointLightPositions[1]);
   mLightingShader->setVec3f("pointLights[1].ambient", 0.05f, 0.05f, 0.05f);
-  mLightingShader->setVec3f("pointLights[1].diffuse", 0.6f, 0.6f, 0.6f);
+  mLightingShader->setVec3f("pointLights[1].diffuse", 0.4f, 0.4f, 0.4f);
   mLightingShader->setVec3f("pointLights[1].specular", 1.0f, 1.0f, 1.0f);
   mLightingShader->setFloat("pointLights[1].constant", 1.0f);
   mLightingShader->setFloat("pointLights[1].linear", 0.09);
   mLightingShader->setFloat("pointLights[1].quadratic", 0.032);
 
   mPointLightPositions[0].x = 2 * glm::cos(-1.5 * glfwGetTime());
-  mPointLightPositions[0].z = 2 + 4.0 * glm::cos(1.3 * glfwGetTime());
-  mPointLightPositions[0].y = 3 + 1.5 * glm::sin(-1.1 * glfwGetTime());
+  mPointLightPositions[0].z = 4.0 * glm::cos(1.3 * glfwGetTime());
+  mPointLightPositions[0].y = 1 + .5 * glm::sin(-1.1 * glfwGetTime());
 
   mPointLightPositions[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
   mPointLightPositions[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
-  mPointLightPositions[1].y = 3.0 + 1.8 * glm::sin(-0.2 * glfwGetTime());
+  mPointLightPositions[1].y = 1.0 + 0.8 * glm::sin(-0.2 * glfwGetTime());
 
   // view/projection transformations
   glm::mat4 projection =
@@ -239,15 +240,13 @@ void App::render() {
   mLampShader->use();
   mLampShader->setMat4f("projection", projection);
   mLampShader->setMat4f("view", view);
+
   glm::mat4 mod = glm::mat4(1.0);
-  mod = glm::translate(mod, mLightPos);
-  mod = glm::scale(mod, glm::vec3(0.2f));
-  mLampShader->setMat4f("model", mod);
   glBindVertexArray(mLightVAO);
   for (unsigned int i = 0; i < point_light_count; i++) {
     mod = glm::mat4(1.0f);
     mod = glm::translate(mod, mPointLightPositions[i]);
-    mod = glm::scale(mod, glm::vec3(0.2f));
+    mod = glm::scale(mod, glm::vec3(0.1f));
     mLampShader->setMat4f("model", mod);
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }

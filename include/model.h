@@ -32,9 +32,7 @@ public:
 
   /*  Functions   */
   // constructor, expects a filepath to a 3D model.
-  Model(string const &path) {
-    loadModel(path);
-  }
+  Model(string const &path) { loadModel(path); }
 
   // draws the model, and thus all its meshes
   void Draw(Shader shader) {
@@ -224,6 +222,7 @@ private:
 
     mat->Get(AI_MATKEY_SHININESS, shininess);
     mappedMaterial.Shininess = shininess;
+    mappedMaterial.Id = mesh->mMaterialIndex;
     meshToReturn.material = mappedMaterial;
 
     return meshToReturn;

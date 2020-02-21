@@ -276,6 +276,10 @@ void App::processInput(GLFWwindow *window) {
     mCamera->translate(glm::vec3(cameraSpeed, 0, 0));
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
     mCamera->lookAt({0.0f, 0.0f, 0.0f});
+  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    mCamera->translate(glm::vec3(0, cameraSpeed, 0));
+  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    mCamera->translate(glm::vec3(0, -cameraSpeed, 0));
 }
 
 void App::basisInit() {

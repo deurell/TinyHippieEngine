@@ -108,7 +108,7 @@ add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/assimp)
 set(LIBS ${LIBS} assimp)
 
 if (WIN32) 
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_ITERATOR_DEBUG_LEVEL=0 -D_SECURE_SCL=0")
+  add_compile_options(-D_ITERATOR_DEBUG_LEVEL=0 -D_SECURE_SCL=0)
 elseif(UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(LIBS ${LIBS} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
   set (CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl")

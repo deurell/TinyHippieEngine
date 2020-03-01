@@ -183,7 +183,9 @@ void App::render() {
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
   ImGui::InputFloat3("light", &mPointLightPositions[0].x);
   ImGui::InputFloat3("light2", &mPointLightPositions[1].x);
-
+  float dot =
+      glm::dot(mCamera->mOrientation * glm::vec3(0, 1, 0), glm::vec3(0, -1, 0));
+  ImGui::InputFloat("dot", &dot);
   ImGui::End();
 
   mLightingShader->use();
@@ -266,6 +268,7 @@ void App::processInput(GLFWwindow *window) {
   }
 
   const float cameraSpeed = 2.0f * mDeltaTime;
+
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
     mCamera->translate(glm::vec3(0, 0, -cameraSpeed));
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -274,12 +277,13 @@ void App::processInput(GLFWwindow *window) {
     mCamera->translate(glm::vec3(-cameraSpeed, 0, 0));
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
     mCamera->translate(glm::vec3(cameraSpeed, 0, 0));
-  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS)
-    mCamera->lookAt({0.0f, 0.0f, 0.0f});
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
     mCamera->translate(glm::vec3(0, cameraSpeed, 0));
   if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
     mCamera->translate(glm::vec3(0, -cameraSpeed, 0));
+  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+    mCamera->lookAt({0.0f, 0.0f, 0.0f});
+  }
 }
 
 void App::basisInit() {

@@ -4,6 +4,7 @@
 #include "model.h"
 #include "shader.h"
 #include <GLFW/glfw3.h>
+#include "../transcoder/basisu_transcoder.h"
 
 #ifdef Emscripten
 #include <emscripten.h>
@@ -31,7 +32,7 @@ private:
   std::unique_ptr<Shader> mLampShader;
   std::unique_ptr<Camera> mCamera;
   std::unique_ptr<Model> mModel;
-  // std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;
+  std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;
 
   unsigned int mLightVAO;
   unsigned int mCubeVAO;

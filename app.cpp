@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
+#include "transcoder/basisu_transcoder.h"
 
 void renderLoopCallback(void *arg) { static_cast<App *>(arg)->render(); }
 
@@ -287,7 +288,7 @@ void App::processInput(GLFWwindow *window) {
 }
 
 void App::basisInit() {
-  // basist::basisu_transcoder_init();
-  // mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
-  // basist::g_global_selector_cb_size, basist::g_global_selector_cb);
+  basist::basisu_transcoder_init();
+  mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
+  basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }

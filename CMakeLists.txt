@@ -128,7 +128,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
     COMMENT "Copying shaders" VERBATIM
   )
-  add_custom_command(
+  add_custom_command( 
     TARGET tiny_hippie_engine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
@@ -139,4 +139,4 @@ else()
   file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
 endif()
 
-target_link_libraries(tiny_hippie_engine ${LIBS} imgui basisu)
+target_link_libraries(tiny_hippie_engine PRIVATE ${LIBS} imgui basisu)

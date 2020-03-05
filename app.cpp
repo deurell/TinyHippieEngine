@@ -10,7 +10,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
-#include "transcoder/basisu_transcoder.h"
 
 void renderLoopCallback(void *arg) { static_cast<App *>(arg)->render(); }
 
@@ -67,7 +66,7 @@ int App::run() {
   mLightingShader = std::make_unique<Shader>(
       "Shaders/model.vert", "Shaders/model.frag", glslVersionString);
 
-  mModel = std::make_unique<Model>("Resources/bridge.obj");
+  mModel = std::make_unique<Model>("Resources/bridge.obj", mCodebook.get());
 
   float cubeVertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
@@ -290,5 +289,5 @@ void App::processInput(GLFWwindow *window) {
 void App::basisInit() {
   basist::basisu_transcoder_init();
   mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
-  basist::g_global_selector_cb_size, basist::g_global_selector_cb);
+      basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }

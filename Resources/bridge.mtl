@@ -18,8 +18,8 @@ Ke 0.0 0.0 0.0
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd /deco.png
-map_d /deco.png
+map_Kd deco.basis
+map_d deco.basis
 
 newmtl grass
 Ns 18.000005
@@ -30,8 +30,8 @@ Ke 0.0 0.0 0.0
 Ni 1.450000
 d 1.000000
 illum 1
-map_Kd /grassfloor.png
-map_d /grassfloor.png
+map_Kd grassfloor.basis
+map_d grassfloor.basis
 
 newmtl water
 Ns 54.705895
@@ -42,5 +42,5 @@ Ke 0.0 0.0 0.0
 Ni 1.450000
 d 1.000000
 illum 2
-map_Kd /water.png
-map_d /water.png
+map_Kd water.basis
+map_d water.basis

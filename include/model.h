@@ -2,23 +2,23 @@
 
 #include <glad/glad.h>
 
+#include "../transcoder/basisu_transcoder.h"
+#include "stb_image.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
+#include <fstream>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "stb_image.h"
-
-#include <mesh.h>
-#include <shader.h>
-
-#include <fstream>
 #include <iostream>
 #include <map>
+#include <memory>
+#include <mesh.h>
+#include <shader.h>
 #include <sstream>
 #include <string>
 #include <vector>
+
 using namespace std;
 
 class Model {
@@ -29,10 +29,14 @@ public:
                        // make sure textures aren't loaded more than once.
   vector<Mesh> meshes;
   string directory;
+  basist::etc1_global_selector_codebook *mCodeBook;
 
   /*  Functions   */
   // constructor, expects a filepath to a 3D model.
-  Model(string const &path) { loadModel(path); }
+  Model(string const &path, basist::etc1_global_selector_codebook *codeBook) {
+    mCodeBook = codeBook;
+    loadModel(path);
+  }
 
   // draws the model, and thus all its meshes
   void Draw(Shader shader) {
@@ -41,28 +45,115 @@ public:
   }
 
 private:
+  bool hasExtension(const std::string &full, const std::string &end) {
+    if (full.length() >= end.length()) {
+      return (full.compare(full.length() - end.length(), full.length(), end) ==
+              0);
+    } else {
+      return false;
+    }
+  }
   unsigned int TextureFromFile(const char *path, const string &directory) {
-    string filename = string(path);
-    filename = directory + '/' + filename;
-
+    unsigned char *data = nullptr;
     unsigned int textureID;
     glGenTextures(1, &textureID);
+    GLenum format = GL_RGB;
+    GLint internal_format = GL_UNSIGNED_SHORT_5_6_5;
 
     int width, height, nrComponents;
-    unsigned char *data =
-        stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
-    if (data) {
-      GLenum format;
-      if (nrComponents == 1)
-        format = GL_RED;
-      else if (nrComponents == 3)
-        format = GL_RGB;
-      else if (nrComponents == 4)
-        format = GL_RGBA;
 
+    bool useBasis = false;
+    basist::transcoder_texture_format transcoder_format =
+        basist::transcoder_texture_format::cTFRGB565;
+
+    if (hasExtension(path, ".basis") && mCodeBook) {
+      useBasis = true;
+      std::vector<unsigned char> dst_data;
+      string filename = string(path);
+      filename = directory + '/' + filename;
+
+      std::ifstream imageStream(filename, std::ios::binary);
+      std::vector<unsigned char> buffer(
+          std::istreambuf_iterator<char>(imageStream), {});
+
+      uint32_t image_index = 0;
+      uint32_t level_index = 0;
+
+      auto transcoder = std::make_unique<basist::basisu_transcoder>(mCodeBook);
+      bool success =
+          transcoder->start_transcoding(buffer.data(), buffer.size());
+      basist::basis_texture_type textureType =
+          transcoder->get_texture_type(buffer.data(), buffer.size());
+      uint32_t imageCount =
+          transcoder->get_total_images(buffer.data(), buffer.size());
+
+      basist::basisu_image_info imageInfo;
+      transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
+                                 image_index);
+
+      basist::basisu_image_level_info levelInfo;
+      transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo,
+                                       image_index, level_index);
+      uint32_t dest_size = 0;
+      bool unCompressed = false;
+      if (basist::basis_transcoder_format_is_uncompressed(transcoder_format)) {
+        unCompressed = true;
+        const uint32_t bytes_per_pixel =
+            basist::basis_get_uncompressed_bytes_per_pixel(transcoder_format);
+        const uint32_t bytes_per_line =
+            imageInfo.m_orig_width * bytes_per_pixel;
+        const uint32_t bytes_per_slice =
+            bytes_per_line * imageInfo.m_orig_height;
+        dest_size = bytes_per_slice;
+      } else {
+        uint32_t bytes_per_block =
+            basist::basis_get_bytes_per_block(transcoder_format);
+        uint32_t required_size = imageInfo.m_total_blocks * bytes_per_block;
+
+        if (transcoder_format ==
+                basist::transcoder_texture_format::cTFPVRTC1_4_RGB ||
+            transcoder_format ==
+                basist::transcoder_texture_format::cTFPVRTC1_4_RGBA) {
+          // For PVRTC1, Basis only writes (or requires) total_blocks *
+          // bytes_per_block. But GL requires extra padding for very small
+          // textures:
+          // https://www.khronos.org/registry/OpenGL/extensions/IMG/IMG_texture_compression_pvrtc.txt
+          // The transcoder will clear the extra bytes followed the used blocks
+          // to 0.
+          const uint32_t width = (imageInfo.m_orig_width + 3) & ~3;
+          const uint32_t height = (imageInfo.m_orig_height + 3) & ~3;
+          required_size =
+              (std::max(8U, width) * std::max(8U, height) * 4 + 7) / 8;
+        }
+        dest_size = required_size;
+      }
+
+      dst_data.resize(dest_size);
+
+      bool status = transcoder->transcode_image_level(
+          buffer.data(), buffer.size(), 0, 0, dst_data.data(),
+          imageInfo.m_orig_width * imageInfo.m_orig_height, transcoder_format,
+          0, imageInfo.m_orig_width, nullptr, imageInfo.m_orig_height);
+      data = dst_data.data();
+      width = imageInfo.m_width;
+      height = imageInfo.m_height;
+    } else {
+      string filename = string(path);
+      filename = directory + '/' + filename;
+      data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+      internal_format = GL_UNSIGNED_BYTE;
+      if (nrComponents == 1) {
+        format = GL_RED;
+      } else if (nrComponents == 3) {
+        format = GL_RGB;
+      } else {
+        format = GL_RGBA;
+      }
+    }
+    if (data) {
       glBindTexture(GL_TEXTURE_2D, textureID);
       glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-                   GL_UNSIGNED_BYTE, data);
+                   internal_format, data);
       glGenerateMipmap(GL_TEXTURE_2D);
 
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -71,10 +162,14 @@ private:
                       GL_LINEAR_MIPMAP_LINEAR);
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
       std::cout << "Texture loaded at path: " << path << std::endl;
-      stbi_image_free(data);
+      if (!useBasis) {
+        stbi_image_free(data);
+      }
     } else {
       std::cout << "Texture failed to load at path: " << path << std::endl;
-      stbi_image_free(data);
+      if (!useBasis) {
+        stbi_image_free(data);
+      }
     }
 
     return textureID;
@@ -110,8 +205,8 @@ private:
     // process each mesh located at the current node
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
       // the node object only contains indices to index the actual objects in
-      // the scene. the scene contains all the data, node is just to keep stuff
-      // organized (like relations between nodes).
+      // the scene. the scene contains all the data, node is just to keep
+      // stuff organized (like relations between nodes).
       aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
       meshes.push_back(processMesh(mesh, scene));
     }
@@ -131,9 +226,9 @@ private:
     // Walk through each of the mesh's vertices
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
       Vertex vertex;
-      glm::vec3 vector; // we declare a placeholder vector since assimp uses its
-                        // own vector class that doesn't directly convert to
-                        // glm's vec3 class so we transfer the data to this
+      glm::vec3 vector; // we declare a placeholder vector since assimp uses
+                        // its own vector class that doesn't directly convert
+                        // to glm's vec3 class so we transfer the data to this
                         // placeholder glm::vec3 first.
       // positions
       vector.x = mesh->mVertices[i].x;
@@ -146,12 +241,14 @@ private:
       vector.z = mesh->mNormals[i].z;
       vertex.Normal = vector;
       // texture coordinates
-      if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+      if (mesh->mTextureCoords[0]) // does the mesh contain texture
+                                   // coordinates?
       {
         glm::vec2 vec;
         // a vertex can contain up to 8 different texture coordinates. We thus
-        // make the assumption that we won't use models where a vertex can have
-        // multiple texture coordinates so we always take the first set (0).
+        // make the assumption that we won't use models where a vertex can
+        // have multiple texture coordinates so we always take the first set
+        // (0).
         vec.x = mesh->mTextureCoords[0][i].x;
         vec.y = mesh->mTextureCoords[0][i].y;
         vertex.TexCoords = vec;
@@ -169,8 +266,8 @@ private:
       vertex.Bitangent = vector;
       vertices.push_back(vertex);
     }
-    // now wak through each of the mesh's faces (a face is a mesh its triangle)
-    // and retrieve the corresponding vertex indices.
+    // now wak through each of the mesh's faces (a face is a mesh its
+    // triangle) and retrieve the corresponding vertex indices.
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
       aiFace face = mesh->mFaces[i];
       // retrieve all indices of the face and store them in the indices vector
@@ -229,7 +326,8 @@ private:
   }
 
   // checks all material textures of a given type and loads the textures if
-  // they're not loaded yet. the required info is returned as a Texture struct.
+  // they're not loaded yet. the required info is returned as a Texture
+  // struct.
   vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
                                        string typeName) {
     vector<Texture> textures;
@@ -254,8 +352,8 @@ private:
         texture.path = str.C_Str();
         textures.push_back(texture);
         textures_loaded.push_back(
-            texture); // store it as texture loaded for entire model, to ensure
-                      // we won't unnecesery load duplicate textures.
+            texture); // store it as texture loaded for entire model, to
+                      // ensure we won't unnecesery load duplicate textures.
       }
     }
     return textures;

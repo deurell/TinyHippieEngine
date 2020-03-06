@@ -65,7 +65,7 @@ int App::run() {
   mLightingShader = std::make_unique<Shader>(
       "Shaders/model.vert", "Shaders/model.frag", glslVersionString);
 
-  mModel = std::make_unique<Model>("Resources/bridge.obj");
+  mModel = std::make_unique<Model>("Resources/bridge.obj", mCodebook.get());
 
   float cubeVertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,

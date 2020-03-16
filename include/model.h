@@ -65,10 +65,10 @@ private:
     bool useBasis = false;
     basist::transcoder_texture_format transcoder_format =
         basist::transcoder_texture_format::cTFRGB565;
-
+    std::vector<unsigned char> dst_data;
+    
     if (hasExtension(path, ".basis") && mCodeBook) {
       useBasis = true;
-      std::vector<unsigned char> dst_data;
       string filename = string(path);
       filename = directory + '/' + filename;
 

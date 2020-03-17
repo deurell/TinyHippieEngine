@@ -6,7 +6,6 @@ set(CMAKE_CXX_STANDARD 17)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
 if (WIN32) 
-  message(STATUS "WIN 32!!!")
   add_compile_options(-D_ITERATOR_DEBUG_LEVEL=0 -D_SECURE_SCL=0)
 elseif(UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(LIBS ${LIBS} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)

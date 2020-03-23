@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../transcoder/basisu_transcoder.h"
+#include "basisu_transcoder.h"
 #include "stb_image.h"
 #include <fstream>
 #include <glad/glad.h>

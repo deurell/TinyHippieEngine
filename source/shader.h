@@ -15,8 +15,8 @@
 
 class Shader {
 public:
-  Shader(const std::string &vertexPath, const std::string &fragmentPath,
-         const std::string &glslVersion) {
+  Shader(std::string vertexPath, std::string fragmentPath,
+         std::string glslVersion) {
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vertexFile;
@@ -89,11 +89,12 @@ public:
   }
 
   void setVec3f(const std::string &name, float x, float y, float z) {
-    glUniform3f(glGetUniformLocation(mId, name.c_str()), x, y, z); 
+    glUniform3f(glGetUniformLocation(mId, name.c_str()), x, y, z);
   }
 
   void setVec3f(const std::string &name, glm::vec3 value) {
-    glUniform3f(glGetUniformLocation(mId, name.c_str()), value.x, value.y, value.z); 
+    glUniform3f(glGetUniformLocation(mId, name.c_str()), value.x, value.y,
+                value.z);
   }
 
   void setVec4f(const std::string &name, float x, float y, float z, float w) {

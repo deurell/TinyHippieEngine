@@ -1,72 +1,26 @@
-#include "app.h"
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
-#include "transcoder/basisu_transcoder.h"
+#include "demoscene.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+#include <GLFW/glfw3.h>
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
-#include <assimp/scene.h>
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
 
-void renderLoopCallback(void *arg) { static_cast<App *>(arg)->render(); }
+DemoScene::DemoScene(std::string glslVersion,
+                     basist::etc1_global_selector_codebook *codeBook)
+    : mGlslVersionString(glslVersion), mCodeBook(codeBook){};
 
-void App::init() {
-  glfwInit();
-  basisInit();
-}
-
-int App::run() {
-  init();
-
-#ifdef __APPLE__
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // 3.2+ only
-  glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // Required on Mac
-#else
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-  glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#endif
-
-  mWindow = glfwCreateWindow(screen_width, screen_height, "tiny hippie engine",
-                             nullptr, nullptr);
-  if (mWindow == nullptr) {
-    std::cout << "window create failed";
-    glfwTerminate();
-    return -1;
-  }
-
-  glfwMakeContextCurrent(mWindow);
-  glfwSwapInterval(1);
-
-  if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "glad init failed";
-    return -1;
-  }
-
-  glViewport(0, 0, screen_width, screen_height);
-
-  // mTexture =
-  //    std::make_unique<Texture>("Resources/sup.basis", *mCodebook, GL_RGB);
-
-#ifdef Emscripten
-  std::string glslVersionString = "#version 300 es\n";
-#else
-  std::string glslVersionString = "#version 330 core\n";
-#endif
-
+void DemoScene::init() {
   mLampShader = std::make_unique<Shader>(
-      "Shaders/lamp.vert", "Shaders/lamp.frag", glslVersionString);
+      "Shaders/lamp.vert", "Shaders/lamp.frag", mGlslVersionString);
 
   mLightingShader = std::make_unique<Shader>(
-      "Shaders/model.vert", "Shaders/model.frag", glslVersionString);
+      "Shaders/model.vert", "Shaders/model.frag", mGlslVersionString);
 
-  mModel = std::make_unique<Model>("Resources/bridge.obj", mCodebook.get());
+  mModel = std::make_unique<Model>("Resources/bridge.obj", mCodeBook);
 
   float cubeVertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
@@ -134,41 +88,11 @@ int App::run() {
 
   glEnable(GL_DEPTH_TEST);
 
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
-
-  ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-  ImGui_ImplOpenGL3_Init(glslVersionString.c_str());
-
   mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
-
-#ifdef Emscripten
-  emscripten_set_main_loop_arg(&renderLoopCallback, this, -1, 1);
-#else
-  while (!glfwWindowShouldClose(mWindow)) {
-    render();
-  }
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
-
-  glfwDestroyWindow(mWindow);
-#endif
-
-  glfwTerminate();
-  return 0;
 }
 
-void App::render() {
-  float currentFrame = glfwGetTime();
-  mDeltaTime = currentFrame - mLastFrame;
-  mLastFrame = currentFrame;
-
-  processInput(mWindow);
-
+void DemoScene::render() {
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -183,9 +107,6 @@ void App::render() {
   ImGui::InputFloat3("cam", &mCamera->mPosition.x);
   ImGui::InputFloat3("light", &mPointLightPositions[0].x);
   ImGui::InputFloat3("light2", &mPointLightPositions[1].x);
-  float dot =
-      glm::dot(mCamera->mOrientation * glm::vec3(0, 1, 0), glm::vec3(0, -1, 0));
-  ImGui::InputFloat("dot", &dot);
   ImGui::End();
 
   mLightingShader->use();
@@ -222,7 +143,7 @@ void App::render() {
 
   // view/projection transformations
   glm::mat4 projection =
-      mCamera->getPerspectiveTransform(45.0, screen_width / screen_height);
+      mCamera->getPerspectiveTransform(45.0, mScreenSize.x / mScreenSize.y);
 
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);
@@ -254,40 +175,9 @@ void App::render() {
   }
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+};
+void DemoScene::onKey(int key){
 
-  int frameWidth, frameHeight;
-  glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);
-  glViewport(0, 0, frameWidth, frameHeight);
-  glfwSwapBuffers(mWindow);
-  glfwPollEvents();
-}
+};
 
-void App::processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, true);
-  }
-
-  const float cameraSpeed = 2.0f * mDeltaTime;
-
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(0, 0, -cameraSpeed));
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(0, 0, cameraSpeed));
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(-cameraSpeed, 0, 0));
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(cameraSpeed, 0, 0));
-  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(0, cameraSpeed, 0));
-  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-    mCamera->translate(glm::vec3(0, -cameraSpeed, 0));
-  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-    mCamera->lookAt({0.0f, 0.0f, 0.0f});
-  }
-}
-
-void App::basisInit() {
-  basist::basisu_transcoder_init();
-  mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
-      basist::g_global_selector_cb_size, basist::g_global_selector_cb);
-}
+void DemoScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };

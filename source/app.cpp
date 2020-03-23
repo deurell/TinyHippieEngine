@@ -107,20 +107,27 @@ void App::processInput(GLFWwindow *window) {
   }
 
   const float cameraSpeed = 2.0f * mDeltaTime;
-
+  int key;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_W);
   }
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_S);
   }
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_A);
   }
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_D);
   }
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_Q);
   }
   if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_E);
   }
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
+    mScene->onKey(GLFW_KEY_L);
   }
 }
 

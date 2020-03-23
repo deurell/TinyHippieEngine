@@ -14,7 +14,7 @@ public:
 
   virtual void init() override;
   virtual void render(float delta) override;
-  virtual void onKey(int key, float delta) override;
+  virtual void onKey(int key) override;
   virtual void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
@@ -35,4 +35,5 @@ private:
   std::string mGlslVersionString;
   basist::etc1_global_selector_codebook *mCodeBook;
   glm::vec2 mScreenSize;
+  float mDelta;
 };

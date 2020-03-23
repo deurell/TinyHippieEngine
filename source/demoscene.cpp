@@ -93,6 +93,7 @@ void DemoScene::init() {
 }
 
 void DemoScene::render(float delta) {
+  mDelta = delta;
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -174,8 +175,8 @@ void DemoScene::render(float delta) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
 };
-void DemoScene::onKey(int key, float delta){
-  const float cameraSpeed = 1.5f * delta;
+void DemoScene::onKey(int key){
+  const float cameraSpeed = 1.5f * mDelta;
   if (key == GLFW_KEY_W) {
     mCamera->translate(glm::vec3(0, 0, -cameraSpeed));
   }

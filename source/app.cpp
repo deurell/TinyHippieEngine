@@ -89,11 +89,15 @@ void App::render() {
   mDeltaTime = currentFrame - mLastFrame;
   mLastFrame = currentFrame;
 
+  mScene->render(mDeltaTime);
+  ImGui::Render();
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
   processInput(mWindow);
-  mScene->render();
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);
+  mScene->onScreenSizeChanged({frameWidth, frameHeight});
   glViewport(0, 0, frameWidth, frameHeight);
   glfwSwapBuffers(mWindow);
   glfwPollEvents();
@@ -103,29 +107,27 @@ void App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-
-  const float cameraSpeed = 2.0f * mDeltaTime;
   int key;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_W);
+    mScene->onKey(GLFW_KEY_W, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_S);
+    mScene->onKey(GLFW_KEY_S, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_A);
+    mScene->onKey(GLFW_KEY_A, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_D);
+    mScene->onKey(GLFW_KEY_D, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_Q);
+    mScene->onKey(GLFW_KEY_Q, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_E);
+    mScene->onKey(GLFW_KEY_E, mDeltaTime);
   }
   if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_L);
+    mScene->onKey(GLFW_KEY_L, mDeltaTime);
   }
 }
 

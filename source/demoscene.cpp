@@ -92,7 +92,7 @@ void DemoScene::init() {
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
 }
 
-void DemoScene::render() {
+void DemoScene::render(float delta) {
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -173,11 +173,30 @@ void DemoScene::render() {
     mLampShader->setMat4f("model", mod);
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
-  ImGui::Render();
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 };
-void DemoScene::onKey(int key){
-
+void DemoScene::onKey(int key, float delta){
+  const float cameraSpeed = 1.5f * delta;
+  if (key == GLFW_KEY_W) {
+    mCamera->translate(glm::vec3(0, 0, -cameraSpeed));
+  }
+  if (key == GLFW_KEY_S) {
+    mCamera->translate(glm::vec3(0, 0, cameraSpeed));
+  }
+  if (key == GLFW_KEY_A) {
+    mCamera->translate(glm::vec3(-cameraSpeed, 0, 0));
+  }
+  if (key == GLFW_KEY_D) {
+    mCamera->translate(glm::vec3(cameraSpeed, 0, 0));
+  }
+  if (key == GLFW_KEY_Q) {
+    mCamera->translate(glm::vec3(0, cameraSpeed, 0));
+  }
+  if (key == GLFW_KEY_E) {
+    mCamera->translate(glm::vec3(0, -cameraSpeed, 0));
+  }
+  if (key == GLFW_KEY_L) {
+    mCamera->lookAt({0.0f, 0.0f, 0.0f});
+  }
 };
 
 void DemoScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };

@@ -13,8 +13,8 @@ public:
   ~DemoScene() = default;
 
   virtual void init() override;
-  virtual void render() override;
-  virtual void onKey(int key) override;
+  virtual void render(float delta) override;
+  virtual void onKey(int key, float delta) override;
   virtual void onScreenSizeChanged(glm::vec2 size) override;
 
 private:

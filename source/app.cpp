@@ -65,6 +65,7 @@ int App::run() {
   ImGui_ImplOpenGL3_Init(mGlslVersionString.c_str());
 
   mScene->init();
+  mScene->onScreenSizeChanged({screen_width, screen_height});
 
 #ifdef Emscripten
   emscripten_set_main_loop_arg(&renderLoopCallback, this, -1, 1);
@@ -89,10 +90,7 @@ void App::render() {
   mLastFrame = currentFrame;
 
   processInput(mWindow);
-
   mScene->render();
-  ImGui::Render();
-  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);

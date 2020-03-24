@@ -22,7 +22,7 @@ void App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<C64Scene>(mGlslVersionString);
+  mScene = std::make_unique<C64Scene>(mGlslVersionString, *mCodebook);
 }
 
 int App::run() {

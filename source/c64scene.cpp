@@ -6,7 +6,9 @@
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-C64Scene::C64Scene(std::string glslVersion) : mGlslVersionString(glslVersion) {}
+C64Scene::C64Scene(std::string glslVersion,
+                   basist::etc1_global_selector_codebook &codeBook)
+    : mGlslVersionString(glslVersion), mCodeBook(codeBook) {}
 
 void C64Scene::init() {
   mShader = std::make_unique<Shader>("Shaders/c64.vert", "Shaders/c64.frag",
@@ -45,7 +47,7 @@ void C64Scene::init() {
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  mTexture = std::make_unique<DL::Texture>("Resources/sup.jpg");
+  mTexture = std::make_unique<DL::Texture>("Resources/sup.basis", mCodeBook);
 
   mShader->use();
   mShader->setInt("texture1", 0);

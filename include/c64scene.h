@@ -9,7 +9,8 @@
 
 class C64Scene : public IScene {
 public:
-  C64Scene(std::string glslVersion);
+  C64Scene(std::string glslVersion,
+           basist::etc1_global_selector_codebook &codeBook);
   ~C64Scene() = default;
 
   virtual void init() override;
@@ -20,6 +21,7 @@ public:
 private:
   std::unique_ptr<Shader> mShader;
   std::unique_ptr<DL::Texture> mTexture;
+  basist::etc1_global_selector_codebook &mCodeBook;
 
   unsigned int mVAO, mVBO, mEBO;
   std::string mGlslVersionString;

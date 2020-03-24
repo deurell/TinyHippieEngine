@@ -179,7 +179,8 @@ void main() {
 
   // float sim_noise = noise(vec3(txc_time * 1.3) + 23.5);
 
-  vec3 sourceCol = texture(texture1, TexCoord).rgb;
+  vec2 flippedUV = vec2(TexCoord.x, 1.0 - TexCoord.y);
+  vec3 sourceCol = texture(texture1, flippedUV).rgb;
   vec3 uv = vec3(TexCoord.xy, 0);
   vec3 noise = random3(uv);
   // float lum = dot(sourceCol, weight);

@@ -10,7 +10,6 @@ uniform float iTime;
 uniform sampler2D texture1;
 
 in float color;
-out vec4 frag_color;
 
 vec3 random3(vec3 c) {
   float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));
@@ -97,9 +96,9 @@ const int indexMatrix8x8[64] =
           5, 37, 63, 31, 55, 23, 61, 29, 53, 21);
 
 float indexValue() {
-  int x = int(mod(gl_FragCoord.x, 8));
-  int y = int(mod(gl_FragCoord.y, 8));
-  return indexMatrix8x8[(x + y * 8)] / 64.0;
+  int x = int(mod(gl_FragCoord.x, 8.0));
+  int y = int(mod(gl_FragCoord.y, 8.0));
+  return float(indexMatrix8x8[(x + y * 8)]) / 64.0;
 }
 
 float colDistance(vec3 col1, vec3 col2, float noise) {
@@ -107,10 +106,10 @@ float colDistance(vec3 col1, vec3 col2, float noise) {
   col2.x *= 3.14159265356 * 2.0;
 
   float x =
-      pow((sin(col1.x) * col1.y * col1.z - sin(col2.x) * col2.y * col2.z), 2);
+      pow((sin(col1.x) * col1.y * col1.z - sin(col2.x) * col2.y * col2.z), 2.0);
   float y =
-      pow((cos(col1.x) * col1.y * col1.z - cos(col2.x) * col2.y * col2.z), 2);
-  float z = pow((col1.z - col2.z), 2);
+      pow((cos(col1.x) * col1.y * col1.z - cos(col2.x) * col2.y * col2.z), 2.0);
+  float z = pow((col1.z - col2.z), 2.0);
   float dist = sqrt(x + y + z);
 
   if (noise < 0.25) { //(0.5+(0.5*sin(iTime*0.50)))) {

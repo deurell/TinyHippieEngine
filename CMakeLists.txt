@@ -25,7 +25,6 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
   source/demoscene.cpp source/c64scene.cpp
   )
 
-
 add_library(imgui STATIC
   imgui/imconfig.h
   imgui/imgui_draw.cpp

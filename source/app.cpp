@@ -106,29 +106,11 @@ void App::render() {
 void App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
-    return;
   }
-  int key;
-  if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_W);
-  }
-  if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_S);
-  }
-  if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_A);
-  }
-  if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_D);
-  }
-  if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_Q);
-  }
-  if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_E);
-  }
-  if (glfwGetKey(window, GLFW_KEY_L) == GLFW_PRESS) {
-    mScene->onKey(GLFW_KEY_L);
+  for (int i = GLFW_KEY_A; i <= GLFW_KEY_Z; i++) {
+    if (glfwGetKey(window, i) == GLFW_PRESS) {
+      mScene->onKey(i);
+    }
   }
 }
 

@@ -11,8 +11,8 @@ C64Scene::C64Scene(std::string glslVersion,
     : mGlslVersionString(glslVersion), mCodeBook(codeBook) {}
 
 void C64Scene::init() {
-  mShader = std::make_unique<Shader>("Shaders/c64.vert", "Shaders/c64.frag",
-                                     mGlslVersionString);
+  mShader = std::make_unique<DL::Shader>("Shaders/c64.vert", "Shaders/c64.frag",
+                                         mGlslVersionString);
 
   float vertices[] = {
       // positions        // colors         // texture coords
@@ -48,6 +48,7 @@ void C64Scene::init() {
   glEnableVertexAttribArray(2);
 
   mTexture = std::make_unique<DL::Texture>("Resources/sup.basis", mCodeBook);
+  glBindVertexArray(0);
 
   mShader->use();
   mShader->setInt("texture1", 0);
@@ -71,6 +72,7 @@ void C64Scene::render(float delta) {
   transform = glm::rotate(transform, glm::radians<float>(0),
                           glm::vec3(0.0f, 0.0f, 1.0f));
   mShader->setMat4f("transform", transform);
+
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 

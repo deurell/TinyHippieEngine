@@ -18,10 +18,10 @@ public:
   virtual void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  std::unique_ptr<Shader> mLightingShader;
-  std::unique_ptr<Shader> mLampShader;
-  std::unique_ptr<Camera> mCamera;
-  std::unique_ptr<Model> mModel;
+  std::unique_ptr<DL::Shader> mLightingShader;
+  std::unique_ptr<DL::Shader> mLampShader;
+  std::unique_ptr<DL::Camera> mCamera;
+  std::unique_ptr<DL::Model> mModel;
   unsigned int mLightVAO;
   unsigned int mCubeVAO;
   glm::vec3 mLightPos = {1.2f, 1.0f, 2.0f};

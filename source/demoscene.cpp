@@ -14,13 +14,13 @@ DemoScene::DemoScene(std::string glslVersion,
     : mGlslVersionString(glslVersion), mCodeBook(codeBook){};
 
 void DemoScene::init() {
-  mLampShader = std::make_unique<Shader>(
+  mLampShader = std::make_unique<DL::Shader>(
       "Shaders/lamp.vert", "Shaders/lamp.frag", mGlslVersionString);
 
-  mLightingShader = std::make_unique<Shader>(
+  mLightingShader = std::make_unique<DL::Shader>(
       "Shaders/model.vert", "Shaders/model.frag", mGlslVersionString);
 
-  mModel = std::make_unique<Model>("Resources/bridge.obj", mCodeBook);
+  mModel = std::make_unique<DL::Model>("Resources/bridge.obj", mCodeBook);
 
   float cubeVertices[] = {
       -0.5f, -0.5f, -0.5f, 0.0f,  0.0f,  -1.0f, 0.0f,  0.0f,  0.5f,  -0.5f,
@@ -88,7 +88,7 @@ void DemoScene::init() {
 
   glEnable(GL_DEPTH_TEST);
 
-  mCamera = std::make_unique<Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
+  mCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
   mCamera->lookAt({0.0f, 0.0f, 0.0f});
 }
 

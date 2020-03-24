@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
-
+namespace DL {
 class Camera {
 public:
   Camera() = default;
@@ -49,3 +49,4 @@ public:
   glm::vec3 mPosition;
   glm::quat mOrientation;
 };
+}; // namespace DL

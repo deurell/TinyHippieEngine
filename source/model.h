@@ -20,7 +20,7 @@
 #include <vector>
 
 using namespace std;
-
+namespace DL {
 class Model {
 public:
   /*  Model Data */
@@ -39,7 +39,7 @@ public:
   }
 
   // draws the model, and thus all its meshes
-  void Draw(Shader shader) {
+  void Draw(DL::Shader shader) {
     for (unsigned int i = 0; i < meshes.size(); i++)
       meshes[i].Draw(shader);
   }
@@ -359,3 +359,4 @@ private:
     return textures;
   }
 };
+}; // namespace DL

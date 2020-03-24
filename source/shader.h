@@ -13,6 +13,7 @@
 #include <sstream>
 #include <string>
 
+namespace DL {
 class Shader {
 public:
   Shader(std::string vertexPath, std::string fragmentPath,
@@ -108,3 +109,4 @@ public:
 
   unsigned int mId;
 };
+}; // namespace DL

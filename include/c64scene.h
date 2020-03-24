@@ -19,7 +19,7 @@ public:
   virtual void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  std::unique_ptr<Shader> mShader;
+  std::unique_ptr<DL::Shader> mShader;
   std::unique_ptr<DL::Texture> mTexture;
   basist::etc1_global_selector_codebook &mCodeBook;
 

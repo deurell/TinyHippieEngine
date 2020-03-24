@@ -39,7 +39,7 @@ int App::run() {
 
 #endif
 
-  mWindow = glfwCreateWindow(screen_width, screen_height, "tiny hippie engine",
+  mWindow = glfwCreateWindow(screen_width, screen_height, windows_title,
                              nullptr, nullptr);
   if (mWindow == nullptr) {
     std::cout << "window create failed";

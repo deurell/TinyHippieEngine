@@ -1,7 +1,7 @@
 #pragma once
 
-#include "basisu_transcoder.h"
 #include "IScene.h"
+#include "basisu_transcoder.h"
 #include "camera.h"
 #include "model.h"
 #include "shader.h"
@@ -25,6 +25,7 @@ private:
   void init();
   void basisInit();
 
+  static constexpr char *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
   GLFWwindow *mWindow;

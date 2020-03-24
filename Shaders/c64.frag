@@ -78,17 +78,6 @@ vec3 rgb2hsv(vec3 c) {
   return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
 }
 
-// const int indexMatrix4x4[16] = int[](0,  8,  2,  10,
-// 12, 4,  14, 6,
-// 3,  11, 1,  9,
-// 15, 7,  13, 5);
-//
-// float indexValue() {
-//    int x = int(mod(gl_FragCoord.x, 4));
-//    int y = int(mod(gl_FragCoord.y, 4));
-//    return indexMatrix4x4[(x + y * 4)] / 16.0;
-//}
-
 const int indexMatrix8x8[64] =
     int[](0, 32, 8, 40, 2, 34, 10, 42, 48, 16, 56, 24, 50, 18, 58, 26, 12, 44,
           4, 36, 14, 46, 6, 38, 60, 28, 52, 20, 62, 30, 54, 22, 3, 35, 11, 43,
@@ -174,19 +163,9 @@ vec3 dither(vec3 color, float noise) {
 }
 
 void main() {
-  // vec2 txc = TexCoord;
-  // vec2 uv = txc * 2. - 1.;
-  // vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 *
-  // cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
-
-  // float sim_noise = noise(vec3(txc_time * 1.3) + 23.5);
-
   vec2 flippedUV = vec2(TexCoord.x, 1.0 - TexCoord.y);
   vec3 sourceCol = texture(texture1, flippedUV).rgb;
   vec3 uv = vec3(TexCoord.xy, 0);
   vec3 noise = random3(uv);
-  // float lum = dot(sourceCol, weight);
-  // vec4 greyScale = vec4(lum, lum, lum,1);
-  // FragColor = greyScale;
-  FragColor = vec4(dither(sourceCol, noise.x), 1);
+  FragColor = vec4(dither(sourceCol, noise.x), 1.0);
 }

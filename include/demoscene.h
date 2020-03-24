@@ -31,7 +31,6 @@ private:
   float mXDeg = 0.0f;
   float mYDeg = 0.0f;
   glm::vec3 mModelTranslate = {0.0f, 0.0f, 0.0f};
-  glm::vec3 mObjectColor = {0.3, 0.8, 0.3};
   std::string mGlslVersionString;
   basist::etc1_global_selector_codebook *mCodeBook;
   glm::vec2 mScreenSize;

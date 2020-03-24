@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../transcoder/basisu_transcoder.h"
+#include "basisu_transcoder.h"
 #include "IScene.h"
 #include "camera.h"
 #include "model.h"
@@ -27,7 +27,6 @@ private:
 
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
-
   GLFWwindow *mWindow;
   std::unique_ptr<IScene> mScene;
   std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;

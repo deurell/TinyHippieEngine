@@ -18,7 +18,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
 endif()
 
-include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui)
+include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder)
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/demoscene.cpp)
 

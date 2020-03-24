@@ -106,6 +106,7 @@ void App::render() {
 void App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
+    return;
   }
   int key;
   if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {

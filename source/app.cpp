@@ -22,7 +22,7 @@ void App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
+  mScene = std::make_unique<C64Scene>(mGlslVersionString, *mCodebook);
 }
 
 int App::run() {
@@ -108,6 +108,11 @@ void App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+  if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+    mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
+    mScene->init();
+  }
+
   for (int i = GLFW_KEY_A; i <= GLFW_KEY_Z; i++) {
     if (glfwGetKey(window, i) == GLFW_PRESS) {
       mScene->onKey(i);

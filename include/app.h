@@ -25,7 +25,7 @@ private:
   void init();
   void basisInit();
 
-  static constexpr char *windows_title = "tiny hippie engine";
+  static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
   GLFWwindow *mWindow;

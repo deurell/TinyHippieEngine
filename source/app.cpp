@@ -1,4 +1,5 @@
 #include "app.h"
+#include "c64scene.h"
 #include "demoscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -21,7 +22,7 @@ void App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
+  mScene = std::make_unique<C64Scene>(mGlslVersionString);
 }
 
 int App::run() {

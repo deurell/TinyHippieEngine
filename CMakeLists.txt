@@ -20,7 +20,11 @@ endif()
 
 include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder)
 
-add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/demoscene.cpp)
+add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 
+  source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h 
+  source/demoscene.cpp source/c64scene.cpp
+  )
+
 
 add_library(imgui STATIC
   imgui/imconfig.h

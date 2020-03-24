@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+namespace DL {
 class Texture {
 public:
   explicit Texture(const std::string &imagePath,
@@ -145,3 +146,4 @@ private:
     }
   }
 };
+}; // namespace DL

@@ -19,7 +19,6 @@ public:
 
 private:
   std::unique_ptr<Shader> mShader;
-  std::unique_ptr<Camera> mCamera;
   std::unique_ptr<DL::Texture> mTexture;
 
   unsigned int mVAO, mVBO, mEBO;

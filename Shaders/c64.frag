@@ -97,9 +97,9 @@ const int indexMatrix8x8[64] =
           5, 37, 63, 31, 55, 23, 61, 29, 53, 21);
 
 float indexValue() {
-  int x = int(mod(gl_FragCoord.x, 8.0));
-  int y = int(mod(gl_FragCoord.y, 8.0));
-  return indexMatrix8x8[(x + y * 8.0)] / 64.0;
+  int x = int(mod(gl_FragCoord.x, 8));
+  int y = int(mod(gl_FragCoord.y, 8));
+  return indexMatrix8x8[(x + y * 8)] / 64.0;
 }
 
 float colDistance(vec3 col1, vec3 col2, float noise) {
@@ -107,10 +107,10 @@ float colDistance(vec3 col1, vec3 col2, float noise) {
   col2.x *= 3.14159265356 * 2.0;
 
   float x =
-      pow((sin(col1.x) * col1.y * col1.z - sin(col2.x) * col2.y * col2.z), 2.0);
+      pow((sin(col1.x) * col1.y * col1.z - sin(col2.x) * col2.y * col2.z), 2);
   float y =
-      pow((cos(col1.x) * col1.y * col1.z - cos(col2.x) * col2.y * col2.z), 2.0);
-  float z = pow((col1.z - col2.z), 2.0);
+      pow((cos(col1.x) * col1.y * col1.z - cos(col2.x) * col2.y * col2.z), 2);
+  float z = pow((col1.z - col2.z), 2);
   float dist = sqrt(x + y + z);
 
   if (noise < 0.25) { //(0.5+(0.5*sin(iTime*0.50)))) {
@@ -139,8 +139,8 @@ vec3[2] closestColors(vec3 col, float noise) {
                             vec3(149.0 / 255.0, 149.0 / 255.0, 149.0 / 255.0));
 
   vec3 ret[2];
-  vec3 closest = vec3(-2.0, 0.0, 0.0);
-  vec3 secondClosest = vec3(-2.0, 0.0, 0.0);
+  vec3 closest = vec3(-2, 0, 0);
+  vec3 secondClosest = vec3(-2, 0, 0);
   vec3 temp;
   for (int i = 0; i < 16; ++i) {
     temp = rgb2hsv(palette[i]);
@@ -184,10 +184,10 @@ void main() {
 
   vec2 flippedUV = vec2(TexCoord.x, 1.0 - TexCoord.y);
   vec3 sourceCol = texture(texture1, flippedUV).rgb;
-  vec3 uv = vec3(TexCoord.xy, 0.0);
+  vec3 uv = vec3(TexCoord.xy, 0);
   vec3 noise = random3(uv);
   // float lum = dot(sourceCol, weight);
   // vec4 greyScale = vec4(lum, lum, lum,1);
   // FragColor = greyScale;
-  FragColor = vec4(dither(sourceCol, noise.x), 1.0);
+  FragColor = vec4(dither(sourceCol, noise.x), 1);
 }

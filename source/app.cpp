@@ -4,6 +4,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "truetypescene.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <assimp/scene.h>
@@ -22,7 +23,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<C64Scene>(mGlslVersionString, *mCodebook);
+  mScene = std::make_unique<TrueTypeScene>(mGlslVersionString);
 }
 
 int DL::App::run() {

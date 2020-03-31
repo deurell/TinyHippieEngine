@@ -1,7 +1,7 @@
 #pragma once
 
 #include <iostream>
-
+namespace DL {
 class Logger {
 public:
   Logger() : m_id(0) {}
@@ -11,3 +11,4 @@ public:
 private:
   unsigned int m_id;
 };
+} // namespace DL

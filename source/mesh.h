@@ -14,6 +14,8 @@
 #include <vector>
 using namespace std;
 
+namespace DL {
+
 struct Vertex {
   // position
   glm::vec3 Position;
@@ -35,7 +37,7 @@ struct Material {
   unsigned int Id;
 };
 
-struct Texture {
+struct MeshTexture {
   unsigned int id;
   string type;
   string path;
@@ -46,14 +48,14 @@ public:
   /*  Mesh Data  */
   vector<Vertex> vertices;
   vector<unsigned int> indices;
-  vector<Texture> textures;
+  vector<MeshTexture> textures;
   Material material;
   unsigned int VAO;
 
   /*  Functions  */
   // constructor
   Mesh(vector<Vertex> vertices, vector<unsigned int> indices,
-       vector<Texture> textures) {
+       vector<MeshTexture> textures) {
     this->vertices = vertices;
     this->indices = indices;
     this->textures = textures;
@@ -164,3 +166,4 @@ private:
     glBindVertexArray(0);
   }
 };
+} // namespace DL

@@ -24,7 +24,7 @@ namespace DL {
 class Model {
 public:
   /*  Model Data */
-  vector<Texture>
+  vector<MeshTexture>
       textures_loaded; // stores all the textures loaded so far, optimization to
                        // make sure textures aren't loaded more than once.
   vector<Mesh> meshes;
@@ -221,7 +221,7 @@ private:
     // data to fill
     vector<Vertex> vertices;
     vector<unsigned int> indices;
-    vector<Texture> textures;
+    vector<MeshTexture> textures;
 
     // Walk through each of the mesh's vertices
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
@@ -284,19 +284,19 @@ private:
     // normal: texture_normalN
 
     // 1. diffuse maps
-    vector<Texture> diffuseMaps = loadMaterialTextures(
+    vector<MeshTexture> diffuseMaps = loadMaterialTextures(
         material, aiTextureType_DIFFUSE, "texture_diffuse");
     textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
     // 2. specular maps
-    vector<Texture> specularMaps = loadMaterialTextures(
+    vector<MeshTexture> specularMaps = loadMaterialTextures(
         material, aiTextureType_SPECULAR, "texture_specular");
     textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
     // 3. normal maps
-    std::vector<Texture> normalMaps =
+    std::vector<MeshTexture> normalMaps =
         loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
     textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
     // 4. height maps
-    std::vector<Texture> heightMaps =
+    std::vector<MeshTexture> heightMaps =
         loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
     textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
@@ -328,9 +328,9 @@ private:
   // checks all material textures of a given type and loads the textures if
   // they're not loaded yet. the required info is returned as a Texture
   // struct.
-  vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
-                                       string typeName) {
-    vector<Texture> textures;
+  vector<MeshTexture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
+                                           string typeName) {
+    vector<MeshTexture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;
       mat->GetTexture(type, i, &str);
@@ -346,7 +346,7 @@ private:
         }
       }
       if (!skip) { // if texture hasn't been loaded already, load it
-        Texture texture;
+        MeshTexture texture;
         texture.id = TextureFromFile(str.C_Str(), this->directory);
         texture.type = typeName;
         texture.path = str.C_Str();

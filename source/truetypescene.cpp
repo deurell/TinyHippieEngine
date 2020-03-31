@@ -12,7 +12,7 @@ TrueTypeScene::TrueTypeScene(std::string glslVersion)
     : mGlslVersionString(glslVersion) {}
 
 void TrueTypeScene::initFont() {
-  std::ifstream iStream("Resources/arial.ttf", std::ios::binary);
+  std::ifstream iStream("Resources/C64_Pro-STYLE.ttf", std::ios::binary);
   iStream.seekg(0, iStream.end);
   const int size = iStream.tellg();
   iStream.seekg(0, iStream.beg);

@@ -6,7 +6,7 @@
 #include "shader.h"
 #include <memory>
 
-class DemoScene : public IScene {
+class DemoScene : public DL::IScene {
 public:
   DemoScene(std::string glslVersion,
             basist::etc1_global_selector_codebook *codeBook);

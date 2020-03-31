@@ -12,9 +12,9 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
 
-void renderLoopCallback(void *arg) { static_cast<App *>(arg)->render(); }
+void renderLoopCallback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
-void App::init() {
+void DL::App::init() {
   glfwInit();
   basisInit();
 #ifdef Emscripten
@@ -25,7 +25,7 @@ void App::init() {
   mScene = std::make_unique<C64Scene>(mGlslVersionString, *mCodebook);
 }
 
-int App::run() {
+int DL::App::run() {
   init();
 
 #ifdef __APPLE__
@@ -85,7 +85,7 @@ int App::run() {
   return 0;
 }
 
-void App::render() {
+void DL::App::render() {
   float currentFrame = glfwGetTime();
   mDeltaTime = currentFrame - mLastFrame;
   mLastFrame = currentFrame;
@@ -104,7 +104,7 @@ void App::render() {
   glfwPollEvents();
 }
 
-void App::processInput(GLFWwindow *window) {
+void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
@@ -120,7 +120,7 @@ void App::processInput(GLFWwindow *window) {
   }
 }
 
-void App::basisInit() {
+void DL::App::basisInit() {
   basist::basisu_transcoder_init();
   mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);

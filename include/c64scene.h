@@ -7,7 +7,7 @@
 #include "texture.h"
 #include <memory>
 
-class C64Scene : public IScene {
+class C64Scene : public DL::IScene {
 public:
   C64Scene(std::string glslVersion,
            basist::etc1_global_selector_codebook &codeBook);

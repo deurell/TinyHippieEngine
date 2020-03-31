@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
 
+namespace DL {
 class IScene {
 public:
   virtual ~IScene(){};
@@ -10,3 +11,4 @@ public:
   virtual void onKey(int key) = 0;
   virtual void onScreenSizeChanged(glm::vec2 size) = 0;
 };
+} // namespace DL

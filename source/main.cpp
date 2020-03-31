@@ -2,6 +2,6 @@
 #include "app.h"
 
 int main() {
-  App app;
+  DL::App app;
   return app.run();
 }

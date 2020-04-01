@@ -44,7 +44,15 @@ void TrueTypeScene::loadFontTexture() {
   glGenTextures(1, &font.texture);
   glBindTexture(GL_TEXTURE_2D, font.texture);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, font.atlasWidth, font.atlasHeight, 0,
+
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                  GL_LINEAR_MIPMAP_LINEAR);
+
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, font.atlasWidth, font.atlasHeight, 0,
                GL_RED, GL_UNSIGNED_BYTE, atlasData.get());
   glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
   glGenerateMipmap(GL_TEXTURE_2D);
@@ -143,7 +151,7 @@ void TrueTypeScene::initLabel() {
 }
 
 void TrueTypeScene::renderLabel(float delta) {
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   mLabelShader->use();
 
   glm::vec3 pivot = {260, 0, 0};
@@ -175,7 +183,6 @@ void TrueTypeScene::renderLabel(float delta) {
   mLabelShader->setInt("texture1", 0);
 
   glBindVertexArray(rotatingLabel.vao);
-
   glDrawElements(GL_TRIANGLES, rotatingLabel.indexElementCount,
                  GL_UNSIGNED_SHORT, nullptr);
 }
@@ -229,14 +236,6 @@ void TrueTypeScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  glActiveTexture(GL_TEXTURE0);
-
-  mShader->use();
-  mShader->setFloat("iTime", (float)glfwGetTime());
-  mShader->setInt("texture1", 0);
-
-  glBindVertexArray(mVAO);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
 
   renderLabel(delta);

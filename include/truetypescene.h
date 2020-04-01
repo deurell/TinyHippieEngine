@@ -31,9 +31,6 @@ private:
   GlyphInfo makeGlyphInfo(uint32_t character, float offsetX, float offsetY);
   std::unique_ptr<DL::Shader> mLabelShader;
   std::unique_ptr<DL::Camera> mLabelCamera;
-
-  std::unique_ptr<DL::Shader> mShader;
-  unsigned int mVAO, mVBO, mEBO;
   std::string mGlslVersionString;
   glm::vec2 mScreenSize;
   float mDelta;

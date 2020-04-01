@@ -7,6 +7,13 @@
 #include "texture.h"
 #include <memory>
 
+struct GlyphInfo {
+  glm::vec3 positions[4];
+  glm::vec2 uvs[4];
+  float offsetX = 0;
+  float offsetY = 0;
+};
+
 class TrueTypeScene : public DL::IScene {
 public:
   TrueTypeScene(std::string glslVersion);
@@ -18,7 +25,12 @@ public:
   virtual void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  void initFont();
+  void loadFontTexture();
+  void initLabel();
+  void renderLabel(float delta);
+  GlyphInfo makeGlyphInfo(uint32_t character, float offsetX, float offsetY);
+  std::unique_ptr<DL::Shader> mLabelShader;
+  std::unique_ptr<DL::Camera> mLabelCamera;
 
   std::unique_ptr<DL::Shader> mShader;
   unsigned int mVAO, mVBO, mEBO;
@@ -37,4 +49,13 @@ private:
     std::unique_ptr<stbtt_packedchar[]> charInfo;
     GLuint texture = 0;
   } font;
+
+  struct {
+    GLuint vao = 0;
+    GLuint vertexBuffer = 0;
+    GLuint uvBuffer = 0;
+    GLuint indexBuffer = 0;
+    uint16_t indexElementCount = 0;
+    float angle = 0;
+  } rotatingLabel;
 };

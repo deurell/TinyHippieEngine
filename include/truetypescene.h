@@ -55,4 +55,6 @@ private:
     uint16_t indexElementCount = 0;
     float angle = 0;
   } rotatingLabel;
+
+  float mDeg = 0.0;
 };

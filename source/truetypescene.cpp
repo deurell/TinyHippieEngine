@@ -86,13 +86,19 @@ GlyphInfo TrueTypeScene::makeGlyphInfo(uint32_t character, float offsetX,
 }
 
 void TrueTypeScene::initLabel() {
-  mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 20.0f));
+  mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 26.0f));
   mLabelCamera->lookAt({0.0f, 0.0f, 0.0f});
 
   mLabelShader = std::make_unique<DL::Shader>(
       "Shaders/label.vert", "Shaders/label.frag", mGlslVersionString);
 
-  const std::string text = "GRuwL/Sector90";
+  const std::string text =
+      "                             "
+      "Gruwl of Sector 90 welcomes you "
+      "back to this "
+      "new production released 35 "
+      "years too late... Hope you enjoy it. Have a nice day out there and take "
+      "care of each other!                           ";
 
   std::vector<glm::vec3> vertices;
   std::vector<glm::vec2> uvs;
@@ -158,13 +164,13 @@ void TrueTypeScene::renderLabel(float delta) {
   glm::mat4 trans_to_pivot = glm::translate(glm::mat4(1.0f), -pivot);
   glm::mat4 trans_from_pivot = glm::translate(glm::mat4(1.0f), pivot);
 
-  glm::mat4 rotate_matrix =
-      glm::rotate(glm::mat4(1.0f), glm::radians<float>(glfwGetTime() * 50),
-                  glm::vec3(0.0, 1.0, 0.0));
+  glm::mat4 rotate_matrix = glm::rotate(
+      glm::mat4(1.0f), glm::radians<float>(-sin(glfwGetTime()) * 84),
+      glm::vec3(0.0, 1.0, 0.0));
 
   glm::mat4 rotate = trans_from_pivot * rotate_matrix * trans_to_pivot;
   glm::mat4 scale_matrix =
-      glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.05));
+      glm::scale(glm::mat4(1.0f), glm::vec3(0.06, 0.06, 0.06));
   rotate = scale_matrix * trans_to_pivot * rotate;
   mLabelShader->setMat4f("model", rotate);
 
@@ -196,7 +202,7 @@ void TrueTypeScene::init() {
 void TrueTypeScene::render(float delta) {
   mDelta = delta;
 
-  glClearColor(0.5, 0.5, 0.5, 1.0);
+  glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   renderLabel(delta);

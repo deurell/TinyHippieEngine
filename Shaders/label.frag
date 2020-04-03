@@ -1,6 +1,8 @@
 precision highp float;
 
 in vec2 TexCoords;
+in vec2 FragPos;
+in vec4 WorldPos;
 out vec4 FragColor;
 
 uniform float iTime;
@@ -11,5 +13,6 @@ void main() {
   if (c.r < 0.5) {
     discard;
   }
-  FragColor = vec4(c.r, c.r, c.r, 1.0);
+  float col = mix(sin(FragPos.x * 3.1415926), sin(FragPos.y * 3.1415926), 0.5);
+  FragColor = vec4(col, col, col, 1.0);
 }

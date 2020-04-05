@@ -10,7 +10,7 @@ uniform sampler2D texture1;
 
 void main() {
   vec4 c = texture(texture1, TexCoords);
-  if (c.r < 0.5) {
+  if (c.r < 0.8) {
     discard;
   }
   float col = mix(sin(FragPos.x * 3.1415926), sin(FragPos.y * 3.1415926), 0.5);

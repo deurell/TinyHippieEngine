@@ -22,7 +22,7 @@ include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOUR
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 
   source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
-  source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp
+  source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp
   )
 
 add_library(imgui STATIC

@@ -41,9 +41,7 @@ void TrueTypeScene::renderScroll(float delta) {
   glBindTexture(GL_TEXTURE_2D, mTextSprite->mFontTexture);
   mLabelShader->setInt("texture1", 0);
 
-  glBindVertexArray(mTextSprite->mVAO);
-  glDrawElements(GL_TRIANGLES, mTextSprite->mIndexElementCount,
-                 GL_UNSIGNED_SHORT, nullptr);
+  mTextSprite->render(delta);
 }
 
 void TrueTypeScene::init() {

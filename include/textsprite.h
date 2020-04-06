@@ -24,6 +24,7 @@ class TextSprite {
 public:
   TextSprite(std::string fontPath);
   TextSprite(std::string fontPath, std::string text);
+  TextSprite(GLuint texture, std::string text);
   ~TextSprite() = default;
 
   void render(float delta);

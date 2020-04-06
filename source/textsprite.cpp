@@ -12,6 +12,10 @@ DL::TextSprite::TextSprite(std::string fontPath) {
   TextSprite(fontPath, "");
 }
 
+DL::TextSprite::TextSprite(GLuint texture, std::string text) : mFontTexture(texture) {
+  init();
+}
+
 void DL::TextSprite::render(float delta) {
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, mIndexElementCount,

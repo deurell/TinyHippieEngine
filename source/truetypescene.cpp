@@ -36,6 +36,7 @@ void TrueTypeScene::renderScroll(float delta) {
   mLabelShader->setMat4f("projection", projectionMatrix);
 
   mLabelShader->setFloat("iTime", glfwGetTime());
+  mLabelShader->setFloat("scrollOffset", mScrollOffset);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mTextSprite->mFontTexture);
   mLabelShader->setInt("texture1", 0);
@@ -61,14 +62,18 @@ void TrueTypeScene::init() {
       "care of each other!               ";
 
   mTextSprite = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text);
-  glEnable(GL_DEPTH_TEST);   
 }
 
 void TrueTypeScene::render(float delta) {
   mDelta = delta;
+  mScrollOffset += delta;
+  if (mScrollOffset > 60) {
+    mScrollOffset = 0;
+  }
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_DEPTH_TEST);   
 
   renderScroll(delta);
 
@@ -77,6 +82,7 @@ void TrueTypeScene::render(float delta) {
   ImGui::NewFrame();
   ImGui::Begin("emscripten demo engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::Text("scrollOffset: %.1f", mScrollOffset);
   ImGui::End();
 }
 

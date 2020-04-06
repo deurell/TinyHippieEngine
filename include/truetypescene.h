@@ -27,5 +27,7 @@ private:
 
   std::string mGlslVersionString;
   glm::vec2 mScreenSize;
+  float mScrollOffset = 0;
+  const float mScrollWrap = 10000;
   float mDelta;
 };

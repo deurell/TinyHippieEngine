@@ -22,11 +22,12 @@ struct GlyphInfo {
 class TextSprite {
 
 public:
+  TextSprite(std::string fontPath);
   TextSprite(std::string fontPath, std::string text);
   ~TextSprite() = default;
 
   void render(float delta);
-  
+
   std::string mText;
   GLuint mVAO = 0;
   GLuint mVBO = 0;

@@ -8,6 +8,10 @@ DL::TextSprite::TextSprite(std::string fontPath, std::string text) : mText(text)
   init();
 };
 
+DL::TextSprite::TextSprite(std::string fontPath) {
+  TextSprite(fontPath, "");
+}
+
 void DL::TextSprite::render(float delta) {
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, mIndexElementCount,
@@ -15,7 +19,7 @@ void DL::TextSprite::render(float delta) {
 }
 
 void DL::TextSprite::loadFontTexture(std::string fontPath) {
-    std::ifstream iStream(fontPath, std::ios::binary);
+  std::ifstream iStream(fontPath, std::ios::binary);
   iStream.seekg(0, iStream.end);
   const int size = iStream.tellg();
   iStream.seekg(0, iStream.beg);

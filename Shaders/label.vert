@@ -9,13 +9,14 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float iTime;
+uniform float scrollOffset;
 
 void main() {
   TexCoords = aTexCoords;
   WorldPos = model * vec4(aPos, 1);
   float w_x = WorldPos.x;
   vec3 pos = aPos;
-  pos.x -= iTime * 150.0;
+  pos.x -= scrollOffset * 150.0;
 
   pos.y = pos.y + 48.0 * sin(-iTime * 0.76 + pos.x * 0.013);
   pos.x = pos.x + 24.0 * cos(iTime * 0.69 + pos.y * 0.012);

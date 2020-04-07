@@ -18,9 +18,13 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal")
 endif()
 
-include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder)
+include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source 
+  ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder
+  ${tiny_hippie_engine_SOURCE_DIR}/open-al/include/AL
+  )
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 
   source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
@@ -134,7 +138,6 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
   set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
   set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
-  
   add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/openal-soft)
   set(LIBS ${LIBS} OpenAL)
   

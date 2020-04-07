@@ -127,8 +127,16 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
   add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/glfw)
   set(LIBS ${LIBS} glfw)
-  
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
+
+  set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
+  set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs" FORCE)
+  set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
+  set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
+  set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
+  
+  add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/openal-soft)
+  set(LIBS ${LIBS} OpenAL)
   
   add_custom_command(
     TARGET tiny_hippie_engine POST_BUILD

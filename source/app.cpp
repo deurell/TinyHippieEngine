@@ -59,12 +59,14 @@ int DL::App::run() {
 
   glViewport(0, 0, screen_width, screen_height);
 
+#ifdef USE_IMGUI
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   ImGui::StyleColorsDark();
   ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
   ImGui_ImplOpenGL3_Init(mGlslVersionString.c_str());
+#endif
 
   mScene->init();
   mScene->onScreenSizeChanged({screen_width, screen_height});
@@ -75,9 +77,11 @@ int DL::App::run() {
   while (!glfwWindowShouldClose(mWindow)) {
     render();
   }
+#ifdef USE_IMGUI
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
+#endif
 
   glfwDestroyWindow(mWindow);
 #endif
@@ -92,8 +96,11 @@ void DL::App::render() {
   mLastFrame = currentFrame;
 
   mScene->render(mDeltaTime);
+
+#ifdef USE_IMGUI
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+#endif
 
   processInput(mWindow);
 

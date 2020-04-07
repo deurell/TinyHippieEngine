@@ -71,10 +71,11 @@ void TrueTypeScene::render(float delta) {
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glEnable(GL_DEPTH_TEST);   
-
+  glEnable(GL_DEPTH_TEST);
+  
   renderScroll(delta);
 
+#ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -82,6 +83,7 @@ void TrueTypeScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollOffset: %.1f", mScrollOffset);
   ImGui::End();
+#endif
 }
 
 void TrueTypeScene::onKey(int key){};

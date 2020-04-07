@@ -139,6 +139,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
   set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
   add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/openal-soft)
+  set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)  
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAL_LIBTYPE_STATIC")
   set(LIBS ${LIBS} OpenAL)
   

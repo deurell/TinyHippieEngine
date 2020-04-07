@@ -97,6 +97,7 @@ void DemoScene::render(float delta) {
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
@@ -109,6 +110,7 @@ void DemoScene::render(float delta) {
   ImGui::InputFloat3("light", &mPointLightPositions[0].x);
   ImGui::InputFloat3("light2", &mPointLightPositions[1].x);
   ImGui::End();
+#endif
 
   mLightingShader->use();
 

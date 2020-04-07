@@ -76,12 +76,14 @@ void C64Scene::render(float delta) {
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
+#ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();
+#endif
 }
 
 void C64Scene::onKey(int key){};

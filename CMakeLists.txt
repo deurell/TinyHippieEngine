@@ -23,7 +23,7 @@ endif()
 
 include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source 
   ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder
-  ${tiny_hippie_engine_SOURCE_DIR}/open-al/include
+  ${tiny_hippie_engine_SOURCE_DIR}/openal-soft/include
   )
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 

@@ -13,6 +13,9 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
 
+#include "../../openal-soft/include/AL/al.h"
+#include "../../openal-soft/include/AL/alc.h"
+
 void renderLoopCallback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
 void DL::App::init() {
@@ -24,6 +27,13 @@ void DL::App::init() {
   mGlslVersionString = "#version 330 core\n";
 #endif
   mScene = std::make_unique<TrueTypeScene>(mGlslVersionString);
+
+  ALCdevice *device = alcOpenDevice(NULL);
+  if (device) {
+    std::cout << "success!";
+  } else {
+    std::cout << "fail!";
+  }
 }
 
 int DL::App::run() {

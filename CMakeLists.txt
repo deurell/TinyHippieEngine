@@ -23,7 +23,7 @@ endif()
 
 include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source 
   ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder
-  ${tiny_hippie_engine_SOURCE_DIR}/open-al/include/AL
+  ${tiny_hippie_engine_SOURCE_DIR}/open-al/include
   )
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 
@@ -139,6 +139,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
   set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
   add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/openal-soft)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAL_LIBTYPE_STATIC")
   set(LIBS ${LIBS} OpenAL)
   
   add_custom_command(

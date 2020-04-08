@@ -1,3 +1,11 @@
+[submodule "assimp"]
+	path = assimp
+	url = git@github.com:assimp/assimp.git
+	branch = master
 [submodule "glfw"]
 	path = glfw
-	url = https://github.com/glfw/glfw.git
+	url = git@github.com:glfw/glfw.git
+[submodule "openal-soft"]
+	path = openal-soft
+	url = git@github.com:kcat/openal-soft.git
+	branch = v1.19

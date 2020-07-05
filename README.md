@@ -1,3 +1,5 @@
+** TINY HIPPIE ENGINE **
+
 Tiny and lovely cross platform demo engine supporting...
 - OSX/Linux/Windows/Emscripten(webgl2/wasm)
 - Fantastic image basisu compression

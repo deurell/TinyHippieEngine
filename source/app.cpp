@@ -50,6 +50,7 @@ int DL::App::run() {
     glfwTerminate();
     return -1;
   }
+  glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);
@@ -118,7 +119,7 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  if (glfwGetKey(window, GLFW_KEY_0) == GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
     mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
     mScene->init();
   }

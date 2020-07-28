@@ -65,7 +65,7 @@ void TrueTypeScene::init() {
 void TrueTypeScene::render(float delta) {
   mDelta = delta;
   mScrollOffset += delta;
-  if (mScrollOffset > 60) {
+  if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
   }
 

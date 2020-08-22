@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 
-#ifdef Emscripten
+#ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 

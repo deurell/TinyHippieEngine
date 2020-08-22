@@ -17,7 +17,7 @@ elseif (APPLE)
 endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -DEmscripten=1 -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -s USE_GLFW=3 -s USE_WEBGL2=1 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
   SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal")
 endif()
 

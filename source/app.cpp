@@ -21,7 +21,7 @@ void renderLoopCallback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 void DL::App::init() {
   glfwInit();
   basisInit();
-#ifdef Emscripten
+#ifdef __EMSCRIPTEN__
   mGlslVersionString = "#version 300 es\n";
 #else
   mGlslVersionString = "#version 330 core\n";
@@ -74,7 +74,7 @@ int DL::App::run() {
   mScene->init();
   mScene->onScreenSizeChanged({screen_width, screen_height});
 
-#ifdef Emscripten
+#ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(&renderLoopCallback, this, -1, 1);
 #else
   while (!glfwWindowShouldClose(mWindow)) {

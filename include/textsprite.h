@@ -24,10 +24,11 @@ class TextSprite {
 public:
   TextSprite(std::string fontPath);
   TextSprite(std::string fontPath, std::string text);
-  TextSprite(GLuint texture, std::string text);
+  TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text);
   ~TextSprite() = default;
 
   void render(float delta);
+  stbtt_packedchar* getFontCharInfoPtr();
 
   std::string mText;
   GLuint mVAO = 0;
@@ -50,5 +51,6 @@ private:
   const uint32_t mFontFirstChar = ' ';
   const uint32_t mFontCharCount = '~' - ' ';
   std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
+  stbtt_packedchar* mFontCharInfoPtr = nullptr;
 };
 }

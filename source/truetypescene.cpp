@@ -44,6 +44,27 @@ void TrueTypeScene::renderScroll(float delta) {
   mTextSprite->render(delta);
 }
 
+void TrueTypeScene::renderStatus(float delta) {
+  mStatusShader->use();
+
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::translate(model, glm::vec3(-14.0,9.0,0.0));
+  model = glm::scale(model, glm::vec3(0.03,0.03,1.0));
+  mStatusShader->setMat4f("model", model);
+  glm::mat4 view = mLabelCamera->getViewMatrix();
+  mStatusShader->setMat4f("view", view);
+  glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform(
+      45.0, mScreenSize.x / mScreenSize.y);
+  mStatusShader->setMat4f("projection", projectionMatrix);
+
+  mStatusShader->setFloat("iTime", glfwGetTime());
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, mStatusSprite->mFontTexture);
+  mStatusShader->setInt("texture1", 0);
+  
+  mStatusSprite->render(delta);
+}
+
 void TrueTypeScene::init() {
   mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 26.0f));
   mLabelCamera->lookAt({0.0f, 0.0f, 0.0f});
@@ -60,6 +81,10 @@ void TrueTypeScene::init() {
       "care of each other!               ";
 
   mTextSprite = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text);
+
+  mStatusShader = std::make_unique<DL::Shader>("Shaders/status.vert", "Shaders/status.frag", mGlslVersionString);
+  std::string statusText = "truetype scroller";
+  mStatusSprite = std::make_unique<DL::TextSprite>(mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
 }
 
 void TrueTypeScene::render(float delta) {
@@ -74,6 +99,7 @@ void TrueTypeScene::render(float delta) {
   glEnable(GL_DEPTH_TEST);
   
   renderScroll(delta);
+  renderStatus(delta);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();

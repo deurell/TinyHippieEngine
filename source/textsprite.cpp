@@ -12,7 +12,8 @@ DL::TextSprite::TextSprite(std::string fontPath) {
   TextSprite(fontPath, "");
 }
 
-DL::TextSprite::TextSprite(GLuint texture, std::string text) : mFontTexture(texture) {
+DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(text) {
+  glBindTexture(GL_TEXTURE_2D, mFontTexture);
   init();
 }
 
@@ -36,6 +37,7 @@ void DL::TextSprite::loadFontTexture(std::string fontPath) {
       std::make_unique<uint8_t[]>(mFontAtlasWidth * mFontAtlasHeight);
 
   mFontCharInfo = std::make_unique<stbtt_packedchar[]>(mFontCharCount);
+  mFontCharInfoPtr = mFontCharInfo.get();
 
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(), mFontAtlasWidth,
@@ -67,6 +69,10 @@ void DL::TextSprite::loadFontTexture(std::string fontPath) {
   glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
   glGenerateMipmap(GL_TEXTURE_2D);
   delete[] fontData;
+}
+
+stbtt_packedchar* DL::TextSprite::getFontCharInfoPtr() {
+  return mFontCharInfo ? mFontCharInfo.get() : mFontCharInfoPtr;
 }
 
 void DL::TextSprite::init() {
@@ -129,7 +135,7 @@ void DL::TextSprite::init() {
 DL::GlyphInfo DL::TextSprite::makeGlyphInfo(uint32_t character, float offsetX,
                                        float offsetY) {
   stbtt_aligned_quad quad;
-  stbtt_GetPackedQuad(mFontCharInfo.get(), mFontAtlasWidth, mFontAtlasHeight,
+  stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
                       character - mFontFirstChar, &offsetX, &offsetY, &quad, 1);
   auto xmin = quad.x0;
   auto xmax = quad.x1;

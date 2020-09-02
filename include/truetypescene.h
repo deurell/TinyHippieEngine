@@ -20,10 +20,14 @@ public:
 
 private:
   void renderScroll(float delta);
+  void renderStatus(float delta);
 
   std::unique_ptr<DL::Shader> mLabelShader;
   std::unique_ptr<DL::Camera> mLabelCamera;
   std::unique_ptr<DL::TextSprite> mTextSprite;
+
+  std::unique_ptr<DL::Shader> mStatusShader;
+  std::unique_ptr<DL::TextSprite> mStatusSprite;
 
   std::string mGlslVersionString;
   glm::vec2 mScreenSize;

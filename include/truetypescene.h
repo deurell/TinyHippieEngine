@@ -9,6 +9,9 @@
 #include <memory>
 
 class TrueTypeScene : public DL::IScene {
+
+enum class SceneState {INTRO, RUNNING};
+
 public:
   TrueTypeScene(std::string glslVersion);
   ~TrueTypeScene() = default;
@@ -21,6 +24,19 @@ public:
 private:
   void renderScroll(float delta);
   void renderStatus(float delta);
+  void calculateStatus(float delta);
+
+  static inline glm::vec3 lerp(glm::vec3 x, glm::vec3 y, float t) {
+    return (x * (1.0f - t) + y * t);
+  }
+
+  static inline float normalizedBezier3(float b, float c, float t) {
+    float s = 1.f - t;
+    float t2 = t * t;
+    float s2 = s * s;
+    float t3 = t2 * t;
+    return (3.f*b*s2*t) + (3.f*c*s*t2) + t3;
+  }
 
   std::unique_ptr<DL::Shader> mLabelShader;
   std::unique_ptr<DL::Camera> mLabelCamera;
@@ -34,4 +50,9 @@ private:
   float mScrollOffset = 0;
   const float scroll_wrap = 60;
   float mDelta;
+  
+  float mStartTime = 0;
+  glm::vec3 mStatusOffset = {0.0,0.0,0.0};
+  static constexpr float intro_time = 3.0;
+  SceneState mState = SceneState::INTRO;
 };

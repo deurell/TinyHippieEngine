@@ -44,11 +44,19 @@ void TrueTypeScene::renderScroll(float delta) {
   mTextSprite->render(delta);
 }
 
+void TrueTypeScene::calculateStatus(float delta) {
+  if (mState != SceneState::INTRO) return;
+  float timeSinceStart = glfwGetTime() - mStartTime;
+  float t = timeSinceStart / intro_time;
+  float mt = 1.0f-t;
+  mStatusOffset = lerp(glm::vec3(240.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), 1.0f-(mt*mt*mt*mt));
+}
+
 void TrueTypeScene::renderStatus(float delta) {
   mStatusShader->use();
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(-14.0,9.0,0.0));
+  model = glm::translate(model, glm::vec3(-14.0,9.0,0.0) + mStatusOffset);
   model = glm::scale(model, glm::vec3(0.03,0.03,1.0));
   mStatusShader->setMat4f("model", model);
   glm::mat4 view = mLabelCamera->getViewMatrix();
@@ -66,6 +74,8 @@ void TrueTypeScene::renderStatus(float delta) {
 }
 
 void TrueTypeScene::init() {
+  mStartTime = glfwGetTime();
+
   mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 26.0f));
   mLabelCamera->lookAt({0.0f, 0.0f, 0.0f});
 
@@ -88,6 +98,9 @@ void TrueTypeScene::init() {
 }
 
 void TrueTypeScene::render(float delta) {
+  if (glfwGetTime() - mStartTime >= intro_time){
+    mState = SceneState::RUNNING;
+  }
   mDelta = delta;
   mScrollOffset += delta;
   if (mScrollOffset > scroll_wrap) {
@@ -99,13 +112,14 @@ void TrueTypeScene::render(float delta) {
   glEnable(GL_DEPTH_TEST);
   
   renderScroll(delta);
+  calculateStatus(delta);
   renderStatus(delta);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
+  ImGui_ImplGlfw_NewFrame();  
   ImGui::NewFrame();
-  ImGui::Begin("emscripten demo engine");
+  ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollOffset: %.1f", mScrollOffset);
   ImGui::End();

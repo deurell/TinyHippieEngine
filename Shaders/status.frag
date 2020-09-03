@@ -8,6 +8,8 @@ out vec4 FragColor;
 uniform float iTime;
 uniform sampler2D texture1;
 
+#define PI 3.14159265
+
 void main() {
   vec4 c = texture(texture1, TexCoords);
   if (c.r < 0.8) {

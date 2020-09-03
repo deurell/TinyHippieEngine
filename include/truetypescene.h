@@ -4,13 +4,13 @@
 #include "camera.h"
 #include "shader.h"
 #include "stb_truetype.h"
-#include "texture.h"
 #include "textsprite.h"
+#include "texture.h"
 #include <memory>
 
 class TrueTypeScene : public DL::IScene {
 
-enum class SceneState {INTRO, RUNNING};
+  enum class SceneState { INTRO, RUNNING, OUTRO };
 
 public:
   TrueTypeScene(std::string glslVersion);
@@ -35,7 +35,7 @@ private:
     float t2 = t * t;
     float s2 = s * s;
     float t3 = t2 * t;
-    return (3.f*b*s2*t) + (3.f*c*s*t2) + t3;
+    return (3.f * b * s2 * t) + (3.f * c * s * t2) + t3;
   }
 
   std::unique_ptr<DL::Shader> mLabelShader;
@@ -48,11 +48,11 @@ private:
   std::string mGlslVersionString;
   glm::vec2 mScreenSize;
   float mScrollOffset = 0;
-  const float scroll_wrap = 60;
+  const float scroll_wrap = 52;
   float mDelta;
-  
+
   float mStartTime = 0;
-  glm::vec3 mStatusOffset = {0.0,0.0,0.0};
+  glm::vec3 mStatusOffset = {0.0, 0.0, 0.0};
   static constexpr float intro_time = 3.0;
   SceneState mState = SceneState::INTRO;
 };

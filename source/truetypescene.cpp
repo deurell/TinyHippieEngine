@@ -4,8 +4,8 @@
 #include "imgui_impl_opengl3.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
-#include <iostream>
 #include <glm/glm.hpp>
+#include <iostream>
 
 TrueTypeScene::TrueTypeScene(std::string glslVersion)
     : mGlslVersionString(glslVersion) {}
@@ -45,19 +45,27 @@ void TrueTypeScene::renderScroll(float delta) {
 }
 
 void TrueTypeScene::calculateStatus(float delta) {
-  if (mState != SceneState::INTRO) return;
-  float timeSinceStart = glfwGetTime() - mStartTime;
-  float t = timeSinceStart / intro_time;
-  float mt = 1.0f-t;
-  mStatusOffset = lerp(glm::vec3(240.0,0.0,0.0), glm::vec3(0.0,0.0,0.0), 1.0f-(mt*mt*mt*mt));
+  if (mState == SceneState::INTRO) {
+    float timeSinceStart = glfwGetTime() - mStartTime;
+    float t = timeSinceStart / intro_time;
+    float mt = 1.0f - t;
+    mStatusOffset = lerp(glm::vec3(240.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0),
+                         1.0f - (mt * mt * mt * mt));
+  } else if (mState == SceneState::OUTRO) {
+    float timeSinceStart = glfwGetTime() - mStartTime;
+    float t = timeSinceStart / intro_time;
+    float mt = 1.0f - t;
+    mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
+                         t * t * t * t);
+  }
 }
 
 void TrueTypeScene::renderStatus(float delta) {
   mStatusShader->use();
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::translate(model, glm::vec3(-14.0,9.0,0.0) + mStatusOffset);
-  model = glm::scale(model, glm::vec3(0.03,0.03,1.0));
+  model = glm::translate(model, glm::vec3(-14.0, 9.0, 0.0) + mStatusOffset);
+  model = glm::scale(model, glm::vec3(0.03, 0.03, 1.0));
   mStatusShader->setMat4f("model", model);
   glm::mat4 view = mLabelCamera->getViewMatrix();
   mStatusShader->setMat4f("view", view);
@@ -69,7 +77,7 @@ void TrueTypeScene::renderStatus(float delta) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mStatusSprite->mFontTexture);
   mStatusShader->setInt("texture1", 0);
-  
+
   mStatusSprite->render(delta);
 }
 
@@ -88,36 +96,44 @@ void TrueTypeScene::init() {
       "back to this "
       "new production released 35 "
       "years too late... Hope you enjoy it. Have a nice day out there and take "
-      "care of each other!               ";
+      "care of each other!             "
+      " ";
 
-  mTextSprite = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text);
+  mTextSprite =
+      std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text);
 
-  mStatusShader = std::make_unique<DL::Shader>("Shaders/status.vert", "Shaders/status.frag", mGlslVersionString);
+  mStatusShader = std::make_unique<DL::Shader>(
+      "Shaders/status.vert", "Shaders/status.frag", mGlslVersionString);
   std::string statusText = "truetype scroller";
-  mStatusSprite = std::make_unique<DL::TextSprite>(mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
+  mStatusSprite = std::make_unique<DL::TextSprite>(
+      mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
 }
 
 void TrueTypeScene::render(float delta) {
-  if (glfwGetTime() - mStartTime >= intro_time){
+  if (mState == SceneState::INTRO &&
+      (glfwGetTime() - mStartTime >= intro_time)) {
     mState = SceneState::RUNNING;
   }
+
   mDelta = delta;
   mScrollOffset += delta;
   if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
+    mState = SceneState::OUTRO;
+    mStartTime = glfwGetTime();
   }
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-  
+
   renderScroll(delta);
   calculateStatus(delta);
   renderStatus(delta);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();  
+  ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
@@ -126,6 +142,13 @@ void TrueTypeScene::render(float delta) {
 #endif
 }
 
-void TrueTypeScene::onKey(int key){};
+void TrueTypeScene::onKey(int key) {
+  if (key == GLFW_KEY_O) {
+    if (mState == SceneState::RUNNING) {
+      mState = SceneState::OUTRO;
+      mStartTime = glfwGetTime();
+    }
+  }
+};
 
 void TrueTypeScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };

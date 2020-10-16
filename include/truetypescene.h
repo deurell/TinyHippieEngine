@@ -46,13 +46,13 @@ private:
   std::unique_ptr<DL::TextSprite> mStatusSprite;
 
   std::string mGlslVersionString;
-  glm::vec2 mScreenSize;
+  glm::vec2 mScreenSize = {0.0, 0.0};
   float mScrollOffset = 0;
   const float scroll_wrap = 52;
-  float mDelta;
+  float mDelta = 0;
 
   float mStartTime = 0;
   glm::vec3 mStatusOffset = {0.0, 0.0, 0.0};
-  static constexpr float intro_time = 3.0;
+  static constexpr float mIntroTime = 3.0;
   SceneState mState = SceneState::INTRO;
 };

@@ -47,13 +47,13 @@ void TrueTypeScene::renderScroll(float delta) {
 void TrueTypeScene::calculateStatus(float delta) {
   if (mState == SceneState::INTRO) {
     float timeSinceStart = glfwGetTime() - mStartTime;
-    float t = timeSinceStart / intro_time;
+    float t = timeSinceStart / mIntroTime;
     float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(240.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0),
                          1.0f - (mt * mt * mt * mt));
   } else if (mState == SceneState::OUTRO) {
     float timeSinceStart = glfwGetTime() - mStartTime;
-    float t = timeSinceStart / intro_time;
+    float t = timeSinceStart / mIntroTime;
     float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
                          t * t * t * t);
@@ -111,7 +111,7 @@ void TrueTypeScene::init() {
 
 void TrueTypeScene::render(float delta) {
   if (mState == SceneState::INTRO &&
-      (glfwGetTime() - mStartTime >= intro_time)) {
+      (glfwGetTime() - mStartTime >= mIntroTime)) {
     mState = SceneState::RUNNING;
   }
 

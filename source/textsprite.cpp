@@ -8,9 +8,7 @@ DL::TextSprite::TextSprite(std::string fontPath, std::string text) : mText(text)
   init();
 };
 
-DL::TextSprite::TextSprite(std::string fontPath) {
-  TextSprite(fontPath, "");
-}
+DL::TextSprite::TextSprite(std::string fontPath) : TextSprite(fontPath, "") {}
 
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(text) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);

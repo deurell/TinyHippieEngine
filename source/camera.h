@@ -7,7 +7,8 @@ class Camera {
 public:
   Camera() = default;
 
-  Camera(const glm::vec3 position) : mPosition(position) {}
+  Camera(const glm::vec3 position) : mPosition(position), mOrientation(glm::mat4(1)) {}
+
   Camera(const glm::vec3 position, const glm::quat orientation)
       : mPosition(position), mOrientation(orientation) {}
 

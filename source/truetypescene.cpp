@@ -54,7 +54,6 @@ void TrueTypeScene::calculateStatus(float delta) {
   } else if (mState == SceneState::OUTRO) {
     float timeSinceStart = glfwGetTime() - mStartTime;
     float t = timeSinceStart / mIntroTime;
-    float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
                          t * t * t * t);
   }

@@ -46,13 +46,13 @@ void TrueTypeScene::renderScroll(float delta) {
 
 void TrueTypeScene::calculateStatus(float delta) {
   if (mState == SceneState::INTRO) {
-    float timeSinceStart = glfwGetTime() - mStartTime;
+    float timeSinceStart = glfwGetTime() - mStateStartTime;
     float t = timeSinceStart / mIntroTime;
     float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(240.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0),
                          1.0f - (mt * mt * mt * mt));
   } else if (mState == SceneState::OUTRO) {
-    float timeSinceStart = glfwGetTime() - mStartTime;
+    float timeSinceStart = glfwGetTime() - mStateStartTime;
     float t = timeSinceStart / mIntroTime;
     mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
                          t * t * t * t);
@@ -81,7 +81,7 @@ void TrueTypeScene::renderStatus(float delta) {
 }
 
 void TrueTypeScene::init() {
-  mStartTime = glfwGetTime();
+  mStateStartTime = glfwGetTime();
 
   mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 26.0f));
   mLabelCamera->lookAt({0.0f, 0.0f, 0.0f});
@@ -110,7 +110,7 @@ void TrueTypeScene::init() {
 
 void TrueTypeScene::render(float delta) {
   if (mState == SceneState::INTRO &&
-      (glfwGetTime() - mStartTime >= mIntroTime)) {
+      (glfwGetTime() - mStateStartTime >= mIntroTime)) {
     mState = SceneState::RUNNING;
   }
 
@@ -119,7 +119,7 @@ void TrueTypeScene::render(float delta) {
   if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
     mState = SceneState::OUTRO;
-    mStartTime = glfwGetTime();
+    mStateStartTime = glfwGetTime();
   }
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -145,7 +145,7 @@ void TrueTypeScene::onKey(int key) {
   if (key == GLFW_KEY_O) {
     if (mState == SceneState::RUNNING) {
       mState = SceneState::OUTRO;
-      mStartTime = glfwGetTime();
+      mStateStartTime = glfwGetTime();
     }
   }
 };

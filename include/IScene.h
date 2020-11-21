@@ -4,7 +4,7 @@
 namespace DL {
 class IScene {
 public:
-  virtual ~IScene(){};
+  virtual ~IScene() = default;
 
   virtual void init() = 0;
   virtual void render(float delta) = 0;

@@ -21,9 +21,9 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal")
 endif()
 
-include_directories(${tiny_hippie_engine_INCLUDE_DIRS} ${tiny_hippie_engine_SOURCE_DIR}/include ${tiny_hippie_engine_SOURCE_DIR}/source 
-  ${tiny_hippie_engine_SOURCE_DIR}/assimp-5.0.1/include ${tiny_hippie_engine_SOURCE_DIR}/imgui ${tiny_hippie_engine_SOURCE_DIR}/transcoder
-  ${tiny_hippie_engine_SOURCE_DIR}/openal-soft/include
+include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/source 
+${CMAKE_SOURCE_DIR}/assimp-5.0.1/include ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/transcoder
+${CMAKE_SOURCE_DIR}/openal-soft/include
   )
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h 
@@ -123,14 +123,14 @@ set(ASSIMP_BUILD_LWO_IMPORTER OFF CACHE BOOL "Disable LWO" FORCE)
 set(ASSIMP_BUILD_LWS_IMPORTER OFF CACHE BOOL "Disable LWS" FORCE)
 set(ASSIMP_BUILD_IFC_IMPORTER OFF CACHE BOOL "Disable IFC" FORCE)
 
-add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/assimp)
+add_subdirectory(${CMAKE_SOURCE_DIR}/assimp)
 set(LIBS ${LIBS} assimp)
 
 if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
   set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-  add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/glfw)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
   set(LIBS ${LIBS} glfw)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
 
@@ -139,7 +139,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
   set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
   set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
-  add_subdirectory(${tiny_hippie_engine_SOURCE_DIR}/openal-soft)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/openal-soft)
   set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)  
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAL_LIBTYPE_STATIC")
   set(LIBS ${LIBS} OpenAL)

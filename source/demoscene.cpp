@@ -8,10 +8,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <iostream>
+#include <utility>
 
 DemoScene::DemoScene(std::string glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
-    : mGlslVersionString(glslVersion), mCodeBook(codeBook){};
+    : mGlslVersionString(std::move(glslVersion)), mCodeBook(codeBook){};
 
 void DemoScene::init() {
   mLampShader = std::make_unique<DL::Shader>(
@@ -169,14 +170,14 @@ void DemoScene::render(float delta) {
 
   glm::mat4 mod = glm::mat4(1.0);
   glBindVertexArray(mLightVAO);
-  for (unsigned int i = 0; i < point_light_count; i++) {
+  for (auto& mPointLightPosition : mPointLightPositions) {
     mod = glm::mat4(1.0f);
-    mod = glm::translate(mod, mPointLightPositions[i]);
+    mod = glm::translate(mod, mPointLightPosition);
     mod = glm::scale(mod, glm::vec3(0.1f));
     mLampShader->setMat4f("model", mod);
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
-};
+}
 void DemoScene::onKey(int key) {
   const float cameraSpeed = 1.5f * mDelta;
   if (key == GLFW_KEY_W) {
@@ -200,6 +201,6 @@ void DemoScene::onKey(int key) {
   if (key == GLFW_KEY_L) {
     mCamera->lookAt({0.0f, 0.0f, 0.0f});
   }
-};
+}
 
-void DemoScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };
+void DemoScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }

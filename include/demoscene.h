@@ -10,20 +10,20 @@ class DemoScene : public DL::IScene {
 public:
   DemoScene(std::string glslVersion,
             basist::etc1_global_selector_codebook *codeBook);
-  ~DemoScene() = default;
+  ~DemoScene() override = default;
 
-  virtual void init() override;
-  virtual void render(float delta) override;
-  virtual void onKey(int key) override;
-  virtual void onScreenSizeChanged(glm::vec2 size) override;
+  void init() override;
+  void render(float delta) override;
+  void onKey(int key) override;
+  void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
   std::unique_ptr<DL::Shader> mLightingShader;
   std::unique_ptr<DL::Shader> mLampShader;
   std::unique_ptr<DL::Camera> mCamera;
   std::unique_ptr<DL::Model> mModel;
-  unsigned int mLightVAO;
-  unsigned int mCubeVAO;
+  unsigned int mLightVAO = 0;
+  unsigned int mCubeVAO = 0;
   glm::vec3 mLightPos = {1.2f, 1.0f, 2.0f};
   static constexpr int point_light_count = 2;
   glm::vec3 mPointLightPositions[point_light_count] = {
@@ -34,5 +34,5 @@ private:
   std::string mGlslVersionString;
   basist::etc1_global_selector_codebook *mCodeBook;
   glm::vec2 mScreenSize;
-  float mDelta;
+  float mDelta = 0;
 };

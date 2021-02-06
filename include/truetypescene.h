@@ -26,9 +26,7 @@ private:
   void renderStatus(float delta);
   void calculateStatus(float delta);
 
-  static inline glm::vec3 lerp(glm::vec3 x, glm::vec3 y, float t) {
-    return (x * (1.0f - t) + y * t);
-  }
+  static inline glm::vec3 lerp(glm::vec3 x, glm::vec3 y, float t);
 
   static inline float normalizedBezier3(float b, float c, float t) {
     float s = 1.f - t;

@@ -8,7 +8,7 @@
 #include <iostream>
 
 TrueTypeScene::TrueTypeScene(std::string glslVersion)
-    : mGlslVersionString(glslVersion) {}
+    : mGlslVersionString(std::move(glslVersion)) {}
 
 void TrueTypeScene::renderScroll(float delta) {
 
@@ -44,7 +44,7 @@ void TrueTypeScene::renderScroll(float delta) {
   mTextSprite->render(delta);
 }
 
-void TrueTypeScene::calculateStatus(float delta) {
+void TrueTypeScene::calculateStatus(float /*delta*/) {
   if (mState == SceneState::INTRO) {
     float timeSinceStart = glfwGetTime() - mStateStartTime;
     float t = timeSinceStart / mIntroTime;
@@ -148,6 +148,10 @@ void TrueTypeScene::onKey(int key) {
       mStateStartTime = glfwGetTime();
     }
   }
-};
+}
 
-void TrueTypeScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };
+void TrueTypeScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }
+
+glm::vec3 TrueTypeScene::lerp(glm::vec3 x, glm::vec3 y, float t) {
+  return (x * (1.0f - t) + y * t);
+}

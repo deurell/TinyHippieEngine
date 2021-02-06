@@ -22,12 +22,12 @@ struct GlyphInfo {
 class TextSprite {
 
 public:
-  TextSprite(std::string fontPath);
+  explicit TextSprite(std::string fontPath);
   TextSprite(std::string fontPath, std::string text);
   TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text);
   ~TextSprite() = default;
 
-  void render(float delta);
+  void render(float delta) const;
   stbtt_packedchar* getFontCharInfoPtr();
 
   std::string mText;

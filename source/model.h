@@ -40,8 +40,8 @@ public:
 
   // draws the model, and thus all its meshes
   void Draw(DL::Shader shader) {
-    for (unsigned int i = 0; i < meshes.size(); i++)
-      meshes[i].Draw(shader);
+    for (auto & mesh : meshes)
+      mesh.Draw(shader);
   }
 
 private:
@@ -337,9 +337,9 @@ private:
       // check if texture was loaded before and if so, continue to next
       // iteration: skip loading a new texture
       bool skip = false;
-      for (unsigned int j = 0; j < textures_loaded.size(); j++) {
-        if (std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0) {
-          textures.push_back(textures_loaded[j]);
+      for (auto& j : textures_loaded) {
+        if (std::strcmp(j.path.data(), str.C_Str()) == 0) {
+          textures.push_back(j);
           skip = true; // a texture with the same filepath has already been
                        // loaded, continue to next one. (optimization)
           break;

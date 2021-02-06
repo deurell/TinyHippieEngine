@@ -2,20 +2,21 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 #include <iostream>
+#include <utility>
 
-DL::TextSprite::TextSprite(std::string fontPath, std::string text) : mText(text) {
-  loadFontTexture(fontPath);
+DL::TextSprite::TextSprite(std::string fontPath, std::string text) : mText(std::move(text)) {
+  loadFontTexture(std::move(fontPath));
   init();
-};
+}
 
-DL::TextSprite::TextSprite(std::string fontPath) : TextSprite(fontPath, "") {}
+DL::TextSprite::TextSprite(std::string fontPath) : TextSprite(std::move(fontPath), "") {}
 
-DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(text) {
+DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);
   init();
 }
 
-void DL::TextSprite::render(float delta) {
+void DL::TextSprite::render(float /*delta*/) const {
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, mIndexElementCount,
                  GL_UNSIGNED_SHORT, nullptr);

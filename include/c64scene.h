@@ -11,20 +11,23 @@ class C64Scene : public DL::IScene {
 public:
   C64Scene(std::string glslVersion,
            basist::etc1_global_selector_codebook &codeBook);
-  ~C64Scene() = default;
+  
+  C64Scene(const C64Scene& rhs) = delete;
+  
+  ~C64Scene() override = default;
 
-  virtual void init() override;
-  virtual void render(float delta) override;
-  virtual void onKey(int key) override;
-  virtual void onScreenSizeChanged(glm::vec2 size) override;
+  void init() override;
+  void render(float delta) override;
+  void onKey(int key) override;
+  void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
   std::unique_ptr<DL::Shader> mShader;
   std::unique_ptr<DL::Texture> mTexture;
   basist::etc1_global_selector_codebook &mCodeBook;
 
-  unsigned int mVAO, mVBO, mEBO;
+  unsigned int mVAO, mVBO, mEBO = 0;
   std::string mGlslVersionString;
   glm::vec2 mScreenSize;
-  float mDelta;
+  float mDelta = 0;
 };

@@ -45,11 +45,11 @@ public:
     uint32_t imageCount =
         transcoder->get_total_images(buffer.data(), buffer.size());
 
-    basist::basisu_image_info imageInfo;
+    basist::basisu_image_info imageInfo{};
     transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
                                image_index);
 
-    basist::basisu_image_level_info levelInfo;
+    basist::basisu_image_level_info levelInfo{};
     transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo,
                                      image_index, level_index);
     uint32_t dest_size = 0;
@@ -137,10 +137,9 @@ public:
   unsigned int mHeight;
 
 private:
-  bool hasExtension(const std::string &full, const std::string &end) {
+  static bool hasExtension(const std::string &full, const std::string &end) {
     if (full.length() >= end.length()) {
-      return (full.compare(full.length() - end.length(), full.length(), end) ==
-              0);
+      return (full.compare(full.length() - end.length(), full.length(), end) == 0);
     } else {
       return false;
     }

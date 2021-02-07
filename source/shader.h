@@ -16,8 +16,8 @@
 namespace DL {
 class Shader {
 public:
-  Shader(std::string vertexPath, std::string fragmentPath,
-         std::string glslVersion) {
+  Shader(const std::string& vertexPath, const std::string& fragmentPath,
+         const std::string& glslVersion) {
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vertexFile;
@@ -79,7 +79,7 @@ public:
     glDeleteShader(fragment);
   }
 
-  void use() { glUseProgram(mId); }
+  void use() const { glUseProgram(mId); }
 
   void setInt(const std::string &name, int value) const {
     glUniform1i(glGetUniformLocation(mId, name.c_str()), value);

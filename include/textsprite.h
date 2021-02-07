@@ -39,7 +39,7 @@ public:
   GLuint mFontTexture = 0;
   
 private:
-  void loadFontTexture(std::string fontPath);
+  void loadFontTexture(const std::string& fontPath);
   void init();
   GlyphInfo makeGlyphInfo(uint32_t character, float offsetX, float offsetY);
  

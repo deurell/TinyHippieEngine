@@ -33,6 +33,6 @@ private:
   glm::vec3 mModelTranslate = {0.0f, 0.0f, 0.0f};
   std::string mGlslVersionString;
   basist::etc1_global_selector_codebook *mCodeBook;
-  glm::vec2 mScreenSize;
+  glm::vec2 mScreenSize ={0.0,0.0};
   float mDelta = 0;
 };

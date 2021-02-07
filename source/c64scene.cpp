@@ -87,6 +87,6 @@ void C64Scene::render(float delta) {
 #endif
 }
 
-void C64Scene::onKey(int key){};
+void C64Scene::onKey(int key){}
 
-void C64Scene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; };
+void C64Scene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }

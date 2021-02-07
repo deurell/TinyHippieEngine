@@ -22,7 +22,7 @@ void DL::TextSprite::render(float /*delta*/) const {
                  GL_UNSIGNED_SHORT, nullptr);
 }
 
-void DL::TextSprite::loadFontTexture(std::string fontPath) {
+void DL::TextSprite::loadFontTexture(const std::string& fontPath) {
   std::ifstream iStream(fontPath, std::ios::binary);
   iStream.seekg(0, iStream.end);
   const int size = iStream.tellg();

@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 using namespace std;
 
@@ -56,9 +57,9 @@ public:
   // constructor
   Mesh(vector<Vertex> vertices, vector<unsigned int> indices,
        vector<MeshTexture> textures) {
-    this->vertices = vertices;
-    this->indices = indices;
-    this->textures = textures;
+    this->vertices = std::move(vertices);
+    this->indices = std::move(indices);
+    this->textures = std::move(textures);
 
     // now that we have all the required data, set the vertex buffers and its
     // attribute pointers.

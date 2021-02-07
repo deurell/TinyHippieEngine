@@ -12,7 +12,7 @@
 
 DemoScene::DemoScene(std::string glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
-    : mGlslVersionString(std::move(glslVersion)), mCodeBook(codeBook){};
+    : mGlslVersionString(std::move(glslVersion)), mCodeBook(codeBook){}
 
 void DemoScene::init() {
   mLampShader = std::make_unique<DL::Shader>(

@@ -26,8 +26,10 @@ private:
   std::unique_ptr<DL::Texture> mTexture;
   basist::etc1_global_selector_codebook &mCodeBook;
 
-  unsigned int mVAO, mVBO, mEBO = 0;
+  unsigned int mVAO = 0;
+  unsigned int mVBO = 0;
+  unsigned int mEBO = 0;
   std::string mGlslVersionString;
-  glm::vec2 mScreenSize;
+  glm::vec2 mScreenSize{};
   float mDelta = 0;
 };

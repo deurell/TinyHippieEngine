@@ -35,7 +35,7 @@ void TrueTypeScene::renderScroll(float delta) {
       45.0, mScreenSize.x / mScreenSize.y);
   mLabelShader->setMat4f("projection", projectionMatrix);
 
-  mLabelShader->setFloat("iTime", glfwGetTime());
+  mLabelShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
   mLabelShader->setFloat("scrollOffset", mScrollOffset);
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mTextSprite->mFontTexture);
@@ -45,14 +45,15 @@ void TrueTypeScene::renderScroll(float delta) {
 }
 
 void TrueTypeScene::calculateStatus(float /*delta*/) {
+  auto currentTime = static_cast<float>(glfwGetTime());
   if (mState == SceneState::INTRO) {
-    float timeSinceStart = glfwGetTime() - mStateStartTime;
+    auto timeSinceStart = currentTime - mStateStartTime;
     float t = timeSinceStart / mIntroTime;
     float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(240.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0),
                          1.0f - (mt * mt * mt * mt));
   } else if (mState == SceneState::OUTRO) {
-    float timeSinceStart = glfwGetTime() - mStateStartTime;
+    float timeSinceStart = currentTime - mStateStartTime;
     float t = timeSinceStart / mIntroTime;
     mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
                          t * t * t * t);
@@ -72,7 +73,7 @@ void TrueTypeScene::renderStatus(float delta) {
       45.0, mScreenSize.x / mScreenSize.y);
   mStatusShader->setMat4f("projection", projectionMatrix);
 
-  mStatusShader->setFloat("iTime", glfwGetTime());
+  mStatusShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mStatusSprite->mFontTexture);
   mStatusShader->setInt("texture1", 0);
@@ -81,7 +82,7 @@ void TrueTypeScene::renderStatus(float delta) {
 }
 
 void TrueTypeScene::init() {
-  mStateStartTime = glfwGetTime();
+  mStateStartTime = static_cast<float>(glfwGetTime());
 
   mLabelCamera = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 26.0f));
   mLabelCamera->lookAt({0.0f, 0.0f, 0.0f});
@@ -119,7 +120,7 @@ void TrueTypeScene::render(float delta) {
   if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
     mState = SceneState::OUTRO;
-    mStateStartTime = glfwGetTime();
+    mStateStartTime = static_cast<float>(glfwGetTime());
   }
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -145,7 +146,7 @@ void TrueTypeScene::onKey(int key) {
   if (key == GLFW_KEY_O) {
     if (mState == SceneState::RUNNING) {
       mState = SceneState::OUTRO;
-      mStateStartTime = glfwGetTime();
+      mStateStartTime = static_cast<float>(glfwGetTime());
     }
   }
 }

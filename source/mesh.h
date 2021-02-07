@@ -50,13 +50,13 @@ public:
   vector<Vertex> vertices;
   vector<unsigned int> indices;
   vector<MeshTexture> textures;
-  Material material;
+  Material material{};
   unsigned int VAO;
 
   /*  Functions  */
   // constructor
   Mesh(vector<Vertex> vertices, vector<unsigned int> indices,
-       vector<MeshTexture> textures) {
+       vector<MeshTexture> textures) : VAO(0), VBO(0) {
     this->vertices = std::move(vertices);
     this->indices = std::move(indices);
     this->textures = std::move(textures);
@@ -95,9 +95,9 @@ public:
     }
 
     glm::vec3 diffuse =
-        (textures.size() == 0) ? material.Diffuse : glm::vec3(0, 0, 0);
+        (textures.empty()) ? material.Diffuse : glm::vec3(0, 0, 0);
     glm::vec3 ambient =
-        (textures.size() == 0) ? material.Ambient : glm::vec3(0, 0, 0);
+        (textures.empty()) ? material.Ambient : glm::vec3(0, 0, 0);
 
     glUniform3f(glGetUniformLocation(shader.mId, "material.diffuseFallback"),
                 diffuse.x, diffuse.y, diffuse.z);
@@ -110,7 +110,7 @@ public:
     glUniform1i(glGetUniformLocation(shader.mId, "material.id"), material.Id);
     // draw mesh
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
     // always good practice to set everything back to defaults once configured.
@@ -119,7 +119,7 @@ public:
 
 private:
   /*  Render data  */
-  unsigned int VBO, EBO;
+  unsigned int VBO, EBO = 0;
 
   /*  Functions    */
   // initializes all the buffer objects/arrays
@@ -146,7 +146,7 @@ private:
     // set the vertex attribute pointers
     // vertex Positions
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)nullptr);
     // vertex normals
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),

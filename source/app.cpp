@@ -94,7 +94,7 @@ int DL::App::run() {
 }
 
 void DL::App::render() {
-  float currentFrame = glfwGetTime();
+  auto currentFrame = static_cast<float>(glfwGetTime());
   mDeltaTime = currentFrame - mLastFrame;
   mLastFrame = currentFrame;
 

@@ -134,8 +134,9 @@ void DL::TextSprite::init() {
 DL::GlyphInfo DL::TextSprite::makeGlyphInfo(uint32_t character, float offsetX,
                                        float offsetY) {
   stbtt_aligned_quad quad;
+  int chrRel = static_cast<int>(character - mFontFirstChar);
   stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
-                      character - mFontFirstChar, &offsetX, &offsetY, &quad, 1);
+                      chrRel, &offsetX, &offsetY, &quad, 1);
   auto xmin = quad.x0;
   auto xmax = quad.x1;
   auto ymin = -quad.y1;

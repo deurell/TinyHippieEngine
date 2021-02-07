@@ -4,7 +4,6 @@
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 #include <assimp/Importer.hpp>
-#include <assimp/postprocess.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <utility>
@@ -66,7 +65,7 @@ void DemoScene::init() {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices,
                GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)nullptr);
   glEnableVertexAttribArray(0);
 
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
@@ -82,7 +81,7 @@ void DemoScene::init() {
   glGenVertexArrays(1, &mLightVAO);
   glBindVertexArray(mLightVAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)nullptr);
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
@@ -93,6 +92,7 @@ void DemoScene::init() {
 }
 
 void DemoScene::render(float delta) {
+  auto time = static_cast<float>(glfwGetTime());
   mDelta = delta;
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -114,7 +114,7 @@ void DemoScene::render(float delta) {
 
   mLightingShader->use();
 
-  mLightingShader->setFloat("iTime", glfwGetTime());
+  mLightingShader->setFloat("iTime", time);
   mLightingShader->setVec3f("dirLight.direction", -0.2f, -1.0f, -0.3f);
   mLightingShader->setVec3f("dirLight.ambient", 0.05f, 0.05f, 0.05f);
   mLightingShader->setVec3f("dirLight.diffuse", 0.4f, 0.4f, 0.4f);

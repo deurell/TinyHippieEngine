@@ -4,12 +4,12 @@
 #include <iostream>
 #include <utility>
 
-DL::TextSprite::TextSprite(std::string fontPath, std::string text) : mText(std::move(text)) {
-  loadFontTexture(std::move(fontPath));
+DL::TextSprite::TextSprite(const std::string& fontPath, std::string text) : mText(std::move(text)) {
+  loadFontTexture(fontPath);
   init();
 }
 
-DL::TextSprite::TextSprite(std::string fontPath) : TextSprite(std::move(fontPath), "") {}
+DL::TextSprite::TextSprite(const std::string& fontPath) : TextSprite(fontPath, "") {}
 
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);

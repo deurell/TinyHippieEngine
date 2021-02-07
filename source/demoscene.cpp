@@ -7,7 +7,6 @@
 #include <assimp/postprocess.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <iostream>
 #include <utility>
 
 DemoScene::DemoScene(std::string glslVersion,

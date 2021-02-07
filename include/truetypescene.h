@@ -13,13 +13,13 @@ class TrueTypeScene : public DL::IScene {
   enum class SceneState { INTRO, RUNNING, OUTRO };
 
 public:
-  TrueTypeScene(std::string glslVersion);
-  ~TrueTypeScene() = default;
+  explicit TrueTypeScene(std::string glslVersion);
+  ~TrueTypeScene() override = default;
 
-  virtual void init() override;
-  virtual void render(float delta) override;
-  virtual void onKey(int key) override;
-  virtual void onScreenSizeChanged(glm::vec2 size) override;
+  void init() override;
+  void render(float delta) override;
+  void onKey(int key) override;
+  void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
   void renderScroll(float delta);

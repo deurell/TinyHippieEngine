@@ -4,7 +4,7 @@
 #include <iostream>
 #include <utility>
 
-DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text) : mText(std::move(text)) {
+DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text) : mText(text) {
   loadFontTexture(fontPath);
   init();
 }

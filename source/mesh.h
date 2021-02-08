@@ -56,7 +56,8 @@ public:
   /*  Functions  */
   // constructor
   Mesh(vector<Vertex> vertices, vector<unsigned int> indices,
-       vector<MeshTexture> textures) : VAO(0), VBO(0) {
+       vector<MeshTexture> textures)
+      : VAO(0), VBO(0) {
     this->vertices = std::move(vertices);
     this->indices = std::move(indices);
     this->textures = std::move(textures);
@@ -146,7 +147,8 @@ private:
     // set the vertex attribute pointers
     // vertex Positions
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),
+                          (void *)nullptr);
     // vertex normals
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex),

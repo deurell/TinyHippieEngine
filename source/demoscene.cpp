@@ -10,7 +10,7 @@
 
 DemoScene::DemoScene(std::string_view glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
-    : mGlslVersionString(glslVersion), mCodeBook(codeBook){}
+    : mGlslVersionString(glslVersion), mCodeBook(codeBook) {}
 
 void DemoScene::init() {
   mLampShader = std::make_unique<DL::Shader>(
@@ -65,7 +65,8 @@ void DemoScene::init() {
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices,
                GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)nullptr);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)nullptr);
   glEnableVertexAttribArray(0);
 
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
@@ -81,7 +82,8 @@ void DemoScene::init() {
   glGenVertexArrays(1, &mLightVAO);
   glBindVertexArray(mLightVAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)nullptr);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                        (void *)nullptr);
   glEnableVertexAttribArray(0);
   glBindVertexArray(0);
 
@@ -169,7 +171,7 @@ void DemoScene::render(float delta) {
 
   glm::mat4 mod = glm::mat4(1.0);
   glBindVertexArray(mLightVAO);
-  for (auto& mPointLightPosition : mPointLightPositions) {
+  for (auto &mPointLightPosition : mPointLightPositions) {
     mod = glm::mat4(1.0f);
     mod = glm::translate(mod, mPointLightPosition);
     mod = glm::scale(mod, glm::vec3(0.1f));

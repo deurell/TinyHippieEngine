@@ -8,7 +8,7 @@
 #include <utility>
 
 C64Scene::C64Scene(std::string_view glslVersion,
-                   basist::etc1_global_selector_codebook &codeBook)
+                   basist::etc1_global_selector_codebook *codeBook)
     : mGlslVersionString(glslVersion), mCodeBook(codeBook) {}
 
 void C64Scene::init() {
@@ -48,7 +48,7 @@ void C64Scene::init() {
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  mTexture = std::make_unique<DL::Texture>("Resources/sup.basis", mCodeBook);
+  mTexture = std::make_unique<DL::Texture>("Resources/sup.basis", *mCodeBook);
   glBindVertexArray(0);
 
   mShader->use();
@@ -87,6 +87,6 @@ void C64Scene::render(float delta) {
 #endif
 }
 
-void C64Scene::onKey(int key){}
+void C64Scene::onKey(int key) {}
 
 void C64Scene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }

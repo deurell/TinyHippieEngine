@@ -4,22 +4,26 @@
 #include <iostream>
 #include <utility>
 
-DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text) : mText(text) {
+DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text)
+    : mText(text) {
   loadFontTexture(fontPath);
   init();
 }
 
-DL::TextSprite::TextSprite(std::string_view fontPath) : TextSprite(fontPath, "") {}
+DL::TextSprite::TextSprite(std::string_view fontPath)
+    : TextSprite(fontPath, "") {}
 
-DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(std::move(text)) {
+DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar *fontInfo,
+                           std::string text)
+    : mFontTexture(texture), mFontCharInfoPtr(fontInfo),
+      mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);
   init();
 }
 
 void DL::TextSprite::render(float /*delta*/) const {
   glBindVertexArray(mVAO);
-  glDrawElements(GL_TRIANGLES, mIndexElementCount,
-                 GL_UNSIGNED_SHORT, nullptr);
+  glDrawElements(GL_TRIANGLES, mIndexElementCount, GL_UNSIGNED_SHORT, nullptr);
 }
 
 void DL::TextSprite::loadFontTexture(std::string_view fontPath) {
@@ -70,7 +74,7 @@ void DL::TextSprite::loadFontTexture(std::string_view fontPath) {
   delete[] fontData;
 }
 
-stbtt_packedchar* DL::TextSprite::getFontCharInfoPtr() {
+stbtt_packedchar *DL::TextSprite::getFontCharInfoPtr() {
   return mFontCharInfo ? mFontCharInfo.get() : mFontCharInfoPtr;
 }
 
@@ -124,15 +128,14 @@ void DL::TextSprite::init() {
   mIndexElementCount = indexes.size();
   glGenBuffers(1, &mIndexBuffer);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-               sizeof(uint16_t) * mIndexElementCount,
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * mIndexElementCount,
                indexes.data(), GL_STATIC_DRAW);
 
   glBindVertexArray(0);
 }
 
 DL::GlyphInfo DL::TextSprite::makeGlyphInfo(uint32_t character, float offsetX,
-                                       float offsetY) {
+                                            float offsetY) {
   stbtt_aligned_quad quad;
   int chrRel = static_cast<int>(character - mFontFirstChar);
   stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,

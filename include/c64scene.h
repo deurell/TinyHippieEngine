@@ -10,10 +10,10 @@
 class C64Scene : public DL::IScene {
 public:
   C64Scene(std::string_view glslVersion,
-           basist::etc1_global_selector_codebook &codeBook);
-  
-  C64Scene(const C64Scene& rhs) = delete;
-  
+           basist::etc1_global_selector_codebook *codeBook);
+
+  C64Scene(const C64Scene &rhs) = delete;
+
   ~C64Scene() override = default;
 
   void init() override;
@@ -24,7 +24,7 @@ public:
 private:
   std::unique_ptr<DL::Shader> mShader;
   std::unique_ptr<DL::Texture> mTexture;
-  basist::etc1_global_selector_codebook &mCodeBook;
+  basist::etc1_global_selector_codebook *mCodeBook;
 
   unsigned int mVAO = 0;
   unsigned int mVBO = 0;

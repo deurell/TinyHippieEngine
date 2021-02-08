@@ -7,7 +7,8 @@ class Camera {
 public:
   Camera() = default;
 
-  explicit Camera(const glm::vec3 position) : mPosition(position), mOrientation(glm::mat4(1)) {}
+  explicit Camera(const glm::vec3 position)
+      : mPosition(position), mOrientation(glm::mat4(1)) {}
 
   Camera(const glm::vec3 position, const glm::quat orientation)
       : mPosition(position), mOrientation(orientation) {}
@@ -43,7 +44,8 @@ public:
     return glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
   }
 
-  static glm::mat4 getOrtoTransform(float left, float right, float bottom, float up) {
+  static glm::mat4 getOrtoTransform(float left, float right, float bottom,
+                                    float up) {
     return glm::ortho(left, right, bottom, up, 0.0f, 100.0f);
   }
 

@@ -140,7 +140,8 @@ public:
 private:
   static bool hasExtension(std::string_view full, std::string_view end) {
     if (full.length() >= end.length()) {
-      return (full.compare(full.length() - end.length(), full.length(), end) == 0);
+      return (full.compare(full.length() - end.length(), full.length(), end) ==
+              0);
     } else {
       return false;
     }

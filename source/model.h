@@ -40,7 +40,7 @@ public:
 
   // draws the model, and thus all its meshes
   void Draw(DL::Shader shader) {
-    for (auto & mesh : meshes)
+    for (auto &mesh : meshes)
       mesh.Draw(shader);
   }
 
@@ -181,9 +181,9 @@ private:
   void loadModel(std::string_view path) {
     // read file via ASSIMP
     Assimp::Importer importer;
-    const aiScene *scene =
-        importer.ReadFile(std::string(path), aiProcess_Triangulate | aiProcess_FlipUVs |
-                                    aiProcess_CalcTangentSpace);
+    const aiScene *scene = importer.ReadFile(
+        std::string(path),
+        aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace);
     // check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) // if is Not Zero
@@ -329,7 +329,7 @@ private:
   // they're not loaded yet. the required info is returned as a Texture
   // struct.
   vector<MeshTexture> loadMaterialTextures(aiMaterial *mat, aiTextureType type,
-                                           const string& typeName) {
+                                           const string &typeName) {
     vector<MeshTexture> textures;
     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
       aiString str;
@@ -337,7 +337,7 @@ private:
       // check if texture was loaded before and if so, continue to next
       // iteration: skip loading a new texture
       bool skip = false;
-      for (auto& j : textures_loaded) {
+      for (auto &j : textures_loaded) {
         if (std::strcmp(j.path.data(), str.C_Str()) == 0) {
           textures.push_back(j);
           skip = true; // a texture with the same filepath has already been

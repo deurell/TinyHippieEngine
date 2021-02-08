@@ -4,12 +4,12 @@
 #include <iostream>
 #include <utility>
 
-DL::TextSprite::TextSprite(const std::string& fontPath, std::string text) : mText(std::move(text)) {
+DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text) : mText(std::move(text)) {
   loadFontTexture(fontPath);
   init();
 }
 
-DL::TextSprite::TextSprite(const std::string& fontPath) : TextSprite(fontPath, "") {}
+DL::TextSprite::TextSprite(std::string_view fontPath) : TextSprite(fontPath, "") {}
 
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text) : mFontTexture(texture), mFontCharInfoPtr(fontInfo), mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);
@@ -22,8 +22,8 @@ void DL::TextSprite::render(float /*delta*/) const {
                  GL_UNSIGNED_SHORT, nullptr);
 }
 
-void DL::TextSprite::loadFontTexture(const std::string& fontPath) {
-  std::ifstream iStream(fontPath, std::ios::binary);
+void DL::TextSprite::loadFontTexture(std::string_view fontPath) {
+  std::ifstream iStream(std::string(fontPath), std::ios::binary);
   iStream.seekg(0, iStream.end);
   const int size = iStream.tellg();
   iStream.seekg(0, iStream.beg);

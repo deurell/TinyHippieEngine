@@ -29,7 +29,7 @@ private:
   unsigned int mVAO = 0;
   unsigned int mVBO = 0;
   unsigned int mEBO = 0;
-  std::string mGlslVersionString;
+  std::string_view mGlslVersionString;
   glm::vec2 mScreenSize{};
   float mDelta = 0;
 };

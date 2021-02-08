@@ -43,7 +43,7 @@ private:
   std::unique_ptr<DL::Shader> mStatusShader;
   std::unique_ptr<DL::TextSprite> mStatusSprite;
 
-  std::string mGlslVersionString;
+  std::string_view  mGlslVersionString;
   glm::vec2 mScreenSize = {0.0, 0.0};
   float mScrollOffset = 0;
   const float scroll_wrap = 52;

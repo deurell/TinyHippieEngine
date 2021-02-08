@@ -45,7 +45,7 @@ public:
   }
 
 private:
-  static bool hasExtension(const std::string &full, const std::string &end) {
+  static bool hasExtension(string_view full, string_view end) {
     if (full.length() >= end.length()) {
       return (full.compare(full.length() - end.length(), full.length(), end) ==
               0);
@@ -178,11 +178,11 @@ private:
   /*  Functions   */
   // loads a model with supported ASSIMP extensions from file and stores the
   // resulting meshes in the meshes vector.
-  void loadModel(string const &path) {
+  void loadModel(std::string_view path) {
     // read file via ASSIMP
     Assimp::Importer importer;
     const aiScene *scene =
-        importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs |
+        importer.ReadFile(std::string(path), aiProcess_Triangulate | aiProcess_FlipUVs |
                                     aiProcess_CalcTangentSpace);
     // check for errors
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||

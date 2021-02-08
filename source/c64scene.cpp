@@ -7,9 +7,9 @@
 #include <iostream>
 #include <utility>
 
-C64Scene::C64Scene(std::string glslVersion,
+C64Scene::C64Scene(std::string_view glslVersion,
                    basist::etc1_global_selector_codebook &codeBook)
-    : mGlslVersionString(std::move(glslVersion)), mCodeBook(codeBook) {}
+    : mGlslVersionString(glslVersion), mCodeBook(codeBook) {}
 
 void C64Scene::init() {
   mShader = std::make_unique<DL::Shader>("Shaders/c64.vert", "Shaders/c64.frag",

@@ -13,7 +13,7 @@ class TrueTypeScene : public DL::IScene {
   enum class SceneState { INTRO, RUNNING, OUTRO };
 
 public:
-  explicit TrueTypeScene(std::string glslVersion);
+  explicit TrueTypeScene(std::string_view glslVersion);
   ~TrueTypeScene() override = default;
 
   void init() override;

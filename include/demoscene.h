@@ -8,7 +8,7 @@
 
 class DemoScene : public DL::IScene {
 public:
-  DemoScene(std::string glslVersion,
+  DemoScene(std::string_view glslVersion,
             basist::etc1_global_selector_codebook *codeBook);
   ~DemoScene() override = default;
 

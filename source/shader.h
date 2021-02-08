@@ -16,8 +16,8 @@
 namespace DL {
 class Shader {
 public:
-  Shader(const std::string& vertexPath, const std::string& fragmentPath,
-         const std::string& glslVersion) {
+  Shader(std::string_view vertexPath, std::string_view fragmentPath,
+         std::string_view glslVersion) {
     std::string vertexCode;
     std::string fragmentCode;
     std::ifstream vertexFile;
@@ -26,8 +26,8 @@ public:
     vertexFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     fragmentFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     try {
-      vertexFile.open(vertexPath);
-      fragmentFile.open(fragmentPath);
+      vertexFile.open(std::string(vertexPath));
+      fragmentFile.open(std::string(fragmentPath));
       std::stringstream vStream, fStream;
       vStream << vertexFile.rdbuf();
       fStream << fragmentFile.rdbuf();

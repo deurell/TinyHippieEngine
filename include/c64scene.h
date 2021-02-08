@@ -9,7 +9,7 @@
 
 class C64Scene : public DL::IScene {
 public:
-  C64Scene(std::string glslVersion,
+  C64Scene(std::string_view glslVersion,
            basist::etc1_global_selector_codebook &codeBook);
   
   C64Scene(const C64Scene& rhs) = delete;

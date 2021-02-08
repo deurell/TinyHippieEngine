@@ -22,8 +22,8 @@ struct GlyphInfo {
 class TextSprite {
 
 public:
-  explicit TextSprite(const std::string& fontPath);
-  TextSprite(const std::string& fontPath, std::string text);
+  explicit TextSprite(std::string_view fontPath);
+  TextSprite(std::string_view fontPath, std::string_view text);
   TextSprite(GLuint texture, stbtt_packedchar* fontInfo, std::string text);
   ~TextSprite() = default;
 
@@ -39,7 +39,7 @@ public:
   GLuint mFontTexture = 0;
   
 private:
-  void loadFontTexture(const std::string& fontPath);
+  void loadFontTexture(std::string_view fontPath);
   void init();
   GlyphInfo makeGlyphInfo(uint32_t character, float offsetX, float offsetY);
  

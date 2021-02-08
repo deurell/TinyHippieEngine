@@ -7,8 +7,8 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-TrueTypeScene::TrueTypeScene(std::string glslVersion)
-    : mGlslVersionString(std::move(glslVersion)) {}
+TrueTypeScene::TrueTypeScene(std::string_view glslVersion)
+    : mGlslVersionString(glslVersion) {}
 
 void TrueTypeScene::renderScroll(float delta) {
 

@@ -7,12 +7,13 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace DL {
 class Texture {
 public:
-  explicit Texture(const std::string &imagePath,
+  explicit Texture(std::string_view imagePath,
                    basist::etc1_global_selector_codebook &codeBook,
                    GLint format = GL_RGB,
                    GLint internal_format = GL_UNSIGNED_SHORT_5_6_5,
@@ -31,7 +32,7 @@ public:
 
     std::vector<unsigned char> dst_data;
 
-    std::ifstream imageStream(imagePath, std::ios::binary);
+    std::ifstream imageStream(std::string(imagePath), std::ios::binary);
     std::vector<unsigned char> buffer(
         std::istreambuf_iterator<char>(imageStream), {});
 
@@ -137,7 +138,7 @@ public:
   unsigned int mHeight;
 
 private:
-  static bool hasExtension(const std::string &full, const std::string &end) {
+  static bool hasExtension(std::string_view full, std::string_view end) {
     if (full.length() >= end.length()) {
       return (full.compare(full.length() - end.length(), full.length(), end) == 0);
     } else {

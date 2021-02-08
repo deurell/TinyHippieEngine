@@ -8,9 +8,9 @@
 #include <glm/gtx/euler_angles.hpp>
 #include <utility>
 
-DemoScene::DemoScene(std::string glslVersion,
+DemoScene::DemoScene(std::string_view glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
-    : mGlslVersionString(std::move(glslVersion)), mCodeBook(codeBook){}
+    : mGlslVersionString(glslVersion), mCodeBook(codeBook){}
 
 void DemoScene::init() {
   mLampShader = std::make_unique<DL::Shader>(

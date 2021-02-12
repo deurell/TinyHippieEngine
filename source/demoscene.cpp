@@ -168,6 +168,7 @@ void DemoScene::render(float delta) {
   mLampShader->use();
   mLampShader->setMat4f("projection", projection);
   mLampShader->setMat4f("view", view);
+  mLampShader->setFloat("iTime", time);
 
   glm::mat4 mod = glm::mat4(1.0);
   glBindVertexArray(mLightVAO);

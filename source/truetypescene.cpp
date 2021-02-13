@@ -48,13 +48,13 @@ void TrueTypeScene::calculateStatus(float /*delta*/) {
   auto currentTime = static_cast<float>(glfwGetTime());
   if (mState == SceneState::INTRO) {
     auto timeSinceStart = currentTime - mStateStartTime;
-    float t = timeSinceStart / mIntroTime;
+    float t = timeSinceStart / mDelayTime;
     float mt = 1.0f - t;
     mStatusOffset = lerp(glm::vec3(240.0, 0.0, 0.0), glm::vec3(0.0, 0.0, 0.0),
                          1.0f - (mt * mt * mt * mt));
   } else if (mState == SceneState::OUTRO) {
     float timeSinceStart = currentTime - mStateStartTime;
-    float t = timeSinceStart / mIntroTime;
+    float t = timeSinceStart / mDelayTime;
     mStatusOffset = lerp(glm::vec3(0.0, 0.0, 0.0), glm::vec3(-240.0, 0.0, 0.0),
                          t * t * t * t);
   }
@@ -111,7 +111,7 @@ void TrueTypeScene::init() {
 
 void TrueTypeScene::render(float delta) {
   if (mState == SceneState::INTRO &&
-      (glfwGetTime() - mStateStartTime >= mIntroTime)) {
+      (glfwGetTime() - mStateStartTime >= mDelayTime)) {
     mState = SceneState::RUNNING;
   }
 
@@ -122,6 +122,11 @@ void TrueTypeScene::render(float delta) {
     mState = SceneState::OUTRO;
     mStateStartTime = static_cast<float>(glfwGetTime());
   }
+
+  if (mState == SceneState::OUTRO && glfwGetTime() - mStateStartTime >= mDelayTime) {
+    // scene switch
+  }
+
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -51,6 +51,6 @@ private:
 
   float mStateStartTime = 0;
   glm::vec3 mStatusOffset = {0.0, 0.0, 0.0};
-  static constexpr float mIntroTime = 3.0;
+  static constexpr float mDelayTime = 3.0;
   SceneState mState = SceneState::INTRO;
 };

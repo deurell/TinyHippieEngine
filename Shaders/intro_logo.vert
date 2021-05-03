@@ -15,7 +15,7 @@ void main() {
   TexCoords = aTexCoords;
   WorldPos = model * vec4(aPos, 1);
   vec3 pos = aPos;
-  pos.x += 60.0 * sin(iTime*1.5);
+  pos.x += 72.0 * sin(iTime * 1.2);
 
   gl_Position = projection * view * model * vec4(pos, 1);
 }

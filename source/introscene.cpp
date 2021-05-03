@@ -16,6 +16,8 @@ void IntroScene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
+  renderLogo(delta);
+
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -25,4 +27,28 @@ void IntroScene::render(float delta) {
   ImGui::End();
 #endif
 
+}
+
+void IntroScene::renderLogo(float delta) {
+  mLogoShader->use();
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::scale(model, glm::vec3(0.06, 0.06, 1.0));
+  model = glm::translate(model, glm::vec3(-160.0, 0.0, 0.0));
+  mLogoShader->setMat4f("model", model);
+  glm::mat4 view = mCamera->getViewMatrix();
+  mLogoShader->setMat4f("view", view);
+  glm::mat4 projectionMatrix = mCamera->getPerspectiveTransform(
+      45.0, mScreenSize.x / mScreenSize.y);
+  mLogoShader->setMat4f("projection", projectionMatrix);
+
+  mLogoShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, mLogoSprite->mFontTexture);
+  mLogoShader->setInt("texture1", 0);
+
+  mLogoSprite->render(delta);
+}
+
+void IntroScene::onScreenSizeChanged(glm::vec2 size) {
+  mScreenSize = size;
 }

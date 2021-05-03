@@ -3,12 +3,12 @@
 //
 #pragma once
 
-#import "IScene.h"
+#include "iscene.h"
 #include "camera.h"
 #include "shader.h"
 #include "textsprite.h"
-#import <string>
-#import <string_view>
+#include <string>
+#include <string_view>
 
 class IntroScene : public DL::IScene
 {
@@ -19,13 +19,16 @@ public:
   void init() override;
   void render(float delta) override;
   void onKey(int key) override {}
-  void onScreenSizeChanged(glm::vec2 size) override {}
+  void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
+  void renderLogo(float delta);
+
   std::string mGlslVersionString;
 
   std::unique_ptr<DL::Shader> mLogoShader;
   std::unique_ptr<DL::Camera> mCamera;
   std::unique_ptr<DL::TextSprite> mLogoSprite;
   glm::vec3 mLogoOffset {0,0,0};
+  glm::vec2 mScreenSize {0,0};
 };

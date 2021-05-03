@@ -3,15 +3,14 @@
 //
 #pragma once
 
-#include "iscene.h"
+#include "IScene.h"
 #include "camera.h"
 #include "shader.h"
 #include "textsprite.h"
 #include <string>
 #include <string_view>
 
-class IntroScene : public DL::IScene
-{
+class IntroScene : public DL::IScene {
 public:
   explicit IntroScene(std::string_view glslVersionString);
   ~IntroScene() override = default;
@@ -29,6 +28,6 @@ private:
   std::unique_ptr<DL::Shader> mLogoShader;
   std::unique_ptr<DL::Camera> mCamera;
   std::unique_ptr<DL::TextSprite> mLogoSprite;
-  glm::vec3 mLogoOffset {0,0,0};
-  glm::vec2 mScreenSize {0,0};
+  glm::vec3 mLogoOffset{0, 0, 0};
+  glm::vec2 mScreenSize{0, 0};
 };

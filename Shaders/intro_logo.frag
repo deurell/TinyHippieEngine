@@ -1,7 +1,6 @@
 precision highp float;
 
 in vec2 TexCoords;
-in vec2 FragPos;
 in vec4 WorldPos;
 out vec4 FragColor;
 

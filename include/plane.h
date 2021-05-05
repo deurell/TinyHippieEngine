@@ -18,6 +18,7 @@ public:
   void render(float delta) const;
 
   glm::vec3 mPosition {0,0,0};
+  glm::vec3 mScale {1.0,1.0,1.0};
   GLuint mVAO = 0;
   GLuint mVBO = 0;
   GLuint mEBO = 0;

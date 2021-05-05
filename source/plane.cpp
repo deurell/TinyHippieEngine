@@ -52,7 +52,7 @@ void DL::Plane::render(float /* delta */) const{
   glm::mat4 transform = glm::mat4(1.0f);
 
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::scale(model, glm::vec3(40.0, 3.0, 1.0));
+  model = glm::scale(model, mScale);
   model = glm::translate(model, mPosition);
   mShader->setMat4f("model", model);
   glm::mat4 view = mCamera.getViewMatrix();

@@ -13,6 +13,7 @@ void IntroScene::init() {
   // raster bars
   mPlane = std::make_unique<DL::Plane>("Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString, *mCamera);
   mPlane->mPosition = {0,2.2,0};
+  mPlane->mScale = {40, 3, 1};
 }
 
 void IntroScene::render(float delta) {

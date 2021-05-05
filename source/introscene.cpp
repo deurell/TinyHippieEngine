@@ -9,6 +9,9 @@ void IntroScene::init() {
   mLogoShader = std::make_unique<DL::Shader>("Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
   std::string logoText = "SECTOR 90";
   mLogoSprite = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoText);
+
+  // raster bars
+  mPlane = std::make_unique<DL::Plane>("Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString, *mCamera);
 }
 
 void IntroScene::render(float delta) {
@@ -17,12 +20,14 @@ void IntroScene::render(float delta) {
   glEnable(GL_DEPTH_TEST);
 
   renderLogo(delta);
+  mPlane->render(delta);
+
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  ImGui::Begin("tiny hippie engine");
+  ImGui::Begin("tiny intro");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();
 #endif
@@ -51,4 +56,5 @@ void IntroScene::renderLogo(float delta) {
 
 void IntroScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
+  mCamera->mScreenSize = mScreenSize;
 }

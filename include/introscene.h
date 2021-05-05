@@ -5,6 +5,7 @@
 
 #include "IScene.h"
 #include "camera.h"
+#include "plane.h"
 #include "shader.h"
 #include "textsprite.h"
 #include <string>
@@ -30,4 +31,6 @@ private:
   std::unique_ptr<DL::TextSprite> mLogoSprite;
   glm::vec3 mLogoOffset{0, 0, 0};
   glm::vec2 mScreenSize{0, 0};
+
+  std::unique_ptr<DL::Plane> mPlane;
 };

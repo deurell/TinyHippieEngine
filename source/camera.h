@@ -51,5 +51,6 @@ public:
 
   glm::vec3 mPosition;
   glm::quat mOrientation;
+  glm::vec2 mScreenSize;
 };
 } // namespace DL

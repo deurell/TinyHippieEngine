@@ -14,7 +14,7 @@ float addRasterbar(float old, float offset) {
 void main() {
 
   float col;
-  for (int i=0; i<6; i++) {
+  for (int i=0; i<12; i++) {
     col = addRasterbar(col*0.9, 0.4* float(i));
   }
   FragColor = vec4(0.5*col,0.3*col,col, 1.0);

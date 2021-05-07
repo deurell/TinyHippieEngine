@@ -13,8 +13,7 @@ namespace DL {
 
 class Plane {
 public:
-  Plane(std::string_view vertexShader, std::string_view fragShader,
-        std::string_view glslVersion, DL::Camera &camera);
+  Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera);
   ~Plane() = default;
 
   void render(float delta) const;

@@ -1,18 +1,23 @@
 #include "introscene.h"
 
-IntroScene::IntroScene(std::string_view glslVersionString) : mGlslVersionString(glslVersionString) {
-}
+IntroScene::IntroScene(std::string_view glslVersionString)
+    : mGlslVersionString(glslVersionString) {}
 
 void IntroScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
-  mCamera->lookAt({0,0,0});
-  mLogoShader = std::make_unique<DL::Shader>("Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
+  mCamera->lookAt({0, 0, 0});
+  mLogoShader = std::make_unique<DL::Shader>(
+      "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
   std::string logoText = "SECTOR 90";
-  mLogoSprite = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoText);
+  mLogoSprite =
+      std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoText);
 
   // raster bars
-  mPlane = std::make_unique<DL::Plane>("Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString, *mCamera);
-  mPlane->mPosition = {0,0.0,0};
+  std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(
+      "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
+
+  mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
+  mPlane->mPosition = {0, 0.0, 0};
   mPlane->mScale = {40, 3, 1};
 }
 
@@ -24,7 +29,6 @@ void IntroScene::render(float delta) {
   renderLogo(delta);
   mPlane->render(delta);
 
-
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -33,7 +37,6 @@ void IntroScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();
 #endif
-
 }
 
 void IntroScene::renderLogo(float delta) {
@@ -44,8 +47,8 @@ void IntroScene::renderLogo(float delta) {
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
-  glm::mat4 projectionMatrix = mCamera->getPerspectiveTransform(
-      45.0, mScreenSize.x / mScreenSize.y);
+  glm::mat4 projectionMatrix =
+      mCamera->getPerspectiveTransform(45.0, mScreenSize.x / mScreenSize.y);
   mLogoShader->setMat4f("projection", projectionMatrix);
 
   mLogoShader->setFloat("iTime", static_cast<float>(glfwGetTime()));

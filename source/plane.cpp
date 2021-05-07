@@ -5,11 +5,8 @@
 #include "plane.h"
 #include <GLFW/glfw3.h>
 #include <memory>
-
-DL::Plane::Plane(std::string_view vertexShader, std::string_view fragShader, std::string_view glslVersion, DL::Camera& camera) :
-  mCamera(camera)
-{
-  mShader = std::make_unique<DL::Shader>(vertexShader, fragShader, glslVersion);
+DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera)
+    : mCamera(camera), mShader(std::move(shader)) {
   float vertices[] = {
       // positions        // colors         // texture coords
       1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
@@ -42,11 +39,10 @@ DL::Plane::Plane(std::string_view vertexShader, std::string_view fragShader, std
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void *)(6 * sizeof(float)));
 
-
   glEnableVertexAttribArray(2);
   glBindVertexArray(0);
 }
-void DL::Plane::render(float /* delta */) const{
+void DL::Plane::render(float /* delta */) const {
   mShader->use();
   mShader->setFloat("iTime", (float)glfwGetTime());
   glm::mat4 transform = glm::mat4(1.0f);
@@ -62,6 +58,6 @@ void DL::Plane::render(float /* delta */) const{
   mShader->setMat4f("projection", projectionMatrix);
 
   glBindVertexArray(mVAO);
-  glDrawElements(GL_TRIANGLES,6, GL_UNSIGNED_INT, nullptr);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
 }

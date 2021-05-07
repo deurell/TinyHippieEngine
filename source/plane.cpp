@@ -5,8 +5,9 @@
 #include "plane.h"
 #include <GLFW/glfw3.h>
 #include <memory>
-DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera)
-    : mCamera(camera), mShader(std::move(shader)) {
+
+DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera, const std::function<void (DL::Shader&)>& shaderModifier)
+    : mCamera(camera), mShader(std::move(shader)), mShaderModifier(shaderModifier) {
   float vertices[] = {
       // positions        // colors         // texture coords
       1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
@@ -42,6 +43,7 @@ DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera)
   glEnableVertexAttribArray(2);
   glBindVertexArray(0);
 }
+
 void DL::Plane::render(float /* delta */) const {
   mShader->use();
   mShader->setFloat("iTime", (float)glfwGetTime());
@@ -57,6 +59,9 @@ void DL::Plane::render(float /* delta */) const {
       45.0, mCamera.mScreenSize.x / mCamera.mScreenSize.y);
   mShader->setMat4f("projection", projectionMatrix);
 
+  if (mShaderModifier) {
+    mShaderModifier(*mShader);
+  }
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);

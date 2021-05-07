@@ -33,4 +33,5 @@ private:
   glm::vec2 mScreenSize{0, 0};
 
   std::unique_ptr<DL::Plane> mPlane;
+  std::unique_ptr<DL::Plane> mPlane2;
 };

@@ -8,6 +8,7 @@
 #include "plane.h"
 #include "shader.h"
 #include "textsprite.h"
+#include <functional>
 #include <string>
 #include <string_view>
 

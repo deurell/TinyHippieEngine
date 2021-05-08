@@ -16,20 +16,18 @@ void IntroScene::init() {
   std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(
       "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
 
-  mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera,
-                                       [] (DL::Shader& shader) {
-                                         shader.setFloat("sineOffset", 0);
-                                       });
+  mPlane = std::make_unique<DL::Plane>(
+      std::move(shader), *mCamera,
+      [](DL::Shader &shader) { shader.setFloat("sineOffset", 0); });
   mPlane->mPosition = {0, 1.4, 0};
   mPlane->mScale = {40, 3, 1};
 
   std::unique_ptr<DL::Shader> shader2 = std::make_unique<DL::Shader>(
       "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
 
-  mPlane2 = std::make_unique<DL::Plane>(std::move(shader2), *mCamera,
-                                       [] (DL::Shader& shader) {
-                                         shader.setFloat("sineOffset", M_PI);
-                                       });
+  mPlane2 = std::make_unique<DL::Plane>(
+      std::move(shader2), *mCamera,
+      [](DL::Shader &shader) { shader.setFloat("sineOffset", M_PI); });
   mPlane2->mPosition = {0, -1.4, 0};
   mPlane2->mScale = {40, 3, 1};
 }

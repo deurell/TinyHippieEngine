@@ -5,6 +5,7 @@
 #pragma once
 #include "shader.h"
 #include <camera.h>
+#include <functional>
 #include <glad/glad.h>
 #include <memory>
 #include <string_view>
@@ -13,7 +14,8 @@ namespace DL {
 
 class Plane {
 public:
-  Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera, const std::function<void (DL::Shader&)>& shaderModifier = nullptr);
+  Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
+        const std::function<void(DL::Shader &)> &shaderModifier = nullptr);
   ~Plane() = default;
 
   void render(float delta) const;
@@ -27,7 +29,7 @@ public:
 private:
   std::unique_ptr<DL::Shader> mShader;
   DL::Camera &mCamera;
-  const std::function<void (DL::Shader&)> mShaderModifier;
+  const std::function<void(DL::Shader &)> mShaderModifier;
 };
 
 } // namespace DL

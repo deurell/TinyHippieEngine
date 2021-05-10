@@ -49,8 +49,8 @@ public:
     return glm::ortho(left, right, bottom, up, 0.0f, 100.0f);
   }
 
-  glm::vec3 mPosition;
+  glm::vec3 mPosition = {0, 0, 0};
   glm::quat mOrientation;
-  glm::vec2 mScreenSize;
+  glm::vec2 mScreenSize = {0, 0};
 };
 } // namespace DL

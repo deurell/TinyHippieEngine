@@ -3,7 +3,7 @@
 //
 #pragma once
 
-#include "IScene.h"
+#include "iscene.h"
 #include "camera.h"
 #include "plane.h"
 #include "shader.h"

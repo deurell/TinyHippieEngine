@@ -8,7 +8,7 @@ void IntroScene::init() {
   mCamera->lookAt({0, 0, 0});
   mLogoShader = std::make_unique<DL::Shader>(
       "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
-  std::string logoText = "SECTOR 90";
+  std::string logoText = "DEURELL LABS";
   mLogoSprite =
       std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoText);
 
@@ -27,7 +27,7 @@ void IntroScene::init() {
 
   mPlane2 = std::make_unique<DL::Plane>(
       std::move(shader2), *mCamera,
-      [](DL::Shader &shader) { shader.setFloat("sineOffset", M_PI); });
+      [](DL::Shader &shader) { shader.setFloat("sineOffset", glm::pi<float>()); });
   mPlane2->mPosition = {0, -1.4, 0};
   mPlane2->mScale = {40, 3, 1};
 }
@@ -36,7 +36,6 @@ void IntroScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-
   renderLogo(delta);
   mPlane->render(delta);
   mPlane2->render(delta);
@@ -55,7 +54,7 @@ void IntroScene::renderLogo(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.06, 0.06, 1.0));
-  model = glm::translate(model, glm::vec3(-158.0, -16.0, 0.0));
+  model = glm::translate(model, glm::vec3(-210.0, -16.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);

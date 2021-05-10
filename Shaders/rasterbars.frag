@@ -1,5 +1,5 @@
-precision highp float;
-precision highp int;
+precision mediump float;
+precision mediump int;
 
 in vec2 TexCoord;
 uniform float iTime;
@@ -12,11 +12,11 @@ float addRasterbar(float old, float offset) {
   float col = pow(sin(r1),64.0);
   return col > 0.2 ? col : old;
 }
-void main() {
 
+void main() {
   float col=0.0;
-  for (int i=0; i<8; i++) {
-    col = addRasterbar(col*0.9, 0.4* float(i));
+  for (int i=0; i<16; i++) {
+    col = addRasterbar(col*0.9, 0.2* float(i));
   }
   FragColor = vec4(0.5*col,0.3*col,col, 1.0);
 }

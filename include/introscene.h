@@ -30,7 +30,6 @@ private:
   std::unique_ptr<DL::Shader> mLogoShader;
   std::unique_ptr<DL::Camera> mCamera;
   std::unique_ptr<DL::TextSprite> mLogoSprite;
-  glm::vec3 mLogoOffset{0, 0, 0};
   glm::vec2 mScreenSize{0, 0};
 
   std::unique_ptr<DL::Plane> mPlane;

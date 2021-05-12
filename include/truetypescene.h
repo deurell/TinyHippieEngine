@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IScene.h"
+#include "iscene.h"
 #include "camera.h"
 #include "shader.h"
 #include "stb_truetype.h"

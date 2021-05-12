@@ -1,5 +1,5 @@
 #pragma once
-#include "IScene.h"
+#include "iscene.h"
 #include "basisu_transcoder.h"
 #include "camera.h"
 #include "model.h"

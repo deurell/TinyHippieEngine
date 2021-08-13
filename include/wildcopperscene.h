@@ -7,6 +7,11 @@
 #include "plane.h"
 #include <string>
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#include "math.h"
+#endif
+
 struct ScrollChar {
 public:
   ScrollChar(DL::Camera &camera, DL::Shader &shader, glm::vec2 screenSize,

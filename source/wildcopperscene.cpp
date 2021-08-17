@@ -6,7 +6,7 @@ WildCopperScene::WildCopperScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
 
 void WildCopperScene::init() {
-  mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 64));
+  mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 68));
   mCamera->lookAt({0, 0, 0});
   mShader = std::make_unique<DL::Shader>(
       "Shaders/wildcopper.vert", "Shaders/wildcopper.frag", mGlslVersionString);
@@ -19,7 +19,7 @@ void WildCopperScene::init() {
     auto chr = std::make_unique<ScrollChar>(
         *mCamera, *mShader, mScreenSize, mTextSprite->mFontTexture,
         mTextSprite->getFontCharInfoPtr(), scrollText.substr(i, 1));
-    chr->angle = -M_PI / 180 * 10 * i;
+    chr->angle = -M_PI / 180 * 12.5 * i;
     mScrollChars.emplace_back(std::move(chr));
   }
 

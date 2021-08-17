@@ -29,7 +29,7 @@ public:
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    model = glm::scale(model, glm::vec3(0.1, 0.1, 0.2));
+    model = glm::scale(model, glm::vec3(0.11, 0.11, 0.3));
     glm::vec3 polarCoord{amp * cos(angle), amp * sin(angle), 20.0f};
     model = glm::translate(model, polarCoord);
     model =
@@ -60,7 +60,7 @@ public:
 
   glm::vec2 screenSize;
   float angle = 0;
-  float amp = 200;
+  float amp = 172;
   float flipDegree = 0;
   std::unique_ptr<DL::TextSprite> charSprite;
   DL::Shader &shader;

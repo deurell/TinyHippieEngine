@@ -19,7 +19,7 @@ void WildCopperScene::init() {
     auto chr = std::make_unique<ScrollChar>(
         *mCamera, *mShader, mScreenSize, mTextSprite->mFontTexture,
         mTextSprite->getFontCharInfoPtr(), scrollText.substr(i, 1));
-    chr->angle = -M_PI / 180 * 12.5 * i;
+    chr->angle = -M_PI / 180 * 12.8 * i;
     mScrollChars.emplace_back(std::move(chr));
   }
 
@@ -71,6 +71,6 @@ void WildCopperScene::onScreenSizeChanged(glm::vec2 size) {
 
 void WildCopperScene::wrap() {
   for (int i = 0; i < mScrollChars.size(); ++i) {
-    mScrollChars.at(i)->angle = -M_PI / 180 * 10 * i;
+    mScrollChars.at(i)->angle = -M_PI / 180 * 12.8 * i;
   }
 }

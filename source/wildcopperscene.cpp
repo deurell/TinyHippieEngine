@@ -1,4 +1,5 @@
 #include "wildcopperscene.h"
+#include "GLFW/glfw3.h"
 #include <cmath>
 
 WildCopperScene::WildCopperScene(std::string_view glslVersionString)
@@ -53,6 +54,7 @@ void WildCopperScene::renderScroller(float delta) {
       sprite->render(delta);
     }
     sprite->angle += M_PI / 180 * delta * 30;
+    sprite->flipDegree = glfwGetTime();
   }
   if (mScrollChars.front()->angle > M_PI * 6) {
     wrap();

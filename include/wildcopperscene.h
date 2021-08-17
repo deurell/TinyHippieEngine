@@ -25,7 +25,6 @@ public:
   }
 
   void render(float delta) {
-    mTime += delta;
     shader.use();
 
     glm::mat4 model = glm::mat4(1.0f);
@@ -35,8 +34,9 @@ public:
     model = glm::translate(model, polarCoord);
     model =
         glm::rotate(model, angle - (float)M_PI_2, glm::vec3(0.0f, 0.0f, 1.0f));
+
     model = glm::translate(model, glm::vec3(0.0f, 16.0f, 0.0f));
-    model = glm::rotate(model, (float)mTime, glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, flipDegree + angle, glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::translate(model, glm::vec3(0.0f, -16.0f, 0.0f));
 
     // model = scale * translate * rotate * glm::inverse(locTra) * rotLoc *
@@ -61,10 +61,10 @@ public:
   glm::vec2 screenSize;
   float angle = 0;
   float amp = 200;
+  float flipDegree = 0;
   std::unique_ptr<DL::TextSprite> charSprite;
   DL::Shader &shader;
   DL::Camera &camera;
-  float mTime = 0;
 };
 
 class WildCopperScene : public DL::IScene {

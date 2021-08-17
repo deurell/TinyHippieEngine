@@ -56,7 +56,7 @@ void WildCopperScene::renderScroller(float delta) {
     sprite->angle += M_PI / 180 * delta * 30;
     sprite->flipDegree = glfwGetTime();
   }
-  if (mScrollChars.front()->angle > M_PI * 6) {
+  if (mScrollChars.front()->angle > M_PI * 8) {
     wrap();
   }
 }

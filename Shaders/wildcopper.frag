@@ -20,6 +20,5 @@ void main() {
   float normalizedAngle = deg / (2.0 * 3.1415926535);
   float val = lerp(0.0,3.1415926535,normalizedAngle);
   col = sin(val);
-  col = sqrt(col);
   FragColor = vec4(col, col, 0.0, 1.0);
 }

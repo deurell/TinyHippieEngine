@@ -176,7 +176,7 @@ vec3 dither(vec3 color, float noise) {
 
 void main() {
   vec2 txc = TexCoord;
-  vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 * cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
+  vec3 txc_time = vec3(txc.x + 0.12 * sin(-iTime*0.3), txc.y + 0.46 * cos(iTime*0.4), 52.6 * sin(iTime * 0.0023));
 
   float sim_noise = noise(vec3(txc_time * 1.3));
 

@@ -175,12 +175,10 @@ vec3 dither(vec3 color, float noise) {
 }
 
 void main() {
-  // vec2 txc = TexCoord;
-  // vec2 uv = txc * 2. - 1.;
-  // vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 *
-  // cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
+  vec2 txc = TexCoord;
+  vec3 txc_time = vec3(txc.x + 0.1 * sin(-iTime*0.3), txc.y + 0.2 * cos(iTime*0.4), 14.6 * sin(iTime * 0.012));
 
-  // float sim_noise = noise(vec3(txc_time * 1.3) + 23.5);
+  float sim_noise = noise(vec3(txc_time * 1.3));
 
   vec2 flippedUV = vec2(TexCoord.x, 1.0 - TexCoord.y);
   vec3 sourceCol = texture(texture1, flippedUV).rgb;
@@ -189,5 +187,9 @@ void main() {
   // float lum = dot(sourceCol, weight);
   // vec4 greyScale = vec4(lum, lum, lum,1);
   // FragColor = greyScale;
-  FragColor = vec4(dither(sourceCol, noise.x), 1);
+  if (sim_noise > 0.10) {
+    FragColor = vec4(sourceCol, 1);
+  } else {
+    FragColor = vec4(dither(sourceCol, noise.x), 1);
+  }
 }

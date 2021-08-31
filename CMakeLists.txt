@@ -17,8 +17,8 @@ elseif (APPLE)
 endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -o out.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal")
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2 -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal --shell-file ../shell.html")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/source 

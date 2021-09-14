@@ -99,11 +99,7 @@ const int indexMatrix8x8[64] =
 float indexValue() {
   int x = int(mod(gl_FragCoord.x, 8.0));
   int y = int(mod(gl_FragCoord.y, 8.0));
-<<<<<<< HEAD
   return float(indexMatrix8x8[(x + y * 8)]) / 64.0;
-=======
-  return float(indexMatrix8x8[(x + y * 8)] / 64.0);
->>>>>>> 847ea5a40e7df0bff39e938f4af26fcbb4a52992
 }
 
 float colDistance(vec3 col1, vec3 col2, float noise) {

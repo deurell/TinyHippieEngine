@@ -2,6 +2,7 @@
 #include "demoscene.h"
 #include "introscene.h"
 #include "wildcopperscene.h"
+#include "c64scene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -23,7 +24,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<WildCopperScene>(mGlslVersionString);
+  mScene = std::make_unique<C64Scene>(mGlslVersionString, mCodebook.get());
 }
 
 int DL::App::run() {

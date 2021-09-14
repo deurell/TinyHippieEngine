@@ -184,10 +184,8 @@ void main() {
   vec3 sourceCol = texture(texture1, flippedUV).rgb;
   vec3 uv = vec3(TexCoord.xy, 0);
   vec3 noise = random3(uv);
-  // float lum = dot(sourceCol, weight);
-  // vec4 greyScale = vec4(lum, lum, lum,1);
-  // FragColor = greyScale;
-  if (sim_noise > 0.10) {
+
+  if (sin(1.6*uv.y + iTime*0.6)*0.5+0.5 > uv.x) {
     FragColor = vec4(sourceCol, 1);
   } else {
     FragColor = vec4(dither(sourceCol, noise.x), 1);

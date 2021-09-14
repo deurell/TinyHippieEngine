@@ -10,7 +10,6 @@ uniform float iTime;
 uniform sampler2D texture1;
 
 in float color;
-out vec4 frag_color;
 
 vec3 random3(vec3 c) {
   float j = 4096.0 * sin(dot(c, vec3(17.0, 59.4, 15.0)));

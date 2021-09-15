@@ -48,7 +48,7 @@ int DL::App::run() {
     glfwTerminate();
     return -1;
   }
-  glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GLFW_TRUE);
+  //glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GLFW_TRUE);
 
   glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);

@@ -1,18 +1,11 @@
 #include "app.h"
 #include "demoscene.h"
-#include "introscene.h"
-#include "wildcopperscene.h"
 #include "c64scene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "truetypescene.h"
-#include <glm/glm.hpp>
-#include <glm/gtx/euler_angles.hpp>
 #include <iostream>
-
-#include "AL/al.h"
-#include "AL/alc.h"
 
 void renderLoopCallback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 

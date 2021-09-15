@@ -1,4 +1,4 @@
-# cmake . -DCMAKE_TOOLCHAIN_FILE=/Users/mikael/emscripten/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B web -G Ninja
+# cmake . -DCMAKE_TOOLCHAIN_FILE=/Users/deurell/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B wildcopper -G Ninja
 cmake_minimum_required(VERSION 3.15)
 
 project(tiny_hippie_engine)
@@ -18,7 +18,7 @@ endif()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} -lopenal --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+  SET(CMAKE_EXE_LINKER_FLAGS  "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
 endif()
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/source 
@@ -133,16 +133,7 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
   set(LIBS ${LIBS} glfw)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
-
-  set(ALSOFT_INSTALL OFF CACHE BOOL "Install headers and libraries" FORCE)
-  set(ALSOFT_UTILS OFF CACHE BOOL "Build and install utility programs" FORCE)
-  set(ALSOFT_NO_CONFIG_UTIL OFF CACHE BOOL "Disable building the alsoft-config utility" FORCE)
-  set(ALSOFT_EXAMPLES OFF CACHE BOOL "Build and install example programs"  FORCE)
-  set(ALSOFT_TESTS OFF CACHE BOOL "Build and install test programs" FORCE)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/openal-soft)
-  set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)  
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DAL_LIBTYPE_STATIC")
-  set(LIBS ${LIBS} OpenAL)
+  set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
   
   add_custom_command(
     TARGET tiny_hippie_engine POST_BUILD

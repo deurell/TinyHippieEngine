@@ -1,10 +1,11 @@
 #pragma once
 
-#include "iscene.h"
 #include "camera.h"
+#include "iscene.h"
 #include "model.h"
 #include "shader.h"
 #include "texture.h"
+#include "audioplayer.h"
 #include <memory>
 
 class C64Scene : public DL::IScene {
@@ -32,4 +33,5 @@ private:
   std::string mGlslVersionString;
   glm::vec2 mScreenSize{};
   float mDelta = 0;
+  std::unique_ptr<AudioPlayer> mAudioPlayer;
 };

@@ -12,7 +12,6 @@
 #endif
 
 namespace DL {
-
 class App {
 public:
   App() = default;

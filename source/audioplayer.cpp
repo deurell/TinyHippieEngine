@@ -27,7 +27,7 @@ void AudioPlayer::load(const std::string &fileName) {
   ma_result result;
   ma_device_config deviceConfig;
 
-  result = ma_decoder_init_file("./Resources/unlock.wav", nullptr, &mDecoder);
+  result = ma_decoder_init_file(fileName.c_str(), nullptr, &mDecoder);
   if (result != MA_SUCCESS) {
     std::cout << "Unable to load sound file." << std::endl;
   }

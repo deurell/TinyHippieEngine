@@ -76,7 +76,7 @@ int DL::App::run() {
   mScene->onScreenSizeChanged({screen_width, screen_height});
 
 #ifdef __EMSCRIPTEN__
-  emscripten_set_main_loop_arg(&renderLoopCallback, this, -1, 1);
+  emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);
 #else
   while (!glfwWindowShouldClose(mWindow)) {
     render();

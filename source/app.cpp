@@ -7,7 +7,14 @@
 #include "truetypescene.h"
 #include <iostream>
 
-void renderLoopCallback(void *arg) { static_cast<DL::App *>(arg)->render(); }
+void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
+
+static void mouseclick_callback(GLFWwindow* window, int button, int action, int mod) {
+  DL::App* app = reinterpret_cast<DL::App*>(glfwGetWindowUserPointer(window));
+  if (app) {
+    app->onClick(button, action, mod);
+  }
+}
 
 void DL::App::init() {
   glfwInit();
@@ -41,7 +48,9 @@ int DL::App::run() {
     glfwTerminate();
     return -1;
   }
-  //glfwSetInputMode(mWindow, GLFW_STICKY_KEYS, GLFW_TRUE);
+
+  glfwSetWindowUserPointer(mWindow, this);
+  glfwSetMouseButtonCallback(mWindow, mouseclick_callback);
 
   glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);
@@ -49,6 +58,7 @@ int DL::App::run() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "glad init failed";
     return -1;
+    
   }
 
   glViewport(0, 0, screen_width, screen_height);
@@ -119,6 +129,12 @@ void DL::App::processInput(GLFWwindow *window) {
     if (glfwGetKey(window, i) == GLFW_PRESS) {
       mScene->onKey(i);
     }
+  }
+}
+
+void DL::App::onClick(int button, int action, int mod) {
+  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+    std::cout << "mouse button click." << std::endl;
   }
 }
 

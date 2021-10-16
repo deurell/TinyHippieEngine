@@ -10,9 +10,9 @@
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
 static void mouseclick_callback(GLFWwindow* window, int button, int action, int mod) {
-  DL::App* app = reinterpret_cast<DL::App*>(glfwGetWindowUserPointer(window));
+  auto* app = reinterpret_cast<DL::App*>(glfwGetWindowUserPointer(window));
   if (app) {
-    app->onClick(button, action, mod);
+    DL::App::onClick(button, action, mod);
   }
 }
 
@@ -132,7 +132,7 @@ void DL::App::processInput(GLFWwindow *window) {
   }
 }
 
-void DL::App::onClick(int button, int action, int mod) {
+void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     std::cout << "mouse button click." << std::endl;
   }

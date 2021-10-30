@@ -29,7 +29,7 @@ private:
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
-  GLFWwindow *mWindow;
+  GLFWwindow *mWindow {};
   std::unique_ptr<DL::IScene> mScene;
   std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;
   std::string mGlslVersionString;

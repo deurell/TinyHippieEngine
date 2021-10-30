@@ -137,13 +137,13 @@ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
   add_custom_command(
     TARGET tiny_hippie_engine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Debug/Shaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
     COMMENT "Copying shaders" VERBATIM
   )
   add_custom_command( 
     TARGET tiny_hippie_engine POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Debug/Resources
+    ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
     COMMENT "Copying resources" VERBATIM
   )
 else()

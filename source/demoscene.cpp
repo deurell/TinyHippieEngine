@@ -138,13 +138,13 @@ void DemoScene::render(float delta) {
   mLightingShader->setFloat("pointLights[1].linear", 0.09);
   mLightingShader->setFloat("pointLights[1].quadratic", 0.032);
 
-  mPointLightPositions[0].x = 2 * glm::cos(-1.5 * glfwGetTime());
+  mPointLightPositions[0].x = 2.0 * glm::cos(-1.5 * glfwGetTime());
   mPointLightPositions[0].z = 4.0 * glm::cos(1.3 * glfwGetTime());
-  mPointLightPositions[0].y = 1 + .5 * glm::sin(-1.1 * glfwGetTime());
+  mPointLightPositions[0].y = 1.0 + 0.5 * glm::sin(-1.1 * glfwGetTime());
 
   mPointLightPositions[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
   mPointLightPositions[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
-  mPointLightPositions[1].y = 1.0 + 0.8 * glm::sin(-0.2 * glfwGetTime());
+  mPointLightPositions[1].y = 1.0 + 0.8f * glm::sin(-0.2 * glfwGetTime());
 
   // view/projection transformations
   glm::mat4 projection =

@@ -18,7 +18,9 @@ void IntroScene::init() {
 
   mPlane = std::make_unique<DL::Plane>(
       std::move(shader), *mCamera,
-      [](DL::Shader &shader) { shader.setFloat("sineOffset", 0); });
+      [this](DL::Shader &shader) { 
+        shader.setFloat("sineOffset", this->mOffset);
+        shader.setFloat("tweak", mTweak); });
   mPlane->mPosition = {0, 1.4, 0};
   mPlane->mScale = {40, 3, 1};
 
@@ -27,7 +29,10 @@ void IntroScene::init() {
 
   mPlane2 = std::make_unique<DL::Plane>(
       std::move(shader2), *mCamera,
-      [](DL::Shader &shader) { shader.setFloat("sineOffset", glm::pi<float>()); });
+      [this](DL::Shader &shader) { 
+        shader.setFloat("sineOffset", glm::pi<float>()+this->mOffset);
+        shader.setFloat("tweak", mTweak); });
+    
   mPlane2->mPosition = {0, -1.4, 0};
   mPlane2->mScale = {40, 3, 1};
 }
@@ -46,6 +51,8 @@ void IntroScene::render(float delta) {
   ImGui::NewFrame();
   ImGui::Begin("tiny intro");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::SliderFloat("offset", &mOffset, 0,5);
+  ImGui::SliderFloat("tweak", &mTweak, -50,50);
   ImGui::End();
 #endif
 }

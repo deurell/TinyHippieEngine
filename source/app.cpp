@@ -1,11 +1,13 @@
 #include "app.h"
 #include "demoscene.h"
 #include "c64scene.h"
+#include "introscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "truetypescene.h"
 #include <iostream>
+#include "simplescene.h"
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
@@ -24,7 +26,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<C64Scene>(mGlslVersionString, mCodebook.get());
+  mScene = std::make_unique<SimpleScene>(mGlslVersionString);
 }
 
 int DL::App::run() {
@@ -41,7 +43,7 @@ int DL::App::run() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  mWindow = glfwCreateWindow(screen_width, screen_height, windows_title,
+  mWindow = glfwCreateWindow(screen_width,screen_height, windows_title,
                              nullptr, nullptr);
   if (mWindow == nullptr) {
     std::cout << "window create failed";

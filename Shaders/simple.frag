@@ -6,5 +6,6 @@ uniform float iTime;
 out vec4 FragColor;
 
 void main() {
-    FragColor = vec4(0.0, 0.0, 0.5, 1.0);
+    float col = abs(sin(iTime));
+    FragColor = vec4(col, col, col, 1.0);
 }

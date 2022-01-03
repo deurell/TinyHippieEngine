@@ -18,7 +18,7 @@ void SimpleScene::init() {
 
   mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
   mPlane->mPosition = {0, 0, 0};
-  mPlane->mScale = {6, 6, 1};
+  mPlane->mScale = {16, 16, 1};
 }
 
 void SimpleScene::render(float delta) {

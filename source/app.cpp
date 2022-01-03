@@ -1,18 +1,19 @@
 #include "app.h"
-#include "demoscene.h"
 #include "c64scene.h"
-#include "introscene.h"
+#include "demoscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include "introscene.h"
+#include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
-#include "simplescene.h"
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
-static void mouseclick_callback(GLFWwindow* window, int button, int action, int mod) {
-  auto* app = reinterpret_cast<DL::App*>(glfwGetWindowUserPointer(window));
+static void mouseclick_callback(GLFWwindow *window, int button, int action,
+                                int mod) {
+  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
     DL::App::onClick(button, action, mod);
   }
@@ -43,7 +44,7 @@ int DL::App::run() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  mWindow = glfwCreateWindow(screen_width,screen_height, windows_title,
+  mWindow = glfwCreateWindow(screen_width, screen_height, windows_title,
                              nullptr, nullptr);
   if (mWindow == nullptr) {
     std::cout << "window create failed";
@@ -60,7 +61,6 @@ int DL::App::run() {
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "glad init failed";
     return -1;
-    
   }
 
   glViewport(0, 0, screen_width, screen_height);

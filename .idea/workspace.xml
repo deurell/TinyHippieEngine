@@ -5,65 +5,26 @@
   </component>
   <component name="CMakeRunConfigurationManager" shouldGenerate="true" shouldDeleteObsolete="true">
     <generated>
-      <config projectName="gfxlab" targetName="gfxlab" />
-      <config projectName="gfxlab" targetName="glfw" />
-      <config projectName="gfxlab" targetName="uninstall" />
+      <config projectName="tiny_hippie_engine" targetName="basisu" />
+      <config projectName="tiny_hippie_engine" targetName="imgui" />
+      <config projectName="tiny_hippie_engine" targetName="tiny_hippie_engine" />
+      <config projectName="tiny_hippie_engine" targetName="update_mappings" />
+      <config projectName="tiny_hippie_engine" targetName="glfw" />
+      <config projectName="tiny_hippie_engine" targetName="assimp" />
+      <config projectName="tiny_hippie_engine" targetName="uninstall" />
+      <config projectName="tiny_hippie_engine" targetName="IrrXML" />
     </generated>
   </component>
   <component name="CMakeSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug" CONFIG_NAME="Debug" />
-      <configuration PROFILE_NAME="Emscripten" CONFIG_NAME="Debug" GENERATION_OPTIONS="-DCMAKE_TOOLCHAIN_FILE=/Users/mikael/emscripten/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" />
+      <configuration PROFILE_NAME="Debug" ENABLED="true" CONFIG_NAME="Debug" />
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="6154450c-c486-414a-b473-e5cac69b38fd" name="Default Changelist" comment="tidying up">
+    <list default="true" id="6154450c-c486-414a-b473-e5cac69b38fd" name="Default Changelist" comment="rotating... ;)">
+      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/c_cpp_properties.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/launch.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.vscode/settings.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeCache.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/3.16.0/CMakeCCompiler.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/3.16.0/CMakeCXXCompiler.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/3.16.0/CMakeSystem.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/CMakeDirectoryInformation.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/CMakeOutput.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/Makefile.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/Makefile2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/TargetDirectories.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/cmake.check_cache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/C.includecache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/CXX.includecache" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/DependInfo.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/build.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/cmake_clean.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/depend.internal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/depend.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/flags.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/glad.c.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui_demo.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui_draw.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui_impl_glfw.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui_impl_opengl3.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/imgui/imgui_widgets.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/includes_C.rsp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/includes_CXX.rsp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/link.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/main.cpp.o" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/objects1.rsp" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/gfxlab.dir/progress.make" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CMakeFiles/progress.marks" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Makefile" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Shaders/fragment.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Shaders/vertex.shader" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/cmake_install.cmake" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/deps/libglfw3.a" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gfxlab" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gfxlab.data" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gfxlab.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gfxlab.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/gfxlab.wasm" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Shaders/simple.frag" beforeDir="false" afterPath="$PROJECT_DIR$/Shaders/simple.frag" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -71,9 +32,6 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="ExecutionTargetManager" SELECTED_TARGET="CMakeBuildProfile:Debug" />
-  <component name="FavoritesManager">
-    <favorites_list name="gfxlab" />
-  </component>
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
       <list>
@@ -82,49 +40,103 @@
     </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="r6rzpdks" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectId" id="1PP4hbmSqpko3DX905TPJgf8fYA" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
     <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
     <property name="ChangesTree.GroupingKeys" value="directory" />
+    <property name="RunOnceActivity.cidr.known.project.marker" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="cf.advertisement.text.overridden" value="true" />
+    <property name="cf.first.check.clang-format" value="false" />
+    <property name="cidr.known.project.marker" value="true" />
+    <property name="cmake.loaded.for.project" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/Resources" />
+    <property name="nodejs_package_manager_path" value="npm" />
     <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
-    <property name="settings.editor.selected.configurable" value="language.cpp.clang-tidy" />
+    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="structure.view.defaults.are.configured" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/Resources" />
     </key>
   </component>
-  <component name="RunManager" selected="CMake Application.gfxlab">
-    <configuration name="gfxlab" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gfxlab" TARGET_NAME="gfxlab" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="gfxlab" RUN_TARGET_NAME="gfxlab">
+  <component name="RunManager" selected="CMake Application.tiny_hippie_engine">
+    <configuration name="IrrXML" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="IrrXML" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="glfw" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gfxlab" TARGET_NAME="glfw" CONFIG_NAME="Debug">
+    <configuration default="true" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
-    <configuration name="uninstall" type="CMakeRunConfiguration" factoryName="Application" PASS_PARENT_ENVS_2="true" PROJECT_NAME="gfxlab" TARGET_NAME="uninstall" CONFIG_NAME="Debug">
+    <configuration name="assimp" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="assimp" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="basisu" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="basisu" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="glfw" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="glfw" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="imgui" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="imgui" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="tiny_hippie_engine" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="tiny_hippie_engine" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="tiny_hippie_engine" RUN_TARGET_NAME="tiny_hippie_engine">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="uninstall" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="uninstall" CONFIG_NAME="Debug">
+      <method v="2">
+        <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="update_mappings" type="CMakeRunConfiguration" factoryName="Application" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" PASS_PARENT_ENVS_2="true" PROJECT_NAME="tiny_hippie_engine" TARGET_NAME="update_mappings" CONFIG_NAME="Debug">
       <method v="2">
         <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
       </method>
     </configuration>
     <list>
-      <item itemvalue="CMake Application.gfxlab" />
+      <item itemvalue="CMake Application.basisu" />
+      <item itemvalue="CMake Application.imgui" />
+      <item itemvalue="CMake Application.tiny_hippie_engine" />
       <item itemvalue="CMake Application.uninstall" />
+      <item itemvalue="CMake Application.assimp" />
+      <item itemvalue="CMake Application.IrrXML" />
       <item itemvalue="CMake Application.glfw" />
+      <item itemvalue="CMake Application.update_mappings" />
     </list>
   </component>
   <component name="ServiceViewManager">
@@ -139,6 +151,7 @@
       </list>
     </option>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -156,6 +169,15 @@
       <workItem from="1577281642702" duration="8000" />
       <workItem from="1577310794021" duration="321000" />
       <workItem from="1577311126741" duration="6185000" />
+      <workItem from="1639994896949" duration="20000" />
+      <workItem from="1639995045049" duration="1745000" />
+      <workItem from="1640099729191" duration="236000" />
+      <workItem from="1640181157087" duration="1913000" />
+      <workItem from="1640609559283" duration="253000" />
+      <workItem from="1640609837273" duration="764000" />
+      <workItem from="1641214514911" duration="469000" />
+      <workItem from="1641214995476" duration="910000" />
+      <workItem from="1641218965502" duration="6390000" />
     </task>
     <task id="LOCAL-00001" summary="c64 dithering">
       <created>1566979653851</created>
@@ -171,11 +193,18 @@
       <option name="project" value="LOCAL" />
       <updated>1577375572825</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="rotating... ;)">
+      <created>1641225133371</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1641225133371</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
+    <option name="version" value="3" />
   </component>
   <component name="Vcs.Log.History.Properties">
     <option name="COLUMN_ORDER">
@@ -192,83 +221,23 @@
       <map>
         <entry key="MAIN">
           <value>
-            <State>
-              <option name="COLUMN_ORDER" />
-            </State>
+            <State />
           </value>
         </entry>
       </map>
     </option>
   </component>
   <component name="VcsManagerConfiguration">
+    <ignored-roots>
+      <path value="$PROJECT_DIR$/glm" />
+    </ignored-roots>
     <MESSAGE value="c64 dithering" />
     <MESSAGE value="tidying up" />
-    <option name="LAST_COMMIT_MESSAGE" value="tidying up" />
+    <MESSAGE value="rotating... ;)" />
+    <option name="LAST_COMMIT_MESSAGE" value="rotating... ;)" />
   </component>
-  <component name="WindowStateProjectService">
-    <state x="184" y="125" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1577375991770">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="184" y="125" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.23.1440.877@0.23.1440.877" timestamp="1577375991770" />
-    <state x="465" y="326" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1" timestamp="1577374510086">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="465" y="326" key="ANALYSIS_DLG_com.intellij.analysis.BaseAnalysisAction$1/0.23.1440.877@0.23.1440.877" timestamp="1577374510086" />
-    <state x="301" y="67" width="1027" height="789" key="CommitChangelistDialog2" timestamp="1577375572469">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="301" y="67" width="1027" height="789" key="CommitChangelistDialog2/0.23.1440.877@0.23.1440.877" timestamp="1577375572469" />
-    <state width="1398" height="184" key="GridCell.Tab.0.bottom" timestamp="1577375633357">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.0.bottom/0.23.1440.877@0.23.1440.877" timestamp="1577375633357" />
-    <state width="1398" height="184" key="GridCell.Tab.0.center" timestamp="1577375633356">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.0.center/0.23.1440.877@0.23.1440.877" timestamp="1577375633356" />
-    <state width="1398" height="184" key="GridCell.Tab.0.left" timestamp="1577375633355">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.0.left/0.23.1440.877@0.23.1440.877" timestamp="1577375633355" />
-    <state width="1398" height="184" key="GridCell.Tab.0.right" timestamp="1577375633356">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.0.right/0.23.1440.877@0.23.1440.877" timestamp="1577375633356" />
-    <state width="1398" height="184" key="GridCell.Tab.1.bottom" timestamp="1577375633358">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.1.bottom/0.23.1440.877@0.23.1440.877" timestamp="1577375633358" />
-    <state width="1398" height="184" key="GridCell.Tab.1.center" timestamp="1577375633357">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.1.center/0.23.1440.877@0.23.1440.877" timestamp="1577375633357" />
-    <state width="1398" height="184" key="GridCell.Tab.1.left" timestamp="1577375633357">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.1.left/0.23.1440.877@0.23.1440.877" timestamp="1577375633357" />
-    <state width="1398" height="184" key="GridCell.Tab.1.right" timestamp="1577375633358">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="1398" height="184" key="GridCell.Tab.1.right/0.23.1440.877@0.23.1440.877" timestamp="1577375633358" />
-    <state x="267" y="99" key="SettingsEditor" timestamp="1577374182207">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="267" y="99" key="SettingsEditor/0.23.1440.877@0.23.1440.877" timestamp="1577374182207" />
-    <state x="450" y="200" width="891" height="524" key="StructurePopup" timestamp="1577375846915">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="450" y="200" width="891" height="524" key="StructurePopup/0.23.1440.877@0.23.1440.877" timestamp="1577375846915" />
-    <state x="320" y="189" key="Vcs.Push.Dialog.v2" timestamp="1577375600163">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="320" y="189" key="Vcs.Push.Dialog.v2/0.23.1440.877@0.23.1440.877" timestamp="1577375600163" />
-    <state width="600" height="424" key="javadoc.popup" timestamp="1577311964579">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state width="600" height="424" key="javadoc.popup/0.23.1440.877@0.23.1440.877" timestamp="1577311964579" />
-    <state x="385" y="213" width="670" height="676" key="search.everywhere.popup" timestamp="1577375833840">
-      <screen x="0" y="23" width="1440" height="877" />
-    </state>
-    <state x="385" y="213" width="670" height="676" key="search.everywhere.popup/0.23.1440.877@0.23.1440.877" timestamp="1577375833840" />
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

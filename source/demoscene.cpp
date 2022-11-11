@@ -181,7 +181,7 @@ void DemoScene::render(float delta) {
   }
 }
 
-void DemoScene::onClick() {}
+void DemoScene::onClick(double x, double y) {}
 
 void DemoScene::onKey(int key) {
   const float cameraSpeed = 1.5f * mDelta;

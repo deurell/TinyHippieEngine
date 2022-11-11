@@ -12,15 +12,15 @@
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
-void mouseclick_callback(GLFWwindow *window, int button, int action,
-                                int mod) {
+void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
   auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
     app->onClick(button, action, mod);
   }
 }
 
-void keyclick_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
+                       int mods) {
   auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
     app->onKey(key, scancode, action, mods);
@@ -139,7 +139,9 @@ void DL::App::processInput(GLFWwindow *window) {
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
-    mScene->onClick();
+    double x, y;
+    glfwGetCursorPos(mWindow, &x, &y);
+    mScene->onClick(x, y);
   }
 }
 

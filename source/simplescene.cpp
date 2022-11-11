@@ -36,8 +36,8 @@ void SimpleScene::render(float delta) {
 #endif
 }
 
-void SimpleScene::onClick() {
-  std::cout << "Mouse click" << std::endl;
+void SimpleScene::onClick(double x, double y) {
+  std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
 }
 
 void SimpleScene::onKey(int key) {

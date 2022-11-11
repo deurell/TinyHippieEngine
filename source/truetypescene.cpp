@@ -147,7 +147,7 @@ void TrueTypeScene::render(float delta) {
 #endif
 }
 
-void TrueTypeScene::onClick() {}
+void TrueTypeScene::onClick(double x, double y) {}
 
 void TrueTypeScene::onKey(int key) {
   if (key == GLFW_KEY_O) {

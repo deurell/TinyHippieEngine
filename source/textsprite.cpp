@@ -117,7 +117,6 @@ void DL::TextSprite::init() {
                vertices.data(), GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
   glEnableVertexAttribArray(0);
-
   glGenBuffers(1, &mUVBuffer);
   glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
   glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * uvs.size(), uvs.data(),

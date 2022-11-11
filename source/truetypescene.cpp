@@ -147,6 +147,8 @@ void TrueTypeScene::render(float delta) {
 #endif
 }
 
+void TrueTypeScene::onClick() {}
+
 void TrueTypeScene::onKey(int key) {
   if (key == GLFW_KEY_O) {
     if (mState == SceneState::RUNNING) {

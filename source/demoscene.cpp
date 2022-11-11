@@ -180,6 +180,9 @@ void DemoScene::render(float delta) {
     glDrawArrays(GL_TRIANGLES, 0, 36);
   }
 }
+
+void DemoScene::onClick() {}
+
 void DemoScene::onKey(int key) {
   const float cameraSpeed = 1.5f * mDelta;
   if (key == GLFW_KEY_W) {

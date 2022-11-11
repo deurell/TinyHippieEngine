@@ -74,6 +74,7 @@ public:
 
   void init() override;
   void render(float delta) override;
+  void onClick() override {}
   void onKey(int key) override {}
   void onScreenSizeChanged(glm::vec2 size) override;
 

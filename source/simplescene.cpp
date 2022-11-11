@@ -36,7 +36,9 @@ void SimpleScene::render(float delta) {
 #endif
 }
 
-void SimpleScene::onKey(int key) {}
+void SimpleScene::onKey(int key) {
+  std::cout << key << std::endl;
+}
 
 void SimpleScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;

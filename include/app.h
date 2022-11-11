@@ -20,7 +20,8 @@ public:
   int run();
   void render();
   void processInput(GLFWwindow *window);
-  static void onClick(int button, int action, int mod);
+  void onClick(int button, int action, int mod);
+  void onKey(int key, int scancode, int action, int mod);
 
 private:
   void init();

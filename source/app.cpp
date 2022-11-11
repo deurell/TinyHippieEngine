@@ -1,4 +1,5 @@
 #include "app.h"
+#include "GLFW/glfw3.h"
 #include "c64scene.h"
 #include "demoscene.h"
 #include "imgui.h"
@@ -11,11 +12,18 @@
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
-static void mouseclick_callback(GLFWwindow *window, int button, int action,
+void mouseclick_callback(GLFWwindow *window, int button, int action,
                                 int mod) {
   auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
-    DL::App::onClick(button, action, mod);
+    app->onClick(button, action, mod);
+  }
+}
+
+void keyclick_callback(GLFWwindow *window, int key, int scancode, int action, int mods) {
+  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
+  if (app) {
+    app->onKey(key, scancode, action, mods);
   }
 }
 
@@ -54,6 +62,7 @@ int DL::App::run() {
 
   glfwSetWindowUserPointer(mWindow, this);
   glfwSetMouseButtonCallback(mWindow, mouseclick_callback);
+  glfwSetKeyCallback(mWindow, keyclick_callback);
 
   glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);
@@ -126,17 +135,17 @@ void DL::App::processInput(GLFWwindow *window) {
     mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
     mScene->init();
   }
-
-  for (int i = GLFW_KEY_A; i <= GLFW_KEY_Z; i++) {
-    if (glfwGetKey(window, i) == GLFW_PRESS) {
-      mScene->onKey(i);
-    }
-  }
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     std::cout << "mouse button click." << std::endl;
+  }
+}
+
+void DL::App::onKey(int key, int scancode, int action, int mod) {
+  if (action == GLFW_RELEASE) {
+    mScene->onKey(key);
   }
 }
 

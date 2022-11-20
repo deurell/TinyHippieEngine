@@ -1,13 +1,9 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
-#include "c64scene.h"
-#include "demoscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
-#include "simplescene.h"
-#include "truetypescene.h"
 #include <iostream>
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }

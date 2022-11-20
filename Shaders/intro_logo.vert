@@ -8,12 +8,13 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float iTime;
+uniform float amp;
+uniform float freq;
 
 void main() {
   TexCoords = aTexCoords;
   WorldPos = model * vec4(aPos, 1);
   vec3 pos = aPos;
-  pos.x += 72.0 * sin(iTime * 1.2);
-
+  pos.x += amp * sin(iTime * freq);
   gl_Position = projection * view * model * vec4(pos, 1);
 }

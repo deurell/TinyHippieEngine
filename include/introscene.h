@@ -24,13 +24,15 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  void renderLogo(float delta);
+  void renderLogoTop(float delta);
+  void renderLogoBottom(float delta);
 
   std::string mGlslVersionString;
 
   std::unique_ptr<DL::Shader> mLogoShader;
   std::unique_ptr<DL::Camera> mCamera;
-  std::unique_ptr<DL::TextSprite> mLogoSprite;
+  std::unique_ptr<DL::TextSprite> mLogoTop;
+  std::unique_ptr<DL::TextSprite> mLogoBottom;
   glm::vec2 mScreenSize{0, 0};
 
   std::unique_ptr<DL::Plane> mPlane;

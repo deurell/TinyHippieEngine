@@ -4,17 +4,17 @@
 #include <iostream>
 #include <utility>
 
-DL::TextSprite::TextSprite(std::string_view fontPath, std::string_view text)
+DL::TextSprite::TextSprite(std::string_view fontPath, std::wstring_view text)
     : mText(text) {
   loadFontTexture(fontPath);
   init();
 }
 
 DL::TextSprite::TextSprite(std::string_view fontPath)
-    : TextSprite(fontPath, "") {}
+    : TextSprite(fontPath, L"") {}
 
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar *fontInfo,
-                           std::string text)
+                           std::wstring text)
     : mFontTexture(texture), mFontCharInfoPtr(fontInfo),
       mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);

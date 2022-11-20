@@ -23,14 +23,14 @@ class TextSprite {
 
 public:
   explicit TextSprite(std::string_view fontPath);
-  TextSprite(std::string_view fontPath, std::string_view text);
-  TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::string text);
+  TextSprite(std::string_view fontPath, std::wstring_view text);
+  TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::wstring text);
   ~TextSprite() = default;
 
   void render(float delta) const;
   stbtt_packedchar *getFontCharInfoPtr();
 
-  std::string mText;
+  std::wstring mText;
   GLuint mVAO = 0;
   GLuint mVBO = 0;
   GLuint mUVBuffer = 0;
@@ -48,8 +48,8 @@ private:
   const uint32_t mFontAtlasHeight = 1024;
   const uint32_t mFontOversampleX = 2;
   const uint32_t mFontOversampleY = 2;
-  const uint32_t mFontFirstChar = ' ';
-  const uint32_t mFontCharCount = '~' - ' ';
+  const uint32_t mFontFirstChar = 32;
+  const uint32_t mFontCharCount = 255 - 32;
   std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
   stbtt_packedchar *mFontCharInfoPtr = nullptr;
 };

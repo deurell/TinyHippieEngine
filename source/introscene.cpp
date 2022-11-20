@@ -10,15 +10,15 @@ void IntroScene::init() {
   mCamera->lookAt({0, 0, 0});
   mLogoShader = std::make_unique<DL::Shader>(
       "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
-  std::string logoTextTop = "GLOSOR";
   mLogoTop =
-      std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoTextTop);
+      std::make_unique<DL::TextSprite>("Resources/vampire.ttf", L"GLOSOR");
 
-  mCodeLabel = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", "Kod till glosor: ......");
+  mCodeLabel = std::make_unique<DL::TextSprite>(mLogoTop->mFontTexture,
+                                                mLogoTop->getFontCharInfoPtr(),
+                                                L"Kod för glosor: ......");
 
-  std::string logoTextBottom = "UTAN REKLAM";
-  mLogoBottom =
-      std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoTextBottom);
+  mLogoBottom = std::make_unique<DL::TextSprite>(
+      mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), L"UTAN REKLAM");
 
   // raster bars
   std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(

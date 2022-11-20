@@ -70,8 +70,8 @@ void IntroScene::render(float delta) {
 void IntroScene::renderLogoTop(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::scale(model, glm::vec3(0.06, 0.06, 1.0));
-  model = glm::translate(model, glm::vec3(-100.0, 50.0, 0.0));
+  model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
+  model = glm::translate(model, glm::vec3(-54.0, 26.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
@@ -93,7 +93,7 @@ void IntroScene::renderCodeLabel(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.02, 0.02, 1.0));
-  model = glm::translate(model, glm::vec3(-310.0, -26.0, 0.0));
+  model = glm::translate(model, glm::vec3(-190.0, -26.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
@@ -114,8 +114,8 @@ void IntroScene::renderCodeLabel(float delta) {
 void IntroScene::renderLogoBottom(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::scale(model, glm::vec3(0.06, 0.06, 1.0));
-  model = glm::translate(model, glm::vec3(-195.0, -80.0, 0.0));
+  model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
+  model = glm::translate(model, glm::vec3(-116.0, -44.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);

@@ -15,7 +15,7 @@ void IntroScene::init() {
 
   mCodeLabel = std::make_unique<DL::TextSprite>(mLogoTop->mFontTexture,
                                                 mLogoTop->getFontCharInfoPtr(),
-                                                L"Kod för glosor: ......");
+                                                L"Kod för glosor: ______");
 
   mLogoBottom = std::make_unique<DL::TextSprite>(
       mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), L"UTAN REKLAM");

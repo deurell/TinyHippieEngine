@@ -25,6 +25,7 @@ public:
 
 private:
   void renderLogoTop(float delta);
+  void renderCodeLabel(float delta);
   void renderLogoBottom(float delta);
 
   std::string mGlslVersionString;
@@ -32,6 +33,7 @@ private:
   std::unique_ptr<DL::Shader> mLogoShader;
   std::unique_ptr<DL::Camera> mCamera;
   std::unique_ptr<DL::TextSprite> mLogoTop;
+  std::unique_ptr<DL::TextSprite> mCodeLabel;
   std::unique_ptr<DL::TextSprite> mLogoBottom;
   glm::vec2 mScreenSize{0, 0};
 

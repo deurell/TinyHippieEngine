@@ -14,6 +14,8 @@ void IntroScene::init() {
   mLogoTop =
       std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoTextTop);
 
+  mCodeLabel = std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", "Kod till glosor: ");
+
   std::string logoTextBottom = "UTAN REKLAM";
   mLogoBottom =
       std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoTextBottom);
@@ -48,6 +50,7 @@ void IntroScene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
   renderLogoTop(delta);
+  renderCodeLabel(delta);
   renderLogoBottom(delta);
   mPlane->render(delta);
   mPlane2->render(delta);
@@ -84,6 +87,28 @@ void IntroScene::renderLogoTop(float delta) {
   mLogoShader->setFloat("freq", 1.2);
   mLogoShader->setFloat("offset", glm::pi<float>());
   mLogoTop->render(delta);
+}
+
+void IntroScene::renderCodeLabel(float delta) {
+  mLogoShader->use();
+  glm::mat4 model = glm::mat4(1.0f);
+  model = glm::scale(model, glm::vec3(0.01, 0.01, 1.0));
+  model = glm::translate(model, glm::vec3(-110.0, -72.0, 0.0));
+  mLogoShader->setMat4f("model", model);
+  glm::mat4 view = mCamera->getViewMatrix();
+  mLogoShader->setMat4f("view", view);
+  glm::mat4 projectionMatrix =
+      mCamera->getPerspectiveTransform(45.0, mScreenSize.x / mScreenSize.y);
+  mLogoShader->setMat4f("projection", projectionMatrix);
+
+  mLogoShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, mLogoTop->mFontTexture);
+  mLogoShader->setInt("texture1", 0);
+  mLogoShader->setFloat("amp", 0.0);
+  mLogoShader->setFloat("freq", 0.0);
+  mLogoShader->setFloat("offset", 0.0);
+  mCodeLabel->render(delta);
 }
 
 void IntroScene::renderLogoBottom(float delta) {

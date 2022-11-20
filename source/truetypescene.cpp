@@ -123,10 +123,10 @@ void TrueTypeScene::render(float delta) {
     mStateStartTime = static_cast<float>(glfwGetTime());
   }
 
-  if (mState == SceneState::OUTRO && glfwGetTime() - mStateStartTime >= mDelayTime) {
+  if (mState == SceneState::OUTRO &&
+      glfwGetTime() - mStateStartTime >= mDelayTime) {
     // scene switch
   }
-
 
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

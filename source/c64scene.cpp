@@ -89,7 +89,9 @@ void C64Scene::render(float delta) {
   ImGui::End();
 #endif
 }
+
 void C64Scene::onClick(double x, double y) {}
+
 void C64Scene::onKey(int key) {}
 
 void C64Scene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }

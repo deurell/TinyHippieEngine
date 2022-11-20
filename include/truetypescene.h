@@ -1,7 +1,7 @@
 #pragma once
 
-#include "iscene.h"
 #include "camera.h"
+#include "iscene.h"
 #include "shader.h"
 #include "stb_truetype.h"
 #include "textsprite.h"

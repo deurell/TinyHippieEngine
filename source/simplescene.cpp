@@ -40,9 +40,7 @@ void SimpleScene::onClick(double x, double y) {
   std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
 }
 
-void SimpleScene::onKey(int key) {
-  std::cout << key << std::endl;
-}
+void SimpleScene::onKey(int key) { std::cout << key << std::endl; }
 
 void SimpleScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;

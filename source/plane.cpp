@@ -6,8 +6,10 @@
 #include <GLFW/glfw3.h>
 #include <memory>
 
-DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera, const std::function<void (DL::Shader&)>& shaderModifier)
-    : mCamera(camera), mShader(std::move(shader)), mShaderModifier(shaderModifier) {
+DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
+                 const std::function<void(DL::Shader &)> &shaderModifier)
+    : mCamera(camera), mShader(std::move(shader)),
+      mShaderModifier(shaderModifier) {
   float vertices[] = {
       // positions        // colors         // texture coords
       1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right

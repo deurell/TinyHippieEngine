@@ -82,6 +82,7 @@ void IntroScene::renderLogoTop(float delta) {
   mLogoShader->setInt("texture1", 0);
   mLogoShader->setFloat("amp", 90.0);
   mLogoShader->setFloat("freq", 1.2);
+  mLogoShader->setFloat("offset", glm::pi<float>());
   mLogoTop->render(delta);
 }
 
@@ -103,6 +104,7 @@ void IntroScene::renderLogoBottom(float delta) {
   mLogoShader->setInt("texture1", 0);
   mLogoShader->setFloat("amp", 90.0);
   mLogoShader->setFloat("freq", 1.2);
+  mLogoShader->setFloat("offset", 0.0);
   mLogoBottom->render(delta);
 }
 

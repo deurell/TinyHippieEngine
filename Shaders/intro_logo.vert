@@ -10,11 +10,12 @@ uniform mat4 projection;
 uniform float iTime;
 uniform float amp;
 uniform float freq;
+uniform float offset;
 
 void main() {
   TexCoords = aTexCoords;
   WorldPos = model * vec4(aPos, 1);
   vec3 pos = aPos;
-  pos.x += amp * sin(iTime * freq);
+  pos.x += amp * sin(iTime * freq + offset);
   gl_Position = projection * view * model * vec4(pos, 1);
 }

@@ -17,10 +17,10 @@ void IntroScene::init() {
       "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
 
   mPlane = std::make_unique<DL::Plane>(
-      std::move(shader), *mCamera,
-      [this](DL::Shader &shader) { 
+      std::move(shader), *mCamera, [this](DL::Shader &shader) {
         shader.setFloat("sineOffset", this->mOffset);
-        shader.setFloat("tweak", mTweak); });
+        shader.setFloat("tweak", mTweak);
+      });
   mPlane->mPosition = {0, 1.4, 0};
   mPlane->mScale = {40, 3, 1};
 
@@ -28,11 +28,11 @@ void IntroScene::init() {
       "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
 
   mPlane2 = std::make_unique<DL::Plane>(
-      std::move(shader2), *mCamera,
-      [this](DL::Shader &shader) { 
-        shader.setFloat("sineOffset", glm::pi<float>()+this->mOffset);
-        shader.setFloat("tweak", mTweak); });
-    
+      std::move(shader2), *mCamera, [this](DL::Shader &shader) {
+        shader.setFloat("sineOffset", glm::pi<float>() + this->mOffset);
+        shader.setFloat("tweak", mTweak);
+      });
+
   mPlane2->mPosition = {0, -1.4, 0};
   mPlane2->mScale = {40, 3, 1};
 }
@@ -51,8 +51,8 @@ void IntroScene::render(float delta) {
   ImGui::NewFrame();
   ImGui::Begin("tiny intro");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-  ImGui::SliderFloat("offset", &mOffset, 0,5);
-  ImGui::SliderFloat("tweak", &mTweak, -50,50);
+  ImGui::SliderFloat("offset", &mOffset, 0, 5);
+  ImGui::SliderFloat("tweak", &mTweak, -50, 50);
   ImGui::End();
 #endif
 }
@@ -80,4 +80,9 @@ void IntroScene::renderLogo(float delta) {
 void IntroScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
   mCamera->mScreenSize = mScreenSize;
+}
+void IntroScene::onKey(int key) {}
+
+void IntroScene::onClick(double x, double y) {
+  std::cout << "clicked x:" << x << ", y:" << y << std::endl;
 }

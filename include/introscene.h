@@ -19,8 +19,8 @@ public:
 
   void init() override;
   void render(float delta) override;
-  void onClick(double x, double y) override {}
-  void onKey(int key) override {}
+  void onClick(double x, double y) override;
+  void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:

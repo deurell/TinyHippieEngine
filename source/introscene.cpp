@@ -137,8 +137,7 @@ void IntroScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
   mCamera->mScreenSize = mScreenSize;
 }
-void IntroScene::onKey(int key) {
-}
+void IntroScene::onKey(int key) {}
 
 void IntroScene::onClick(double x, double y) {
   std::cout << "clicked x:" << x << ", y:" << y << std::endl;

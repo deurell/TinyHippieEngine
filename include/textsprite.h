@@ -9,6 +9,8 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
+#include <sys/_types/_u_char.h>
+#include <sys/_types/_u_int8_t.h>
 
 namespace DL {
 
@@ -23,14 +25,14 @@ class TextSprite {
 
 public:
   explicit TextSprite(std::string_view fontPath);
-  TextSprite(std::string_view fontPath, std::wstring_view text);
-  TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::wstring text);
+  TextSprite(std::string_view fontPath, std::string_view text);
+  TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::string_view text);
   ~TextSprite() = default;
 
   void render(float delta) const;
   stbtt_packedchar *getFontCharInfoPtr();
 
-  std::wstring mText;
+  std::string mText;
   GLuint mVAO = 0;
   GLuint mVBO = 0;
   GLuint mUVBuffer = 0;
@@ -41,15 +43,15 @@ public:
 private:
   void loadFontTexture(std::string_view fontPath);
   void init();
-  GlyphInfo makeGlyphInfo(uint32_t character, float offsetX, float offsetY);
+  GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
 
   const uint32_t mFontSize = 40;
   const uint32_t mFontAtlasWidth = 1024;
   const uint32_t mFontAtlasHeight = 1024;
   const uint32_t mFontOversampleX = 2;
   const uint32_t mFontOversampleY = 2;
-  const uint32_t mFontFirstChar = 32;
-  const uint32_t mFontCharCount = 255 - 32;
+  const u_int8_t mFontFirstChar = 32;
+  const u_int8_t mFontCharCount = 255 - 32;
   std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
   stbtt_packedchar *mFontCharInfoPtr = nullptr;
 };

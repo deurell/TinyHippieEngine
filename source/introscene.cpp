@@ -11,14 +11,16 @@ void IntroScene::init() {
   mLogoShader = std::make_unique<DL::Shader>(
       "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
   mLogoTop =
-      std::make_unique<DL::TextSprite>("Resources/vampire.ttf", L"GLOSOR");
+      std::make_unique<DL::TextSprite>("Resources/vampire.ttf", "GLOSOR");
 
   mCodeLabel = std::make_unique<DL::TextSprite>(mLogoTop->mFontTexture,
                                                 mLogoTop->getFontCharInfoPtr(),
-                                                L"Kod för glosor: ______");
+                                                "Kod f\xD6r glosor: ____");
+
+  std::cout << sizeof(wchar_t) << std::endl;
 
   mLogoBottom = std::make_unique<DL::TextSprite>(
-      mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), L"UTAN REKLAM");
+      mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), "UTAN REKLAM");
 
   // raster bars
   std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(
@@ -137,7 +139,8 @@ void IntroScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
   mCamera->mScreenSize = mScreenSize;
 }
-void IntroScene::onKey(int key) {}
+void IntroScene::onKey(int key) {
+}
 
 void IntroScene::onClick(double x, double y) {
   std::cout << "clicked x:" << x << ", y:" << y << std::endl;

@@ -9,8 +9,6 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
-#include <sys/_types/_u_char.h>
-#include <sys/_types/_u_int8_t.h>
 
 namespace DL {
 
@@ -50,8 +48,8 @@ private:
   const uint32_t mFontAtlasHeight = 1024;
   const uint32_t mFontOversampleX = 2;
   const uint32_t mFontOversampleY = 2;
-  const u_int8_t mFontFirstChar = 32;
-  const u_int8_t mFontCharCount = 255 - 32;
+  const uint8_t mFontFirstChar = 32;
+  const uint8_t mFontCharCount = 255 - 32;
   std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
   stbtt_packedchar *mFontCharInfoPtr = nullptr;
 };

@@ -1,5 +1,4 @@
 #include "textsprite.h"
-#include <_types/_uint8_t.h>
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "stb_truetype.h"
 #include <iostream>

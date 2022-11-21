@@ -29,7 +29,7 @@ void IntroScene::init() {
         shader.setFloat("sineOffset", this->mOffset);
         shader.setFloat("tweak", mTweak);
       });
-  mPlane->mPosition = {0, 1.4, 0};
+  mPlane->mPosition = {0, 2.3, 0};
   mPlane->mScale = {40, 3, 1};
 
   std::unique_ptr<DL::Shader> shader2 = std::make_unique<DL::Shader>(
@@ -41,7 +41,7 @@ void IntroScene::init() {
         shader.setFloat("tweak", mTweak);
       });
 
-  mPlane2->mPosition = {0, -1.4, 0};
+  mPlane2->mPosition = {0, -2.3, 0};
   mPlane2->mScale = {40, 3, 1};
 }
 
@@ -71,7 +71,7 @@ void IntroScene::renderLogoTop(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
-  model = glm::translate(model, glm::vec3(-54.0, 26.0, 0.0));
+  model = glm::translate(model, glm::vec3(-54.0, 46.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
@@ -115,7 +115,7 @@ void IntroScene::renderLogoBottom(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
-  model = glm::translate(model, glm::vec3(-116.0, -44.0, 0.0));
+  model = glm::translate(model, glm::vec3(-116.0, -68.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);

@@ -39,6 +39,9 @@ private:
 
   std::unique_ptr<DL::Plane> mPlane;
   std::unique_ptr<DL::Plane> mPlane2;
-  float mOffset = 0;
-  float mTweak = 0.6;
+  float mOffset = 4;
+  float mTweak = 8;
+  float mTopOffset = -64;
+  float mMiddleOffset = -80;
+  float mBottomOffset = -36;
 };

@@ -11,14 +11,14 @@ void IntroScene::init() {
   mLogoShader = std::make_unique<DL::Shader>(
       "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
   mLogoTop =
-      std::make_unique<DL::TextSprite>("Resources/vampire.ttf", "GLOSOR");
+      std::make_unique<DL::TextSprite>("Resources/vampire.ttf", "DEURELL");
 
   mCodeLabel = std::make_unique<DL::TextSprite>(mLogoTop->mFontTexture,
                                                 mLogoTop->getFontCharInfoPtr(),
-                                                "Kod f\xD6r glosor: ______");
+                                                "About Us:");
 
   mLogoBottom = std::make_unique<DL::TextSprite>(
-      mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), "UTAN REKLAM");
+      mLogoTop->mFontTexture, mLogoTop->getFontCharInfoPtr(), "LABS");
 
   // raster bars
   std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(
@@ -63,6 +63,9 @@ void IntroScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::SliderFloat("offset", &mOffset, 0, 5);
   ImGui::SliderFloat("tweak", &mTweak, -50, 50);
+  ImGui::SliderFloat("top", &mTopOffset, -200, 200);
+  ImGui::SliderFloat("middle", &mMiddleOffset, -200, 200);
+  ImGui::SliderFloat("bottom", &mBottomOffset, -200, 200);
   ImGui::End();
 #endif
 }
@@ -71,7 +74,7 @@ void IntroScene::renderLogoTop(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
-  model = glm::translate(model, glm::vec3(-54.0, 46.0, 0.0));
+  model = glm::translate(model, glm::vec3(mTopOffset, 46.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
@@ -93,7 +96,7 @@ void IntroScene::renderCodeLabel(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.02, 0.02, 1.0));
-  model = glm::translate(model, glm::vec3(-190.0, -26.0, 0.0));
+  model = glm::translate(model, glm::vec3(mMiddleOffset, -26.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
@@ -115,7 +118,7 @@ void IntroScene::renderLogoBottom(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.12, 0.12, 1.0));
-  model = glm::translate(model, glm::vec3(-116.0, -68.0, 0.0));
+  model = glm::translate(model, glm::vec3(mBottomOffset, -68.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);

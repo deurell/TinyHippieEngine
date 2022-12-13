@@ -37,4 +37,5 @@ private:
   std::unique_ptr<DL::Plane> mPlane2;
   float mOffset = 0;
   float mTweak = 0.6;
+  float mLogoOffset = -127;
 };

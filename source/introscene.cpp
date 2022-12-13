@@ -53,6 +53,7 @@ void IntroScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::SliderFloat("offset", &mOffset, 0, 5);
   ImGui::SliderFloat("tweak", &mTweak, -50, 50);
+  ImGui::SliderFloat("logoOffset", &mLogoOffset, -200, 200);
   ImGui::End();
 #endif
 }
@@ -61,7 +62,7 @@ void IntroScene::renderLogo(float delta) {
   mLogoShader->use();
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, glm::vec3(0.06, 0.06, 1.0));
-  model = glm::translate(model, glm::vec3(-210.0, -16.0, 0.0));
+  model = glm::translate(model, glm::vec3(mLogoOffset, -16.0, 0.0));
   mLogoShader->setMat4f("model", model);
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);

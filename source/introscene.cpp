@@ -20,6 +20,8 @@ void IntroScene::init() {
       std::move(shader), *mCamera, [this](DL::Shader &shader) {
         shader.setFloat("sineOffset", this->mOffset);
         shader.setFloat("tweak", mTweak);
+        shader.setFloat("bars", mBars);
+        shader.setVec3f("baseCol", mBaseCol);
       });
   mPlane->mPosition = {0, 1.4, 0};
   mPlane->mScale = {40, 3, 1};
@@ -31,6 +33,8 @@ void IntroScene::init() {
       std::move(shader2), *mCamera, [this](DL::Shader &shader) {
         shader.setFloat("sineOffset", glm::pi<float>() + this->mOffset);
         shader.setFloat("tweak", mTweak);
+        shader.setFloat("bars", mBars);
+        shader.setVec3f("baseCol", mBaseCol);
       });
 
   mPlane2->mPosition = {0, -1.4, 0};
@@ -54,6 +58,7 @@ void IntroScene::render(float delta) {
   ImGui::SliderFloat("offset", &mOffset, 0, 5);
   ImGui::SliderFloat("tweak", &mTweak, -50, 50);
   ImGui::SliderFloat("logoOffset", &mLogoOffset, -200, 200);
+  ImGui::ColorPicker3("color2", (float*)&mBaseCol);
   ImGui::End();
 #endif
 }

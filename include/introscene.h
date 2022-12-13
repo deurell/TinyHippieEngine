@@ -38,4 +38,6 @@ private:
   float mOffset = 0;
   float mTweak = 0.6;
   float mLogoOffset = -127;
+  float mBars = 8;
+  glm::vec3 mBaseCol = {0,0,0};
 };

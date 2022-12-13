@@ -59,7 +59,7 @@ void IntroScene::render(float delta) {
   ImGui::SliderFloat("tweak", &mTweak, -50, 50);
   ImGui::SliderFloat("logoOffset", &mLogoOffset, -200, 200);
   ImGui::SliderInt("bars", &mBars, 0, 32);
-  ImGui::ColorPicker3("color2", (float*)&mBaseCol);
+  ImGui::ColorPicker3("color2", &mBaseCol[0]);
   ImGui::End();
 #endif
 }

@@ -8,9 +8,9 @@ void IntroScene::init() {
   mCamera->lookAt({0, 0, 0});
   mLogoShader = std::make_unique<DL::Shader>(
       "Shaders/intro_logo.vert", "Shaders/intro_logo.frag", mGlslVersionString);
-  std::string logoText = "DEURELL LABS";
+  std::string logoText = "S\xC5""D\xc4""RJA!";
   mLogoSprite =
-      std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", logoText);
+      std::make_unique<DL::TextSprite>("Resources/c64.ttf", logoText);
 
   // raster bars
   std::unique_ptr<DL::Shader> shader = std::make_unique<DL::Shader>(

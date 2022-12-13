@@ -35,7 +35,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<SimpleScene>(mGlslVersionString);
+  mScene = std::make_unique<IntroScene>(mGlslVersionString);
 }
 
 int DL::App::run() {

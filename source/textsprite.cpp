@@ -14,7 +14,7 @@ DL::TextSprite::TextSprite(std::string_view fontPath)
     : TextSprite(fontPath, "") {}
 
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar *fontInfo,
-                           std::string text)
+                           std::string_view text)
     : mFontTexture(texture), mFontCharInfoPtr(fontInfo),
       mText(std::move(text)) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);
@@ -133,10 +133,10 @@ void DL::TextSprite::init() {
   glBindVertexArray(0);
 }
 
-DL::GlyphInfo DL::TextSprite::makeGlyphInfo(uint32_t character, float offsetX,
+DL::GlyphInfo DL::TextSprite::makeGlyphInfo(char character, float offsetX,
                                             float offsetY) {
   stbtt_aligned_quad quad;
-  int chrRel = static_cast<int>(character - mFontFirstChar);
+  int chrRel = static_cast<uint8_t>(character - mFontFirstChar);
   stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
                       chrRel, &offsetX, &offsetY, &quad, 1);
   auto xmin = quad.x0;

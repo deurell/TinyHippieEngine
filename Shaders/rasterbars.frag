@@ -5,7 +5,7 @@ in vec2 TexCoord;
 uniform float iTime;
 uniform float tweak;
 uniform float sineOffset;
-uniform float bars;
+uniform int bars;
 uniform vec3 baseCol;
 
 out vec4 FragColor;
@@ -19,7 +19,7 @@ float addRasterbar(float old, float offset) {
 
 void main() {
   float col=0.0;
-  for (int i=0; i<8; i++) {
+  for (int i=0; i<bars; i++) {
     col = addRasterbar(col*0.9, 0.4* float(i));
   }
   FragColor = vec4(col*baseCol.r, col*baseCol.g, col * baseCol.b, 1.0);

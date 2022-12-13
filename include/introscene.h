@@ -35,9 +35,9 @@ private:
 
   std::unique_ptr<DL::Plane> mPlane;
   std::unique_ptr<DL::Plane> mPlane2;
-  float mOffset = 0;
-  float mTweak = 0.6;
+  float mOffset = 0.34;
+  float mTweak = -3.1;
   float mLogoOffset = -127;
-  float mBars = 8;
-  glm::vec3 mBaseCol = {0,0,0};
+  int mBars = 8;
+  glm::vec3 mBaseCol = {0.47, 0.57, 0.78};
 };

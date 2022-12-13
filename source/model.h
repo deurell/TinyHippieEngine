@@ -19,26 +19,19 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 namespace DL {
 class Model {
 public:
-  /*  Model Data */
-  vector<MeshTexture>
-      textures_loaded; // stores all the textures loaded so far, optimization to
-                       // make sure textures aren't loaded more than once.
+  vector<MeshTexture> textures_loaded;
   vector<Mesh> meshes;
-  string directory;
+  std::string directory;
   basist::etc1_global_selector_codebook *mCodeBook;
 
-  /*  Functions   */
-  // constructor, expects a filepath to a 3D model.
   Model(string const &path, basist::etc1_global_selector_codebook *codeBook) {
     mCodeBook = codeBook;
     loadModel(path);
   }
 
-  // draws the model, and thus all its meshes
   void Draw(DL::Shader shader) {
     for (auto &mesh : meshes)
       mesh.Draw(shader);

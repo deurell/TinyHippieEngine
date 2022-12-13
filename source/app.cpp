@@ -132,7 +132,7 @@ void DL::App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    mScene = std::make_unique<DemoScene>(mGlslVersionString, mCodebook.get());
+    mScene = std::make_unique<IntroScene>(mGlslVersionString);
     mScene->init();
   }
 }

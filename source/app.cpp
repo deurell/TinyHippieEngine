@@ -8,6 +8,7 @@
 #include "introscene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
+#include "particlescene.h"
 #include <iostream>
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
@@ -35,7 +36,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<IntroScene>(mGlslVersionString);
+  mScene = std::make_unique<ParticleScene>(mGlslVersionString);
 }
 
 int DL::App::run() {

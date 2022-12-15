@@ -30,7 +30,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp include/app.h include/iscene.h include/demoscene.h include/c64scene.h include/truetypescene.h include/textsprite.h
         include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
         source/wildcopperscene.cpp include/miniaudio.h source/audioplayer.cpp include/audioplayer.h source/simplescene.cpp include/simplescene.h
-        include/particlescene.h source/particlescene.cpp)
+        include/particlescene.h source/particlescene.cpp include/enforcer.h include/enforcer.h source/enforcer.cpp include/particle.h source/particle.cpp)
 
 add_library(imgui STATIC
         imgui/imconfig.h

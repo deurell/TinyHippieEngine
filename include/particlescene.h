@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "iscene.h"
+#include "particle.h"
 #include "plane.h"
 #include "shader.h"
 #include <string_view>
@@ -26,11 +27,9 @@ private:
   glm::vec2 mScreenSize{0, 0};
   std::string mGlslVersionString;
   glm::vec3 mLinearVelocity = {0, 0, 0};
-  glm::vec3 mLinearDamping = {0, 0, 0};
-  glm::vec3 mAngularVelocity = {0, 0, 0};
-  glm::vec3 mAngularDamping = {0, 0, 0};
   std::vector<glm::vec3> mForces = {};
   const glm::vec3 gravity = {0, -10.0f, 0};
   static constexpr float mass = 1.0;
-  glm::vec3 mSineForce = {0,0,0};
+
+  std::unique_ptr<DL::Particle> particle;
 };

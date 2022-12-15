@@ -20,7 +20,7 @@ public:
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 
-  static constexpr int number_of_particles = 128;
+  static constexpr int number_of_particles = 64;
 
 private:
   double mTime = 0;

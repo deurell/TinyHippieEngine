@@ -17,7 +17,7 @@ void ParticleScene::init() {
 
     auto plane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
     plane->position = {0, 0, 0};
-    plane->scale = {0.2, 0.2, 0.2};
+    plane->scale = {0.25, 0.25, 0.25};
     mPlanes.push_back(std::move(plane));
   }
 

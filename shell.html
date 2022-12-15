@@ -3,26 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <title>Emscripten-Generated Code</title>
+  <title>Particles</title>
   <style>
-    .emscripten {
-      position: absolute;
-      top: 0px;
-      left: 0px;
-      margin: 0px;
-      border: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      display: block;
-    }
-
-    /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-    canvas.emscripten {
-      border: 0px none;
-      background-color: black;
-    }
-
+    .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+    textarea.emscripten { font-family: monospace; width: 80%; }
+    div.emscripten { text-align: center; }
+    div.emscripten_border { }
     .spinner {
       height: 50px;
       width: 50px;
@@ -73,7 +59,6 @@
   </style>
 </head>
 <body>
-<hr />
 <figure style="overflow: visible" id="spinner">
   <div class="spinner"></div>
   <center style="margin-top: 0.5em"><strong>emscripten</strong></center>

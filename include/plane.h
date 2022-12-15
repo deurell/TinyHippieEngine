@@ -16,6 +16,7 @@ class Plane {
 public:
   Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
         const std::function<void(DL::Shader &)> &shaderModifier = nullptr);
+
   ~Plane() = default;
 
   void render(float delta) const;

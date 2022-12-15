@@ -3,18 +3,31 @@
 //
 
 #include "particlesystem.h"
+#include <random>
 
-namespace DL {
+DL::ParticleSystem::ParticleSystem() = default;
 
-ParticleSystem::ParticleSystem() = default;
-
-void ParticleSystem::addParticle(Particle &particle) {
+void DL::ParticleSystem::addParticle(Particle &particle) {
   mParticles.emplace_back(particle);
 }
-void ParticleSystem::updatePhysics(float delta) {
-  for(auto particle : mParticles) {
+void DL::ParticleSystem::updatePhysics(float delta) {
+  for (auto particle : mParticles) {
     particle.get().updatePhysics(delta);
   }
 }
 
-} // namespace DL
+void DL::ParticleSystem::explode() {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  std::uniform_real_distribution<double> dist(-2000.0, 2000.0);
+
+  for (auto particle : mParticles) {
+    glm::vec3 force = {dist(mt), dist(mt), 0};
+    particle.get().addForce(force);
+  }
+}
+void DL::ParticleSystem::reset() {
+  for (auto particle :  mParticles) {
+    particle.get().reset();
+  }
+}

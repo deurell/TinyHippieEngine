@@ -20,13 +20,15 @@ public:
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 
+  static constexpr int number_of_particles = 128;
+
 private:
   double mTime = 0;
   std::unique_ptr<DL::Camera> mCamera;
-  std::unique_ptr<DL::Plane> mPlane;
   glm::vec2 mScreenSize{0, 0};
   std::string mGlslVersionString;
 
-  std::unique_ptr<DL::Particle> mParticle;
+  std::vector<std::unique_ptr<DL::Plane>> mPlanes = {};
+  std::vector<std::unique_ptr<DL::Particle>> mParticles = {};
   std::unique_ptr<DL::ParticleSystem> mParticleSystem;
 };

@@ -10,11 +10,13 @@ namespace DL {
 class ParticleSystem {
 public:
   ParticleSystem();
-  void addParticle(DL::Particle& particle);
+  void addParticle(DL::Particle &particle);
   void updatePhysics(float delta);
+  void explode();
+  void reset();
 
 private:
   std::vector<std::reference_wrapper<DL::Particle>> mParticles = {};
 };
 
-}
+} // namespace DL

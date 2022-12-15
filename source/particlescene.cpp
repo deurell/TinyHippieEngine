@@ -10,18 +10,27 @@ ParticleScene::ParticleScene(std::string_view glslVersionString)
 void ParticleScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
-  auto shader = std::make_unique<DL::Shader>(
-      "Shaders/particle.vert", "Shaders/particle.frag", mGlslVersionString);
 
-  mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
-  mPlane->position = {0, 0, 0};
-  mPlane->scale = {0.5, 0.5, 0.5};
+  for (int i = 0; i < number_of_particles; ++i) {
+    auto shader = std::make_unique<DL::Shader>(
+        "Shaders/particle.vert", "Shaders/particle.frag", mGlslVersionString);
 
-  mParticle = std::make_unique<DL::Particle>(mPlane->position, 1.0,
-                                            glm::vec3(0, -10.0f, 0));
+    auto plane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
+    plane->position = {0, 0, 0};
+    plane->scale = {0.2, 0.2, 0.2};
+    mPlanes.push_back(std::move(plane));
+  }
+
+  for (int i = 0; i < number_of_particles; ++i) {
+    auto particle = std::make_unique<DL::Particle>(
+        mPlanes[i]->position, 0.5, glm::vec3(0, -32.0f, 0));
+    mParticles.push_back(std::move(particle));
+  }
 
   mParticleSystem = std::make_unique<DL::ParticleSystem>();
-  mParticleSystem->addParticle(*mParticle);
+  for (auto& p : mParticles) {
+    mParticleSystem->addParticle(*p);
+  }
 }
 
 void ParticleScene::render(float delta) {
@@ -29,7 +38,10 @@ void ParticleScene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT);
 
   mParticleSystem->updatePhysics(delta);
-  mPlane->render(delta);
+
+  for(auto& plane : mPlanes) {
+    plane->render(delta);
+  }
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
@@ -43,6 +55,7 @@ void ParticleScene::render(float delta) {
 
 void ParticleScene::onClick(double x, double y) {
   std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
+  mParticleSystem->explode();
 }
 
 void ParticleScene::onKey(int key) {
@@ -51,13 +64,11 @@ void ParticleScene::onKey(int key) {
   glm::vec3 dampen = {-200, 0, 0};
   switch (key) {
   case 49:
-    mParticle->addForce(explode);
+    mParticleSystem->reset();
     break;
   case 50:
-    mParticle->addForce(dampen);
     break;
   case 51:
-    mParticle->reset();
     break;
   default:
     break;

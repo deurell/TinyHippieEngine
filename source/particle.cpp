@@ -19,8 +19,11 @@ void DL::Particle::updatePhysics(float delta) {
   visual += linearVelocity * delta;
   forces.clear();
 }
+
 void DL::Particle::addForce(glm::vec3 force) { forces.emplace_back(force); }
+
 void DL::Particle::clearForces() { forces.clear(); }
+
 void DL::Particle::reset() {
   forces.clear();
   linearVelocity = {0, 0, 0};

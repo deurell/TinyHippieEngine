@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "iscene.h"
 #include "particle.h"
+#include "particlesystem.h"
 #include "plane.h"
 #include "shader.h"
 #include <string_view>
@@ -25,6 +26,7 @@ private:
   std::unique_ptr<DL::Plane> mPlane;
   glm::vec2 mScreenSize{0, 0};
   std::string mGlslVersionString;
-  
-  std::unique_ptr<DL::Particle> particle;
+
+  std::unique_ptr<DL::Particle> mParticle;
+  std::unique_ptr<DL::ParticleSystem> mParticleSystem;
 };

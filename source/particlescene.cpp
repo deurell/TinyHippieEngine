@@ -17,15 +17,18 @@ void ParticleScene::init() {
   mPlane->position = {0, 0, 0};
   mPlane->scale = {0.5, 0.5, 0.5};
 
-  particle = std::make_unique<DL::Particle>(mPlane->position, 1.0,
+  mParticle = std::make_unique<DL::Particle>(mPlane->position, 1.0,
                                             glm::vec3(0, -10.0f, 0));
+
+  mParticleSystem = std::make_unique<DL::ParticleSystem>();
+  mParticleSystem->addParticle(*mParticle);
 }
 
 void ParticleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  particle->updatePhysics(delta);
+  mParticleSystem->updatePhysics(delta);
   mPlane->render(delta);
 
 #ifdef USE_IMGUI
@@ -48,13 +51,13 @@ void ParticleScene::onKey(int key) {
   glm::vec3 dampen = {-200, 0, 0};
   switch (key) {
   case 49:
-    particle->addForce(explode);
+    mParticle->addForce(explode);
     break;
   case 50:
-    particle->addForce(dampen);
+    mParticle->addForce(dampen);
     break;
   case 51:
-    particle->reset();
+    mParticle->reset();
     break;
   default:
     break;

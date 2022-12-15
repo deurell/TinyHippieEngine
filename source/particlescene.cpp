@@ -14,10 +14,11 @@ void ParticleScene::init() {
       "Shaders/particle.vert", "Shaders/particle.frag", mGlslVersionString);
 
   mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
-  mPlane->mPosition = {0, 0, 0};
-  mPlane->mScale = {0.5, 0.5, 0.5};
+  mPlane->position = {0, 0, 0};
+  mPlane->scale = {0.5, 0.5, 0.5};
 
-  particle = std::make_unique<DL::Particle>(mPlane->mPosition, 1.0, glm::vec3(0,-10.0f,0));
+  particle = std::make_unique<DL::Particle>(mPlane->position, 1.0,
+                                            glm::vec3(0, -10.0f, 0));
 }
 
 void ParticleScene::render(float delta) {
@@ -47,15 +48,13 @@ void ParticleScene::onKey(int key) {
   glm::vec3 dampen = {-200, 0, 0};
   switch (key) {
   case 49:
-    mForces.emplace_back(explode);
+    particle->addForce(explode);
     break;
   case 50:
-    mForces.emplace_back(dampen);
+    particle->addForce(dampen);
     break;
   case 51:
-    mForces.clear();
-    mLinearVelocity = {0, 0, 0};
-    mPlane->mPosition = {0, 0, 0};
+    particle->reset();
     break;
   default:
     break;
@@ -65,17 +64,4 @@ void ParticleScene::onKey(int key) {
 void ParticleScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
   mCamera->mScreenSize = size;
-}
-
-void ParticleScene::updatePhysics(float delta) {
-  mTime += delta;
-  if (mass == 0) {
-    return;
-  }
-  mForces.emplace_back(gravity * mass);
-  glm::vec3 accumulatedForce = std::reduce(mForces.begin(), mForces.end());
-  glm::vec3 acceleration = accumulatedForce / mass;
-  mLinearVelocity += acceleration * delta;
-  mPlane->mPosition += mLinearVelocity * delta;
-  mForces.clear();
 }

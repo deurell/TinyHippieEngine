@@ -23,8 +23,8 @@ void IntroScene::init() {
         shader.setVec3f("baseCol", mBaseCol);
         shader.setInt("bars", mBars);
       });
-  mPlane->mPosition = {0, 1.4, 0};
-  mPlane->mScale = {40, 3, 1};
+  mPlane->position = {0, 1.4, 0};
+  mPlane->scale = {40, 3, 1};
 
   std::unique_ptr<DL::Shader> shader2 = std::make_unique<DL::Shader>(
       "Shaders/rasterbars.vert", "Shaders/rasterbars.frag", mGlslVersionString);
@@ -37,8 +37,8 @@ void IntroScene::init() {
         shader.setInt("bars", mBars);
       });
 
-  mPlane2->mPosition = {0, -1.4, 0};
-  mPlane2->mScale = {40, 3, 1};
+  mPlane2->position = {0, -1.4, 0};
+  mPlane2->scale = {40, 3, 1};
 }
 
 void IntroScene::render(float delta) {

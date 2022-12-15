@@ -27,8 +27,8 @@ void WildCopperScene::init() {
       "Shaders/rast.vert", "Shaders/rast.frag", mGlslVersionString);
 
   mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
-  mPlane->mPosition = {0, 0, 0};
-  mPlane->mScale = {50, 30, 1};
+  mPlane->position = {0, 0, 0};
+  mPlane->scale = {50, 30, 1};
 }
 
 void WildCopperScene::render(float delta) {

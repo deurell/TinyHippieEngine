@@ -5,7 +5,7 @@
 #include "particle.h"
 #include <numeric>
 
-DL::Particle::Particle(glm::vec3& visual, float mass, glm::vec3 gravity)
+DL::Particle::Particle(glm::vec3 &visual, float mass, glm::vec3 gravity)
     : visual(visual), mass(mass), gravity(gravity) {}
 
 void DL::Particle::updatePhysics(float delta) {
@@ -18,4 +18,11 @@ void DL::Particle::updatePhysics(float delta) {
   linearVelocity += acceleration * delta;
   visual += linearVelocity * delta;
   forces.clear();
+}
+void DL::Particle::addForce(glm::vec3 force) { forces.emplace_back(force); }
+void DL::Particle::clearForces() { forces.clear(); }
+void DL::Particle::reset() {
+  forces.clear();
+  linearVelocity = {0, 0, 0};
+  visual = {0, 0, 0};
 }

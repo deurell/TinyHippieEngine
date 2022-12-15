@@ -8,10 +8,13 @@
 namespace DL {
 
 class Particle {
-
 public:
   Particle(glm::vec3& visual, float mass, glm::vec3 gravity);
+
   void updatePhysics(float delta);
+  void addForce(glm::vec3 force);
+  void clearForces();
+  void reset();
 
 private:
   float mass;

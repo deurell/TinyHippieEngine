@@ -50,8 +50,8 @@ public:
   }
 
   glm::vec3 mPosition = {0, 0, 0};
-  glm::quat mOrientation;
+  glm::quat mOrientation = glm::mat4(1);
   glm::vec2 mScreenSize = {0, 0};
-  float mFov;
+  float mFov = 45;
 };
 } // namespace DL

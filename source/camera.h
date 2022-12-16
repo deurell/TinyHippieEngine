@@ -8,10 +8,10 @@ public:
   Camera() = default;
 
   explicit Camera(const glm::vec3 position)
-      : mPosition(position), mOrientation(glm::mat4(1)) {}
+      : mPosition(position), mOrientation(glm::mat4(1)), mFov(45) {}
 
-  Camera(const glm::vec3 position, const glm::quat orientation)
-      : mPosition(position), mOrientation(orientation) {}
+  Camera(const glm::vec3 position, const glm::quat orientation, const float fov)
+      : mPosition(position), mOrientation(orientation), mFov(fov) {}
 
   [[nodiscard]] glm::mat4 getViewMatrix() const {
     return glm::translate(glm::mat4_cast(mOrientation), -mPosition);
@@ -40,8 +40,8 @@ public:
   void pitch(float angle) { rotate(angle, 1.0f, 0.0f, 0.0f); }
   void roll(float angle) { rotate(angle, 0.0f, 0.0f, 1.0f); }
 
-  static glm::mat4 getPerspectiveTransform(float fov, float aspect) {
-    return glm::perspective(glm::radians(fov), aspect, 0.1f, 100.0f);
+  glm::mat4 getPerspectiveTransform() const {
+    return glm::perspective(glm::radians(mFov), mScreenSize.x/mScreenSize.y, 0.1f, 100.0f);
   }
 
   static glm::mat4 getOrtoTransform(float left, float right, float bottom,
@@ -52,5 +52,6 @@ public:
   glm::vec3 mPosition = {0, 0, 0};
   glm::quat mOrientation;
   glm::vec2 mScreenSize = {0, 0};
+  float mFov;
 };
 } // namespace DL

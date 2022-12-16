@@ -60,7 +60,7 @@ void ParticleScene::render(float delta) {
 
 void ParticleScene::onClick(double x, double y) {
   std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
-  glm::mat4 perspective = DL::Camera::getPerspectiveTransform(45.0, mCamera->mScreenSize.x / mCamera->mScreenSize.y);
+  glm::mat4 perspective = mCamera->getPerspectiveTransform();
   glm::vec4 viewport = glm::vec4(0, 0, 1024, 768);
   glm::vec3 screenPos = glm::vec3(x, 768-y, 1);
   glm::vec3 worldPos = glm::unProject(screenPos, mCamera->getViewMatrix(), perspective, viewport);

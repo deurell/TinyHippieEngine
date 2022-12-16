@@ -45,7 +45,7 @@ public:
     glm::mat4 view = camera.getViewMatrix();
 
     glm::mat4 projection =
-        camera.getPerspectiveTransform(45.0, screenSize.x / screenSize.y);
+        camera.getPerspectiveTransform();
     glm::mat4 mvp = projection * view * model;
     shader.setMat4f("mvp", mvp);
 

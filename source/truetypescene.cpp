@@ -31,8 +31,7 @@ void TrueTypeScene::renderScroll(float delta) {
   glm::mat4 view = mLabelCamera->getViewMatrix();
   mLabelShader->setMat4f("view", view);
 
-  glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform(
-      45.0, mScreenSize.x / mScreenSize.y);
+  glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
   mLabelShader->setMat4f("projection", projectionMatrix);
 
   mLabelShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
@@ -69,8 +68,7 @@ void TrueTypeScene::renderStatus(float delta) {
   mStatusShader->setMat4f("model", model);
   glm::mat4 view = mLabelCamera->getViewMatrix();
   mStatusShader->setMat4f("view", view);
-  glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform(
-      45.0, mScreenSize.x / mScreenSize.y);
+  glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
   mStatusShader->setMat4f("projection", projectionMatrix);
 
   mStatusShader->setFloat("iTime", static_cast<float>(glfwGetTime()));

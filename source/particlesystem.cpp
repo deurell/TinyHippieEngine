@@ -19,7 +19,7 @@ void DL::ParticleSystem::updatePhysics(float delta) {
 void DL::ParticleSystem::explode(glm::vec3 position) {
   std::random_device rd;
   std::mt19937 mt(rd());
-  std::uniform_real_distribution<double> dist(-2000.0, 2000.0);
+  std::uniform_real_distribution<double> dist(-2500.0, 2500.0);
 
   for (auto particle : mParticles) {
     particle.get().setLinearVelocity({0,0,0});

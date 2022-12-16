@@ -73,7 +73,7 @@ void IntroScene::renderLogo(float delta) {
   glm::mat4 view = mCamera->getViewMatrix();
   mLogoShader->setMat4f("view", view);
   glm::mat4 projectionMatrix =
-      mCamera->getPerspectiveTransform(45.0, mScreenSize.x / mScreenSize.y);
+      mCamera->getPerspectiveTransform();
   mLogoShader->setMat4f("projection", projectionMatrix);
 
   mLogoShader->setFloat("iTime", static_cast<float>(glfwGetTime()));

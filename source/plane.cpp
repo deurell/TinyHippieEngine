@@ -57,8 +57,7 @@ void DL::Plane::render(float /* delta */) const {
   mShader->setMat4f("model", model);
   glm::mat4 view = mCamera.getViewMatrix();
   mShader->setMat4f("view", view);
-  glm::mat4 projectionMatrix = Camera::getPerspectiveTransform(
-      45.0, mCamera.mScreenSize.x / mCamera.mScreenSize.y);
+  glm::mat4 projectionMatrix = mCamera.getPerspectiveTransform();
   mShader->setMat4f("projection", projectionMatrix);
 
   if (mShaderModifier) {

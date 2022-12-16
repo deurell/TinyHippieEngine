@@ -148,7 +148,7 @@ void DemoScene::render(float delta) {
 
   // view/projection transformations
   glm::mat4 projection =
-      mCamera->getPerspectiveTransform(45.0, mScreenSize.x / mScreenSize.y);
+      mCamera->getPerspectiveTransform();
 
   glm::mat4 view = mCamera->getViewMatrix();
   mLightingShader->setMat4f("projection", projection);

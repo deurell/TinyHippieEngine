@@ -31,4 +31,6 @@ private:
   std::vector<std::unique_ptr<DL::Plane>> mPlanes = {};
   std::vector<std::unique_ptr<DL::Particle>> mParticles = {};
   std::unique_ptr<DL::ParticleSystem> mParticleSystem;
+  void initPlanes();
+  void initParticles();
 };

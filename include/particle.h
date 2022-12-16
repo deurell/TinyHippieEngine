@@ -12,6 +12,8 @@ public:
   Particle(glm::vec3& visual, float mass, glm::vec3 gravity);
 
   void updatePhysics(float delta);
+  void setPosition(glm::vec3 position);
+  void setLinearVelocity(glm::vec3 velocity);
   void addForce(glm::vec3 force);
   void clearForces();
   void reset();

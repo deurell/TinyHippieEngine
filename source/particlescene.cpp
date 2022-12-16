@@ -11,25 +11,30 @@ void ParticleScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
 
+  initPlanes();
+  initParticles();
+  mParticleSystem = std::make_unique<DL::ParticleSystem>();
+  for (auto &p : mParticles) {
+    mParticleSystem->addParticle(*p);
+  }
+}
+void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
-    auto shader = std::make_unique<DL::Shader>(
+    auto particle = std::__1::make_unique<DL::Particle>(
+        mPlanes[i]->position, 0.55, glm::vec3(0, -32.0f, 0));
+    mParticles.emplace_back(std::move(particle));
+  }
+}
+
+void ParticleScene::initPlanes() {
+  for (int i = 0; i < number_of_particles; ++i) {
+    auto shader = std::__1::make_unique<DL::Shader>(
         "Shaders/particle.vert", "Shaders/particle.frag", mGlslVersionString);
 
-    auto plane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
+    auto plane = std::__1::make_unique<DL::Plane>(std::move(shader), *mCamera);
     plane->position = {0, 0, 0};
     plane->scale = {0.25, 0.25, 0.25};
-    mPlanes.push_back(std::move(plane));
-  }
-
-  for (int i = 0; i < number_of_particles; ++i) {
-    auto particle = std::make_unique<DL::Particle>(
-        mPlanes[i]->position, 0.5, glm::vec3(0, -32.0f, 0));
-    mParticles.push_back(std::move(particle));
-  }
-
-  mParticleSystem = std::make_unique<DL::ParticleSystem>();
-  for (auto& p : mParticles) {
-    mParticleSystem->addParticle(*p);
+    mPlanes.emplace_back(std::move(plane));
   }
 }
 
@@ -39,7 +44,7 @@ void ParticleScene::render(float delta) {
 
   mParticleSystem->updatePhysics(delta);
 
-  for(auto& plane : mPlanes) {
+  for (auto &plane : mPlanes) {
     plane->render(delta);
   }
 
@@ -55,7 +60,13 @@ void ParticleScene::render(float delta) {
 
 void ParticleScene::onClick(double x, double y) {
   std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
-  mParticleSystem->explode();
+  glm::mat4 perspective = DL::Camera::getPerspectiveTransform(45.0, mCamera->mScreenSize.x / mCamera->mScreenSize.y);
+  glm::vec4 viewport = glm::vec4(0, 0, 1024, 768);
+  glm::vec3 screenPos = glm::vec3(x, 768-y, 1);
+  glm::vec3 worldPos = glm::unProject(screenPos, mCamera->getViewMatrix(), perspective, viewport);
+  worldPos.z = 0;
+
+  mParticleSystem->explode(worldPos);
 }
 
 void ParticleScene::onKey(int key) {
@@ -67,8 +78,6 @@ void ParticleScene::onKey(int key) {
     mParticleSystem->reset();
     break;
   case 50:
-    break;
-  case 51:
     break;
   default:
     break;

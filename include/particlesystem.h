@@ -12,7 +12,7 @@ public:
   ParticleSystem();
   void addParticle(DL::Particle &particle);
   void updatePhysics(float delta);
-  void explode();
+  void explode(glm::vec3 position);
   void reset();
 
 private:

@@ -16,18 +16,20 @@ void DL::ParticleSystem::updatePhysics(float delta) {
   }
 }
 
-void DL::ParticleSystem::explode() {
+void DL::ParticleSystem::explode(glm::vec3 position) {
   std::random_device rd;
   std::mt19937 mt(rd());
   std::uniform_real_distribution<double> dist(-2000.0, 2000.0);
 
   for (auto particle : mParticles) {
+    particle.get().setLinearVelocity({0,0,0});
+    particle.get().setPosition(position);
     glm::vec3 force = {dist(mt), dist(mt), 0};
     particle.get().addForce(force);
   }
 }
 void DL::ParticleSystem::reset() {
-  for (auto particle :  mParticles) {
+  for (auto particle : mParticles) {
     particle.get().reset();
   }
 }

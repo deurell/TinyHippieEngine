@@ -29,3 +29,9 @@ void DL::Particle::reset() {
   linearVelocity = {0, 0, 0};
   visual = {0, 0, 0};
 }
+void DL::Particle::setPosition(glm::vec3 position) {
+  visual = position;
+}
+void DL::Particle::setLinearVelocity(glm::vec3 velocity) {
+  linearVelocity = velocity;
+}

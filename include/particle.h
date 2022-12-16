@@ -3,13 +3,14 @@
 //
 #pragma once
 #include "glm/vec3.hpp"
+#include "plane.h"
 #include <vector>
 
 namespace DL {
 
 class Particle {
 public:
-  Particle(glm::vec3& visual, float mass, glm::vec3 gravity);
+  Particle(DL::Plane& visual, float mass, glm::vec3 gravity);
 
   void updatePhysics(float delta);
   void setPosition(glm::vec3 position);
@@ -20,7 +21,7 @@ public:
 
 private:
   float mass;
-  glm::vec3& visual;
+  DL::Plane& visual;
   glm::vec3 gravity;
   glm::vec3 linearVelocity = {0, 0, 0};
   std::vector<glm::vec3> forces = {};

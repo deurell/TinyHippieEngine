@@ -3,6 +3,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <numeric>
+#include <random>
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
@@ -20,20 +21,28 @@ void ParticleScene::init() {
 }
 void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
-    auto particle = std::__1::make_unique<DL::Particle>(
-        mPlanes[i]->position, 0.55, glm::vec3(0, -32.0f, 0));
+    auto particle = std::make_unique<DL::Particle>(
+        *mPlanes[i], 0.9, glm::vec3(0, -32.0f, 0));
     mParticles.emplace_back(std::move(particle));
   }
 }
 
 void ParticleScene::initPlanes() {
   for (int i = 0; i < number_of_particles; ++i) {
-    auto shader = std::__1::make_unique<DL::Shader>(
+    auto shader = std::make_unique<DL::Shader>(
         "Shaders/particle.vert", "Shaders/particle.frag", mGlslVersionString);
 
-    auto plane = std::__1::make_unique<DL::Plane>(std::move(shader), *mCamera);
+    auto plane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
     plane->position = {0, 0, 0};
     plane->scale = {0.25, 0.25, 0.25};
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(-2.0, 2.0);
+    glm::vec3 randomAxis = glm::vec3(dist(mt), dist(mt), dist(mt)*0.2);
+    plane->rotationAxis = glm::normalize(randomAxis);
+    plane->rotationSpeed = dist(mt) * glm::pi<float>()/180 * 360;
+
     mPlanes.emplace_back(std::move(plane));
   }
 }
@@ -52,7 +61,7 @@ void ParticleScene::render(float delta) {
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  ImGui::Begin("simple scene");
+  ImGui::Begin("fireworks scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();
 #endif

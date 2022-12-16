@@ -5,7 +5,7 @@
 #include "particle.h"
 #include <numeric>
 
-DL::Particle::Particle(glm::vec3 &visual, float mass, glm::vec3 gravity)
+DL::Particle::Particle(DL::Plane &visual, float mass, glm::vec3 gravity)
     : visual(visual), mass(mass), gravity(gravity) {}
 
 void DL::Particle::updatePhysics(float delta) {
@@ -16,7 +16,7 @@ void DL::Particle::updatePhysics(float delta) {
   glm::vec3 accumulatedForce = std::reduce(forces.begin(), forces.end());
   glm::vec3 acceleration = accumulatedForce / mass;
   linearVelocity += acceleration * delta;
-  visual += linearVelocity * delta;
+  visual.position += linearVelocity * delta;
   forces.clear();
 }
 
@@ -27,10 +27,10 @@ void DL::Particle::clearForces() { forces.clear(); }
 void DL::Particle::reset() {
   forces.clear();
   linearVelocity = {0, 0, 0};
-  visual = {0, 0, 0};
+  visual.position = {0, 0, 0};
 }
 void DL::Particle::setPosition(glm::vec3 position) {
-  visual = position;
+  visual.position = position;
 }
 void DL::Particle::setLinearVelocity(glm::vec3 velocity) {
   linearVelocity = velocity;

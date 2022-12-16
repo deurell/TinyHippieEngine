@@ -54,6 +54,8 @@ void DL::Plane::render(float /* delta */) const {
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, scale);
   model = glm::translate(model, position);
+  model = glm::rotate(model, (float)glfwGetTime() * rotationSpeed, rotationAxis);
+
   mShader->setMat4f("model", model);
   glm::mat4 view = mCamera.getViewMatrix();
   mShader->setMat4f("view", view);

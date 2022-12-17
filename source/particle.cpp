@@ -13,7 +13,7 @@ void DL::Particle::updatePhysics(float delta) {
     return;
   }
   forces.emplace_back(gravity * mass);
-  glm::vec3 accumulatedForce = std::reduce(forces.begin(), forces.end());
+  glm::vec3 accumulatedForce = std::accumulate(forces.begin(), forces.end(), glm::vec3(0,0,0));
   glm::vec3 acceleration = accumulatedForce / mass;
   linearVelocity += acceleration * delta;
   visual.position += linearVelocity * delta;

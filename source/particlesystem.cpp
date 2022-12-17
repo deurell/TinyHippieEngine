@@ -24,7 +24,7 @@ void DL::ParticleSystem::explode(glm::vec3 position) {
   for (auto particle : mParticles) {
     particle.get().setLinearVelocity({0,0,0});
     particle.get().setPosition(position);
-    glm::vec3 force = {dist(mt), dist(mt), 0};
+    glm::vec3 force = {dist(mt), dist(mt), dist(mt)*0.2};
     particle.get().addForce(force);
   }
 }

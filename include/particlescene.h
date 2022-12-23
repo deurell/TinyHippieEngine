@@ -8,6 +8,7 @@
 #include "shader.h"
 #include <string_view>
 #include <vector>
+#include <random>
 
 class ParticleScene : public DL::IScene {
 public:
@@ -23,6 +24,7 @@ public:
   static constexpr int number_of_particles = 64;
 
 private:
+  std::mt19937 twister;
   double mTime = 0;
   std::unique_ptr<DL::Camera> mCamera;
   glm::vec2 mScreenSize{0, 0};

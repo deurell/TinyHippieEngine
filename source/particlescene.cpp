@@ -3,10 +3,12 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <numeric>
-#include <random>
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
-    : mGlslVersionString(glslVersionString) {}
+    : mGlslVersionString(glslVersionString) {
+  std::random_device rd;
+  twister = std::mt19937(rd());
+}
 
 void ParticleScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
@@ -36,12 +38,10 @@ void ParticleScene::initPlanes() {
     plane->position = {0, 0, 0};
     plane->scale = {0.25, 0.25, 0.25};
 
-    std::random_device rd;
-    std::mt19937 mt(rd());
     std::uniform_real_distribution<double> dist(-2.0, 2.0);
-    glm::vec3 randomAxis = glm::vec3(dist(mt), dist(mt), dist(mt) * 0.2);
+    glm::vec3 randomAxis = glm::vec3(dist(twister), dist(twister), dist(twister) * 0.2);
     plane->rotationAxis = glm::normalize(randomAxis);
-    plane->rotationSpeed = dist(mt) * glm::pi<float>() / 180 * 360;
+    plane->rotationSpeed = dist(twister) * glm::pi<float>() / 180 * 360;
     mPlanes.emplace_back(std::move(plane));
   }
 }
@@ -85,8 +85,6 @@ void ParticleScene::onKey(int key) {
   switch (key) {
   case 49:
     mParticleSystem->reset();
-    break;
-  case 50:
     break;
   default:
     break;

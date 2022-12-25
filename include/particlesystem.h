@@ -4,6 +4,7 @@
 
 #pragma once
 #include "particle.h"
+#include <random>
 
 namespace DL {
 
@@ -16,6 +17,7 @@ public:
   void reset();
 
 private:
+  std::mt19937 twister;
   std::vector<std::reference_wrapper<DL::Particle>> mParticles = {};
 };
 

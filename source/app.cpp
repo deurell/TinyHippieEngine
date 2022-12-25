@@ -26,6 +26,11 @@ void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
   }
 }
 
+void window_size_callback(GLFWwindow* window, int width, int height) {
+  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
+  app->onScreenSizeChanged(width, height);
+}
+
 void DL::App::init() {
   glfwInit();
   basisInit();
@@ -62,6 +67,7 @@ int DL::App::run() {
   glfwSetWindowUserPointer(mWindow, this);
   glfwSetMouseButtonCallback(mWindow, mouseclick_callback);
   glfwSetKeyCallback(mWindow, keyclick_callback);
+  glfwSetWindowSizeCallback(mWindow, window_size_callback);
 
   glfwMakeContextCurrent(mWindow);
   glfwSwapInterval(1);
@@ -120,7 +126,6 @@ void DL::App::render() {
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);
-  mScene->onScreenSizeChanged({frameWidth, frameHeight});
   glViewport(0, 0, frameWidth, frameHeight);
   glfwSwapBuffers(mWindow);
   glfwPollEvents();
@@ -154,4 +159,7 @@ void DL::App::basisInit() {
   basist::basisu_transcoder_init();
   mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
+}
+void DL::App::onScreenSizeChanged(int width, int height) {
+  mScene->onScreenSizeChanged({width, height});
 }

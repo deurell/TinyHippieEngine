@@ -22,6 +22,7 @@ public:
   void processInput(GLFWwindow *window);
   void onClick(int button, int action, int mod);
   void onKey(int key, int scancode, int action, int mod);
+  void onScreenSizeChanged(int width, int height);
 
 private:
   void init();

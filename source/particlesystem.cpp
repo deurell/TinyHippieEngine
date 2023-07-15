@@ -28,6 +28,7 @@ void DL::ParticleSystem::explode(glm::vec3 position) {
     particle.get().addForce(force);
   }
 }
+
 void DL::ParticleSystem::reset() {
   for (auto particle : mParticles) {
     particle.get().reset();

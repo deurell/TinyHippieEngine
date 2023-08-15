@@ -23,14 +23,18 @@ endif ()
 
 include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/source
         ${CMAKE_SOURCE_DIR}/assimp-5.0.1/include ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/transcoder
-        )
+)
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h
         source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
         source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp include/app.h include/iscene.h include/demoscene.h include/c64scene.h include/truetypescene.h include/textsprite.h
         include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
         source/wildcopperscene.cpp include/miniaudio.h source/audioplayer.cpp include/audioplayer.h source/simplescene.cpp include/simplescene.h
-        include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h)
+        include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
+        include/SceneNode.h
+        source/SceneNode.cpp
+        include/IComponent.h
+        include/CustomComponent.h)
 
 add_library(imgui STATIC
         imgui/imconfig.h
@@ -46,7 +50,7 @@ add_library(imgui STATIC
         imgui/imstb_rectpack.h
         imgui/imstb_textedit.h
         imgui/imstb_truetype.h
-        )
+)
 
 add_library(basisu STATIC
         transcoder/basisu_file_headers.h
@@ -56,7 +60,7 @@ add_library(basisu STATIC
         transcoder/basisu_transcoder.cpp
         transcoder/basisu_transcoder.h
         transcoder/basisu.h
-        )
+)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
     set_target_properties(

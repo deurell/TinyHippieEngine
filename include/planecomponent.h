@@ -23,7 +23,7 @@ public:
 
   void render(const glm::mat4 &worldTransform, float delta) override {
     plane_->position = worldTransform[3];
-    plane_->setRotation({0,0,glm::pi<float>()/2 + glfwGetTime() * 10});
+    plane_->setRotation({0,0,glm::pi<float>()/4});
     plane_->render(delta);
   }
 

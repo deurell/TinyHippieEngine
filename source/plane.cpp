@@ -71,9 +71,9 @@ void DL::Plane::render(float /* delta */) const {
 }
 
 void DL::Plane::setRotation(const glm::vec3 &eulerAngles) {
-  glm::quat qx = glm::angleAxis(glm::radians(eulerAngles.x), glm::vec3(1.0f, 0.0f, 0.0f));
-  glm::quat qy = glm::angleAxis(glm::radians(eulerAngles.y), glm::vec3(0.0f, 1.0f, 0.0f));
-  glm::quat qz = glm::angleAxis(glm::radians(eulerAngles.z), glm::vec3(0.0f, 0.0f, 1.0f));
+  glm::quat qx = glm::angleAxis(eulerAngles.x, glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::quat qy = glm::angleAxis(eulerAngles.y, glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::quat qz = glm::angleAxis(eulerAngles.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
   rotation = qz * qy * qx;
 }

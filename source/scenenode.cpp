@@ -12,7 +12,7 @@ void SceneNode::updateTransforms(const glm::mat4& parentWorldTransform) {
     dirty = false;
   }
 
-  for (SceneNode* child : children) {
+  for (auto& child : children) {
     child->updateTransforms(worldTransform);
   }
 }
@@ -30,11 +30,11 @@ void SceneNode::render(float delta) {
 
   updateTransforms(glm::mat4(1.0f));
 
-  for (IComponent* component : components) {
+  for (auto& component : components) {
     component->render(worldTransform, delta);
   }
 
-  for (SceneNode* child : children) {
+  for (auto& child : children) {
     child->render(delta);
   }
 }
@@ -86,5 +86,6 @@ void SceneNode::onKey(int key) {}
 void SceneNode::onScreenSizeChanged(glm::vec2 size) {
 
 }
+SceneNode::SceneNode() {}
 
 } // namespace DL

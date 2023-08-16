@@ -10,7 +10,7 @@
 #include "shader.h"
 #include <string_view>
 
-class SimpleNodeScene : public DL::SceneNode{
+class SimpleNodeScene : public DL::SceneNode {
 public:
   explicit SimpleNodeScene(std::string_view glslVersionString);
   ~SimpleNodeScene() override = default;
@@ -20,8 +20,10 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
+  void initCamera();
+  void initComponents();
+
   std::unique_ptr<DL::Camera> mCamera;
-  std::unique_ptr<DL::Plane> mPlane;
   glm::vec2 mScreenSize{0, 0};
   std::string mGlslVersionString;
 };

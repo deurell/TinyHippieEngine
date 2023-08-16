@@ -8,13 +8,25 @@ namespace DL {
 
 class CustomComponent : public IComponent {
 public:
-  explicit CustomComponent(std::string name) : name(std::move(name)) {}
+  explicit CustomComponent(std::string name, DL::Camera &camera, std::string_view glslVersionString)
+      : name_(std::move(name)), camera_(camera), glslVersionString_(glslVersionString) {
+    camera.lookAt({0, 0, 0});
+    auto shader = std::make_unique<DL::Shader>(
+        "Shaders/simple.vert", "Shaders/simple.frag", glslVersionString_);
+
+    plane_ = std::make_unique<DL::Plane>(std::move(shader), camera_);
+    plane_->position = {0, 0, 0};
+    plane_->scale = {16, 16, 1};
+  }
 
   void render(const glm::mat4 &worldTransform, float delta) override {
-    std::cout << "Rendering component: " << name << std::endl;
+    plane_->render(delta);
   }
 
 private:
-  std::string name;
+  DL::Camera &camera_;
+  std::string name_;
+  std::unique_ptr<DL::Plane> plane_ = nullptr;
+  std::string glslVersionString_;
 };
 }; // namespace DL

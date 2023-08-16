@@ -13,10 +13,11 @@ namespace DL {
 
 class SceneNode : public IScene {
 public:
+  SceneNode();
   glm::mat4 localTransform{1.0f};
   bool dirty{true};
-  std::vector<SceneNode *> children;
-  std::vector<IComponent *> components;
+  std::vector<std::unique_ptr<SceneNode>> children;
+  std::vector<std::unique_ptr<IComponent>> components;
 
   // IScene methods
   void init() override;

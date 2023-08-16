@@ -9,6 +9,7 @@
 namespace DL {
 class IComponent {
 public:
+  virtual void init() = 0;
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
   virtual ~IComponent() = default;
 };

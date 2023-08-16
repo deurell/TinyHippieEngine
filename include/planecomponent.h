@@ -21,6 +21,8 @@ public:
     plane_->setRotation({0,0,glm::pi<float>()/2});
   }
 
+  void init() override {}
+
   void render(const glm::mat4 &worldTransform, float delta) override {
     plane_->position = worldTransform[3];
     plane_->setRotation({0,0,glm::pi<float>()/4});

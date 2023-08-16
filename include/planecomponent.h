@@ -6,9 +6,9 @@
 
 namespace DL {
 
-class CustomComponent : public IComponent {
+class PlaneComponent : public IComponent {
 public:
-  explicit CustomComponent(std::string name, DL::Camera &camera, std::string_view glslVersionString)
+  explicit PlaneComponent(std::string name, DL::Camera &camera, std::string_view glslVersionString)
       : name_(std::move(name)), camera_(camera), glslVersionString_(glslVersionString) {
     camera.lookAt({0, 0, 0});
     auto shader = std::make_unique<DL::Shader>(

@@ -3,7 +3,7 @@
 //
 
 #include "simplenodescene.h"
-#include "customcomponent.h"
+#include "planecomponent.h"
 
 SimpleNodeScene::SimpleNodeScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
@@ -31,6 +31,6 @@ void SimpleNodeScene::initCamera() {
 }
 
 void SimpleNodeScene::initComponents() {
-  auto component = std::make_unique<DL::CustomComponent>("custom", *mCamera, mGlslVersionString);
+  auto component = std::make_unique<DL::PlaneComponent>("custom", *mCamera, mGlslVersionString);
   components.emplace_back(std::move(component));
 }

@@ -50,7 +50,6 @@ void DL::Plane::render(float /* delta */) const {
   mShader->use();
   mShader->setFloat("iTime", (float)glfwGetTime());
   glm::mat4 transform = glm::mat4(1.0f);
-
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::scale(model, scale);
   model = glm::translate(model, position);

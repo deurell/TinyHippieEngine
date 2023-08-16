@@ -10,7 +10,7 @@ namespace DL {
 
 class Particle {
 public:
-  Particle(DL::Plane& visual, float mass, glm::vec3 gravity);
+  Particle(DL::Plane &visual, float mass, glm::vec3 gravity);
 
   void updatePhysics(float delta);
   void setPosition(glm::vec3 position);
@@ -21,7 +21,7 @@ public:
 
 private:
   float mass;
-  DL::Plane& visual;
+  DL::Plane &visual;
   glm::vec3 gravity;
   glm::vec3 linearVelocity = {0, 0, 0};
   std::vector<glm::vec3> forces = {};

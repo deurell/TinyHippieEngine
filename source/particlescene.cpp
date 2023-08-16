@@ -40,6 +40,7 @@ void ParticleScene::initPlanes() {
 
     std::uniform_real_distribution<double> dist(-2.0, 2.0);
     glm::vec3 randomAxis = glm::vec3(dist(twister), dist(twister), dist(twister) * 0.2);
+
     plane->rotationAxis = glm::normalize(randomAxis);
     plane->rotationSpeed = dist(twister) * glm::pi<float>() / 180 * 360;
     mPlanes.emplace_back(std::move(plane));

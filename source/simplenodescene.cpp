@@ -12,6 +12,7 @@ void SimpleNodeScene::init() {
   SceneNode::init();
   initCamera();
   initComponents();
+  setLocalPosition({5,0,0});
 }
 
 void SimpleNodeScene::render(float delta) {

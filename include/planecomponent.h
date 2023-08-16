@@ -16,10 +16,11 @@ public:
 
     plane_ = std::make_unique<DL::Plane>(std::move(shader), camera_);
     plane_->position = {0, 0, 0};
-    plane_->scale = {16, 16, 1};
+    plane_->scale = {1, 6, 1};
   }
 
   void render(const glm::mat4 &worldTransform, float delta) override {
+    plane_->position = worldTransform[3];
     plane_->render(delta);
   }
 

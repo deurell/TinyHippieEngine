@@ -19,10 +19,13 @@ public:
 
   ~Plane() = default;
 
+  void setRotation(const glm::vec3& eulerAngles);
+
   void render(float delta) const;
 
   glm::vec3 position{0, 0, 0};
   glm::vec3 scale{1.0, 1.0, 1.0};
+  glm::quat rotation = glm::quat(1, 0, 0, 0);
 
   glm::vec3 rotationAxis{1,0,0};
   float rotationSpeed = glm::pi<float>()/180;

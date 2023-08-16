@@ -51,9 +51,10 @@ void DL::Plane::render(float /* delta */) const {
   mShader->setFloat("iTime", (float)glfwGetTime());
   glm::mat4 transform = glm::mat4(1.0f);
   glm::mat4 model = glm::mat4(1.0f);
-  model = glm::scale(model, scale);
+
   model = glm::translate(model, position);
-  model = glm::rotate(model, (float)glfwGetTime() * rotationSpeed, rotationAxis);
+  model = model * glm::mat4_cast(rotation);
+  model = glm::scale(model, scale);
 
   mShader->setMat4f("model", model);
   glm::mat4 view = mCamera.getViewMatrix();
@@ -67,4 +68,12 @@ void DL::Plane::render(float /* delta */) const {
   glBindVertexArray(mVAO);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
   glBindVertexArray(0);
+}
+
+void DL::Plane::setRotation(const glm::vec3 &eulerAngles) {
+  glm::quat qx = glm::angleAxis(glm::radians(eulerAngles.x), glm::vec3(1.0f, 0.0f, 0.0f));
+  glm::quat qy = glm::angleAxis(glm::radians(eulerAngles.y), glm::vec3(0.0f, 1.0f, 0.0f));
+  glm::quat qz = glm::angleAxis(glm::radians(eulerAngles.z), glm::vec3(0.0f, 0.0f, 1.0f));
+
+  rotation = qz * qy * qx;
 }

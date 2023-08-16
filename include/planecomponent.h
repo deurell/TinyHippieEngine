@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
+#include <GLFW/glfw3.h>
 
 namespace DL {
 
@@ -17,10 +18,12 @@ public:
     plane_ = std::make_unique<DL::Plane>(std::move(shader), camera_);
     plane_->position = {0, 0, 0};
     plane_->scale = {1, 6, 1};
+    plane_->setRotation({0,0,glm::pi<float>()/2});
   }
 
   void render(const glm::mat4 &worldTransform, float delta) override {
     plane_->position = worldTransform[3];
+    plane_->setRotation({0,0,glm::pi<float>()/2 + glfwGetTime() * 10});
     plane_->render(delta);
   }
 

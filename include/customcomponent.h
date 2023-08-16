@@ -1,5 +1,5 @@
 #pragma once
-#include "IComponent.h"
+#include "Icomponent.h"
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>

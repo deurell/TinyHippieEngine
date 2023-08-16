@@ -31,10 +31,10 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
         source/wildcopperscene.cpp include/miniaudio.h source/audioplayer.cpp include/audioplayer.h source/simplescene.cpp include/simplescene.h
         include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
-        include/SceneNode.h
-        source/SceneNode.cpp
-        include/IComponent.h
-        include/CustomComponent.h)
+        include/scenenode.h
+        source/scenenode.cpp
+        include/icomponent.h
+        include/customcomponent.h)
 
 add_library(imgui STATIC
         imgui/imconfig.h

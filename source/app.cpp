@@ -4,9 +4,9 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
+#include "particlescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
-#include "particlescene.h"
 #include <iostream>
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
@@ -26,7 +26,7 @@ void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
   }
 }
 
-void window_size_callback(GLFWwindow* window, int width, int height) {
+void window_size_callback(GLFWwindow *window, int width, int height) {
   auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
   app->onScreenSizeChanged(width, height);
 }
@@ -160,6 +160,7 @@ void DL::App::basisInit() {
   mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }
+
 void DL::App::onScreenSizeChanged(int width, int height) {
   mScene->onScreenSizeChanged({width, height});
 }

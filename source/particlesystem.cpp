@@ -21,15 +21,15 @@ void DL::ParticleSystem::updatePhysics(float delta) {
 void DL::ParticleSystem::explode(glm::vec3 position) {
   std::uniform_real_distribution<double> dist(-1500.0, 1500.0);
 
-  for (auto& particle : mParticles) {
-    particle.get().setLinearVelocity({0,0,0});
+  for (auto &particle : mParticles) {
+    particle.get().setLinearVelocity({0, 0, 0});
     particle.get().setPosition(position);
-    glm::vec3 force = {dist(twister), dist(twister), dist(twister)*0.2};
+    glm::vec3 force = {dist(twister), dist(twister), 0};
     particle.get().addForce(force);
   }
 }
 void DL::ParticleSystem::reset() {
-  for (auto particle : mParticles) {
+  for (auto &particle : mParticles) {
     particle.get().reset();
   }
 }

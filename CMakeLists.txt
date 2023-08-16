@@ -1,4 +1,4 @@
-# cmake . -DCMAKE_TOOLCHAIN_FILE=/Users/deurell/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B wildcopper -G Ninja
+# cmake . -DCMAKE_TOOLCHAIN_FILE=/Users/mikael/tools/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B web -G Ninja
 cmake_minimum_required(VERSION 3.15)
 
 project(tiny_hippie_engine)

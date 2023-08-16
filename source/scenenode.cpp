@@ -1,4 +1,7 @@
 #include "scenenode.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
 
 namespace DL {
 
@@ -15,6 +18,16 @@ void SceneNode::updateTransforms(const glm::mat4& parentWorldTransform) {
 }
 
 void SceneNode::render(float delta) {
+
+#ifdef USE_IMGUI
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+  ImGui::Begin("Node Scene");
+  ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::End();
+#endif
+
   updateTransforms(glm::mat4(1.0f));
 
   for (IComponent* component : components) {
@@ -63,6 +76,15 @@ void SceneNode::setLocalScale(const glm::vec3& scale) {
 
 glm::vec3 SceneNode::getLocalScale() const {
   return glm::vec3(glm::length(localTransform[0]), glm::length(localTransform[1]), glm::length(localTransform[2]));
+}
+void SceneNode::init() {}
+
+void SceneNode::onClick(double x, double y) {}
+
+void SceneNode::onKey(int key) {}
+
+void SceneNode::onScreenSizeChanged(glm::vec2 size) {
+
 }
 
 } // namespace DL

@@ -8,6 +8,7 @@
 #include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
+#include "simplenodescene.h"
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
@@ -39,7 +40,7 @@ void DL::App::init() {
 #else
   mGlslVersionString = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<ParticleScene>(mGlslVersionString);
+  mScene = std::make_unique<SimpleNodeScene>(mGlslVersionString);
 }
 
 int DL::App::run() {

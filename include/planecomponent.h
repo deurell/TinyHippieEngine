@@ -20,7 +20,6 @@ public:
     plane_->scale = {1, 6, 1};
     plane_->setRotation({0,0,glm::pi<float>()/2});
   }
-
   void init() override {}
 
   void render(const glm::mat4 &worldTransform, float delta) override {

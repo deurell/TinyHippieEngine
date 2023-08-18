@@ -5,10 +5,11 @@
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
 #include "particlescene.h"
+#include "simplenodescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
-#include "simplenodescene.h"
+#include <thread>
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
@@ -36,11 +37,11 @@ void DL::App::init() {
   glfwInit();
   basisInit();
 #ifdef __EMSCRIPTEN__
-  mGlslVersionString = "#version 300 es\n";
+  glslVersionString_ = "#version 300 es\n";
 #else
-  mGlslVersionString = "#version 330 core\n";
+  glslVersionString_ = "#version 330 core\n";
 #endif
-  mScene = std::make_unique<SimpleNodeScene>(mGlslVersionString);
+  scene_ = std::make_unique<SimpleNodeScene>(glslVersionString_);
 }
 
 int DL::App::run() {
@@ -57,20 +58,20 @@ int DL::App::run() {
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #endif
 
-  mWindow = glfwCreateWindow(screen_width, screen_height, windows_title,
+  window_ = glfwCreateWindow(screen_width, screen_height, windows_title,
                              nullptr, nullptr);
-  if (mWindow == nullptr) {
+  if (window_ == nullptr) {
     std::cout << "window create failed";
     glfwTerminate();
     return -1;
   }
 
-  glfwSetWindowUserPointer(mWindow, this);
-  glfwSetMouseButtonCallback(mWindow, mouseclick_callback);
-  glfwSetKeyCallback(mWindow, keyclick_callback);
-  glfwSetWindowSizeCallback(mWindow, window_size_callback);
+  glfwSetWindowUserPointer(window_, this);
+  glfwSetMouseButtonCallback(window_, mouseclick_callback);
+  glfwSetKeyCallback(window_, keyclick_callback);
+  glfwSetWindowSizeCallback(window_, window_size_callback);
 
-  glfwMakeContextCurrent(mWindow);
+  glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -85,17 +86,17 @@ int DL::App::run() {
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
   ImGui::StyleColorsLight();
-  ImGui_ImplGlfw_InitForOpenGL(mWindow, true);
-  ImGui_ImplOpenGL3_Init(mGlslVersionString.c_str());
+  ImGui_ImplGlfw_InitForOpenGL(window_, true);
+  ImGui_ImplOpenGL3_Init(glslVersionString_.c_str());
 #endif
 
-  mScene->init();
-  mScene->onScreenSizeChanged({screen_width, screen_height});
+  scene_->init();
+  scene_->onScreenSizeChanged({screen_width, screen_height});
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);
 #else
-  while (!glfwWindowShouldClose(mWindow)) {
+  while (!glfwWindowShouldClose(window_)) {
     render();
   }
 #ifdef USE_IMGUI
@@ -104,7 +105,7 @@ int DL::App::run() {
   ImGui::DestroyContext();
 #endif
 
-  glfwDestroyWindow(mWindow);
+  glfwDestroyWindow(window_);
 #endif
 
   glfwTerminate();
@@ -112,24 +113,35 @@ int DL::App::run() {
 }
 
 void DL::App::render() {
-  auto currentFrame = static_cast<float>(glfwGetTime());
-  mDeltaTime = currentFrame - mLastFrame;
-  mLastFrame = currentFrame;
+  auto startFrameTime = static_cast<float>(glfwGetTime());
+  deltaTime_ = startFrameTime - lastFrameTime_;
+  lastFrameTime_ = startFrameTime;
 
-  mScene->render(mDeltaTime);
+  scene_->render(deltaTime_);
 
 #ifdef USE_IMGUI
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #endif
 
-  processInput(mWindow);
+  processInput(window_);
 
   int frameWidth, frameHeight;
-  glfwGetFramebufferSize(mWindow, &frameWidth, &frameHeight);
+  glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
   glViewport(0, 0, frameWidth, frameHeight);
-  glfwSwapBuffers(mWindow);
+  glfwSwapBuffers(window_);
   glfwPollEvents();
+
+  auto endFrameTime = static_cast<float>(glfwGetTime());
+  float frameTime = endFrameTime - startFrameTime;
+
+  if (desiredFrameTime_ > 0.0f) {
+    while (frameTime < desiredFrameTime_) {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      endFrameTime = static_cast<float>(glfwGetTime());
+      frameTime = endFrameTime - startFrameTime;
+    }
+  }
 }
 
 void DL::App::processInput(GLFWwindow *window) {
@@ -137,31 +149,31 @@ void DL::App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    mScene = std::make_unique<IntroScene>(mGlslVersionString);
-    mScene->init();
+    scene_ = std::make_unique<IntroScene>(glslVersionString_);
+    scene_->init();
   }
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     double x, y;
-    glfwGetCursorPos(mWindow, &x, &y);
-    mScene->onClick(x, y);
+    glfwGetCursorPos(window_, &x, &y);
+    scene_->onClick(x, y);
   }
 }
 
 void DL::App::onKey(int key, int scancode, int action, int mod) {
   if (action == GLFW_RELEASE) {
-    mScene->onKey(key);
+    scene_->onKey(key);
   }
 }
 
 void DL::App::basisInit() {
   basist::basisu_transcoder_init();
-  mCodebook = std::make_unique<basist::etc1_global_selector_codebook>(
+  codebook_ = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }
 
 void DL::App::onScreenSizeChanged(int width, int height) {
-  mScene->onScreenSizeChanged({width, height});
+  scene_->onScreenSizeChanged({width, height});
 }

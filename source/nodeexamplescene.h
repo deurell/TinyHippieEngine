@@ -3,6 +3,7 @@
 //
 
 #pragma once
+#include "planenode.h"
 #include "scenenode.h"
 #include <string_view>
 

@@ -16,8 +16,8 @@ void PlaneNode::init() {
 }
 
 void PlaneNode::render(float delta) {
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  //glClearColor(0.0, 0.0, 0.0, 1.0);
+  //glClear(GL_COLOR_BUFFER_BIT);
   SceneNode::render(delta);
 }
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {

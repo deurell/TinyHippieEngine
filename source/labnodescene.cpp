@@ -13,10 +13,14 @@ LabNodeScene::LabNodeScene(std::string_view glslVersionString) {
 
 void LabNodeScene::init() {
   SceneNode::init();
+  setLocalPosition({-12, 0, 0});
+
   auto simpleNode = std::make_unique<SimpleNode>(glslVersionString_);
   simpleNode->init();
+  simpleNode->setLocalPosition({12, 0, 0});
+  simpleNode->dirty = true;
   children.emplace_back(std::move(simpleNode));
-}
+  }
 
 void LabNodeScene::render(float delta) {
 #ifdef USE_IMGUI

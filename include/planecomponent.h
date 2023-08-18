@@ -17,8 +17,8 @@ public:
 
     plane_ = std::make_unique<DL::Plane>(std::move(shader), camera_);
     plane_->position = {0, 0, 0};
-    plane_->scale = {1, 6, 1};
-    plane_->setRotation({0,0,glm::pi<float>()/2});
+    plane_->scale = {1.0, 1.0, 1.0};
+    plane_->setRotation({0, 0, 0});
   }
   void init() override {}
 

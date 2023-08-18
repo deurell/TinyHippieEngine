@@ -20,7 +20,7 @@ void LabNodeScene::init() {
   planeNode->setLocalPosition({6, 0, 0});
   glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
   planeNode->setLocalRotation(rotation);
-  planeNode->setLocalScale({2, 6, 1});
+  planeNode->setLocalScale({4, 4, 1});
   children.emplace_back(std::move(planeNode));
 }
 

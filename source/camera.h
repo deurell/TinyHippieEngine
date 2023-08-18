@@ -2,6 +2,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+
 namespace DL {
 class Camera {
 public:
@@ -41,7 +42,8 @@ public:
   void roll(float angle) { rotate(angle, 0.0f, 0.0f, 1.0f); }
 
   glm::mat4 getPerspectiveTransform() const {
-    return glm::perspective(glm::radians(mFov), mScreenSize.x/mScreenSize.y, 0.1f, 100.0f);
+    return glm::perspective(glm::radians(mFov), mScreenSize.x / mScreenSize.y,
+                            0.1f, 100.0f);
   }
 
   static glm::mat4 getOrtoTransform(float left, float right, float bottom,

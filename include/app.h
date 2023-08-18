@@ -24,13 +24,15 @@ public:
   void onKey(int key, int scancode, int action, int mod);
   void onScreenSizeChanged(int width, int height);
 
-private:
-  void init();
-  void basisInit();
-
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
+
+private:
+  void init();
+  void basisInit();
+  glm::vec2 getScreenSize();
+
   GLFWwindow *window_{};
   std::unique_ptr<DL::IScene> scene_;
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;

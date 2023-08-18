@@ -4,11 +4,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
+#include "labnodescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
 #include <thread>
-#include "labnodescene.h"
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
@@ -90,7 +90,7 @@ int DL::App::run() {
 #endif
 
   scene_->init();
-  scene_->onScreenSizeChanged({screen_width, screen_height});
+  scene_->onScreenSizeChanged(getScreenSize());
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);
@@ -148,8 +148,9 @@ void DL::App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
   if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    scene_ = std::make_unique<IntroScene>(glslVersionString_);
+    scene_ = std::make_unique<SimpleScene>(glslVersionString_);
     scene_->init();
+    scene_->onScreenSizeChanged(getScreenSize());
   }
 }
 
@@ -175,4 +176,10 @@ void DL::App::basisInit() {
 
 void DL::App::onScreenSizeChanged(int width, int height) {
   scene_->onScreenSizeChanged({width, height});
+}
+
+glm::vec2 DL::App::getScreenSize() {
+  int width, height;
+  glfwGetWindowSize(window_, &width, &height);
+  return {width, height};
 }

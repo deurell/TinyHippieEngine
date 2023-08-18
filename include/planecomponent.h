@@ -23,13 +23,9 @@ public:
   void init() override {}
 
   void render(const glm::mat4 &worldTransform, float delta) override {
-    plane_->position = glm::vec3(worldTransform[3]);
-    glm::mat4 normalizedRotationMatrix = normalizeRotation(worldTransform);
-    glm::quat rotationQuaternion = glm::quat_cast(normalizedRotationMatrix);
-    plane_->rotation = rotationQuaternion;
-    plane_->scale.x = glm::length(worldTransform[0]);
-    plane_->scale.y = glm::length(worldTransform[1]);
-    plane_->scale.z = glm::length(worldTransform[2]);
+    plane_->position = extractPosition(worldTransform);
+    plane_->rotation = extractRotation(worldTransform);
+    plane_->scale = extractScale(worldTransform);
     plane_->render(delta);
   }
 

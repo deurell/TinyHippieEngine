@@ -4,7 +4,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
-#include "labnodescene.h"
+#include "nodeexamplescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
@@ -40,7 +40,7 @@ void DL::App::init() {
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
-  scene_ = std::make_unique<LabNodeScene>(glslVersionString_);
+  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
 }
 
 int DL::App::run() {

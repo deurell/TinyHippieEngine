@@ -1,17 +1,17 @@
 //
 // Created by Mikael Deurell on 2023-08-18.
 //
-#include "labnodescene.h"
+#include "nodeexamplescene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
 
-LabNodeScene::LabNodeScene(std::string_view glslVersionString) {
+NodeExampleScene::NodeExampleScene(std::string_view glslVersionString) {
   glslVersionString_ = glslVersionString;
 }
 
-void LabNodeScene::init() {
+void NodeExampleScene::init() {
   SceneNode::init();
   setLocalPosition({-6, 0, 0});
 
@@ -24,7 +24,7 @@ void LabNodeScene::init() {
   children.emplace_back(std::move(planeNode));
 }
 
-void LabNodeScene::render(float delta) {
+void NodeExampleScene::render(float delta) {
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -36,6 +36,6 @@ void LabNodeScene::render(float delta) {
   SceneNode::render(delta);
 }
 
-void LabNodeScene::onScreenSizeChanged(glm::vec2 size) {
+void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
 }

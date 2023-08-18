@@ -6,11 +6,11 @@
 #include "scenenode.h"
 #include <string_view>
 
-class LabNodeScene : public DL::SceneNode {
+class NodeExampleScene : public DL::SceneNode {
 public:
-  explicit LabNodeScene(std::string_view glslVersionString);
+  explicit NodeExampleScene(std::string_view glslVersionString);
 
-  ~LabNodeScene() override = default;
+  ~NodeExampleScene() override = default;
 
   void init() override;
   void render(float delta) override;

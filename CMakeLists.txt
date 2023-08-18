@@ -35,8 +35,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/scenenode.cpp
         include/abstractcomponent.h
         include/planecomponent.h source/planenode.cpp source/planenode.h
-        source/labnodescene.h
-        source/labnodescene.cpp)
+        source/nodeexamplescene.h
+        source/nodeexamplescene.cpp)
 
 add_library(imgui STATIC
         imgui/imconfig.h

@@ -1,13 +1,13 @@
 #pragma once
-#include "icomponent.h"
+#include "abstractcomponent.h"
+#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>
-#include <GLFW/glfw3.h>
 
 namespace DL {
 
-class PlaneComponent : public IComponent {
+class PlaneComponent : public AbstractComponent {
 public:
   explicit PlaneComponent(std::string name, DL::Camera &camera, std::string_view glslVersionString)
       : name_(std::move(name)), camera_(camera), glslVersionString_(glslVersionString) {
@@ -21,14 +21,6 @@ public:
     plane_->setRotation({0, 0, 0});
   }
   void init() override {}
-
-  glm::mat4 normalizeRotation(const glm::mat4 &matrix) {
-    glm::mat4 normalizedMatrix = matrix;
-    normalizedMatrix[0] = glm::normalize(matrix[0]);
-    normalizedMatrix[1] = glm::normalize(matrix[1]);
-    normalizedMatrix[2] = glm::normalize(matrix[2]);
-    return normalizedMatrix;
-  }
 
   void render(const glm::mat4 &worldTransform, float delta) override {
     plane_->position = glm::vec3(worldTransform[3]);

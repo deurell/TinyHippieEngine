@@ -33,7 +33,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
         include/scenenode.h
         source/scenenode.cpp
-        include/icomponent.h
+        include/abstractcomponent.h
         include/planecomponent.h source/planenode.cpp source/simplenode.h
         source/labnodescene.h
         source/labnodescene.cpp)

@@ -34,7 +34,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/scenenode.h
         source/scenenode.cpp
         include/abstractcomponent.h
-        include/planecomponent.h source/planenode.cpp source/simplenode.h
+        include/planecomponent.h source/planenode.cpp source/planenode.h
         source/labnodescene.h
         source/labnodescene.cpp)
 

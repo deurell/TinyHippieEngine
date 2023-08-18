@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include "simplenode.h"
+#include "planenode.h"
 
 LabNodeScene::LabNodeScene(std::string_view glslVersionString) {
   glslVersionString_ = glslVersionString;

@@ -2,7 +2,7 @@
 // Created by Mikael Deurell on 2023-08-16.
 //
 
-#include "simplenode.h"
+#include "planenode.h"
 #include "planecomponent.h"
 
 PlaneNode::PlaneNode(std::string_view glslVersionString)

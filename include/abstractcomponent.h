@@ -6,10 +6,23 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include "camera.h"
+#include <string_view>
+#include <string>
+#include <utility>
 
 namespace DL {
 class AbstractComponent {
 public:
+  AbstractComponent(DL::Camera &camera, std::string name,
+                    std::string glslVersionString,
+                    std::string vertexShaderPath,
+                    std::string fragmentShaderPath)
+      : camera_(camera), name_(std::move(name)),
+        glslVersionString_(std::move(glslVersionString)),
+        vertexShaderPath_(std::move(vertexShaderPath)),
+        fragmentShaderPath_(std::move(fragmentShaderPath)) {}
+
   virtual void init() = 0;
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
   virtual ~AbstractComponent() = default;
@@ -40,5 +53,10 @@ protected:
     return glm::vec3(matrix[3]);
   }
 
+  DL::Camera &camera_;
+  std::string name_;
+  std::string glslVersionString_;
+  std::string vertexShaderPath_;
+  std::string fragmentShaderPath_;
 };
 } // namespace DL

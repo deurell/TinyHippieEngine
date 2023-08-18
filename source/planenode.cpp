@@ -12,7 +12,7 @@ void PlaneNode::init() {
   SceneNode::init();
   initCamera();
   initComponents();
-  setLocalPosition({5,0,0});
+  setLocalPosition({0,0,0});
 }
 
 void PlaneNode::render(float delta) {

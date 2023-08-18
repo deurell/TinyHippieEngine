@@ -5,6 +5,8 @@
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -31,14 +33,17 @@ public:
   void setLocalPosition(const glm::vec3 &position);
   glm::vec3 getLocalPosition() const;
 
-  void setLocalRotation(const glm::vec3 &rotation);
-  glm::vec3 getLocalRotation() const;
+  void setLocalRotation(const glm::quat &rotation); // Changed to accept a quaternion
+  glm::quat getLocalRotation() const;               // Changed to return a quaternion
 
   void setLocalScale(const glm::vec3 &scale);
   glm::vec3 getLocalScale() const;
 
 private:
   glm::mat4 worldTransform{1.0f};
+
+  glm::mat4 extractPositionMatrix() const; // Helper function
+  glm::mat4 extractScaleMatrix() const;    // Helper function
 };
 
 } // namespace DL

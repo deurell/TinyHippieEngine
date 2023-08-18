@@ -2,13 +2,14 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace DL {
 
 void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   if (dirty) {
-    glm::mat4 newTransform = localTransform;
-    worldTransform = parentWorldTransform * newTransform;
+    worldTransform = parentWorldTransform * localTransform;
     dirty = false;
   }
 
@@ -38,26 +39,14 @@ glm::vec3 SceneNode::getLocalPosition() const {
   return glm::vec3(localTransform[3]);
 }
 
-void SceneNode::setLocalRotation(const glm::vec3 &rotation) {
-  glm::mat4 rotationMatrix(1.0f);
-  rotationMatrix =
-      glm::rotate(rotationMatrix, rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-  rotationMatrix =
-      glm::rotate(rotationMatrix, rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-  rotationMatrix =
-      glm::rotate(rotationMatrix, rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-  localTransform = localTransform * rotationMatrix;
+void SceneNode::setLocalRotation(const glm::quat &rotation) {
+  glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
+  localTransform = extractPositionMatrix() * rotationMatrix * extractScaleMatrix();
   dirty = true;
 }
 
-glm::vec3 SceneNode::getLocalRotation() const {
-  glm::vec3 rotation;
-  rotation.x = atan2(localTransform[2][1], localTransform[2][2]);
-  rotation.y = atan2(-localTransform[2][0],
-                     sqrt(localTransform[2][1] * localTransform[2][1] +
-                          localTransform[2][2] * localTransform[2][2]));
-  rotation.z = atan2(localTransform[1][0], localTransform[0][0]);
-  return rotation;
+glm::quat SceneNode::getLocalRotation() const {
+  return glm::quat_cast(localTransform);
 }
 
 void SceneNode::setLocalScale(const glm::vec3 &scale) {
@@ -65,7 +54,7 @@ void SceneNode::setLocalScale(const glm::vec3 &scale) {
   scaleMatrix[0][0] = scale.x;
   scaleMatrix[1][1] = scale.y;
   scaleMatrix[2][2] = scale.z;
-  localTransform = localTransform * scaleMatrix;
+  localTransform = extractPositionMatrix() * glm::mat4_cast(getLocalRotation()) * scaleMatrix;
   dirty = true;
 }
 
@@ -74,6 +63,22 @@ glm::vec3 SceneNode::getLocalScale() const {
                    glm::length(localTransform[1]),
                    glm::length(localTransform[2]));
 }
+
+glm::mat4 SceneNode::extractPositionMatrix() const {
+  glm::mat4 positionMatrix = glm::mat4(1.0f);
+  positionMatrix[3] = localTransform[3];
+  return positionMatrix;
+}
+
+glm::mat4 SceneNode::extractScaleMatrix() const {
+  glm::vec3 scale = getLocalScale();
+  glm::mat4 scaleMatrix(1.0f);
+  scaleMatrix[0][0] = scale.x;
+  scaleMatrix[1][1] = scale.y;
+  scaleMatrix[2][2] = scale.z;
+  return scaleMatrix;
+}
+
 void SceneNode::init() {}
 
 void SceneNode::onClick(double x, double y) {}
@@ -85,6 +90,7 @@ void SceneNode::onScreenSizeChanged(glm::vec2 size) {
     child->onScreenSizeChanged(size);
   }
 }
-SceneNode::SceneNode() {}
+
+SceneNode::SceneNode() : dirty(true) {}
 
 } // namespace DL

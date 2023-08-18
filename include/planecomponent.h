@@ -23,8 +23,9 @@ public:
   void init() override {}
 
   void render(const glm::mat4 &worldTransform, float delta) override {
-    plane_->position = worldTransform[3];
-    plane_->setRotation({0,0,glm::pi<float>()/4});
+    plane_->position = glm::vec3(worldTransform[3]);
+    glm::quat rotationQuaternion = glm::quat_cast(worldTransform);
+    plane_->rotation = rotationQuaternion;
     plane_->render(delta);
   }
 

@@ -15,11 +15,13 @@ void LabNodeScene::init() {
   SceneNode::init();
   setLocalPosition({-6, 0, 0});
 
-  auto simpleNode = std::make_unique<SimpleNode>(glslVersionString_);
-  simpleNode->init();
-  simpleNode->setLocalPosition({6, 0, 0});
-  children.emplace_back(std::move(simpleNode));
-  }
+  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
+  planeNode->init();
+  planeNode->setLocalPosition({6, 0, 0});
+  glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
+  planeNode->setLocalRotation(rotation);
+  children.emplace_back(std::move(planeNode));
+}
 
 void LabNodeScene::render(float delta) {
 #ifdef USE_IMGUI

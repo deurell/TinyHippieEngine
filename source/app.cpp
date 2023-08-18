@@ -4,12 +4,11 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
-#include "particlescene.h"
-#include "simplenodescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include <iostream>
 #include <thread>
+#include "labnodescene.h"
 
 void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
 
@@ -41,7 +40,7 @@ void DL::App::init() {
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
-  scene_ = std::make_unique<SimpleNodeScene>(glslVersionString_);
+  scene_ = std::make_unique<LabNodeScene>(glslVersionString_);
 }
 
 int DL::App::run() {

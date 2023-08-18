@@ -2,36 +2,35 @@
 // Created by Mikael Deurell on 2023-08-16.
 //
 
-#include "simplenodescene.h"
+#include "simplenode.h"
 #include "planecomponent.h"
 
-SimpleNodeScene::SimpleNodeScene(std::string_view glslVersionString)
+SimpleNode::SimpleNode(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
 
-void SimpleNodeScene::init() {
+void SimpleNode::init() {
   SceneNode::init();
   initCamera();
   initComponents();
   setLocalPosition({5,0,0});
 }
 
-void SimpleNodeScene::render(float delta) {
+void SimpleNode::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
-
   SceneNode::render(delta);
 }
-void SimpleNodeScene::onScreenSizeChanged(glm::vec2 size) {
+void SimpleNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
   mScreenSize = size;
   mCamera->mScreenSize = size;
 }
-void SimpleNodeScene::initCamera() {
+void SimpleNode::initCamera() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
 }
 
-void SimpleNodeScene::initComponents() {
+void SimpleNode::initComponents() {
   auto component = std::make_unique<DL::PlaneComponent>("custom", *mCamera, mGlslVersionString);
   components.emplace_back(std::move(component));
 }

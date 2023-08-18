@@ -10,10 +10,10 @@
 #include "shader.h"
 #include <string_view>
 
-class SimpleNodeScene : public DL::SceneNode {
+class SimpleNode : public DL::SceneNode {
 public:
-  explicit SimpleNodeScene(std::string_view glslVersionString);
-  ~SimpleNodeScene() override = default;
+  explicit SimpleNode(std::string_view glslVersionString);
+  ~SimpleNode() override = default;
 
   void init() override;
   void render(float delta) override;

@@ -3,7 +3,7 @@
 //
 
 #include "planenode.h"
-#include "planecomponent.h"
+#include "planevisualizer.h"
 
 PlaneNode::PlaneNode(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
@@ -31,6 +31,6 @@ void PlaneNode::initCamera() {
 }
 
 void PlaneNode::initComponents() {
-  auto component = std::make_unique<DL::PlaneComponent>("custom", *mCamera, mGlslVersionString);
+  auto component = std::make_unique<DL::PlaneVisualizer>("custom", *mCamera, mGlslVersionString);
   components.emplace_back(std::move(component));
 }

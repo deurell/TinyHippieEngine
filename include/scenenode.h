@@ -1,6 +1,6 @@
 #pragma once
-#include "abstractcomponent.h"
 #include "iscene.h"
+#include "visualizerbase.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -19,7 +19,7 @@ public:
   glm::mat4 localTransform{1.0f};
   bool dirty{true};
   std::vector<std::unique_ptr<SceneNode>> children;
-  std::vector<std::unique_ptr<AbstractComponent>> components;
+  std::vector<std::unique_ptr<VisualizerBase>> components;
 
   // IScene methods
   void init() override;

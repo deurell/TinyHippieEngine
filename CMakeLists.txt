@@ -33,8 +33,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
         include/scenenode.h
         source/scenenode.cpp
-        include/abstractcomponent.h
-        include/planecomponent.h source/planenode.cpp source/planenode.h
+        include/visualizerbase.h
+        include/planevisualizer.h source/planenode.cpp source/planenode.h
         source/nodeexamplescene.h
         source/nodeexamplescene.cpp)
 

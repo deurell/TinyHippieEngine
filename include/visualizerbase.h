@@ -12,9 +12,9 @@
 #include <utility>
 
 namespace DL {
-class AbstractComponent {
+class VisualizerBase {
 public:
-  AbstractComponent(DL::Camera &camera, std::string name,
+  VisualizerBase(DL::Camera &camera, std::string name,
                     std::string glslVersionString,
                     std::string vertexShaderPath,
                     std::string fragmentShaderPath)
@@ -25,7 +25,7 @@ public:
 
   virtual void init() = 0;
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
-  virtual ~AbstractComponent() = default;
+  virtual ~VisualizerBase() = default;
 
   static glm::mat4 normalizeRotation(const glm::mat4 &matrix) {
     glm::mat4 normalizedMatrix = matrix;

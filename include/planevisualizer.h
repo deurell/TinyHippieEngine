@@ -1,5 +1,5 @@
 #pragma once
-#include "abstractcomponent.h"
+#include "visualizerbase.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <iostream>
@@ -7,10 +7,10 @@
 
 namespace DL {
 
-class PlaneComponent : public AbstractComponent {
+class PlaneVisualizer : public VisualizerBase {
 public:
-  explicit PlaneComponent(std::string name, DL::Camera &camera, std::string_view glslVersionString)
-  : AbstractComponent(camera, std::move(name), std::string(glslVersionString), "Shaders/simple.vert", "Shaders/simple.frag") {
+  explicit PlaneVisualizer(std::string name, DL::Camera &camera, std::string_view glslVersionString)
+  : VisualizerBase(camera, std::move(name), std::string(glslVersionString), "Shaders/simple.vert", "Shaders/simple.frag") {
     camera.lookAt({0, 0, 0});
 
     auto shader = std::make_unique<DL::Shader>(vertexShaderPath_, fragmentShaderPath_, glslVersionString_);

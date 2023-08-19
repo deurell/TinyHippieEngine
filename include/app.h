@@ -24,18 +24,21 @@ public:
   void onKey(int key, int scancode, int action, int mod);
   void onScreenSizeChanged(int width, int height);
 
-private:
-  void init();
-  void basisInit();
-
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
   static constexpr float screen_height = 768;
-  GLFWwindow *mWindow{};
-  std::unique_ptr<DL::IScene> mScene;
-  std::unique_ptr<basist::etc1_global_selector_codebook> mCodebook;
-  std::string mGlslVersionString;
-  float mDeltaTime = 0.0f;
-  float mLastFrame = 0.0f;
+
+private:
+  void init();
+  void basisInit();
+  glm::vec2 getScreenSize();
+
+  GLFWwindow *window_{};
+  std::unique_ptr<DL::IScene> scene_;
+  std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;
+  std::string glslVersionString_;
+  float deltaTime_ = 0.0f;
+  float lastFrameTime_ = 0.0f;
+  float desiredFrameTime_ = 1.0f / 60.0f;
 };
 } // namespace DL

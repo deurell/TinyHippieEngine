@@ -69,13 +69,12 @@ void ParticleScene::render(float delta) {
 
 void ParticleScene::onClick(double x, double y) {
   std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
-  glm::mat4 perspective = mCamera->getPerspectiveTransform();
-  glm::vec4 viewport = glm::vec4(0, 0, mCamera->mScreenSize.x, mCamera->mScreenSize.y);
-  glm::vec3 screenPos = glm::vec3(x, mCamera->mScreenSize.y - y, 1);
-  glm::vec3 worldPos = glm::unProject(screenPos, mCamera->getViewMatrix(),
-                                      perspective, viewport);
-  worldPos.z = 0;
-
+  float x_ndc = (x / mCamera->mScreenSize.x) * 2.0f - 1.0f;
+  float y_ndc = ((mCamera->mScreenSize.y - y) / mCamera->mScreenSize.y) * 2.0f - 1.0f;
+  x_ndc *= mCamera->mScreenSize.x / mCamera->mScreenSize.y;
+  float desiredZ = 35.0f;
+  float scaleFactor = tan(glm::radians(mCamera->mFov / 2.0f)) * desiredZ * 2.0f;
+  glm::vec3 worldPos = glm::vec3(x_ndc * scaleFactor, y_ndc * scaleFactor, desiredZ);
   mParticleSystem->explode(worldPos);
 }
 

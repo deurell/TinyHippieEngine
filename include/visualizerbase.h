@@ -3,25 +3,26 @@
 //
 
 #pragma once
+#include "camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include "camera.h"
-#include <string_view>
 #include <string>
+#include <string_view>
 #include <utility>
 
 namespace DL {
+class SceneNode;
+
 class VisualizerBase {
 public:
   VisualizerBase(DL::Camera &camera, std::string name,
-                    std::string glslVersionString,
-                    std::string vertexShaderPath,
-                    std::string fragmentShaderPath)
+                 std::string glslVersionString, std::string vertexShaderPath,
+                 std::string fragmentShaderPath, SceneNode &node)
       : camera_(camera), name_(std::move(name)),
         glslVersionString_(std::move(glslVersionString)),
         vertexShaderPath_(std::move(vertexShaderPath)),
-        fragmentShaderPath_(std::move(fragmentShaderPath)) {}
+        fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
   virtual void init() = 0;
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
@@ -58,5 +59,6 @@ protected:
   std::string glslVersionString_;
   std::string vertexShaderPath_;
   std::string fragmentShaderPath_;
+  DL::SceneNode& node_;
 };
 } // namespace DL

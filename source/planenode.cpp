@@ -12,12 +12,12 @@ void PlaneNode::init() {
   SceneNode::init();
   initCamera();
   initComponents();
-  setLocalPosition({0,0,0});
+  setLocalPosition({0, 0, 0});
 }
 
 void PlaneNode::render(float delta) {
-  //glClearColor(0.0, 0.0, 0.0, 1.0);
-  //glClear(GL_COLOR_BUFFER_BIT);
+  // glClearColor(0.0, 0.0, 0.0, 1.0);
+  // glClear(GL_COLOR_BUFFER_BIT);
   SceneNode::render(delta);
 }
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {
@@ -31,6 +31,7 @@ void PlaneNode::initCamera() {
 }
 
 void PlaneNode::initComponents() {
-  auto component = std::make_unique<DL::PlaneVisualizer>("custom", *mCamera, mGlslVersionString);
+  auto component = std::make_unique<DL::PlaneVisualizer>(
+      "custom", *mCamera, mGlslVersionString, *this);
   visualizers.emplace_back(std::move(component));
 }

@@ -9,11 +9,14 @@ namespace DL {
 
 class PlaneVisualizer : public VisualizerBase {
 public:
-  explicit PlaneVisualizer(std::string name, DL::Camera &camera, std::string_view glslVersionString)
-  : VisualizerBase(camera, std::move(name), std::string(glslVersionString), "Shaders/simple.vert", "Shaders/simple.frag") {
+  explicit PlaneVisualizer(std::string name, DL::Camera &camera,
+                           std::string_view glslVersionString, SceneNode &node)
+      : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
+                       "Shaders/simple.vert", "Shaders/simple.frag", node) {
     camera.lookAt({0, 0, 0});
 
-    auto shader = std::make_unique<DL::Shader>(vertexShaderPath_, fragmentShaderPath_, glslVersionString_);
+    auto shader = std::make_unique<DL::Shader>(
+        vertexShaderPath_, fragmentShaderPath_, glslVersionString_);
 
     plane_ = std::make_unique<DL::Plane>(std::move(shader), camera_);
     plane_->position = {0, 0, 0};

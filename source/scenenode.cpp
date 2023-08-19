@@ -17,7 +17,7 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
 void SceneNode::render(float delta) {
   updateTransforms(glm::mat4(1.0f));
 
-  for (auto &component : components) {
+  for (auto &component : visualizers) {
     component->render(worldTransform, delta);
   }
 

@@ -19,7 +19,7 @@ public:
   glm::mat4 localTransform{1.0f};
   bool dirty{true};
   std::vector<std::unique_ptr<SceneNode>> children;
-  std::vector<std::unique_ptr<VisualizerBase>> components;
+  std::vector<std::unique_ptr<VisualizerBase>> visualizers;
 
   // IScene methods
   void init() override;

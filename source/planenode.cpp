@@ -32,5 +32,5 @@ void PlaneNode::initCamera() {
 
 void PlaneNode::initComponents() {
   auto component = std::make_unique<DL::PlaneVisualizer>("custom", *mCamera, mGlslVersionString);
-  components.emplace_back(std::move(component));
+  visualizers.emplace_back(std::move(component));
 }

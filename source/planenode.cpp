@@ -5,9 +5,6 @@
 #include "planenode.h"
 #include "planevisualizer.h"
 
-PlaneNode::PlaneNode(std::string_view glslVersionString)
-    : mGlslVersionString(glslVersionString) {}
-
 void PlaneNode::init() {
   SceneNode::init();
   initCamera();

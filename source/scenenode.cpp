@@ -53,6 +53,30 @@ void SceneNode::render(float delta) {
   }
 }
 
+glm::mat4 SceneNode::getWorldTransform() {
+  if (dirty) {
+    // Use the parent's world transform if it exists, otherwise use identity
+    glm::mat4 parentTransform =
+        parent ? parent->getWorldTransform() : glm::mat4(1.0f);
+    updateTransforms(parentTransform);
+  }
+  return worldTransform;
+}
+
+glm::vec3 SceneNode::getWorldPosition() {
+  return glm::vec3(getWorldTransform()[3]);
+}
+
+glm::quat SceneNode::getWorldRotation() {
+  return glm::quat_cast(getWorldTransform());
+}
+
+glm::vec3 SceneNode::getWorldScale() {
+  glm::mat4 transform = getWorldTransform();
+  return glm::vec3(glm::length(transform[0]), glm::length(transform[1]),
+                   glm::length(transform[2]));
+}
+
 glm::mat4 SceneNode::extractPositionMatrix() const {
   glm::mat4 positionMatrix = glm::mat4(1.0f);
   positionMatrix[3] = localTransform[3];
@@ -80,6 +104,11 @@ void SceneNode::onScreenSizeChanged(glm::vec2 size) {
   }
 }
 
-SceneNode::SceneNode() : dirty(true) {}
+void SceneNode::addChild(std::unique_ptr<SceneNode> child) {
+  child->parent = this;
+  children.push_back(std::move(child));
+}
+
+void SceneNode::setParent(SceneNode *parentNode) { parent = parentNode; }
 
 } // namespace DL

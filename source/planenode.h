@@ -4,15 +4,19 @@
 
 #pragma once
 
-#include "scenenode.h"
 #include "camera.h"
 #include "plane.h"
+#include "scenenode.h"
 #include "shader.h"
 #include <string_view>
 
 class PlaneNode : public DL::SceneNode {
 public:
-  explicit PlaneNode(std::string_view glslVersionString);
+  explicit PlaneNode(std::string_view glslVersionString,
+                     DL::SceneNode *parentNode = nullptr)
+      : DL::SceneNode(parentNode),
+        mGlslVersionString(glslVersionString.data()) {}
+
   ~PlaneNode() override = default;
 
   void init() override;

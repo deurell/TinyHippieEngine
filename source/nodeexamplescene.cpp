@@ -17,7 +17,7 @@ void NodeExampleScene::init() {
   SceneNode::init();
   setLocalPosition({0, 0, 0});
 
-  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
+  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_, this);
   planeNode->init();
   planeNode->setLocalPosition({6, 0, 0});
   glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
@@ -25,7 +25,7 @@ void NodeExampleScene::init() {
   planeNode->setLocalScale({4, 2, 1});
   children.emplace_back(std::move(planeNode));
 
-  auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_);
+  auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_, this);
   planeNode2->init();
   planeNode2->setLocalPosition({-6, 0, 0});
   glm::quat rotation2 = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1));

@@ -15,9 +15,12 @@ namespace DL {
 
 class SceneNode : public IScene {
 public:
-  SceneNode();
   std::vector<std::unique_ptr<SceneNode>> children;
   std::vector<std::unique_ptr<VisualizerBase>> visualizers;
+
+  SceneNode(SceneNode *parentNode = nullptr)
+      : dirty(true), parent(parentNode) {}
+  ~SceneNode() override = default;
 
   // IScene methods
   void init() override;
@@ -28,6 +31,9 @@ public:
 
   void updateTransforms(const glm::mat4 &parentWorldTransform);
 
+  void setParent(SceneNode *parent);
+  void addChild(std::unique_ptr<SceneNode> child);
+
   void setLocalPosition(const glm::vec3 &position);
   glm::vec3 getLocalPosition() const;
 
@@ -36,6 +42,14 @@ public:
 
   void setLocalScale(const glm::vec3 &scale);
   glm::vec3 getLocalScale() const;
+
+  glm::mat4 getWorldTransform();
+  glm::vec3 getWorldPosition();
+  glm::quat getWorldRotation();
+  glm::vec3 getWorldScale();
+
+protected:
+  SceneNode *parent;
 
 private:
   glm::mat4 localTransform = glm::mat4(1.0f);

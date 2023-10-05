@@ -23,7 +23,7 @@ void IntroScene::init() {
         shader.setVec3f("baseCol", mBaseCol);
         shader.setInt("bars", mBars);
       });
-  mPlane->position = {0, 1.4, 0};
+  mPlane->position = {0, 4, 0};
   mPlane->scale = {40, 3, 1};
 
   std::unique_ptr<DL::Shader> shader2 = std::make_unique<DL::Shader>(
@@ -37,7 +37,7 @@ void IntroScene::init() {
         shader.setInt("bars", mBars);
       });
 
-  mPlane2->position = {0, -1.4, 0};
+  mPlane2->position = {0, -4, 0};
   mPlane2->scale = {40, 3, 1};
 }
 

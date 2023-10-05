@@ -5,6 +5,12 @@ namespace DL {
 
 void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   if (dirty) {
+    glm::mat4 positionMatrix = glm::translate(glm::mat4(1.0f), localPosition);
+    glm::mat4 rotationMatrix = glm::mat4_cast(localRotation);
+    glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), localScale);
+
+    localTransform = positionMatrix * rotationMatrix * scaleMatrix;
+
     worldTransform = parentWorldTransform * localTransform;
     dirty = false;
   }
@@ -13,6 +19,27 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
     child->updateTransforms(worldTransform);
   }
 }
+
+void SceneNode::setLocalPosition(const glm::vec3 &position) {
+  localPosition = position;
+  dirty = true;
+}
+
+glm::vec3 SceneNode::getLocalPosition() const { return localPosition; }
+
+void SceneNode::setLocalRotation(const glm::quat &rotation) {
+  localRotation = rotation;
+  dirty = true;
+}
+
+glm::quat SceneNode::getLocalRotation() const { return localRotation; }
+
+void SceneNode::setLocalScale(const glm::vec3 &scale) {
+  localScale = scale;
+  dirty = true;
+}
+
+glm::vec3 SceneNode::getLocalScale() const { return localScale; }
 
 void SceneNode::render(float delta) {
   updateTransforms(glm::mat4(1.0f));
@@ -24,40 +51,6 @@ void SceneNode::render(float delta) {
   for (auto &child : children) {
     child->render(delta);
   }
-}
-
-void SceneNode::setLocalPosition(const glm::vec3 &position) {
-  localTransform[3] = glm::vec4(position, 1.0f);
-  dirty = true;
-}
-
-glm::vec3 SceneNode::getLocalPosition() const {
-  return glm::vec3(localTransform[3]);
-}
-
-void SceneNode::setLocalRotation(const glm::quat &rotation) {
-  glm::mat4 rotationMatrix = glm::mat4_cast(rotation);
-  localTransform = extractPositionMatrix() * rotationMatrix * extractScaleMatrix();
-  dirty = true;
-}
-
-glm::quat SceneNode::getLocalRotation() const {
-  return glm::quat_cast(localTransform);
-}
-
-void SceneNode::setLocalScale(const glm::vec3 &scale) {
-  glm::mat4 scaleMatrix(1.0f);
-  scaleMatrix[0][0] = scale.x;
-  scaleMatrix[1][1] = scale.y;
-  scaleMatrix[2][2] = scale.z;
-  localTransform = extractPositionMatrix() * glm::mat4_cast(getLocalRotation()) * scaleMatrix;
-  dirty = true;
-}
-
-glm::vec3 SceneNode::getLocalScale() const {
-  return glm::vec3(glm::length(localTransform[0]),
-                   glm::length(localTransform[1]),
-                   glm::length(localTransform[2]));
 }
 
 glm::mat4 SceneNode::extractPositionMatrix() const {

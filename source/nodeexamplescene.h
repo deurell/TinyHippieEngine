@@ -3,8 +3,10 @@
 //
 
 #pragma once
+#include "plane.h"
 #include "planenode.h"
 #include "scenenode.h"
+#include <memory>
 #include <string_view>
 
 class NodeExampleScene : public DL::SceneNode {
@@ -19,4 +21,7 @@ public:
 
 private:
   std::string glslVersionString_;
+  PlaneNode* plane2_;
+  float scale_ = 1.0f;
+  float rotation_ = 0.0f;
 };

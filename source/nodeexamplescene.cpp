@@ -2,10 +2,12 @@
 // Created by Mikael Deurell on 2023-08-18.
 //
 #include "nodeexamplescene.h"
+#include "GLFW/glfw3.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
+#include <memory>
 
 NodeExampleScene::NodeExampleScene(std::string_view glslVersionString) {
   glslVersionString_ = glslVersionString;
@@ -26,11 +28,11 @@ void NodeExampleScene::init() {
   auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode2->init();
   planeNode2->setLocalPosition({-6, 0, 0});
-  glm::quat rotation2 = glm::angleAxis(glm::radians(135.0f), glm::vec3(0, 0, 1));
-  planeNode2->setLocalRotation(rotation);
+  glm::quat rotation2 = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1));
+  planeNode2->setLocalRotation(rotation2);
   planeNode2->setLocalScale({2, 4, 1});
+  plane2_ = planeNode2.get();
   children.emplace_back(std::move(planeNode2));
-
 }
 
 void NodeExampleScene::render(float delta) {
@@ -46,6 +48,14 @@ void NodeExampleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   SceneNode::render(delta);
+  float time = glfwGetTime();
+  float rotation = sin(time * 5.0) * 0.6f;
+  float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
+  plane2_->setLocalScale({scale_, scale_, 1});
+  plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+  glm::vec3 currentScale = plane2_->getLocalScale();
+  std::cout << "Current scale: " << currentScale.x << ", " << currentScale.y
+            << ", " << currentScale.z << std::endl;
 }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {

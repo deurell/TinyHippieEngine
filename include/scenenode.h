@@ -16,8 +16,6 @@ namespace DL {
 class SceneNode : public IScene {
 public:
   SceneNode();
-  glm::mat4 localTransform{1.0f};
-  bool dirty{true};
   std::vector<std::unique_ptr<SceneNode>> children;
   std::vector<std::unique_ptr<VisualizerBase>> visualizers;
 
@@ -33,17 +31,23 @@ public:
   void setLocalPosition(const glm::vec3 &position);
   glm::vec3 getLocalPosition() const;
 
-  void setLocalRotation(const glm::quat &rotation); // Changed to accept a quaternion
-  glm::quat getLocalRotation() const;               // Changed to return a quaternion
+  void setLocalRotation(const glm::quat &rotation);
+  glm::quat getLocalRotation() const;
 
   void setLocalScale(const glm::vec3 &scale);
   glm::vec3 getLocalScale() const;
 
 private:
-  glm::mat4 worldTransform{1.0f};
+  glm::mat4 localTransform = glm::mat4(1.0f);
+  glm::mat4 worldTransform;
+  bool dirty = true;
 
-  glm::mat4 extractPositionMatrix() const; // Helper function
-  glm::mat4 extractScaleMatrix() const;    // Helper function
+  glm::vec3 localPosition;
+  glm::quat localRotation;
+  glm::vec3 localScale = glm::vec3(1.0f, 1.0f, 1.0f);
+
+  glm::mat4 extractPositionMatrix() const;
+  glm::mat4 extractScaleMatrix() const;
 };
 
 } // namespace DL

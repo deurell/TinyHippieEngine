@@ -55,10 +55,7 @@ void SceneNode::render(float delta) {
 
 glm::mat4 SceneNode::getWorldTransform() {
   if (dirty) {
-    // Use the parent's world transform if it exists, otherwise use identity
-    glm::mat4 parentTransform =
-        parent ? parent->getWorldTransform() : glm::mat4(1.0f);
-    updateTransforms(parentTransform);
+    updateTransforms(parent ? parent->getWorldTransform() : glm::mat4(1.0f));
   }
   return worldTransform;
 }

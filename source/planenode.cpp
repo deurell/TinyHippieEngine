@@ -5,6 +5,10 @@
 #include "planenode.h"
 #include "planevisualizer.h"
 
+PlaneNode::PlaneNode(std::string_view glslVersionString,
+                     DL::SceneNode *parentNode)
+    : DL::SceneNode(parentNode), mGlslVersionString(glslVersionString.data()) {}
+
 void PlaneNode::init() {
   SceneNode::init();
   initCamera();

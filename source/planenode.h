@@ -13,9 +13,7 @@
 class PlaneNode : public DL::SceneNode {
 public:
   explicit PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode = nullptr)
-      : DL::SceneNode(parentNode),
-        mGlslVersionString(glslVersionString.data()) {}
+                     DL::SceneNode *parentNode = nullptr);
 
   ~PlaneNode() override = default;
 

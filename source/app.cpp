@@ -135,10 +135,9 @@ void DL::App::render() {
   float frameTime = endFrameTime - startFrameTime;
 
   if (desiredFrameTime_ > 0.0f) {
-    while (frameTime < desiredFrameTime_) {
-      std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      endFrameTime = static_cast<float>(glfwGetTime());
-      frameTime = endFrameTime - startFrameTime;
+    float sleepTime = desiredFrameTime_ - frameTime;
+    if (sleepTime > 0.0f) {
+      std::this_thread::sleep_for(std::chrono::duration<float>(sleepTime));
     }
   }
 }

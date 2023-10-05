@@ -9,9 +9,8 @@
 #include "planenode.h"
 #include <memory>
 
-NodeExampleScene::NodeExampleScene(std::string_view glslVersionString) {
-  glslVersionString_ = glslVersionString;
-}
+NodeExampleScene::NodeExampleScene(std::string_view glslVersionString)
+    : SceneNode(nullptr), glslVersionString_(glslVersionString) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
@@ -34,7 +33,6 @@ void NodeExampleScene::init() {
   plane2_ = planeNode2.get();
   addChild(std::move(planeNode2));
 }
-
 
 void NodeExampleScene::render(float delta) {
 #ifdef USE_IMGUI

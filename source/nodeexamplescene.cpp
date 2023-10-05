@@ -53,9 +53,6 @@ void NodeExampleScene::render(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
-  glm::vec3 currentScale = plane2_->getLocalScale();
-  std::cout << "Current scale: " << currentScale.x << ", " << currentScale.y
-            << ", " << currentScale.z << std::endl;
 }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {

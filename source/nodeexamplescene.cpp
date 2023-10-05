@@ -17,23 +17,24 @@ void NodeExampleScene::init() {
   SceneNode::init();
   setLocalPosition({0, 0, 0});
 
-  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_, this);
+  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode->init();
   planeNode->setLocalPosition({6, 0, 0});
   glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale({4, 2, 1});
-  children.emplace_back(std::move(planeNode));
+  addChild(std::move(planeNode));
 
-  auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_, this);
+  auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode2->init();
   planeNode2->setLocalPosition({-6, 0, 0});
   glm::quat rotation2 = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1));
   planeNode2->setLocalRotation(rotation2);
   planeNode2->setLocalScale({2, 4, 1});
   plane2_ = planeNode2.get();
-  children.emplace_back(std::move(planeNode2));
+  addChild(std::move(planeNode2));
 }
+
 
 void NodeExampleScene::render(float delta) {
 #ifdef USE_IMGUI

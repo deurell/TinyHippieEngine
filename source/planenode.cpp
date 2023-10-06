@@ -16,6 +16,8 @@ void PlaneNode::init() {
   setLocalPosition({0, 0, 0});
 }
 
+void PlaneNode::update(float delta) { SceneNode::update(delta); }
+
 void PlaneNode::render(float delta) {
   // glClearColor(0.0, 0.0, 0.0, 1.0);
   // glClear(GL_COLOR_BUFFER_BIT);

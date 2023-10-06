@@ -12,37 +12,52 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
     localTransform = positionMatrix * rotationMatrix * scaleMatrix;
 
     worldTransform = parentWorldTransform * localTransform;
+
     dirty = false;
   }
-
+  
   for (auto &child : children) {
     child->updateTransforms(worldTransform);
   }
 }
 
+
+
 void SceneNode::setLocalPosition(const glm::vec3 &position) {
   localPosition = position;
-  dirty = true;
+  markDirty();
 }
 
 glm::vec3 SceneNode::getLocalPosition() const { return localPosition; }
 
 void SceneNode::setLocalRotation(const glm::quat &rotation) {
   localRotation = rotation;
-  dirty = true;
+  markDirty();
 }
 
 glm::quat SceneNode::getLocalRotation() const { return localRotation; }
 
 void SceneNode::setLocalScale(const glm::vec3 &scale) {
   localScale = scale;
-  dirty = true;
+  markDirty();
 }
 
 glm::vec3 SceneNode::getLocalScale() const { return localScale; }
 
+
+void SceneNode::update(float delta) {
+  if (parent) {
+    updateTransforms(parent->getWorldTransform());
+  } else {
+    updateTransforms(glm::mat4(1.0f));
+  }
+
+  for (auto &child : children) {
+    child->update(delta);
+  }
+}
+
 void SceneNode::render(float delta) {
-  updateTransforms(glm::mat4(1.0f));
 
   for (auto &component : visualizers) {
     component->render(worldTransform, delta);
@@ -53,10 +68,8 @@ void SceneNode::render(float delta) {
   }
 }
 
+
 glm::mat4 SceneNode::getWorldTransform() {
-  if (dirty) {
-    updateTransforms(parent ? parent->getWorldTransform() : glm::mat4(1.0f));
-  }
   return worldTransform;
 }
 
@@ -107,5 +120,13 @@ void SceneNode::addChild(std::unique_ptr<SceneNode> child) {
 }
 
 void SceneNode::setParent(SceneNode *parentNode) { parent = parentNode; }
+
+void SceneNode::markDirty() {
+  dirty = true;
+  for(auto& child : children) {
+      child->markDirty();
+  }
+}
+
 
 } // namespace DL

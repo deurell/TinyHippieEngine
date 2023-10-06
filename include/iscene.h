@@ -7,6 +7,7 @@ public:
   virtual ~IScene() = default;
 
   virtual void init() = 0;
+  virtual void update(float delta) = 0;
   virtual void render(float delta) = 0;
   virtual void onClick(double x, double y) = 0;
   virtual void onKey(int key) = 0;

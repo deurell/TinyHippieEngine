@@ -18,6 +18,8 @@ public:
   ~App() = default;
 
   int run();
+  void computeDeltaTime();
+  void update();
   void render();
   void processInput(GLFWwindow *window);
   void onClick(int button, int action, int mod);
@@ -38,6 +40,7 @@ private:
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
+  float startFrameTime = 0.0f; 
   float lastFrameTime_ = 0.0f;
   float desiredFrameTime_ = 1.0f / 60.0f;
 };

@@ -10,7 +10,10 @@
 #include <iostream>
 #include <thread>
 
-void renderloop_callback(void *arg) { static_cast<DL::App *>(arg)->render(); }
+void renderloop_callback(void *arg) {
+  static_cast<DL::App *>(arg)->update();
+  static_cast<DL::App *>(arg)->render();
+}
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
   auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
@@ -113,14 +116,12 @@ int DL::App::run() {
 }
 
 void DL::App::computeDeltaTime() {
-    auto currentTime = static_cast<float>(glfwGetTime());
-    deltaTime_ = currentTime - lastFrameTime_;
-    lastFrameTime_ = currentTime;
+  auto currentTime = static_cast<float>(glfwGetTime());
+  deltaTime_ = currentTime - lastFrameTime_;
+  lastFrameTime_ = currentTime;
 }
 
-void DL::App::update() {
-  scene_->update(deltaTime_);
-}
+void DL::App::update() { scene_->update(deltaTime_); }
 
 void DL::App::render() {
   startFrameTime = static_cast<float>(glfwGetTime());

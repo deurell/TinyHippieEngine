@@ -21,8 +21,6 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   }
 }
 
-
-
 void SceneNode::setLocalPosition(const glm::vec3 &position) {
   localPosition = position;
   markDirty();

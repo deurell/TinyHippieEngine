@@ -8,8 +8,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
-#include <memory>
 #include "textnode.h"
+#include <memory>
 
 NodeExampleScene::NodeExampleScene(std::string_view glslVersionString)
     : SceneNode(nullptr), glslVersionString_(glslVersionString) {}
@@ -36,11 +36,31 @@ void NodeExampleScene::init() {
   plane2_ = planeNode2.get();
   addChild(std::move(planeNode2));
 
-  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, "Hello\nWorld!");
+  std::string text = R"(
+A long time ago, in a galaxy far, far away...
+It is a period of civil war. Rebel
+spaceships, striking from a hidden
+base, have won their first victory
+against the evil Galactic Empire.
+
+During the battle, Rebel spies managed
+to steal secret plans to the Empire's
+ultimate weapon, the Death Star, an
+armored space station with enough
+power to destroy an entire planet.
+
+Pursued by the Empire's sinister agents,
+Princess Leia races home aboard her
+starship, custodian of the stolen plans
+that can save her people and restore
+freedom to the galaxy....
+  )";
+
+  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
   textNode->init();
-  textNode->setLocalPosition({-5, 5, 0});
+  textNode->setLocalPosition({-22, 3, -26});
   textNode->setLocalScale({1.0, 1.0, 1});
-  textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(0, 0, 1)));
+  textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(1, 0, 0)));
   textNode_ = textNode.get();
   addChild(std::move(textNode));
 }
@@ -51,8 +71,6 @@ void NodeExampleScene::update(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
-  float textRotation = sin(time * 1.5) * glm::pi<float>();
-  textNode_->setLocalRotation(glm::angleAxis(textRotation, glm::vec3(1, 0, 0)));
   SceneNode::update(delta);
 }
 
@@ -66,10 +84,13 @@ void NodeExampleScene::render(float delta) {
   ImGui::End();
 #endif
 
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
   glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   SceneNode::render(delta);
- }
+}
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);

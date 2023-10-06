@@ -23,6 +23,7 @@ void NodeExampleScene::init() {
   glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale({4, 2, 1});
+  plane2_ = planeNode.get();
   addChild(std::move(planeNode));
 
   auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_);
@@ -34,11 +35,12 @@ void NodeExampleScene::init() {
   plane2_ = planeNode2.get();
   addChild(std::move(planeNode2));
 
-  auto textNode = std::make_unique<TextNode>(glslVersionString_);
+  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, "Hello World!");
   textNode->init();
-  textNode->setLocalPosition({-2, 6, 0});
+  textNode->setLocalPosition({-5, 5, 0});
   textNode->setLocalScale({1.0, 1.0, 1});
   textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(0, 0, 1)));
+  textNode_ = textNode.get();
   addChild(std::move(textNode));
 }
 
@@ -48,6 +50,8 @@ void NodeExampleScene::update(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+  
+  textNode_->setLocalRotation(glm::angleAxis(-rotation, glm::vec3(1, 0, 0)));
   SceneNode::update(delta);
 }
 

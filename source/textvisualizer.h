@@ -17,12 +17,15 @@ class TextVisualizer : public VisualizerBase {
 
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
-                          std::string_view glslVersionString, SceneNode &node)
+                          std::string_view glslVersionString, SceneNode &node,
+                          std::string_view text)
       : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                       "Shaders/status.vert", "Shaders/status.frag", node) {
+                       "Shaders/status.vert", "Shaders/status.frag", node),
+        text_(text) {
+
     camera.lookAt({0, 0, 0});
     textSprite_ =
-        std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text);
+        std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text_);
     shader_ = std::make_unique<DL::Shader>(
         vertexShaderPath_, fragmentShaderPath_, glslVersionString_);
   }
@@ -55,7 +58,7 @@ public:
 
 private:
   std::unique_ptr<DL::TextSprite> textSprite_ = nullptr;
-  std::string text = "Gruwl";
+  std::string_view text_;
   std::unique_ptr<DL::Shader> shader_ = nullptr;
 };
 

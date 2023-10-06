@@ -1,4 +1,6 @@
 #pragma once
+#include "plane.h"
+#include "shader.h"
 #include "visualizerbase.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

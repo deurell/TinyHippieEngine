@@ -9,7 +9,7 @@
 class TextNode : public DL::SceneNode {
 public:
     explicit TextNode(std::string_view glslVersionString,
-                        DL::SceneNode *parentNode = nullptr);
+                        DL::SceneNode *parentNode = nullptr, std::string text = "text");
     
     ~TextNode() override = default;
     
@@ -25,4 +25,5 @@ void initComponents();
 std::unique_ptr<DL::Camera> camera_;
 glm::vec2 screenSize_{0, 0};
 std::string glslVersionString_;
+std::string text_;
 };

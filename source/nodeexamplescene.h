@@ -6,6 +6,7 @@
 #include "plane.h"
 #include "planenode.h"
 #include "scenenode.h"
+#include "textnode.h"
 #include <memory>
 #include <string_view>
 
@@ -22,7 +23,9 @@ public:
 
 private:
   std::string glslVersionString_;
+  PlaneNode* plane1_;
   PlaneNode* plane2_;
+  TextNode* textNode_;
   float scale_ = 1.0f;
   float rotation_ = 0.0f;
 };

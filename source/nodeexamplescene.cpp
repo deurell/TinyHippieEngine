@@ -34,6 +34,15 @@ void NodeExampleScene::init() {
   addChild(std::move(planeNode2));
 }
 
+void NodeExampleScene::update(float delta) {
+  float time = glfwGetTime();
+  float rotation = sin(time * 5.0) * 0.6f;
+  float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
+  plane2_->setLocalScale({scale_, scale_, 1});
+  plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+  SceneNode::update(delta);
+}
+
 void NodeExampleScene::render(float delta) {
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
@@ -47,12 +56,7 @@ void NodeExampleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
   SceneNode::render(delta);
-  float time = glfwGetTime();
-  float rotation = sin(time * 5.0) * 0.6f;
-  float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
-  plane2_->setLocalScale({scale_, scale_, 1});
-  plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
-}
+ }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);

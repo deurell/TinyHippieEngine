@@ -21,6 +21,9 @@ void SimpleScene::init() {
   mPlane->scale = {16, 16, 1};
 }
 
+void SimpleScene::update(float delta) {
+}
+
 void SimpleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);

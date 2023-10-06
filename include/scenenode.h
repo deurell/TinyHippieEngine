@@ -24,6 +24,7 @@ public:
 
   // IScene methods
   void init() override;
+  void update(float delta) override;
   void render(float delta) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;
@@ -32,6 +33,7 @@ public:
   void updateTransforms(const glm::mat4 &parentWorldTransform);
 
   void setParent(SceneNode *parent);
+  void markDirty();
   void addChild(std::unique_ptr<SceneNode> child);
 
   void setLocalPosition(const glm::vec3 &position);
@@ -50,16 +52,14 @@ public:
 
 protected:
   SceneNode *parent;
-
-private:
   glm::mat4 localTransform = glm::mat4(1.0f);
-  glm::mat4 worldTransform;
+  glm::mat4 worldTransform = glm::mat4(1.0f);
   bool dirty = true;
-
-  glm::vec3 localPosition;
-  glm::quat localRotation;
+  glm::vec3 localPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+  glm::quat localRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
   glm::vec3 localScale = glm::vec3(1.0f, 1.0f, 1.0f);
 
+private:
   glm::mat4 extractPositionMatrix() const;
   glm::mat4 extractScaleMatrix() const;
 };

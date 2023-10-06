@@ -96,6 +96,7 @@ int DL::App::run() {
   emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);
 #else
   while (!glfwWindowShouldClose(window_)) {
+    update();
     render();
   }
 #ifdef USE_IMGUI
@@ -111,11 +112,18 @@ int DL::App::run() {
   return 0;
 }
 
-void DL::App::render() {
-  auto startFrameTime = static_cast<float>(glfwGetTime());
-  deltaTime_ = startFrameTime - lastFrameTime_;
-  lastFrameTime_ = startFrameTime;
+void DL::App::computeDeltaTime() {
+    auto currentTime = static_cast<float>(glfwGetTime());
+    deltaTime_ = currentTime - lastFrameTime_;
+    lastFrameTime_ = currentTime;
+}
 
+void DL::App::update() {
+  scene_->update(deltaTime_);
+}
+
+void DL::App::render() {
+  startFrameTime = static_cast<float>(glfwGetTime());
   scene_->render(deltaTime_);
 
 #ifdef USE_IMGUI

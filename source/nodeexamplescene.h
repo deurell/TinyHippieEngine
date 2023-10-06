@@ -16,6 +16,7 @@ public:
   ~NodeExampleScene() override = default;
 
   void init() override;
+  void update(float delta) override;
   void render(float delta) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 

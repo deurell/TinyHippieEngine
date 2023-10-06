@@ -39,6 +39,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/nodeexamplescene.cpp
         source/textnode.cpp
         source/textnode.h
+        source/textvisualizer.h
+        source/textvisualizer.cpp
         )
 
 add_library(imgui STATIC

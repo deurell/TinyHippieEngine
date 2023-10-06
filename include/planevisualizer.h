@@ -26,8 +26,6 @@ public:
     plane_->setRotation({0, 0, 0});
   }
 
-  void init() override {}
-
   void render(const glm::mat4 &worldTransform, float delta) override {
     plane_->position = extractPosition(worldTransform);
     plane_->rotation = extractRotation(worldTransform);

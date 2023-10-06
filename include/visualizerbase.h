@@ -24,7 +24,6 @@ public:
         vertexShaderPath_(std::move(vertexShaderPath)),
         fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
-  virtual void init() = 0;
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
   virtual ~VisualizerBase() = default;
 

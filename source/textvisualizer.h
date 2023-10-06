@@ -1,4 +1,5 @@
 #pragma once
+
 #include "camera.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
@@ -12,54 +13,39 @@
 #include <string_view>
 
 namespace DL {
-
 class TextVisualizer : public VisualizerBase {
-
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
                           std::string_view glslVersionString, SceneNode &node,
-                          std::string_view text)
-      : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                       "Shaders/status.vert", "Shaders/status.frag", node),
-        text_(text) {
+                          std::string_view text);
 
-    camera.lookAt({0, 0, 0});
-    textSprite_ =
-        std::make_unique<DL::TextSprite>("Resources/C64_Pro-STYLE.ttf", text_);
-    shader_ = std::make_unique<DL::Shader>(
-        vertexShaderPath_, fragmentShaderPath_, glslVersionString_);
-  }
-
-  void init() override {}
-
-  void render(const glm::mat4 &worldTransform, float delta) override {
-    shader_->use();
-    glm::mat4 model = glm::mat4(1.0f);
-    auto position = extractPosition(worldTransform);
-    auto rotation = extractRotation(worldTransform);
-    auto scale = extractScale(worldTransform);
-
-    model = glm::translate(model, position);
-    model = model * glm::mat4_cast(rotation);
-    model = glm::scale(model, glm::vec3(0.03, 0.03, 1.0) * scale);
-
-    shader_->setMat4f("model", model);
-    glm::mat4 view = camera_.getViewMatrix();
-    shader_->setMat4f("view", view);
-    glm::mat4 projectionMatrix = camera_.getPerspectiveTransform();
-    shader_->setMat4f("projection", projectionMatrix);
-
-    shader_->setFloat("iTime", static_cast<float>(glfwGetTime()));
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textSprite_->mFontTexture);
-    shader_->setInt("texture1", 0);
-    textSprite_->render(delta);
-  }
+  void render(const glm::mat4 &worldTransform, float delta) override;
 
 private:
-  std::unique_ptr<DL::TextSprite> textSprite_ = nullptr;
+  void loadFontTexture(std::string_view fontPath);
+  stbtt_packedchar *getFontCharInfoPtr();
+  GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
+  void initGraphics();
+
   std::string_view text_;
   std::unique_ptr<DL::Shader> shader_ = nullptr;
+
+  GLuint mVAO = 0;
+  GLuint mVBO = 0;
+  GLuint mUVBuffer = 0;
+  GLuint mIndexBuffer = 0;
+  uint16_t mIndexElementCount = 0;
+  GLuint mFontTexture = 0;
+
+  const uint32_t mFontSize = 40;
+  const uint32_t mFontAtlasWidth = 1024;
+  const uint32_t mFontAtlasHeight = 1024;
+  const uint32_t mFontOversampleX = 2;
+  const uint32_t mFontOversampleY = 2;
+  const uint8_t mFontFirstChar = 32;
+  const uint8_t mFontCharCount = 255 - 32;
+  std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
+  stbtt_packedchar *mFontCharInfoPtr = nullptr;
 };
 
 } // namespace DL

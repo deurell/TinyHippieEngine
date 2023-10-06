@@ -11,8 +11,9 @@
 #include <thread>
 
 void renderloop_callback(void *arg) {
-  static_cast<DL::App *>(arg)->update();
-  static_cast<DL::App *>(arg)->render();
+  auto app = static_cast<DL::App *>(arg);
+  app->update();
+  app->render();
 }
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
@@ -107,10 +108,8 @@ int DL::App::run() {
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 #endif
-
   glfwDestroyWindow(window_);
 #endif
-
   glfwTerminate();
   return 0;
 }

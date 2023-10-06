@@ -18,23 +18,21 @@ void PlaneNode::init() {
 
 void PlaneNode::update(float delta) { SceneNode::update(delta); }
 
-void PlaneNode::render(float delta) {
-  // glClearColor(0.0, 0.0, 0.0, 1.0);
-  // glClear(GL_COLOR_BUFFER_BIT);
-  SceneNode::render(delta);
-}
+void PlaneNode::render(float delta) { SceneNode::render(delta); }
+
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
   mScreenSize = size;
   mCamera->mScreenSize = size;
 }
+
 void PlaneNode::initCamera() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
 }
 
 void PlaneNode::initComponents() {
-  auto component = std::make_unique<DL::PlaneVisualizer>(
+  auto visualizer = std::make_unique<DL::PlaneVisualizer>(
       "custom", *mCamera, mGlslVersionString, *this);
-  visualizers.emplace_back(std::move(component));
+  visualizers.emplace_back(std::move(visualizer));
 }

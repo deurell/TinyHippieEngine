@@ -36,7 +36,10 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/visualizerbase.h
         include/planevisualizer.h source/planenode.cpp source/planenode.h
         source/nodeexamplescene.h
-        source/nodeexamplescene.cpp)
+        source/nodeexamplescene.cpp
+        source/textnode.cpp
+        source/textnode.h
+        )
 
 add_library(imgui STATIC
         imgui/imconfig.h

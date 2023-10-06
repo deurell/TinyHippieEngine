@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
 #include <memory>
+#include "textnode.h"
 
 NodeExampleScene::NodeExampleScene(std::string_view glslVersionString)
     : SceneNode(nullptr), glslVersionString_(glslVersionString) {}
@@ -32,6 +33,13 @@ void NodeExampleScene::init() {
   planeNode2->setLocalScale({2, 4, 1});
   plane2_ = planeNode2.get();
   addChild(std::move(planeNode2));
+
+  auto textNode = std::make_unique<TextNode>(glslVersionString_);
+  textNode->init();
+  textNode->setLocalPosition({-2, 6, 0});
+  textNode->setLocalScale({1.0, 1.0, 1});
+  textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(0, 0, 1)));
+  addChild(std::move(textNode));
 }
 
 void NodeExampleScene::update(float delta) {

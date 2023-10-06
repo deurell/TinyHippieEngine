@@ -3,6 +3,7 @@
 //
 #include "nodeexamplescene.h"
 #include "GLFW/glfw3.h"
+#include "glm/gtc/constants.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -50,8 +51,8 @@ void NodeExampleScene::update(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
-  
-  textNode_->setLocalRotation(glm::angleAxis(-rotation, glm::vec3(1, 0, 0)));
+  float textRotation = sin(time * 1.5) * glm::pi<float>();
+  textNode_->setLocalRotation(glm::angleAxis(textRotation, glm::vec3(1, 0, 0)));
   SceneNode::update(delta);
 }
 

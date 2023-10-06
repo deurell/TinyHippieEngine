@@ -99,6 +99,7 @@ DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
   int chrRel = static_cast<uint8_t>(character - mFontFirstChar);
   stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
                       chrRel, &offsetX, &offsetY, &quad, 1);
+
   auto xmin = quad.x0;
   auto xmax = quad.x1;
   auto ymin = -quad.y1;
@@ -125,6 +126,12 @@ void DL::TextVisualizer::initGraphics() {
   uint16_t lastIndex = 0;
   float offsetX = 0, offsetY = 0;
   for (auto c : text_) {
+    if (c == '\n') {
+      offsetY += 42;
+      offsetX = 0;
+      continue;
+    }
+
     const auto glyphInfo = makeGlyphInfo(c, offsetX, offsetY);
     offsetX = glyphInfo.offsetX;
     offsetY = glyphInfo.offsetY;

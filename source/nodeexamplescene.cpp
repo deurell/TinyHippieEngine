@@ -36,7 +36,7 @@ void NodeExampleScene::init() {
   plane2_ = planeNode2.get();
   addChild(std::move(planeNode2));
 
-  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, "Hello World!");
+  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, "Hello\nWorld!");
   textNode->init();
   textNode->setLocalPosition({-5, 5, 0});
   textNode->setLocalScale({1.0, 1.0, 1});

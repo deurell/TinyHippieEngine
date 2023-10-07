@@ -26,7 +26,7 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
 
   model = glm::translate(model, position);
   model = model * glm::mat4_cast(rotation);
-  model = glm::scale(model, glm::vec3(0.03, 0.03, 1.0) * scale);
+  model = glm::scale(model, glm::vec3(1.0, 1.0, 1.0) * scale);
 
   shader_->setMat4f("model", model);
   glm::mat4 view = camera_.getViewMatrix();
@@ -36,11 +36,11 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
 
   shader_->setFloat("iTime", static_cast<float>(glfwGetTime()));
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, mFontTexture);
+  glBindTexture(GL_TEXTURE_2D, fontTexture_);
   shader_->setInt("texture1", 0);
 
-  glBindVertexArray(mVAO);
-  glDrawElements(GL_TRIANGLES, mIndexElementCount, GL_UNSIGNED_SHORT, nullptr);
+  glBindVertexArray(VAO_);
+  glDrawElements(GL_TRIANGLES, indexElementCount_, GL_UNSIGNED_SHORT, nullptr);
 }
 
 void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
@@ -53,28 +53,48 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   iStream.read((char *)fontData, size);
   iStream.close();
 
-  auto atlasData =
-      std::make_unique<uint8_t[]>(mFontAtlasWidth * mFontAtlasHeight);
+   stbtt_fontinfo fontInfo;
+    if (!stbtt_InitFont(&fontInfo, (unsigned char*)fontData, 0)) {
+        std::cout << "Failed to initialize font info." << std::endl;
+        return;
+    }
+    
+    // Determine the scale for the desired pixel height
+    fontScale_ = stbtt_ScaleForPixelHeight(&fontInfo, desiredPixelHeight_);
 
-  mFontCharInfo = std::make_unique<stbtt_packedchar[]>(mFontCharCount);
-  mFontCharInfoPtr = mFontCharInfo.get();
+     int ascent, descent, lineGap;
+    stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+
+    // Convert to actual height using the scale.
+    float actualFontHeight = (ascent - descent + lineGap) * fontScale_;
+
+    // You can then use this actualFontHeight as your equivalent 'font size'
+    // when packing the atlas. Note that it's an approximation.
+    fontSize_ = actualFontHeight; // Update mFontSize with this value.
+
+
+  auto atlasData =
+      std::make_unique<uint8_t[]>(fontAtlasWidth_ * FontAtlasHeight_);
+
+  fontCharInfo_ = std::make_unique<stbtt_packedchar[]>(fontCharCount_);
+  fontCharInfoPtr_ = fontCharInfo_.get();
 
   stbtt_pack_context context;
-  if (!stbtt_PackBegin(&context, atlasData.get(), mFontAtlasWidth,
-                       mFontAtlasHeight, 0, 1, nullptr)) {
+  if (!stbtt_PackBegin(&context, atlasData.get(), fontAtlasWidth_,
+                       FontAtlasHeight_, 0, 1, nullptr)) {
     std::cout << "init font failed.";
   }
-  stbtt_PackSetOversampling(&context, mFontOversampleX, mFontOversampleY);
+  stbtt_PackSetOversampling(&context, fontOversampleX_, fontOversampleY_);
 
   if (!stbtt_PackFontRange(
           &context, reinterpret_cast<const unsigned char *>(fontData), 0,
-          mFontSize, mFontFirstChar, mFontCharCount, mFontCharInfo.get())) {
+          fontSize_, fontFirstChar_, fontCharCount_, fontCharInfo_.get())) {
     std::cout << "pack font failed";
   }
 
   stbtt_PackEnd(&context);
-  glGenTextures(1, &mFontTexture);
-  glBindTexture(GL_TEXTURE_2D, mFontTexture);
+  glGenTextures(1, &fontTexture_);
+  glBindTexture(GL_TEXTURE_2D, fontTexture_);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -84,7 +104,7 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
                   GL_LINEAR_MIPMAP_LINEAR);
 
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, mFontAtlasWidth, mFontAtlasHeight, 0,
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, fontAtlasWidth_, FontAtlasHeight_, 0,
                GL_RED, GL_UNSIGNED_BYTE, atlasData.get());
   glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
   glGenerateMipmap(GL_TEXTURE_2D);
@@ -92,14 +112,14 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
 }
 
 stbtt_packedchar *DL::TextVisualizer::getFontCharInfoPtr() {
-  return mFontCharInfo ? mFontCharInfo.get() : mFontCharInfoPtr;
+  return fontCharInfo_ ? fontCharInfo_.get() : fontCharInfoPtr_;
 }
 
 DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
                                                 float offsetY) {
   stbtt_aligned_quad quad;
-  int chrRel = static_cast<uint8_t>(character - mFontFirstChar);
-  stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
+  int chrRel = static_cast<uint8_t>(character - fontFirstChar_);
+  stbtt_GetPackedQuad(getFontCharInfoPtr(), fontAtlasWidth_, FontAtlasHeight_,
                       chrRel, &offsetX, &offsetY, &quad, 1);
 
   auto xmin = quad.x0;
@@ -156,26 +176,26 @@ void DL::TextVisualizer::initGraphics() {
     lastIndex += 4;
   }
 
-  glGenVertexArrays(1, &mVAO);
-  glBindVertexArray(mVAO);
+  glGenVertexArrays(1, &VAO_);
+  glBindVertexArray(VAO_);
 
-  glGenBuffers(1, &mVBO);
-  glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+  glGenBuffers(1, &VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(),
                vertices.data(), GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
   glEnableVertexAttribArray(0);
-  glGenBuffers(1, &mUVBuffer);
-  glBindBuffer(GL_ARRAY_BUFFER, mUVBuffer);
+  glGenBuffers(1, &UVBuffer_);
+  glBindBuffer(GL_ARRAY_BUFFER, UVBuffer_);
   glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * uvs.size(), uvs.data(),
                GL_STATIC_DRAW);
   glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
   glEnableVertexAttribArray(1);
 
-  mIndexElementCount = indexes.size();
-  glGenBuffers(1, &mIndexBuffer);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndexBuffer);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * mIndexElementCount,
+  indexElementCount_ = indexes.size();
+  glGenBuffers(1, &indexBuffer_);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indexElementCount_,
                indexes.data(), GL_STATIC_DRAW);
 
   glBindVertexArray(0);

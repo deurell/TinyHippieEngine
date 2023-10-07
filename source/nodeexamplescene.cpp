@@ -58,8 +58,8 @@ freedom to the galaxy....
 
   auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
   textNode->init();
-  textNode->setLocalPosition({-22, 3, -26});
-  textNode->setLocalScale({1.0, 1.0, 1});
+  textNode->setLocalPosition({-44, 3, -64});
+  textNode->setLocalScale({.1f, .1f, 1});
   textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(1, 0, 0)));
   textNode_ = textNode.get();
   addChild(std::move(textNode));

@@ -132,7 +132,7 @@ void DL::TextVisualizer::initGraphics() {
   glm::vec2 offset(0.0f);
   for (char c : text_) {
     if (c == '\n') {
-      offset.y += 42.0f;
+      offset.y += fontSize_;
       offset.x = 0.0f;
       continue;
     }

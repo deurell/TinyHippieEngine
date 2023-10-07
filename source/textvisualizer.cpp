@@ -1,5 +1,6 @@
 #include "textvisualizer.h"
 #include "app.h"
+#include "assimp/SkeletonMeshBuilder.h"
 #include <glm/glm.hpp>
 #include <sstream>
 #include <string>
@@ -147,13 +148,13 @@ void DL::TextVisualizer::initGraphics() {
 
     // Calculate the width of a space character
     float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x - makeGlyphInfo('A', 0.0f, 0.0f).positions[0].x);
-
+    spaceWidth /= 2;
     for (const auto& line : lines) {
         if (alignment_ == TextAlignment::CENTER) {
             float totalLineWidth = 0.0f;
             for (char c : line) {
                 GlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
-                totalLineWidth += (glyphInfo.positions[2].x - glyphInfo.positions[0].x) + kerning;
+                totalLineWidth += (glyphInfo.positions[2].x - glyphInfo.positions[0].x) + kerning;  // Include kerning in the width
             }
             offset.x = (viewportWidth - totalLineWidth) * 0.5f;
         }
@@ -180,7 +181,7 @@ void DL::TextVisualizer::initGraphics() {
             } else {
                 offset.x += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
             }
-            offset.x += kerning
+            offset.x += 2.0;  // Kerning
         }
 
         offset.y += fontSize_; // Use the calculated font size for line height

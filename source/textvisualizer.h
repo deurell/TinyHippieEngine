@@ -31,7 +31,7 @@ private:
   std::unique_ptr<DL::Shader> shader_ = nullptr;
 
   GLuint VAO_ = 0;
-  GLuint VBO = 0;
+  GLuint VBO_ = 0;
   GLuint UVBuffer_ = 0;
   GLuint indexBuffer_ = 0;
   uint16_t indexElementCount_ = 0;

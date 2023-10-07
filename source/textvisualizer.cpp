@@ -153,7 +153,7 @@ void DL::TextVisualizer::initGraphics() {
             float totalLineWidth = 0.0f;
             for (char c : line) {
                 GlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
-                totalLineWidth += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
+                totalLineWidth += (glyphInfo.positions[2].x - glyphInfo.positions[0].x) + kerning;
             }
             offset.x = (viewportWidth - totalLineWidth) * 0.5f;
         }
@@ -180,7 +180,7 @@ void DL::TextVisualizer::initGraphics() {
             } else {
                 offset.x += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
             }
-            offset.x += 2.0;
+            offset.x += kerning
         }
 
         offset.y += fontSize_; // Use the calculated font size for line height

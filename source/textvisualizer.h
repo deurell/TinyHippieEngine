@@ -30,22 +30,25 @@ private:
   std::string_view text_;
   std::unique_ptr<DL::Shader> shader_ = nullptr;
 
-  GLuint mVAO = 0;
-  GLuint mVBO = 0;
-  GLuint mUVBuffer = 0;
-  GLuint mIndexBuffer = 0;
-  uint16_t mIndexElementCount = 0;
-  GLuint mFontTexture = 0;
+  GLuint VAO_ = 0;
+  GLuint VBO = 0;
+  GLuint UVBuffer_ = 0;
+  GLuint indexBuffer_ = 0;
+  uint16_t indexElementCount_ = 0;
+  GLuint fontTexture_ = 0;
 
-  const uint32_t mFontSize = 40;
-  const uint32_t mFontAtlasWidth = 1024;
-  const uint32_t mFontAtlasHeight = 1024;
-  const uint32_t mFontOversampleX = 2;
-  const uint32_t mFontOversampleY = 2;
-  const uint8_t mFontFirstChar = 32;
-  const uint8_t mFontCharCount = 255 - 32;
-  std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
-  stbtt_packedchar *mFontCharInfoPtr = nullptr;
+  const float desiredPixelHeight_ = 24.0f;
+  float fontScale_;
+  float fontSize_ = 0.0f;
+
+  const uint32_t fontAtlasWidth_ = 1024;
+  const uint32_t FontAtlasHeight_ = 1024;
+  const uint32_t fontOversampleX_ = 2;
+  const uint32_t fontOversampleY_ = 2;
+  const uint8_t fontFirstChar_ = 32;
+  const uint8_t fontCharCount_ = 255 - 32;
+  std::unique_ptr<stbtt_packedchar[]> fontCharInfo_;
+  stbtt_packedchar *fontCharInfoPtr_ = nullptr;
 };
 
 } // namespace DL

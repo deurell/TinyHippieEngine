@@ -37,7 +37,8 @@ void NodeExampleScene::init() {
   addChild(std::move(planeNode2));
 
   std::string text = R"(
-A long time ago, in a galaxy far, far away...
+A long time ago,
+in a galaxy far, far away...
 It is a period of civil war. Rebel
 spaceships, striking from a hidden
 base, have won their first victory
@@ -58,7 +59,7 @@ freedom to the galaxy....
 
   auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
   textNode->init();
-  textNode->setLocalPosition({-44, 3, -64});
+  textNode->setLocalPosition({-57, 3, -64});
   textNode->setLocalScale({.1f, .1f, 1});
   textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(1, 0, 0)));
   textNode_ = textNode.get();

@@ -13,6 +13,9 @@
 #include <string_view>
 
 namespace DL {
+
+enum class TextAlignment { LEFT, CENTER };
+
 class TextVisualizer : public VisualizerBase {
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
@@ -20,6 +23,8 @@ public:
                           std::string_view text);
 
   void render(const glm::mat4 &worldTransform, float delta) override;
+  void setText(std::string_view text) { text_ = text; }
+  void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
 
 private:
   void loadFontTexture(std::string_view fontPath);
@@ -36,6 +41,8 @@ private:
   GLuint indexBuffer_ = 0;
   uint16_t indexElementCount_ = 0;
   GLuint fontTexture_ = 0;
+  TextAlignment alignment_ = TextAlignment::CENTER; // Default to left-aligned
+  const float kerning = 2.0f; 
 
   const float desiredPixelHeight_ = 24.0f;
   float fontScale_;

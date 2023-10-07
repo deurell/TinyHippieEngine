@@ -28,4 +28,5 @@ private:
   TextNode* textNode_;
   float scale_ = 1.0f;
   float rotation_ = 0.0f;
+  float scrollAngle = 40;
 };

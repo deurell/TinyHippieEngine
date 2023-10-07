@@ -44,7 +44,7 @@ private:
   TextAlignment alignment_ = TextAlignment::CENTER;
   const float kerning_ = 2.0f; 
 
-  const float desiredPixelHeight_ = 24.0f;
+  const float desiredPixelHeight_ = 18.0f;
   float fontScale_;
   float fontSize_ = 0.0f;
 

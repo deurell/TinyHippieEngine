@@ -24,7 +24,7 @@ void TextNode::onScreenSizeChanged(glm::vec2 size) {
 }
 
 void TextNode::initCamera() {
-  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
+  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 16));
   camera_->lookAt({0, 0, 0});
 }
 

@@ -21,7 +21,7 @@ void NodeExampleScene::init() {
   auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode->init();
   planeNode->setLocalPosition({6, 0, 0});
-  glm::quat rotation = glm::angleAxis(glm::radians(45.0f), glm::vec3(0, 0, 1));
+  glm::quat rotation = glm::angleAxis(glm::radians(scrollAngle), glm::vec3(0, 0, 1));
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale({4, 2, 1});
   plane2_ = planeNode.get();
@@ -90,8 +90,13 @@ void NodeExampleScene::update(float delta) {
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
 
+  const float theta = glm::radians(scrollAngle); 
+  const float delta_s = 0.02f;
+  float delta_y = delta_s * cos(theta);
+  float delta_z = delta_s * sin(theta);
   auto position = textNode_->getLocalPosition();
-  textNode_->setLocalPosition(position + glm::vec3(0, 0.01, -0.02f));
+  textNode_->setLocalPosition(position + glm::vec3(0, delta_y, -delta_z)); 
+
   SceneNode::update(delta);
 }
 

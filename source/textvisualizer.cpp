@@ -1,4 +1,6 @@
-#import "textvisualizer.h"
+#include "textvisualizer.h"
+#include <glm/glm.hpp>
+#include <string>
 
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string_view glslVersionString,

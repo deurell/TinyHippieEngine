@@ -129,87 +129,94 @@ DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
 }
 
 void DL::TextVisualizer::initGraphics() {
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec2> uvs;
-    std::vector<uint16_t> indices;
+  std::vector<glm::vec3> vertices;
+  std::vector<glm::vec2> uvs;
+  std::vector<uint16_t> indices;
 
-    uint16_t index = 0;
-    glm::vec2 offset(0.0f, 0.0f);
+  uint16_t index = 0;
+  glm::vec2 offset(0.0f, 0.0f);
 
-    std::vector<std::string> lines;
-    std::string strText = std::string(text_);  // Convert string_view to string
-    std::stringstream ss(strText);
-    std::string line;
-    while (std::getline(ss, line)) {
-        lines.push_back(line);
+  std::vector<std::string> lines;
+  std::string strText = std::string(text_); // Convert string_view to string
+  std::stringstream ss(strText);
+  std::string line;
+  while (std::getline(ss, line)) {
+    lines.push_back(line);
+  }
+
+  float viewportWidth =
+      DL::App::screen_width; // Provide the width of your rendering area
+                             // (viewport or window)
+
+  // Calculate the width of a space character
+  float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x -
+                      makeGlyphInfo('A', 0.0f, 0.0f).positions[0].x);
+  spaceWidth /= 2;
+  for (const auto &line : lines) {
+    if (alignment_ == TextAlignment::CENTER) {
+      float totalLineWidth = 0.0f;
+      for (char c : line) {
+        GlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
+        totalLineWidth +=
+            (glyphInfo.positions[2].x - glyphInfo.positions[0].x) +
+            kerning_; // Include kerning in the width
+      }
+      totalLineWidth -= kerning_; // Remove the last kerning
+      offset.x = (viewportWidth - totalLineWidth) * 0.5f;
     }
 
-    float viewportWidth = DL::App::screen_width; // Provide the width of your rendering area (viewport or window)
+    for (char c : line) {
+      GlyphInfo glyphInfo = makeGlyphInfo(c, offset.x, offset.y);
+      for (int i = 0; i < 4; i++) {
+        vertices.push_back(glyphInfo.positions[i]);
+        uvs.push_back(glyphInfo.uvs[i]);
+      }
 
-    // Calculate the width of a space character
-    float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x - makeGlyphInfo('A', 0.0f, 0.0f).positions[0].x);
-    spaceWidth /= 2;
-    for (const auto& line : lines) {
-        if (alignment_ == TextAlignment::CENTER) {
-            float totalLineWidth = 0.0f;
-            for (char c : line) {
-                GlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
-                totalLineWidth += (glyphInfo.positions[2].x - glyphInfo.positions[0].x) + kerning;  // Include kerning in the width
-            }
-            offset.x = (viewportWidth - totalLineWidth) * 0.5f;
-        }
+      indices.push_back(index);
+      indices.push_back(index + 1);
+      indices.push_back(index + 2);
+      indices.push_back(index);
+      indices.push_back(index + 2);
+      indices.push_back(index + 3);
 
-        for (char c : line) {
-            GlyphInfo glyphInfo = makeGlyphInfo(c, offset.x, offset.y);
-            for (int i = 0; i < 4; i++) {
-                vertices.push_back(glyphInfo.positions[i]);
-                uvs.push_back(glyphInfo.uvs[i]);
-            }
+      index += 4;
 
-            indices.push_back(index);
-            indices.push_back(index + 1);
-            indices.push_back(index + 2);
-            indices.push_back(index);
-            indices.push_back(index + 2);
-            indices.push_back(index + 3);
-
-            index += 4;
-
-            // Adjust the offset.x for every character, including spaces
-            if (c == ' ') {
-                offset.x += spaceWidth;
-            } else {
-                offset.x += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
-            }
-            offset.x += 2.0;  // Kerning
-        }
-
-        offset.y += fontSize_; // Use the calculated font size for line height
-        offset.x = 0.0f;       // Reset the X offset for the next line
+      // Adjust the offset.x for every character, including spaces
+      if (c == ' ') {
+        offset.x += spaceWidth;
+      } else {
+        offset.x += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
+      }
+      offset.x += 2.0; // Kerning
     }
 
-    glGenVertexArrays(1, &VAO_);
-    glBindVertexArray(VAO_);
+    offset.y +=
+        fontSize_ + kerning_; // Use the calculated font size for line height
+    offset.x = 0.0f;          // Reset the X offset for the next line
+  }
 
-    glGenBuffers(1, &VBO_);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(),
+  glGenVertexArrays(1, &VAO_);
+  glBindVertexArray(VAO_);
+
+  glGenBuffers(1, &VBO_);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(),
                vertices.data(), GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glEnableVertexAttribArray(0);
 
-    glGenBuffers(1, &UVBuffer_);
-    glBindBuffer(GL_ARRAY_BUFFER, UVBuffer_);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * uvs.size(), uvs.data(),
+  glGenBuffers(1, &UVBuffer_);
+  glBindBuffer(GL_ARRAY_BUFFER, UVBuffer_);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * uvs.size(), uvs.data(),
                GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(1);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glEnableVertexAttribArray(1);
 
-    indexElementCount_ = indices.size();
-    glGenBuffers(1, &indexBuffer_);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indexElementCount_,
+  indexElementCount_ = indices.size();
+  glGenBuffers(1, &indexBuffer_);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indexElementCount_,
                indices.data(), GL_STATIC_DRAW);
 
-    glBindVertexArray(0);
+  glBindVertexArray(0);
 }

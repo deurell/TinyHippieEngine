@@ -42,7 +42,7 @@ private:
   uint16_t indexElementCount_ = 0;
   GLuint fontTexture_ = 0;
   TextAlignment alignment_ = TextAlignment::CENTER;
-  const float kerning = 2.0f; 
+  const float kerning_ = 2.0f; 
 
   const float desiredPixelHeight_ = 24.0f;
   float fontScale_;

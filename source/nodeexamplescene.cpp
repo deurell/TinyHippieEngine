@@ -37,7 +37,25 @@ void NodeExampleScene::init() {
   addChild(std::move(planeNode2));
 
   std::string text = R"(
-A long time ago, in a galaxy far, far away...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+A long time ago,
+in a galaxy far, far away...
 It is a period of civil war. Rebel
 spaceships, striking from a hidden
 base, have won their first victory
@@ -71,6 +89,9 @@ void NodeExampleScene::update(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+
+  auto position = textNode_->getLocalPosition();
+  textNode_->setLocalPosition(position + glm::vec3(0, 0.01, -0.02f));
   SceneNode::update(delta);
 }
 

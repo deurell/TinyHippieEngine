@@ -17,6 +17,7 @@ public:
     void update(float delta) override;
     void render(float delta) override;
     void onScreenSizeChanged(glm::vec2 size) override;
+    DL::Camera& getCamera() { return *camera_; }
 
 private:
 void initCamera();

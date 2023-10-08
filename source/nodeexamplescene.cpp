@@ -40,20 +40,7 @@ void NodeExampleScene::init() {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    
 A long time ago,
 in a galaxy far, far away...
 It is a period of civil war. Rebel
@@ -76,11 +63,13 @@ freedom to the galaxy...
 
   auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
   textNode->init();
-  textNode->setLocalPosition({-54, 3, -64});
+  textNode->setLocalPosition({-53, 3, 0});
   textNode->setLocalScale({.1f, .1f, 1});
-  textNode->setLocalRotation(glm::angleAxis(-45.0f, glm::vec3(1, 0, 0)));
+  textNode->setLocalRotation(glm::angleAxis(scrollAngle, glm::vec3(1, 0, 0)));
   textNode_ = textNode.get();
   addChild(std::move(textNode));
+  textNode_->getCamera().setPosition({0, -40, 40});
+  textNode_->getCamera().lookAt({0, 40, 0});
 }
 
 void NodeExampleScene::update(float delta) {

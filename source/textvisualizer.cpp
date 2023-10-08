@@ -1,6 +1,5 @@
 #include "textvisualizer.h"
 #include "app.h"
-#include "assimp/SkeletonMeshBuilder.h"
 #include <glm/glm.hpp>
 #include <sstream>
 #include <string>
@@ -14,7 +13,7 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
 
-  camera.lookAt({0, 0, 0});
+//  camera.lookAt({0, 0, 0});
   loadFontTexture("Resources/C64_Pro-STYLE.ttf");
   initGraphics();
 }

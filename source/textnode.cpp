@@ -7,10 +7,9 @@ TextNode::TextNode(std::string_view glslVersionString,
       text_(text) {}
 
 void TextNode::init() {
-  SceneNode::init();
   initCamera();
   initComponents();
-  setLocalPosition({0, 0, 0});
+  SceneNode::init();
 }
 
 void TextNode::update(float delta) { SceneNode::update(delta); }
@@ -24,8 +23,7 @@ void TextNode::onScreenSizeChanged(glm::vec2 size) {
 }
 
 void TextNode::initCamera() {
-  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 16));
-  camera_->lookAt({0, 0, 0});
+  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 10));
 }
 
 void TextNode::initComponents() {

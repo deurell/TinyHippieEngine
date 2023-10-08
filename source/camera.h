@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
@@ -17,6 +18,9 @@ public:
   [[nodiscard]] glm::mat4 getViewMatrix() const {
     return glm::translate(glm::mat4_cast(mOrientation), -mPosition);
   }
+
+  void setPosition(const glm::vec3 position) { mPosition = position; }
+  glm::vec3 getPosition() const { return mPosition; }
 
   void lookAt(const glm::vec3 position,
               const glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f)) {

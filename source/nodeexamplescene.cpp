@@ -3,6 +3,7 @@
 //
 #include "nodeexamplescene.h"
 #include "GLFW/glfw3.h"
+#include "glm/ext/scalar_constants.hpp"
 #include "glm/gtc/constants.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -20,16 +21,16 @@ void NodeExampleScene::init() {
 
   auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode->init();
-  planeNode->setLocalPosition({6, 0, 0});
-  glm::quat rotation = glm::angleAxis(glm::radians(scrollAngle), glm::vec3(0, 0, 1));
+  planeNode->setLocalPosition({6, 4, 0});
+  glm::quat rotation = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1));
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale({4, 2, 1});
-  plane2_ = planeNode.get();
+  plane1_ = planeNode.get();
   addChild(std::move(planeNode));
 
   auto planeNode2 = std::make_unique<PlaneNode>(glslVersionString_);
   planeNode2->init();
-  planeNode2->setLocalPosition({-6, 0, 0});
+  planeNode2->setLocalPosition({-6, 4, 0});
   glm::quat rotation2 = glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1));
   planeNode2->setLocalRotation(rotation2);
   planeNode2->setLocalScale({2, 4, 1});
@@ -75,6 +76,9 @@ void NodeExampleScene::update(float delta) {
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   plane2_->setLocalScale({scale_, scale_, 1});
   plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+
+  float rotation2 = cos(time * 1.5) * glm::pi<float>();
+  plane1_->setLocalRotation(glm::angleAxis(rotation2, glm::vec3(0, 1, 0)));
 
   const float theta = glm::radians(scrollAngle); 
   const float delta_s = 0.02f;

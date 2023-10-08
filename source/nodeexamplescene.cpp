@@ -83,6 +83,10 @@ void NodeExampleScene::update(float delta) {
   auto position = textNode_->getLocalPosition();
   textNode_->setLocalPosition(position + glm::vec3(0, delta_y, -delta_z)); 
 
+  if (textNode_->getLocalPosition().y >=100) {
+    textNode_->setLocalPosition({-53, -24, 0});
+  }
+
   SceneNode::update(delta);
 }
 
@@ -93,6 +97,7 @@ void NodeExampleScene::render(float delta) {
   ImGui::NewFrame();
   ImGui::Begin("Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::Text("scrollPosition: %.1f", textNode_->getLocalPosition().y);; 
   ImGui::End();
 #endif
 

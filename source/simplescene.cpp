@@ -25,8 +25,10 @@ void SimpleScene::update(float delta) {
 }
 
 void SimpleScene::render(float delta) {
+  glDisable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
+
   mPlane->render(delta);
 
 #ifdef USE_IMGUI

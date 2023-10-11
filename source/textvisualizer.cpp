@@ -9,9 +9,9 @@ static std::map<std::string, DL::FontData> fontCache_;
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string_view glslVersionString,
                                    SceneNode &node, std::string_view text,
-                                   std::string_view fontPath)
+                                   std::string_view fontPath, std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     "Shaders/starwars.vert", "Shaders/starwars.frag", node),
+                     vertexShaderPath, fragmentShaderPath, node),
       text_(text),
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {

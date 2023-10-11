@@ -26,7 +26,7 @@ class TextVisualizer : public VisualizerBase {
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
                           std::string_view glslVersionString, SceneNode &node,
-                          std::string_view text, std::string_view fontPath);
+                          std::string_view text, std::string_view fontPath, std::string vertexShaderPath, std::string fragmentShaderPath);
 
   void render(const glm::mat4 &worldTransform, float delta) override;
   void setText(std::string_view text) { text_ = text; }

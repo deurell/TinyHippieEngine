@@ -19,7 +19,7 @@ enum class TextAlignment { LEFT, CENTER };
 
 struct FontData {
   GLuint texture;
-  stbtt_packedchar* fontInfo;
+  std::shared_ptr<stbtt_packedchar[]> fontInfo;
 };
 
 class TextVisualizer : public VisualizerBase {
@@ -65,8 +65,7 @@ private:
   const uint32_t fontOversampleY_ = 2;
   const uint8_t fontFirstChar_ = 32;
   const uint8_t fontCharCount_ = 255 - 32;
-  std::unique_ptr<stbtt_packedchar[]> fontCharInfo_;
-  stbtt_packedchar *fontCharInfoPtr_ = nullptr;
+  std::shared_ptr<stbtt_packedchar[]> fontCharInfo_;
 };
 
 } // namespace DL

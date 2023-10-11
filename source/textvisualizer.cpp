@@ -8,24 +8,25 @@ static std::map<std::string, DL::FontData> fontCache_;
 
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string_view glslVersionString,
-                                   SceneNode &node, std::string_view text, std::string_view fontPath)
+                                   SceneNode &node, std::string_view text,
+                                   std::string_view fontPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
                      "Shaders/starwars.vert", "Shaders/starwars.frag", node),
       text_(text),
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
 
-  auto it = fontCache_.find(std::string(fontPath));
-  if (it != fontCache_.end()) {
-    fontTexture_ = it->second.texture;
-    fontCharInfoPtr_ = it->second.fontInfo;
-  } else {
-    loadFontTexture(fontPath);
-    fontCache_.insert(std::make_pair(
-        std::string(fontPath),
-        FontData{fontTexture_, fontCharInfoPtr_}));
-  }
-  
+      auto it = fontCache_.find(std::string(fontPath));
+    if (it != fontCache_.end()) {
+        fontTexture_ = it->second.texture;
+        fontCharInfo_ = it->second.fontInfo;
+    } else {
+        loadFontTexture(fontPath);
+        fontCache_.insert(std::make_pair(
+            std::string(fontPath),
+            FontData{fontTexture_, fontCharInfo_}));
+    }
+
   initGraphics();
 }
 
@@ -84,8 +85,7 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   auto atlasData =
       std::make_unique<uint8_t[]>(fontAtlasWidth_ * FontAtlasHeight_);
 
-  fontCharInfo_ = std::make_unique<stbtt_packedchar[]>(fontCharCount_);
-  fontCharInfoPtr_ = fontCharInfo_.get();
+  fontCharInfo_ = std::shared_ptr<stbtt_packedchar[]>(new stbtt_packedchar[fontCharCount_], [](stbtt_packedchar* p) { delete[] p; });
 
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(), fontAtlasWidth_,
@@ -118,15 +118,11 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   glGenerateMipmap(GL_TEXTURE_2D);
 }
 
-stbtt_packedchar *DL::TextVisualizer::getFontCharInfoPtr() {
-  return fontCharInfo_ ? fontCharInfo_.get() : fontCharInfoPtr_;
-}
-
 DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
                                                 float offsetY) {
   stbtt_aligned_quad quad;
   int chrRel = static_cast<uint8_t>(character - fontFirstChar_);
-  stbtt_GetPackedQuad(getFontCharInfoPtr(), fontAtlasWidth_, FontAtlasHeight_,
+  stbtt_GetPackedQuad(fontCharInfo_.get(), fontAtlasWidth_, FontAtlasHeight_,
                       chrRel, &offsetX, &offsetY, &quad, 1);
 
   auto [xmin, xmax] = std::minmax({quad.x0, quad.x1});

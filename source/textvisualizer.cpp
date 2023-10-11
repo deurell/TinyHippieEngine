@@ -10,7 +10,7 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string_view glslVersionString,
                                    SceneNode &node, std::string_view text, std::string_view fontPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     "Shaders/status.vert", "Shaders/status.frag", node),
+                     "Shaders/starwars.vert", "Shaders/starwars.frag", node),
       text_(text),
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {

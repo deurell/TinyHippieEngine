@@ -9,33 +9,15 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float iTime;
-uniform float rotAngle1;
-uniform float rotAngle2;
-uniform float c1;
-uniform float c2;
 
 void main() {
-    TexCoords = aTexCoords;
+  TexCoords = aTexCoords;
+  WorldPos = model * vec4(aPos, 1);
+  float w_x = WorldPos.x;
+  vec3 pos = aPos;
 
-    // Calculate the World Position before rotation
-    WorldPos = model * vec4(aPos, 1.0);
+  gl_Position = projection * view * model * vec4(aPos,1.0);
 
-    // Calculate the angle based on z value of WorldPos
-    float angle = sin(iTime*0.5 + WorldPos.y * rotAngle1) * rotAngle2;
-
-    // Rotation matrix around y-axis
-    mat4 rotationY = mat4(
-        cos(angle), 0, sin(angle), 0,
-        0, 1, 0, 0,
-        -sin(angle), 0, cos(angle), 0,
-        0, 0, 0, 1
-    );
-
-    // Apply the rotation
-    vec3 rotatedPos = vec3(rotationY * WorldPos);
-
-    gl_Position = projection * view * vec4(rotatedPos, 1.0);
-
-    vec2 ndc = gl_Position.xy / gl_Position.w;
-    FragPos = ndc.xy * 0.5 + 0.5;
+  vec2 ndc = gl_Position.xy / gl_Position.w;
+  FragPos = ndc.xy * 0.5 + 0.5;
 }

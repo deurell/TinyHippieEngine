@@ -32,6 +32,10 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   shader_->setMat4f("view", viewMatrix);
   shader_->setMat4f("projection", perspectiveTransform);
   shader_->setFloat("iTime", static_cast<float>(glfwGetTime()));
+  shader_->setFloat("rotAngle1", rotAngle1_);
+  shader_->setFloat("rotAngle2", rotAngle2_);
+  shader_->setFloat("c1", c1_);
+  shader_->setFloat("c2", c2_);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, fontTexture_);

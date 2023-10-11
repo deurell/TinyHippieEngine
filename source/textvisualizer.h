@@ -26,6 +26,11 @@ public:
   void setText(std::string_view text) { text_ = text; }
   void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
 
+  float rotAngle1_ = 0.04f;
+  float rotAngle2_ = 0.5f;
+  float c1_ = 0.03f;
+  float c2_ = 1.35f;
+
 private:
   void loadFontTexture(std::string_view fontPath);
   stbtt_packedchar *getFontCharInfoPtr();

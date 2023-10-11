@@ -1,5 +1,6 @@
 #include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
+#include <string_view>
 
 namespace DL {
 
@@ -41,7 +42,6 @@ void SceneNode::setLocalScale(const glm::vec3 &scale) {
 }
 
 glm::vec3 SceneNode::getLocalScale() const { return localScale; }
-
 
 void SceneNode::update(float delta) {
   if (parent) {

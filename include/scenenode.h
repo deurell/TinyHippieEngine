@@ -45,6 +45,17 @@ public:
   void setLocalScale(const glm::vec3 &scale);
   glm::vec3 getLocalScale() const;
 
+  VisualizerBase* getVisualizer(std::string_view name) {
+    auto it = std::find_if(visualizers.begin(), visualizers.end(),
+                           [&name](const std::unique_ptr<VisualizerBase> &v) {
+                             return v->getName() == name;
+                           });
+    if (it != visualizers.end()) {
+      return it->get();
+    }
+  return nullptr;
+  }
+
   glm::mat4 getWorldTransform();
   glm::vec3 getWorldPosition();
   glm::quat getWorldRotation();

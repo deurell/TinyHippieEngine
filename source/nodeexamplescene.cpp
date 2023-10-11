@@ -81,9 +81,8 @@ void NodeExampleScene::update(float delta) {
   }
 
   const float theta = glm::radians(scrollAngle);
-  const float delta_s = 0.02f;
-  float delta_y = delta_s * cos(theta);
-  float delta_z = delta_s * sin(theta);
+  float delta_y = scrollSpeed * cos(theta);
+  float delta_z = scrollSpeed * sin(theta);
   auto position = textNode_->getLocalPosition();
   textNode_->setLocalPosition(position + glm::vec3(0, delta_y, -delta_z));
 
@@ -103,10 +102,14 @@ void NodeExampleScene::render(float delta) {
   ImGui::Begin("Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollPosition: %.1f", textNode_->getLocalPosition().y);
+  ImGui::SliderFloat("spd", &scrollSpeed, -2.0f, 2.0f);
   ImGui::SliderFloat("a1", &textVisualizer->rotAngle1_,0.0f, 1.0f);
   ImGui::SliderFloat("a2", &textVisualizer->rotAngle2_, 0.0f, 1.0f);
   ImGui::SliderFloat("c1", &textVisualizer->c1_, 0.0f, 0.2f);
   ImGui::SliderFloat("c2", &textVisualizer->c2_, -4.0f, 4.0f);
+  if (ImGui::Button("wrap")) {
+    textNode_->setLocalPosition(INITIAL_TEXT_POSITION);
+  }
   ImGui::End();
 #endif
 

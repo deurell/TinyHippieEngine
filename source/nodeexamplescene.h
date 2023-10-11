@@ -34,4 +34,5 @@ private:
   float scale_ = 1.0f;
   float rotation_ = 0.0f;
   float scrollAngle = 0;
+  float scrollSpeed = 0.02f;
 };

@@ -28,6 +28,6 @@ void TextNode::initCamera() {
 
 void TextNode::initComponents() {
   auto component = std::make_unique<DL::TextVisualizer>(
-      "main", *camera_, glslVersionString_, *this, text_);
+      "main", *camera_, glslVersionString_, *this, text_, "Resources/C64_Pro-STYLE.ttf");
   visualizers.emplace_back(std::move(component));
 }

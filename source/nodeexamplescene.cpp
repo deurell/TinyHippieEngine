@@ -87,7 +87,7 @@ void NodeExampleScene::update(float delta) {
   textNode_->setLocalPosition(position + glm::vec3(0, delta_y, -delta_z));
 
   if (textNode_->getLocalPosition().y >= TEXT_RESET_POSITION) {
-    textNode_->setLocalPosition({-53, -24, 0});
+    wrapScrollText();
   }
 
   SceneNode::update(delta);
@@ -103,12 +103,12 @@ void NodeExampleScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollPosition: %.1f", textNode_->getLocalPosition().y);
   ImGui::SliderFloat("spd", &scrollSpeed, -2.0f, 2.0f);
-  ImGui::SliderFloat("a1", &textVisualizer->rotAngle1_,0.0f, 1.0f);
-  ImGui::SliderFloat("a2", &textVisualizer->rotAngle2_, 0.0f, 1.0f);
+  ImGui::SliderFloat("a1", &textVisualizer->rotAngle1_,-1.0f, 1.0f);
+  ImGui::SliderFloat("a2", &textVisualizer->rotAngle2_, -1.0f, 1.0f);
   ImGui::SliderFloat("c1", &textVisualizer->c1_, 0.0f, 0.2f);
   ImGui::SliderFloat("c2", &textVisualizer->c2_, -4.0f, 4.0f);
   if (ImGui::Button("wrap")) {
-    textNode_->setLocalPosition(INITIAL_TEXT_POSITION);
+    wrapScrollText();
   }
   ImGui::End();
 #endif
@@ -134,4 +134,8 @@ std::unique_ptr<PlaneNode> NodeExampleScene::createPlane(glm::vec3 position,
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale(scale);
   return planeNode;
+}
+
+void NodeExampleScene::wrapScrollText() {
+  textNode_->setLocalPosition(INITIAL_TEXT_POSITION);
 }

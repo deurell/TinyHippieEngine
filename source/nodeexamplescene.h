@@ -21,6 +21,8 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
+  void wrapScrollText();
+
   static constexpr glm::vec3 INITIAL_TEXT_POSITION = {-53, -24, 0};
   static constexpr float TEXT_RESET_POSITION = 100;
 

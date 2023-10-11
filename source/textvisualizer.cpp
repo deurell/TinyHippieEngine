@@ -4,17 +4,28 @@
 #include <sstream>
 #include <string>
 
+static std::map<std::string, DL::FontData> fontCache_;
+
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string_view glslVersionString,
-                                   SceneNode &node, std::string_view text)
+                                   SceneNode &node, std::string_view text, std::string_view fontPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
                      "Shaders/status.vert", "Shaders/status.frag", node),
       text_(text),
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
 
-//  camera.lookAt({0, 0, 0});
-  loadFontTexture("Resources/C64_Pro-STYLE.ttf");
+  auto it = fontCache_.find(std::string(fontPath));
+  if (it != fontCache_.end()) {
+    fontTexture_ = it->second.texture;
+    fontCharInfoPtr_ = it->second.fontInfo;
+  } else {
+    loadFontTexture(fontPath);
+    fontCache_.insert(std::make_pair(
+        std::string(fontPath),
+        FontData{fontTexture_, fontCharInfoPtr_}));
+  }
+  
   initGraphics();
 }
 

@@ -18,6 +18,7 @@ public:
   ~C64Scene() override = default;
 
   void init() override;
+  void update(float delta) override;
   void render(float delta) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;

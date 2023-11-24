@@ -58,6 +58,8 @@ void C64Scene::init() {
   mShader->setInt("texture1", 0);
 }
 
+void C64Scene::update(float delta) {}
+
 void C64Scene::render(float delta) {
   mDelta = delta;
   glClearColor(0.52f, 0.81f, .92f, 1.0f);

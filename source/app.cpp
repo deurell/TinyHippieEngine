@@ -1,5 +1,6 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
+#include "c64scene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -7,7 +8,9 @@
 #include "nodeexamplescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
+#include "wildcopperscene.h"
 #include <iostream>
+#include <memory>
 #include <thread>
 
 void renderloop_callback(void *arg) {
@@ -45,6 +48,8 @@ void DL::App::init() {
   glslVersionString_ = "#version 330 core\n";
 #endif
   scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  //scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
+  //scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
 }
 
 int DL::App::run() {
@@ -117,7 +122,7 @@ int DL::App::run() {
 void DL::App::update() { scene_->update(deltaTime_); }
 
 void DL::App::render() {
-  startFrameTime = static_cast<float>(glfwGetTime());
+  calculateDeltaTime();
   scene_->render(deltaTime_);
 
 #ifdef USE_IMGUI
@@ -134,7 +139,7 @@ void DL::App::render() {
   glfwPollEvents();
 
   auto endFrameTime = static_cast<float>(glfwGetTime());
-  float frameTime = endFrameTime - startFrameTime;
+  float frameTime = endFrameTime - startFrameTime_;
 
   if (desiredFrameTime_ > 0.0f) {
     float sleepTime = desiredFrameTime_ - frameTime;
@@ -183,4 +188,11 @@ glm::vec2 DL::App::getScreenSize() {
   int width, height;
   glfwGetWindowSize(window_, &width, &height);
   return {width, height};
+}
+
+void DL::App::calculateDeltaTime() {
+  float currentFrameTime = static_cast<float>(glfwGetTime());
+  startFrameTime_ = currentFrameTime;
+  deltaTime_ = currentFrameTime - lastFrameTime_;
+  lastFrameTime_ = currentFrameTime;
 }

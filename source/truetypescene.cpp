@@ -107,12 +107,13 @@ void TrueTypeScene::init() {
       mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
 }
 
+void TrueTypeScene::update(float /*delta*/) {}
+
 void TrueTypeScene::render(float delta) {
   if (mState == SceneState::INTRO &&
       (glfwGetTime() - mStateStartTime >= mDelayTime)) {
     mState = SceneState::RUNNING;
   }
-
   mDelta = delta;
   mScrollOffset += delta;
   if (mScrollOffset > scroll_wrap) {
@@ -156,7 +157,10 @@ void TrueTypeScene::onKey(int key) {
   }
 }
 
-void TrueTypeScene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }
+void TrueTypeScene::onScreenSizeChanged(glm::vec2 size) {
+  mScreenSize = size;
+  mLabelCamera->mScreenSize = mScreenSize;
+}
 
 glm::vec3 TrueTypeScene::lerp(glm::vec3 x, glm::vec3 y, float t) {
   return (x * (1.0f - t) + y * t);

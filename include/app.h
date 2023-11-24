@@ -33,13 +33,14 @@ private:
   void init();
   void basisInit();
   glm::vec2 getScreenSize();
+  void calculateDeltaTime();
 
   GLFWwindow *window_{};
   std::unique_ptr<DL::IScene> scene_;
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
-  float startFrameTime = 0.0f;
+  float startFrameTime_ = 0.0f;
   float lastFrameTime_ = 0.0f;
   float desiredFrameTime_ = 1.0f / 60.0f;
 };

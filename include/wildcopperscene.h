@@ -24,39 +24,7 @@ public:
     charSprite = std::make_unique<DL::TextSprite>(texture, fontInfo, text);
   }
 
-  void render(float delta) {
-    shader.use();
-
-    glm::mat4 model = glm::mat4(1.0f);
-
-    model = glm::scale(model, glm::vec3(0.11, 0.11, 0.3));
-    glm::vec3 polarCoord{amp * cos(angle), amp * sin(angle), 20.0f};
-    model = glm::translate(model, polarCoord);
-    model =
-        glm::rotate(model, angle - (float)M_PI_2, glm::vec3(0.0f, 0.0f, 1.0f));
-
-    model = glm::translate(model, glm::vec3(0.0f, 16.0f, 0.0f));
-    model = glm::rotate(model, flipDegree + angle, glm::vec3(1.0f, 0.0f, 0.0f));
-    model = glm::translate(model, glm::vec3(0.0f, -16.0f, 0.0f));
-
-    // model = scale * translate * rotate * glm::inverse(locTra) * rotLoc *
-    // locTra;
-
-    glm::mat4 view = camera.getViewMatrix();
-
-    glm::mat4 projection =
-        camera.getPerspectiveTransform();
-    glm::mat4 mvp = projection * view * model;
-    shader.setMat4f("mvp", mvp);
-
-    shader.setFloat("deg", angle);
-    shader.setFloat("iTime", static_cast<float>(glfwGetTime()));
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, charSprite->mFontTexture);
-    shader.setInt("texture1", 0);
-
-    charSprite->render(delta);
-  }
+  void render(float delta);
 
   glm::vec2 screenSize;
   float angle = 0;
@@ -73,6 +41,7 @@ public:
   ~WildCopperScene() override = default;
 
   void init() override;
+  void update(float delta) override;
   void render(float delta) override;
   void onClick(double x, double y) override {}
   void onKey(int key) override {}

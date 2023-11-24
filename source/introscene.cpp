@@ -41,6 +41,8 @@ void IntroScene::init() {
   mPlane2->scale = {40, 3, 1};
 }
 
+void IntroScene::update(float delta) {}
+
 void IntroScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

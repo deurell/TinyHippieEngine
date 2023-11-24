@@ -1,8 +1,12 @@
 #include "scenenode.h"
+#include <__algorithm/ranges_find_if.h>
 #include <glm/gtc/quaternion.hpp>
 #include <string_view>
+#include <ranges>
 
 namespace DL {
+
+SceneNode::SceneNode(SceneNode *parentNode) : dirty(true), parent(parentNode) {}
 
 void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   if (dirty) {
@@ -11,12 +15,10 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), localScale);
 
     localTransform = positionMatrix * rotationMatrix * scaleMatrix;
-
     worldTransform = parentWorldTransform * localTransform;
-
     dirty = false;
   }
-  
+
   for (auto &child : children) {
     child->updateTransforms(worldTransform);
   }
@@ -57,8 +59,8 @@ void SceneNode::update(float delta) {
 
 void SceneNode::render(float delta) {
 
-  for (auto &component : visualizers) {
-    component->render(worldTransform, delta);
+  for (auto &visualizer : visualizers) {
+    visualizer->render(worldTransform, delta);
   }
 
   for (auto &child : children) {
@@ -66,10 +68,7 @@ void SceneNode::render(float delta) {
   }
 }
 
-
-glm::mat4 SceneNode::getWorldTransform() {
-  return worldTransform;
-}
+glm::mat4 SceneNode::getWorldTransform() { return worldTransform; }
 
 glm::vec3 SceneNode::getWorldPosition() {
   return glm::vec3(getWorldTransform()[3]);
@@ -121,10 +120,16 @@ void SceneNode::setParent(SceneNode *parentNode) { parent = parentNode; }
 
 void SceneNode::markDirty() {
   dirty = true;
-  for(auto& child : children) {
-      child->markDirty();
+  for (auto &child : children) {
+    child->markDirty();
   }
 }
 
+VisualizerBase *SceneNode::getVisualizer(std::string_view name) {
+  auto iterator = std::ranges::find_if(visualizers, [&name](const auto &visualizer) {
+    return visualizer->getName() == name;
+  });
+  return iterator != visualizers.end() ? iterator->get() : nullptr;
+}
 
 } // namespace DL

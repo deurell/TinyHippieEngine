@@ -4,8 +4,6 @@
 #include "nodeexamplescene.h"
 #include "GLFW/glfw3.h"
 #include "glm/ext/scalar_constants.hpp"
-#include "glm/fwd.hpp"
-#include "glm/gtc/constants.hpp"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -13,9 +11,10 @@
 #include "textnode.h"
 #include "textvisualizer.h"
 #include <memory>
+#include <utility>
 
-NodeExampleScene::NodeExampleScene(std::string_view glslVersionString)
-    : SceneNode(nullptr), glslVersionString_(glslVersionString) {}
+NodeExampleScene::NodeExampleScene(std::string glslVersionString)
+    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
@@ -33,7 +32,7 @@ void NodeExampleScene::init() {
   plane2_ = plane2.get();
   addChild(std::move(plane2));
 
-  std::string text = R"( 
+  std::string text = R"(
 A long time ago,
 in a galaxy far, far away...
 It is a period of civil war. Rebel
@@ -94,7 +93,8 @@ void NodeExampleScene::update(float delta) {
 }
 
 void NodeExampleScene::render(float delta) {
-  DL::TextVisualizer* textVisualizer = dynamic_cast<DL::TextVisualizer*>(textNode_->getVisualizer("main"));
+  auto *textVisualizer =
+      dynamic_cast<DL::TextVisualizer *>(textNode_->getVisualizer("main"));
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();
   ImGui_ImplGlfw_NewFrame();
@@ -103,10 +103,10 @@ void NodeExampleScene::render(float delta) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollPosition: %.1f", textNode_->getLocalPosition().y);
   ImGui::SliderFloat("spd", &scrollSpeed, -2.0f, 2.0f);
-  ImGui::SliderFloat("a1", &textVisualizer->rotAngle1_,-1.0f, 1.0f);
+  ImGui::SliderFloat("a1", &textVisualizer->rotAngle1_, -1.0f, 1.0f);
   ImGui::SliderFloat("a2", &textVisualizer->rotAngle2_, -1.0f, 1.0f);
-  ImGui::SliderFloat("c1", &textVisualizer->c1_, 0.0f, 0.2f);
-  ImGui::SliderFloat("c2", &textVisualizer->c2_, -4.0f, 4.0f);
+  ImGui::SliderFloat("c1", &textVisualizer->color1_, 0.0f, 0.2f);
+  ImGui::SliderFloat("c2", &textVisualizer->color2_, -4.0f, 4.0f);
   if (ImGui::Button("wrap")) {
     wrapScrollText();
   }

@@ -25,8 +25,10 @@ struct FontData {
 class TextVisualizer : public VisualizerBase {
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
-                          std::string_view glslVersionString, SceneNode &node,
-                          std::string_view text, std::string_view fontPath, std::string vertexShaderPath, std::string fragmentShaderPath);
+                          std::string glslVersionString, SceneNode &node,
+                          std::string text, const std::string& fontPath,
+                          std::string vertexShaderPath,
+                          std::string fragmentShaderPath);
 
   void render(const glm::mat4 &worldTransform, float delta) override;
   void setText(std::string_view text) { text_ = text; }
@@ -34,12 +36,11 @@ public:
 
   float rotAngle1_ = 0.04f;
   float rotAngle2_ = 0.5f;
-  float c1_ = 0.03f;
-  float c2_ = 1.35f;
+  float color1_ = 0.03f;
+  float color2_ = 1.35f;
 
 private:
   void loadFontTexture(std::string_view fontPath);
-  stbtt_packedchar *getFontCharInfoPtr();
   GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
 

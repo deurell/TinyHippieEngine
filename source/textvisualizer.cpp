@@ -1,31 +1,31 @@
 #include "textvisualizer.h"
 #include "app.h"
-#include <glm/glm.hpp>
 #include <sstream>
 #include <string>
 
 static std::map<std::string, DL::FontData> fontCache_;
 
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
-                                   std::string_view glslVersionString,
-                                   SceneNode &node, std::string_view text,
-                                   std::string_view fontPath, std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     vertexShaderPath, fragmentShaderPath, node),
+                                   std::string glslVersionString,
+                                   SceneNode &node, const std::string text,
+                                   const std::string &fontPath,
+                                   const std::string vertexShaderPath,
+                                   const std::string fragmentShaderPath)
+    : VisualizerBase(camera, name, glslVersionString, vertexShaderPath,
+                     fragmentShaderPath, node),
       text_(text),
       shader_(std::make_unique<DL::Shader>(
           vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
 
-      auto it = fontCache_.find(std::string(fontPath));
-    if (it != fontCache_.end()) {
-        fontTexture_ = it->second.texture;
-        fontCharInfo_ = it->second.fontInfo;
-    } else {
-        loadFontTexture(fontPath);
-        fontCache_.insert(std::make_pair(
-            std::string(fontPath),
-            FontData{fontTexture_, fontCharInfo_}));
-    }
+  auto it = fontCache_.find(std::string(fontPath));
+  if (it != fontCache_.end()) {
+    fontTexture_ = it->second.texture;
+    fontCharInfo_ = it->second.fontInfo;
+  } else {
+    loadFontTexture(fontPath);
+    fontCache_.insert(std::make_pair(std::string(fontPath),
+                                     FontData{fontTexture_, fontCharInfo_}));
+  }
 
   initGraphics();
 }
@@ -46,8 +46,8 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   shader_->setFloat("iTime", static_cast<float>(glfwGetTime()));
   shader_->setFloat("rotAngle1", rotAngle1_);
   shader_->setFloat("rotAngle2", rotAngle2_);
-  shader_->setFloat("c1", c1_);
-  shader_->setFloat("c2", c2_);
+  shader_->setFloat("c1", color1_);
+  shader_->setFloat("c2", color2_);
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, fontTexture_);
@@ -59,9 +59,9 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
 
 void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   std::ifstream iStream(std::string(fontPath), std::ios::binary);
-  iStream.seekg(0, iStream.end);
+  iStream.seekg(0, std::ifstream::end);
   const int size = iStream.tellg();
-  iStream.seekg(0, iStream.beg);
+  iStream.seekg(0, std::ifstream::beg);
 
   std::unique_ptr<char[]> fontData = std::make_unique<char[]>(size);
   iStream.read(fontData.get(), size);
@@ -85,7 +85,9 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   auto atlasData =
       std::make_unique<uint8_t[]>(fontAtlasWidth_ * FontAtlasHeight_);
 
-  fontCharInfo_ = std::shared_ptr<stbtt_packedchar[]>(new stbtt_packedchar[fontCharCount_], [](stbtt_packedchar* p) { delete[] p; });
+  fontCharInfo_ = std::shared_ptr<stbtt_packedchar[]>(
+      new stbtt_packedchar[fontCharCount_],
+      [](stbtt_packedchar *p) { delete[] p; });
 
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(), fontAtlasWidth_,

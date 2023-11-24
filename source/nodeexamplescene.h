@@ -12,7 +12,7 @@
 
 class NodeExampleScene : public DL::SceneNode {
 public:
-  explicit NodeExampleScene(std::string_view glslVersionString);
+  explicit NodeExampleScene(std::string glslVersionString);
   ~NodeExampleScene() override = default;
 
   void init() override;
@@ -30,11 +30,12 @@ private:
                                          glm::quat rotation);
 
   std::string glslVersionString_;
-  PlaneNode *plane1_;
-  PlaneNode *plane2_;
-  TextNode *textNode_;
+  PlaneNode *plane1_ = nullptr;
+  PlaneNode *plane2_ = nullptr;
+  
+  TextNode *textNode_ = nullptr;
   float scale_ = 1.0f;
   float rotation_ = 0.0f;
   float scrollAngle = 0;
-  float scrollSpeed = 0.02f;
+  float scrollSpeed = 0.04f;
 };

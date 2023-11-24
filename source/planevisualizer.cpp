@@ -46,6 +46,7 @@ DL::PlaneVisualizer::PlaneVisualizer(
   glEnableVertexAttribArray(2);
   glBindVertexArray(0);
 }
+
 void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   shader_->use();
   shader_->setFloat("iTime", (float)glfwGetTime());

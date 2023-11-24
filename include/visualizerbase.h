@@ -27,6 +27,8 @@ public:
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
   virtual ~VisualizerBase() = default;
 
+  std::string_view getName() const { return name_; }
+
   static glm::mat4 normalizeRotation(const glm::mat4 &matrix) {
     glm::mat4 normalizedMatrix = matrix;
     normalizedMatrix[0] = glm::normalize(matrix[0]);
@@ -58,6 +60,6 @@ protected:
   std::string glslVersionString_;
   std::string vertexShaderPath_;
   std::string fragmentShaderPath_;
-  DL::SceneNode& node_;
+  DL::SceneNode &node_;
 };
 } // namespace DL

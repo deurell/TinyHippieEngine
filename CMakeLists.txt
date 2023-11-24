@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 project(tiny_hippie_engine)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IMGUI")
@@ -34,7 +34,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/scenenode.h
         source/scenenode.cpp
         include/visualizerbase.h
-        source/planenode.cpp 
+        source/planenode.cpp
         source/planenode.h
         source/nodeexamplescene.h
         source/nodeexamplescene.cpp
@@ -44,7 +44,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/textvisualizer.cpp
         source/planevisualizer.h
         source/planevisualizer.cpp
-        )
+)
 
 add_library(imgui STATIC
         imgui/imconfig.h

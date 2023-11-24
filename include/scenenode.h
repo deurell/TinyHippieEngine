@@ -18,8 +18,7 @@ public:
   std::vector<std::unique_ptr<SceneNode>> children;
   std::vector<std::unique_ptr<VisualizerBase>> visualizers;
 
-  SceneNode(SceneNode *parentNode = nullptr)
-      : dirty(true), parent(parentNode) {}
+  explicit SceneNode(SceneNode *parentNode = nullptr);
   ~SceneNode() override = default;
 
   // IScene methods
@@ -44,6 +43,8 @@ public:
 
   void setLocalScale(const glm::vec3 &scale);
   glm::vec3 getLocalScale() const;
+
+  VisualizerBase* getVisualizer(std::string_view name);
 
   glm::mat4 getWorldTransform();
   glm::vec3 getWorldPosition();

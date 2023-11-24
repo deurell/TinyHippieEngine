@@ -114,12 +114,6 @@ int DL::App::run() {
   return 0;
 }
 
-void DL::App::computeDeltaTime() {
-  auto currentTime = static_cast<float>(glfwGetTime());
-  deltaTime_ = currentTime - lastFrameTime_;
-  lastFrameTime_ = currentTime;
-}
-
 void DL::App::update() { scene_->update(deltaTime_); }
 
 void DL::App::render() {

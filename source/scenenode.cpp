@@ -1,5 +1,4 @@
 #include "scenenode.h"
-#include <__algorithm/ranges_find_if.h>
 #include <glm/gtc/quaternion.hpp>
 #include <string_view>
 #include <ranges>

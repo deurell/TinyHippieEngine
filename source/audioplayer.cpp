@@ -4,54 +4,82 @@
 
 #include "audioplayer.h"
 #include <iostream>
+#include <locale>
 
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
-void data_callback(ma_device *pDevice, void *pOutput,
-                   [[maybe_unused]] const void *pInput,
-                   ma_uint32 frameCount) {
-  auto *pDecoder = (ma_decoder *)pDevice->pUserData;
-  if (pDecoder == nullptr) {
-    return;
-  }
-  ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount);
+void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
+{
+    ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
+    if (pDecoder == NULL) {
+        return;
+    }
+
+    ma_uint64 framesRead;
+    ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &framesRead);
 }
 
 AudioPlayer::~AudioPlayer() {
-  ma_device_uninit(&mDevice);
-  ma_decoder_uninit(&mDecoder);
+  for (auto &audioData : audioData_) {
+    ma_device_uninit(audioData.second.device.get());
+    ma_decoder_uninit(audioData.second.decoder.get());
+  }
 }
 
-void AudioPlayer::load(const std::string &fileName) {
+void AudioPlayer::load(const std::string &name, const std::string &fileName) {
+  if (audioData_.find(name) != audioData_.end()) {
+    std::cout << "Audio with name " << name << " already loaded." << std::endl;
+    return;
+  }
+  AudioData audioData;
+  audioData.decoder = std::make_unique<ma_decoder>();
+  audioData.device = std::make_unique<ma_device>();
   ma_result result;
-  ma_device_config deviceConfig;
-
-  result = ma_decoder_init_file(fileName.c_str(), nullptr, &mDecoder);
-  if (result != MA_SUCCESS) {
-    std::cout << "Unable to load sound file." << std::endl;
+  
+  if (ma_decoder_init_file(fileName.c_str(), nullptr, audioData.decoder.get()) !=
+      MA_SUCCESS) {
+    std::cout << "Unable to load audio file " << fileName << std::endl;
+    return;
   }
 
-  deviceConfig = ma_device_config_init(ma_device_type_playback);
-  deviceConfig.playback.format = mDecoder.outputFormat;
-  deviceConfig.playback.channels = mDecoder.outputChannels;
-  deviceConfig.sampleRate = mDecoder.outputSampleRate;
+  ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
+  deviceConfig.playback.format = audioData.decoder->outputFormat;
+  deviceConfig.playback.channels = audioData.decoder->outputChannels;
+  deviceConfig.sampleRate = audioData.decoder->outputSampleRate;
   deviceConfig.dataCallback = data_callback;
-  deviceConfig.pUserData = &mDecoder;
+  deviceConfig.pUserData = audioData.decoder.get();
 
-  if (ma_device_init(nullptr, &deviceConfig, &mDevice) != MA_SUCCESS) {
-    std::cout << "Failed to open playback device." << std::endl;
-    ma_decoder_uninit(&mDecoder);
+  if (ma_device_init(nullptr, &deviceConfig, audioData.device.get()) != MA_SUCCESS) {
+    std::cout << "Unable to initialize playback device." << std::endl;
+    ma_decoder_uninit(audioData.decoder.get());
+    return;
+  }
+
+  audioData_[name] = std::move(audioData);
+}
+
+void AudioPlayer::play(const std::string &name) {
+  if (audioData_.find(name) == audioData_.end()) {
+    std::cout << "Audio with name " << name << " not loaded." << std::endl;
+    return;
+  }
+
+  auto &audioData = audioData_[name];
+  if (ma_device_start(audioData.device.get()) != MA_SUCCESS) {
+    std::cout << "Unable to start playback device." << std::endl;
+    ma_device_uninit(audioData.device.get());
+    ma_decoder_uninit(audioData.decoder.get());
+    return;
   }
 }
 
-void AudioPlayer::play() {
-  if (ma_device_start(&mDevice) != MA_SUCCESS) {
-    std::cout << "Unable to play audio." << std::endl;
-    ma_device_uninit(&mDevice);
-    ma_decoder_uninit(&mDecoder);
+void AudioPlayer::stop(const std::string &name) {
+  if (audioData_.find(name) == audioData_.end()) {
+    std::cout << "Audio with name " << name << " not loaded." << std::endl;
+    return;
   }
+
+  auto &audioData = audioData_[name];
+  ma_device_stop(audioData.device.get());
 }
-
-void AudioPlayer::stop() { ma_device_stop(&mDevice); }
-

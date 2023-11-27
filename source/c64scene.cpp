@@ -8,15 +8,15 @@
 
 C64Scene::C64Scene(std::string_view glslVersion,
                    basist::etc1_global_selector_codebook *codeBook)
-    : mGlslVersionString(glslVersion), mCodeBook(codeBook) {
-  mAudioPlayer = std::make_unique<AudioPlayer>();
-  mAudioPlayer->load("Resources/unlock.wav");
-  mAudioPlayer->play();
+    : glslVersionString_(glslVersion), codeBook_(codeBook) {
+  audioPlayer_ = std::make_unique<AudioPlayer>();
+  audioPlayer_->load(audio_unlock, "Resources/unlock.wav");
+  audioPlayer_->play(audio_unlock);
 }
 
 void C64Scene::init() {
-  mShader = std::make_unique<DL::Shader>("Shaders/c64.vert", "Shaders/c64.frag",
-                                         mGlslVersionString);
+  shader_ = std::make_unique<DL::Shader>("Shaders/c64.vert", "Shaders/c64.frag",
+                                         glslVersionString_);
 
   float vertices[] = {
       // positions        // colors         // texture coords
@@ -28,16 +28,16 @@ void C64Scene::init() {
 
   unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 
-  glGenVertexArrays(1, &mVAO);
-  glGenBuffers(1, &mVBO);
-  glGenBuffers(1, &mEBO);
+  glGenVertexArrays(1, &VAO_);
+  glGenBuffers(1, &VBO_);
+  glGenBuffers(1, &EBO_);
 
-  glBindVertexArray(mVAO);
+  glBindVertexArray(VAO_);
 
-  glBindBuffer(GL_ARRAY_BUFFER, mVBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                GL_STATIC_DRAW);
 
@@ -51,17 +51,17 @@ void C64Scene::init() {
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  mTexture = std::make_unique<DL::Texture>("Resources/sup.basis", *mCodeBook);
+  texture_ = std::make_unique<DL::Texture>("Resources/sup.basis", *codeBook_);
   glBindVertexArray(0);
 
-  mShader->use();
-  mShader->setInt("texture1", 0);
+  shader_->use();
+  shader_->setInt("texture1", 0);
 }
 
 void C64Scene::update(float delta) {}
 
 void C64Scene::render(float delta) {
-  mDelta = delta;
+  delta_ = delta;
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -69,17 +69,17 @@ void C64Scene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT);
 
   glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, mTexture->mId);
+  glBindTexture(GL_TEXTURE_2D, texture_->mId);
 
-  mShader->use();
-  mShader->setFloat("iTime", (float)glfwGetTime());
+  shader_->use();
+  shader_->setFloat("iTime", (float)glfwGetTime());
 
   glm::mat4 transform = glm::mat4(1.0f);
   transform = glm::rotate(transform, glm::radians<float>(0),
                           glm::vec3(0.0f, 0.0f, 1.0f));
-  mShader->setMat4f("transform", transform);
+  shader_->setMat4f("transform", transform);
 
-  glBindVertexArray(mVAO);
+  glBindVertexArray(VAO_);
   glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
 
 #ifdef USE_IMGUI
@@ -96,4 +96,4 @@ void C64Scene::onClick(double x, double y) {}
 
 void C64Scene::onKey(int key) {}
 
-void C64Scene::onScreenSizeChanged(glm::vec2 size) { mScreenSize = size; }
+void C64Scene::onScreenSizeChanged(glm::vec2 size) { screenSize_ = size; }

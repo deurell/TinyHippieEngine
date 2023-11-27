@@ -4,17 +4,23 @@
 #pragma once
 #include <string>
 #include "miniaudio.h"
+#include <map>
+
+struct AudioData {
+  std::unique_ptr<ma_decoder> decoder;
+  std::unique_ptr<ma_device> device;
+};
 
 class AudioPlayer {
 public:
   AudioPlayer() = default;
   ~AudioPlayer();
 
-  void load(const std::string &fileName);
-  void play();
-  void stop();
+  void load(const std::string &name, const std::string &fileName);
+  void play(const std::string &name);
+  void stop(const std::string &name);
 
 private:
-  ma_device mDevice;
-  ma_decoder mDecoder;
+  std::map<std::string, AudioData> audioData_;
+
 };

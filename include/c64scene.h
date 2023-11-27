@@ -25,15 +25,16 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  std::unique_ptr<DL::Shader> mShader;
-  std::unique_ptr<DL::Texture> mTexture;
-  basist::etc1_global_selector_codebook *mCodeBook;
+  const char* audio_unlock = "unlock";
+  std::unique_ptr<DL::Shader> shader_;
+  std::unique_ptr<DL::Texture> texture_;
+  basist::etc1_global_selector_codebook *codeBook_;
 
-  unsigned int mVAO = 0;
-  unsigned int mVBO = 0;
-  unsigned int mEBO = 0;
-  std::string mGlslVersionString;
-  glm::vec2 mScreenSize{};
-  float mDelta = 0;
-  std::unique_ptr<AudioPlayer> mAudioPlayer;
+  unsigned int VAO_ = 0;
+  unsigned int VBO_ = 0;
+  unsigned int EBO_ = 0;
+  std::string glslVersionString_;
+  glm::vec2 screenSize_{};
+  float delta_ = 0;
+  std::unique_ptr<AudioPlayer> audioPlayer_;
 };

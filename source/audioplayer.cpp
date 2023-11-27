@@ -9,15 +9,21 @@
 #define MINIAUDIO_IMPLEMENTATION
 #include "miniaudio.h"
 
-void data_callback(ma_device* pDevice, void* pOutput, const void* pInput, ma_uint32 frameCount)
-{
-    ma_decoder* pDecoder = (ma_decoder*)pDevice->pUserData;
-    if (pDecoder == NULL) {
-        return;
-    }
+void data_callback(ma_device *pDevice, void *pOutput, const void *pInput,
+                   ma_uint32 frameCount) {
+  ma_decoder *pDecoder = (ma_decoder *)pDevice->pUserData;
+  if (pDecoder == NULL) {
+    return;
+  }
 
-    ma_uint64 framesRead;
-    ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &framesRead);
+  ma_uint64 framesRead;
+  ma_decoder_read_pcm_frames(pDecoder, pOutput, frameCount, &framesRead);
+  if (framesRead < frameCount) {
+    ma_uint32 framesToSilence = frameCount - framesRead;
+    ma_silence_pcm_frames(
+        (ma_int16 *)pOutput + framesRead * pDecoder->outputChannels,
+        framesToSilence, pDecoder->outputFormat, pDecoder->outputChannels);
+  }
 }
 
 AudioPlayer::~AudioPlayer() {
@@ -36,21 +42,23 @@ void AudioPlayer::load(const std::string &name, const std::string &fileName) {
   audioData.decoder = std::make_unique<ma_decoder>();
   audioData.device = std::make_unique<ma_device>();
   ma_result result;
-  
-  if (ma_decoder_init_file(fileName.c_str(), nullptr, audioData.decoder.get()) !=
-      MA_SUCCESS) {
+
+  if (ma_decoder_init_file(fileName.c_str(), nullptr,
+                           audioData.decoder.get()) != MA_SUCCESS) {
     std::cout << "Unable to load audio file " << fileName << std::endl;
     return;
   }
 
-  ma_device_config deviceConfig = ma_device_config_init(ma_device_type_playback);
+  ma_device_config deviceConfig =
+      ma_device_config_init(ma_device_type_playback);
   deviceConfig.playback.format = audioData.decoder->outputFormat;
   deviceConfig.playback.channels = audioData.decoder->outputChannels;
   deviceConfig.sampleRate = audioData.decoder->outputSampleRate;
   deviceConfig.dataCallback = data_callback;
   deviceConfig.pUserData = audioData.decoder.get();
 
-  if (ma_device_init(nullptr, &deviceConfig, audioData.device.get()) != MA_SUCCESS) {
+  if (ma_device_init(nullptr, &deviceConfig, audioData.device.get()) !=
+      MA_SUCCESS) {
     std::cout << "Unable to initialize playback device." << std::endl;
     ma_decoder_uninit(audioData.decoder.get());
     return;

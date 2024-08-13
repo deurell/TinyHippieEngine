@@ -32,7 +32,7 @@ void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
 }
 
 void window_size_callback(GLFWwindow *window, int width, int height) {
-  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
+  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
   app->onScreenSizeChanged(width, height);
 }
 

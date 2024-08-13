@@ -19,8 +19,7 @@ void renderloop_callback(void *arg) {
 }
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
-  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
-  if (app) {
+  if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onClick(button, action, mod);
   }
 }

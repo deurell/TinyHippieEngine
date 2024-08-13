@@ -26,8 +26,7 @@ void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
 
 void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
-  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
-  if (app) {
+  if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onKey(key, scancode, action, mods);
   }
 }

@@ -10,7 +10,6 @@
 #include "truetypescene.h"
 #include "wildcopperscene.h"
 #include <iostream>
-#include <memory>
 #include <thread>
 
 void renderloop_callback(void *arg) {
@@ -20,7 +19,7 @@ void renderloop_callback(void *arg) {
 }
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
-  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
+  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
     app->onClick(button, action, mod);
   }
@@ -28,7 +27,7 @@ void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
 
 void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
-  auto *app = reinterpret_cast<DL::App *>(glfwGetWindowUserPointer(window));
+  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
   if (app) {
     app->onKey(key, scancode, action, mods);
   }

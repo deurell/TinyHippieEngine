@@ -50,6 +50,7 @@ std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
   auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
+  planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);
   planeNode->setLocalRotation(rotation);

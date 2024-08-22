@@ -32,7 +32,14 @@ void PlaneNode::initCamera() {
 }
 
 void PlaneNode::initComponents() {
+  std::string vertexShaderPath = planeType == PlaneType::Simple
+                                     ? "Shaders/simple.vert"
+                                     : "Shaders/spinner.vert";
+  std::string fragmentShaderPath = planeType == PlaneType::Simple
+                                       ? "Shaders/simple.frag"
+                                       : "Shaders/spinner.frag";
+
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "custom", *mCamera, mGlslVersionString, *this);
+      "custom", *mCamera, mGlslVersionString, *this, nullptr, vertexShaderPath, fragmentShaderPath);
   visualizers.emplace_back(std::move(visualizer));
 }

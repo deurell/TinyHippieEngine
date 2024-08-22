@@ -45,10 +45,10 @@ void DL::App::init() {
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
-  //scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
   //scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
   //scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
-  scene_ = std::make_unique<GlosifyScene>(glslVersionString_);
+  //scene_ = std::make_unique<GlosifyScene>(glslVersionString_);
 }
 
 int DL::App::run() {

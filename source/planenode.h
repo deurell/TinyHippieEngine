@@ -12,15 +12,19 @@
 
 class PlaneNode : public DL::SceneNode {
 public:
+
+  enum class PlaneType {
+    Simple, Spinner
+  };
+
   explicit PlaneNode(std::string_view glslVersionString,
                      DL::SceneNode *parentNode = nullptr);
-
   ~PlaneNode() override = default;
-
   void init() override;
   void update(float delta) override;
   void render(float delta) override;
   void onScreenSizeChanged(glm::vec2 size) override;
+  PlaneType planeType = PlaneType::Simple;
 
 private:
   void initCamera();

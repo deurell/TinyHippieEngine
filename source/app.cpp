@@ -1,6 +1,7 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
 #include "c64scene.h"
+#include "glosifyscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -44,14 +45,15 @@ void DL::App::init() {
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
-  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  //scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
   //scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
   //scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
+  scene_ = std::make_unique<GlosifyScene>(glslVersionString_);
 }
 
 int DL::App::run() {
   init();
-
+  
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

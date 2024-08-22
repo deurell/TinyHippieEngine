@@ -10,8 +10,6 @@
 #include "planenode.h"
 #include "textnode.h"
 #include "textvisualizer.h"
-#include <memory>
-#include <utility>
 
 NodeExampleScene::NodeExampleScene(std::string glslVersionString)
     : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)) {}

@@ -45,8 +45,6 @@ private:
   void initGraphics();
 
   std::string_view text_;
-  std::unique_ptr<DL::Shader> shader_ = nullptr;
-
   GLuint VAO_ = 0;
   GLuint VBO_ = 0;
   GLuint UVBuffer_ = 0;

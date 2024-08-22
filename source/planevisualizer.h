@@ -14,7 +14,9 @@ public:
   explicit PlaneVisualizer(
       std::string name, DL::Camera &camera, std::string_view glslVersionString,
       SceneNode &node,
-      const std::function<void(DL::Shader &)> &shaderModifier = nullptr);
+      const std::function<void(DL::Shader &)> &shaderModifier = nullptr,
+      std::string vertexShaderPath = "Shaders/simple.vert",
+      std::string fragmentShaderPath = "Shaders/simple.frag");
 
   void render(const glm::mat4 &worldTransform, float delta) override;
 
@@ -23,7 +25,6 @@ private:
   GLuint VBO_ = 0;
   GLuint EBO_ = 0;
 
-  std::unique_ptr<DL::Shader> shader_ = nullptr;
   const std::function<void(DL::Shader &)> shaderModifier_ = nullptr;
 };
 

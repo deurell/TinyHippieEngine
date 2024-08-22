@@ -2,16 +2,15 @@
 
 DL::PlaneVisualizer::PlaneVisualizer(
     std::string name, DL::Camera &camera, std::string_view glslVersionString,
-    SceneNode &node, const std::function<void(DL::Shader &)> &shaderModifier)
+    SceneNode &node, const std::function<void(DL::Shader &)> &shaderModifier,
+    std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     "Shaders/simple.vert", "Shaders/simple.frag", node),
-      shaderModifier_(shaderModifier),
-      shader_(std::make_unique<DL::Shader>(
-          vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
+                     vertexShaderPath, fragmentShaderPath, node),
+      shaderModifier_(shaderModifier) {
 
   camera.lookAt({0, 0, 0});
 
-  float vertices[] = {
+  const float vertices[] = {
       // positions        // colors         // texture coords
       1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
       1.0f,  -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
@@ -19,7 +18,7 @@ DL::PlaneVisualizer::PlaneVisualizer(
       -1.0f, 1.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
   };
 
-  unsigned int indices[] = {0, 1, 3, 1, 2, 3};
+  const unsigned int indices[] = {0, 1, 3, 1, 2, 3};
 
   glGenVertexArrays(1, &VAO_);
   glGenBuffers(1, &VBO_);

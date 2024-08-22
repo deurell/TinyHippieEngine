@@ -1,4 +1,5 @@
-#include "scenenode.h"
+#pragma once
+  #include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
 #include <string_view>
 #include <ranges>
@@ -125,7 +126,7 @@ void SceneNode::markDirty() {
 }
 
 VisualizerBase *SceneNode::getVisualizer(std::string_view name) {
-  auto iterator = std::ranges::find_if(visualizers, [&name](const auto &visualizer) {
+  const auto iterator = std::ranges::find_if(visualizers, [&name](const auto &visualizer) {
     return visualizer->getName() == name;
   });
   return iterator != visualizers.end() ? iterator->get() : nullptr;

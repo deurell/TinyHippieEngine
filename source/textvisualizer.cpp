@@ -13,9 +13,7 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    const std::string fragmentShaderPath)
     : VisualizerBase(camera, name, glslVersionString, vertexShaderPath,
                      fragmentShaderPath, node),
-      text_(text),
-      shader_(std::make_unique<DL::Shader>(
-          vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {
+      text_(text) {
 
   auto it = fontCache_.find(std::string(fontPath));
   if (it != fontCache_.end()) {

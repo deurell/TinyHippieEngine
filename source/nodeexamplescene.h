@@ -7,8 +7,6 @@
 #include "planenode.h"
 #include "scenenode.h"
 #include "textnode.h"
-#include <memory>
-#include <string_view>
 
 class NodeExampleScene : public DL::SceneNode {
 public:

@@ -51,7 +51,7 @@ void C64Scene::init() {
                         (void *)(6 * sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  texture_ = std::make_unique<DL::Texture>("Resources/sup.basis", *codeBook_);
+  texture_ = std::make_unique<DL::Texture>("Resources/sup.basis", GL_TEXTURE0, *codeBook_);
   glBindVertexArray(0);
 
   shader_->use();

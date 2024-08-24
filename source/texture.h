@@ -13,7 +13,7 @@
 namespace DL {
 class Texture {
 public:
-  explicit Texture(std::string_view imagePath,
+  explicit Texture(std::string_view imagePath, int textureUnit, 
                    basist::etc1_global_selector_codebook &codeBook,
                    GLint format = GL_RGB,
                    GLint internal_format = GL_UNSIGNED_SHORT_5_6_5,
@@ -22,8 +22,8 @@ public:
       : mId(0) {
 
     assert(hasExtension(imagePath, ".basis"));
-
     glGenTextures(1, &mId);
+    glActiveTexture(textureUnit);
     glBindTexture(GL_TEXTURE_2D, mId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -104,11 +104,12 @@ public:
     mHeight = imageInfo.m_height;
   }
 
-  explicit Texture(const std::string &imagePath, GLint format = GL_RGB,
+  explicit Texture(const std::string &imagePath, int textureUnit, GLint format = GL_RGB,
                    bool flipImage = true)
       : mId(0) {
 
     glGenTextures(1, &mId);
+    glActiveTexture(textureUnit);
     glBindTexture(GL_TEXTURE_2D, mId);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);

@@ -3,13 +3,16 @@
 //
 #include "glosifyscene.h"
 
+#include "imagenode.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
 
-DL::GlosifyScene::GlosifyScene(std::string glslVersionString)
-    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)) {}
+DL::GlosifyScene::GlosifyScene(std::string glslVersionString,
+                               basist::etc1_global_selector_codebook *codeBook)
+    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)),
+      codeBook_(codeBook) {}
 
 void DL::GlosifyScene::init() {
   SceneNode::init();
@@ -20,6 +23,12 @@ void DL::GlosifyScene::init() {
                   glm::angleAxis(glm::radians(0.0f), glm::vec3(0, 0, 1)));
   plane_node_ = plane.get();
   addChild(std::move(plane));
+
+  auto imageNode =
+      createImage({0, 0, 10}, {3.0, 2.0, 1.0},
+                  glm::angleAxis(glm::radians(0.0f), glm::vec3(0, 0, 1)));
+  image_node_ = imageNode.get();
+  addChild(std::move(imageNode));
 }
 
 void DL::GlosifyScene::update(float delta) { SceneNode::update(delta); }
@@ -56,4 +65,16 @@ std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
   planeNode->setLocalRotation(rotation);
   planeNode->setLocalScale(scale);
   return planeNode;
+}
+
+std::unique_ptr<ImageNode> DL::GlosifyScene::createImage(glm::vec3 position,
+                                                         glm::vec3 scale,
+                                                         glm::quat rotation) {
+  auto imageNode = std::make_unique<ImageNode>(
+      glslVersionString_, "Resources/sup.basis", codeBook_);
+  imageNode->init();
+  imageNode->setLocalPosition(position);
+  imageNode->setLocalRotation(rotation);
+  imageNode->setLocalScale(scale);
+  return imageNode;
 }

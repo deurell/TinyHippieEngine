@@ -54,10 +54,10 @@ void DL::App::init() {
   //scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
   //scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
   //scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
-  scene_ = std::make_unique<GlosifyScene>(glslVersionString_, codebook_.get());
+  //scene_ = std::make_unique<GlosifyScene>(glslVersionString_, codebook_.get());
   //scene_ = std::make_unique<IntroScene>(glslVersionString_);
   //scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get()); 
-  //scene_ = std::make_unique<ParticleScene>(glslVersionString_);
+  scene_ = std::make_unique<ParticleScene>(glslVersionString_);
 }
 
 int DL::App::run() {
@@ -175,14 +175,8 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
-    int windowWidth, windowHeight;
-    glfwGetWindowSize(window_, &windowWidth, &windowHeight);
-    int framebufferWidth, framebufferHeight;
-    glfwGetFramebufferSize(window_, &framebufferWidth, &framebufferHeight);
-    float xscale = static_cast<float>(framebufferWidth) / windowWidth;
-    float yscale = static_cast<float>(framebufferHeight) / windowHeight;
-    float mouseX = static_cast<float>(x) * xscale;
-    float mouseY = static_cast<float>(y) * yscale;
+    float mouseX = static_cast<float>(x);
+    float mouseY = static_cast<float>(y);
     scene_->onClick(mouseX, mouseY);
   }
 }

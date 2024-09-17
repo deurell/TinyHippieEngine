@@ -13,7 +13,6 @@ ParticleScene::ParticleScene(std::string_view glslVersionString)
 void ParticleScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
-
   initPlanes();
   initParticles();
   mParticleSystem = std::make_unique<DL::ParticleSystem>();
@@ -21,6 +20,9 @@ void ParticleScene::init() {
     mParticleSystem->addParticle(*p);
   }
 }
+
+void ParticleScene::update(float delta) {}
+
 void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
     auto particle = std::make_unique<DL::Particle>(*mPlanes[i], 0.9,
@@ -39,7 +41,8 @@ void ParticleScene::initPlanes() {
     plane->scale = {0.25, 0.25, 0.25};
 
     std::uniform_real_distribution<double> dist(-2.0, 2.0);
-    glm::vec3 randomAxis = glm::vec3(dist(twister), dist(twister), dist(twister) * 0.2);
+    glm::vec3 randomAxis =
+        glm::vec3(dist(twister), dist(twister), dist(twister) * 0.2);
 
     plane->rotationAxis = glm::normalize(randomAxis);
     plane->rotationSpeed = dist(twister) * glm::pi<float>() / 180 * 360;
@@ -68,13 +71,22 @@ void ParticleScene::render(float delta) {
 }
 
 void ParticleScene::onClick(double x, double y) {
-  std::cout << "Mouse click @ x:" << x << " y:" << y << std::endl;
-  float x_ndc = (x / mCamera->mScreenSize.x) * 2.0f - 1.0f;
-  float y_ndc = ((mCamera->mScreenSize.y - y) / mCamera->mScreenSize.y) * 2.0f - 1.0f;
-  x_ndc *= mCamera->mScreenSize.x / mCamera->mScreenSize.y;
-  float desiredZ = 35.0f;
-  float scaleFactor = tan(glm::radians(mCamera->mFov / 2.0f)) * desiredZ * 2.0f;
-  glm::vec3 worldPos = glm::vec3(x_ndc * scaleFactor, y_ndc * scaleFactor, desiredZ);
+  float mouseX = static_cast<float>(x);
+  float mouseY = static_cast<float>(y);
+  float invertedY = mCamera->mScreenSize.y - mouseY;
+  glm::vec4 viewport(0.0f, 0.0f, mCamera->mScreenSize.x,
+                     mCamera->mScreenSize.y);
+  float desiredZ = 0.0f;
+
+  glm::vec4 projected = mCamera->getPerspectiveTransform() *
+                        mCamera->getViewMatrix() *
+                        glm::vec4(0.0f, 0.0f, desiredZ, 1.0f);
+  float ndcDepth = projected.z / projected.w;
+  float depth = ndcDepth * 0.5f + 0.5f;
+  glm::vec3 screenPos(mouseX, invertedY, depth);
+  glm::vec3 worldPos =
+      glm::unProject(screenPos, mCamera->getViewMatrix(),
+                     mCamera->getPerspectiveTransform(), viewport);
   mParticleSystem->explode(worldPos);
 }
 

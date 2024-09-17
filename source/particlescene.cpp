@@ -21,6 +21,9 @@ void ParticleScene::init() {
     mParticleSystem->addParticle(*p);
   }
 }
+
+void ParticleScene::update(float delta) {}
+
 void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
     auto particle = std::make_unique<DL::Particle>(*mPlanes[i], 0.9,

@@ -24,6 +24,7 @@ public:
   void onClick(int button, int action, int mod);
   void onKey(int key, int scancode, int action, int mod);
   void onScreenSizeChanged(int width, int height);
+  void onFramebufferSizeChanged(int width, int height);
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;

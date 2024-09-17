@@ -12,6 +12,7 @@
 #include "wildcopperscene.h"
 #include <iostream>
 #include <thread>
+#include "particlescene.h"
 
 void renderloop_callback(void *arg) {
   auto app = static_cast<DL::App *>(arg);
@@ -37,6 +38,11 @@ void window_size_callback(GLFWwindow *window, int width, int height) {
   app->onScreenSizeChanged(width, height);
 }
 
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+  auto* app = static_cast<DL::App*>(glfwGetWindowUserPointer(window));
+  app->onFramebufferSizeChanged(width, height);
+}
+
 void DL::App::init() {
   glfwInit();
   basisInit();
@@ -51,6 +57,7 @@ void DL::App::init() {
   scene_ = std::make_unique<GlosifyScene>(glslVersionString_, codebook_.get());
   //scene_ = std::make_unique<IntroScene>(glslVersionString_);
   //scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get()); 
+  //scene_ = std::make_unique<ParticleScene>(glslVersionString_);
 }
 
 int DL::App::run() {
@@ -79,6 +86,7 @@ int DL::App::run() {
   glfwSetMouseButtonCallback(window_, mouseclick_callback);
   glfwSetKeyCallback(window_, keyclick_callback);
   glfwSetWindowSizeCallback(window_, window_size_callback);
+  glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
 
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);
@@ -88,7 +96,9 @@ int DL::App::run() {
     return -1;
   }
 
-  glViewport(0, 0, screen_width, screen_height);
+  int frameWidth, frameHeight;
+  glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
+  glViewport(0, 0, frameWidth, frameHeight);
 
 #ifdef USE_IMGUI
   IMGUI_CHECKVERSION();
@@ -165,7 +175,15 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
-    scene_->onClick(x, y);
+    int windowWidth, windowHeight;
+    glfwGetWindowSize(window_, &windowWidth, &windowHeight);
+    int framebufferWidth, framebufferHeight;
+    glfwGetFramebufferSize(window_, &framebufferWidth, &framebufferHeight);
+    float xscale = static_cast<float>(framebufferWidth) / windowWidth;
+    float yscale = static_cast<float>(framebufferHeight) / windowHeight;
+    float mouseX = static_cast<float>(x) * xscale;
+    float mouseY = static_cast<float>(y) * yscale;
+    scene_->onClick(mouseX, mouseY);
   }
 }
 
@@ -183,6 +201,10 @@ void DL::App::basisInit() {
 
 void DL::App::onScreenSizeChanged(int width, int height) {
   scene_->onScreenSizeChanged({width, height});
+}
+
+void DL::App::onFramebufferSizeChanged(int width, int height) {
+  glViewport(0, 0, width, height);
 }
 
 glm::vec2 DL::App::getScreenSize() {

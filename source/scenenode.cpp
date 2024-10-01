@@ -1,5 +1,4 @@
-#pragma once
-  #include "scenenode.h"
+#include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
 #include <string_view>
 #include <ranges>

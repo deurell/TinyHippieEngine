@@ -19,7 +19,7 @@ public:
 
   ~Plane() = default;
 
-  void setRotation(const glm::vec3& eulerAngles);
+  void setRotation(const glm::vec3 &eulerAngles);
 
   void render(float delta) const;
 
@@ -27,8 +27,8 @@ public:
   glm::vec3 scale{1.0, 1.0, 1.0};
   glm::quat rotation = glm::quat(1, 0, 0, 0);
 
-  glm::vec3 rotationAxis{1,0,0};
-  float rotationSpeed = glm::pi<float>()/180;
+  glm::vec3 rotationAxis{1, 0, 0};
+  float rotationSpeed = glm::pi<float>() / 180;
 
   GLuint mVAO = 0;
   GLuint mVBO = 0;
@@ -41,4 +41,3 @@ private:
 };
 
 } // namespace DL
- 

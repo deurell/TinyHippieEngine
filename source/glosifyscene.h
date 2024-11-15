@@ -11,7 +11,8 @@ class PlaneNode;
 namespace DL {
 class GlosifyScene : public DL::SceneNode {
 public:
-  explicit GlosifyScene(std::string glslVersionString, basist::etc1_global_selector_codebook *codeBook);
+  explicit GlosifyScene(std::string glslVersionString,
+                        basist::etc1_global_selector_codebook *codeBook);
   ~GlosifyScene() override = default;
 
   void init() override;

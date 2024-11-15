@@ -5,11 +5,10 @@
 #include "particle.h"
 #include "particlesystem.h"
 #include "plane.h"
-#include "shader.h"
 #include <string_view>
 #include <vector>
 #include <random>
-
+//TODO:  evolve this to become an EffectsNode so that effects can spawn at any world position based on the node's transform.
 class ParticleScene : public DL::IScene {
 public:
   explicit ParticleScene(std::string_view glslVersionString);
@@ -33,7 +32,7 @@ private:
 
   std::vector<std::unique_ptr<DL::Plane>> mPlanes = {};
   std::vector<std::unique_ptr<DL::Particle>> mParticles = {};
-  std::unique_ptr<DL::ParticleSystem> mParticleSystem;
+  std::unique_ptr<DL::ParticleSystem> particleSystem_;
   void initPlanes();
   void initParticles();
 };

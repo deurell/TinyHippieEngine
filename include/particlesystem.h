@@ -17,8 +17,8 @@ public:
   void reset();
 
 private:
-  std::mt19937 twister;
-  std::vector<std::reference_wrapper<DL::Particle>> mParticles = {};
+  std::mt19937 twister_;
+  std::vector<std::reference_wrapper<DL::Particle>> particles_ = {};
 };
 
 } // namespace DL

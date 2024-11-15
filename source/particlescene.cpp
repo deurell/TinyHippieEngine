@@ -2,7 +2,6 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
-#include <numeric>
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {
@@ -11,13 +10,13 @@ ParticleScene::ParticleScene(std::string_view glslVersionString)
 }
 
 void ParticleScene::init() {
-  mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
+  mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 36));
   mCamera->lookAt({0, 0, 0});
   initPlanes();
   initParticles();
-  mParticleSystem = std::make_unique<DL::ParticleSystem>();
+  particleSystem_ = std::make_unique<DL::ParticleSystem>();
   for (auto &p : mParticles) {
-    mParticleSystem->addParticle(*p);
+    particleSystem_->addParticle(*p);
   }
 }
 
@@ -54,7 +53,7 @@ void ParticleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  mParticleSystem->updatePhysics(delta);
+  particleSystem_->updatePhysics(delta);
 
   for (auto &plane : mPlanes) {
     plane->render(delta);
@@ -87,7 +86,7 @@ void ParticleScene::onClick(double x, double y) {
   glm::vec3 worldPos =
       glm::unProject(screenPos, mCamera->getViewMatrix(),
                      mCamera->getPerspectiveTransform(), viewport);
-  mParticleSystem->explode(worldPos);
+  particleSystem_->explode(worldPos);
 }
 
 void ParticleScene::onKey(int key) {
@@ -96,7 +95,7 @@ void ParticleScene::onKey(int key) {
   glm::vec3 dampen = {-200, 0, 0};
   switch (key) {
   case 49:
-    mParticleSystem->reset();
+    particleSystem_->reset();
     break;
   default:
     break;

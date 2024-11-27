@@ -59,8 +59,8 @@ void DL::App::init() {
   // scene_ = std::make_unique<IntroScene>(glslVersionString_);
   // scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get());
   // scene_ = std::make_unique<ParticleScene>(glslVersionString_);
-  scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
-  // scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  // scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
+  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
 }
 
 int DL::App::run() {

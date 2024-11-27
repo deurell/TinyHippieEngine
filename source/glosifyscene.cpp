@@ -2,7 +2,6 @@
 // Created by Mikael Deurell on 2024-08-22.
 //
 #include "glosifyscene.h"
-
 #include "imagenode.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"

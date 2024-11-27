@@ -19,7 +19,6 @@ DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
   };
 
   unsigned int indices[] = {0, 1, 3, 1, 2, 3};
-
   glGenVertexArrays(1, &mVAO);
   glGenBuffers(1, &mVBO);
   glGenBuffers(1, &mEBO);

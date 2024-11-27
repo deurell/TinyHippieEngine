@@ -1,6 +1,9 @@
 build/
 deps/
+web/
+cmake-build-debug/
 .cache/
 .vscode
+.idea/
 .DS_Store
 imgui.ini

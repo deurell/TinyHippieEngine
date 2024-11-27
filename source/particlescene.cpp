@@ -100,8 +100,8 @@ void ParticleScene::onKey(int key) {
     break;
   default:
     break;
-  }
 }
+  }
 
 void ParticleScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;

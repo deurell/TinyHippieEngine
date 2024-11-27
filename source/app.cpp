@@ -7,12 +7,13 @@
 #include "imgui_impl_opengl3.h"
 #include "introscene.h"
 #include "nodeexamplescene.h"
+#include "particlescene.h"
+#include "quicknodescene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
 #include <iostream>
 #include <thread>
-#include "particlescene.h"
 
 void renderloop_callback(void *arg) {
   auto app = static_cast<DL::App *>(arg);
@@ -38,8 +39,8 @@ void window_size_callback(GLFWwindow *window, int width, int height) {
   app->onScreenSizeChanged(width, height);
 }
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
-  auto* app = static_cast<DL::App*>(glfwGetWindowUserPointer(window));
+void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
+  auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
   app->onFramebufferSizeChanged(width, height);
 }
 
@@ -51,18 +52,20 @@ void DL::App::init() {
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
-  //scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
-  //scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
-  //scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
-  scene_ = std::make_unique<GlosifyScene>(glslVersionString_, codebook_.get());
-  //scene_ = std::make_unique<IntroScene>(glslVersionString_);
-  //scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get()); 
-  //scene_ = std::make_unique<ParticleScene>(glslVersionString_);
+
+  // scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
+  // scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
+  // scene_ = std::make_unique<GlosifyScene>(glslVersionString_, codebook_.get());
+  // scene_ = std::make_unique<IntroScene>(glslVersionString_);
+  // scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get());
+  // scene_ = std::make_unique<ParticleScene>(glslVersionString_);
+  // scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
+  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
 }
 
 int DL::App::run() {
   init();
-  
+
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);

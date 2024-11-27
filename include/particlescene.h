@@ -10,6 +10,7 @@
 #include <vector>
 #include <random>
 
+//todo: make another version of this and name it effectsnode and base it on scenenode
 class ParticleScene : public DL::IScene {
 public:
   explicit ParticleScene(std::string_view glslVersionString);

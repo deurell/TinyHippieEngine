@@ -12,10 +12,7 @@
 
 class PlaneNode : public DL::SceneNode {
 public:
-
-  enum class PlaneType {
-    Simple, Spinner
-  };
+  enum class PlaneType { Simple, Spinner };
 
   explicit PlaneNode(std::string_view glslVersionString,
                      DL::SceneNode *parentNode = nullptr);
@@ -25,6 +22,7 @@ public:
   void render(float delta) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   PlaneType planeType = PlaneType::Simple;
+  glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
 
 private:
   void initCamera();

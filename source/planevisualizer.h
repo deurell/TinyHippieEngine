@@ -19,6 +19,7 @@ public:
       std::string fragmentShaderPath = "Shaders/simple.frag");
 
   void render(const glm::mat4 &worldTransform, float delta) override;
+  glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
 
 private:
   GLuint VAO_ = 0;

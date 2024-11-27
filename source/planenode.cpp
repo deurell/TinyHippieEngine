@@ -38,15 +38,16 @@ void PlaneNode::initComponents() {
   std::string fragmentShaderPath = planeType == PlaneType::Simple
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
+
   auto shaderModifier =
       planeType == PlaneType::Spinner
           ? [](DL::Shader &shader) { shader.setFloat("speed", 0.25f); }
           : nullptr;
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *mCamera,
-      mGlslVersionString, *this, shaderModifier, vertexShaderPath,
-      fragmentShaderPath);
+      "PlaneVisualizer", *mCamera, mGlslVersionString, *this, shaderModifier,
+      vertexShaderPath, fragmentShaderPath);
+  visualizer->baseColor = color;
 
   visualizers.emplace_back(std::move(visualizer));
 }

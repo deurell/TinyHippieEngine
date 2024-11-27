@@ -6,6 +6,7 @@ precision mediump int;
 in vec2 TexCoord;
 uniform float iTime;
 uniform float speed;
+uniform vec4 baseColor;
 out vec4 FragColor;
 
 void main() {

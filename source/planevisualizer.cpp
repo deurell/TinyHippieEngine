@@ -49,6 +49,7 @@ DL::PlaneVisualizer::PlaneVisualizer(
 void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   shader_->use();
   shader_->setFloat("iTime", (float)glfwGetTime());
+  shader_->setVec4f("baseColor", baseColor);
   glm::mat4 transform = glm::mat4(1.0f);
   glm::mat4 model = glm::mat4(1.0f);
 

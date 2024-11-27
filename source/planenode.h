@@ -15,7 +15,9 @@ public:
   enum class PlaneType { Simple, Spinner };
 
   explicit PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode = nullptr);
+                     DL::SceneNode *parentNode = nullptr,
+                     DL::Camera *camera = nullptr);
+
   ~PlaneNode() override = default;
   void init() override;
   void update(float delta) override;
@@ -28,7 +30,8 @@ private:
   void initCamera();
   void initComponents();
 
-  std::unique_ptr<DL::Camera> mCamera;
-  glm::vec2 mScreenSize{0, 0};
-  std::string mGlslVersionString;
+  std::unique_ptr<DL::Camera> localCamera_;
+  DL::Camera *camera_;
+  glm::vec2 screenSize_{0, 0};
+  std::string glslVersionString_;
 };

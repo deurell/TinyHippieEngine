@@ -1,5 +1,7 @@
 #pragma once
+#include "camera.h"
 #include "scenenode.h"
+#include <memory>
 
 class PlaneNode;
 
@@ -13,6 +15,10 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
+  void bounce(float delta);
+
   std::string glslVersionString_;
-  PlaneNode* plane_ = nullptr;
+  std::unique_ptr<DL::Camera> camera_ = nullptr;
+  PlaneNode *plane_ = nullptr;
+  glm::vec3 spritePosition{0, 0, 0};
 };

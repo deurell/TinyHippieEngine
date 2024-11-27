@@ -6,8 +6,9 @@
 #include "planevisualizer.h"
 
 PlaneNode::PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode)
-    : DL::SceneNode(parentNode), mGlslVersionString(glslVersionString.data()) {}
+                     DL::SceneNode *parentNode, DL::Camera *camera)
+    : glslVersionString_(glslVersionString.data()), DL::SceneNode(parentNode),
+      camera_(camera) {}
 
 void PlaneNode::init() {
   SceneNode::init();
@@ -16,19 +17,28 @@ void PlaneNode::init() {
   setLocalPosition({0, 0, 0});
 }
 
-void PlaneNode::update(float delta) { SceneNode::update(delta); }
+void PlaneNode::update(float delta) {
+  SceneNode::update(delta);
+
+  auto* visualizer= dynamic_cast<DL::PlaneVisualizer*>(getVisualizer("PlaneVisualizer"));
+  visualizer->baseColor = color;
+}
 
 void PlaneNode::render(float delta) { SceneNode::render(delta); }
 
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
-  mScreenSize = size;
-  mCamera->mScreenSize = size;
+  screenSize_ = size;
+  camera_->mScreenSize = size;
 }
 
 void PlaneNode::initCamera() {
-  mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
-  mCamera->lookAt({0, 0, 0});
+  if (camera_) {
+    return;
+  }
+  localCamera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
+  localCamera_->lookAt({0, 0, 0});
+  camera_ = localCamera_.get();
 }
 
 void PlaneNode::initComponents() {
@@ -45,7 +55,7 @@ void PlaneNode::initComponents() {
           : nullptr;
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *mCamera, mGlslVersionString, *this, shaderModifier,
+      "PlaneVisualizer", *camera_, glslVersionString_, *this, shaderModifier,
       vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
 

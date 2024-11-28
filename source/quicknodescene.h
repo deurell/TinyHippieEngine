@@ -16,9 +16,11 @@ public:
 
 private:
   void bounce(float delta);
+  [[nodiscard]] std::unique_ptr<PlaneNode> createPlane(DL::Camera *camera);
+  void sortChildrenOnZ();
 
   std::string glslVersionString_;
   std::unique_ptr<DL::Camera> camera_ = nullptr;
-  PlaneNode *plane_ = nullptr;
-  glm::vec3 spritePosition{0, 0, 0};
+
+  static constexpr uint number_of_planes = 32;
 };

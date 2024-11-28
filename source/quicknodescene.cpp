@@ -4,22 +4,19 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include "planenode.h"
+#include <algorithm>
 #include <memory>
+#include <ranges>
 
 QuickNodeScene::QuickNodeScene(std::string_view glslVersionString)
     : glslVersionString_(glslVersionString) {}
 
 void QuickNodeScene::init() {
   SceneNode::init();
-  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 16));
-  auto plane =
-      std::make_unique<PlaneNode>(glslVersionString_, this, camera_.get());
-  plane->planeType = PlaneNode::PlaneType::Simple;
-  plane->color = {0.5f, 0.5f, 1.0f, 1.0f};
-  plane->init();
-  plane->setLocalPosition({0, 0, 0});
-  plane_ = plane.get();
-  addChild(std::move(plane));
+  camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 46));
+  for (uint i = 0; i < number_of_planes; i++) {
+    addChild(createPlane(camera_.get()));
+  }
 }
 
 void QuickNodeScene::update(float delta) {
@@ -49,13 +46,30 @@ void QuickNodeScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
 }
 
-
 void QuickNodeScene::bounce(float delta) {
-  float time = glfwGetTime();
-  glm::vec3 deltaPosition{2.5f * sinf(time * 1.5f),
-                          1.9f * sinf(time * 1.3f),
-                          abs(4.9f * sinf(time * 1.8f))};
-  plane_->setLocalPosition(deltaPosition);
-  float col = plane_->getLocalPosition().z / 5.0f;
-  plane_->color = {col, col, 1.0f, 1.0f};
+  float colAmp = 20.0f;
+  float offset = glm::radians(0.0f);
+  for (auto &child : children) {
+    auto *node = dynamic_cast<PlaneNode *>(child.get());
+    float x = 7.5f * sinf(glfwGetTime() * 1.1f + offset);
+    float y = 8.9f * sinf(-glfwGetTime() * 1.3f + offset);
+    float z = colAmp * sinf(glfwGetTime() * 0.8f + offset);
+    node->setLocalPosition({x, y, z});
+    float col = (z + colAmp) / (2.0f * colAmp);
+    node->color = {col, col, 1.0, 1.0f};
+    offset += glm::radians(4.0f);
+  }
+}
+
+void QuickNodeScene::sortChildrenOnZ() {
+  std::ranges::sort(children, {}, [](const std::unique_ptr<SceneNode> &node) {
+    return node->getWorldPosition().z;
+  });
+}
+
+std::unique_ptr<PlaneNode> QuickNodeScene::createPlane(DL::Camera *camera) {
+  auto planeNode =
+      std::make_unique<PlaneNode>(glslVersionString_, this, camera);
+  planeNode->init();
+  return planeNode;
 }

@@ -38,6 +38,11 @@ void QuickNodeScene::render(float delta) {
   ImGui::NewFrame();
   ImGui::Begin("Quick Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+  ImGui::SliderFloat("f1", &f1, 0.0f, 2.0f);
+  ImGui::SliderFloat("f2", &f2, 0.0f, 2.0f);
+  ImGui::SliderFloat("f3", &f3, 0.0f, 2.0f);
+  ImGui::SliderFloat("fAmp", &fAmp, 0.0f, 100.0f);
+  ImGui::SliderFloat("fOffset", &fOffset, 0.0f, 2.0f);
   ImGui::End();
 #endif
 }
@@ -46,25 +51,18 @@ void QuickNodeScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
 }
 
-void QuickNodeScene::bounce(float delta) {
-  float colAmp = 20.0f;
+void QuickNodeScene::bounce(float delta) const {
   float offset = glm::radians(0.0f);
   for (auto &child : children) {
     auto *node = dynamic_cast<PlaneNode *>(child.get());
-    float x = 7.5f * sinf(glfwGetTime() * 1.1f + offset);
-    float y = 8.9f * sinf(-glfwGetTime() * 1.3f + offset);
-    float z = colAmp * sinf(glfwGetTime() * 0.8f + offset);
+    float x = 7.5f * sinf(f1 * glfwGetTime() + offset);
+    float y = 8.9f * sinf(f2 * -glfwGetTime() + offset);
+    float z = fAmp * sinf(f3 * glfwGetTime() + offset);
     node->setLocalPosition({x, y, z});
-    float col = (z + colAmp) / (2.0f * colAmp);
+    float col = (z + fAmp) / (2.0f * fAmp);
     node->color = {col, col, 1.0, 1.0f};
-    offset += glm::radians(4.0f);
+    offset += fOffset;
   }
-}
-
-void QuickNodeScene::sortChildrenOnZ() {
-  std::ranges::sort(children, {}, [](const std::unique_ptr<SceneNode> &node) {
-    return node->getWorldPosition().z;
-  });
 }
 
 std::unique_ptr<PlaneNode> QuickNodeScene::createPlane(DL::Camera *camera) {

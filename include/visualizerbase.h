@@ -12,6 +12,7 @@
 #include <string>
 #include <string_view>
 #include <utility>
+#include <memory>
 
 namespace DL {
 class SceneNode;

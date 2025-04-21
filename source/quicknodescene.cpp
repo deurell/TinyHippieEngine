@@ -14,7 +14,7 @@ QuickNodeScene::QuickNodeScene(std::string_view glslVersionString)
 void QuickNodeScene::init() {
   SceneNode::init();
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0, 0, 46));
-  for (uint i = 0; i < number_of_planes; i++) {
+  for (unsigned int i = 0; i < number_of_planes; i++) {
     addChild(createPlane(camera_.get()));
   }
 }

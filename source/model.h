@@ -6,7 +6,7 @@
 #include "mesh.h"
 #include "shader.h"
 #include "stb_image.h"
-#include "tiny_obj_loader.h" // <-- tinyobjloader for OBJ parsing
+#include "tiny_obj_loader.h"
 
 #include <fstream>
 #include <iostream>

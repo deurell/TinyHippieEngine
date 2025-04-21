@@ -52,6 +52,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/imagevisualizer.h
         source/quicknodescene.cpp
         source/quicknodescene.h
+        source/model.cpp
 )
 
 add_library(imgui STATIC

@@ -1,6 +1,7 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
 #include "c64scene.h"
+#include "demoscene.h"
 #include "glosifyscene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -9,6 +10,7 @@
 #include "nodeexamplescene.h"
 #include "particlescene.h"
 #include "quicknodescene.h"
+#include "demoscene.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
@@ -60,7 +62,9 @@ void DL::App::init() {
   // scene_ = std::make_unique<C64Scene>(glslVersionString_, codebook_.get());
   // scene_ = std::make_unique<ParticleScene>(glslVersionString_);
   // scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
-  scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  // scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
+  scene_ = std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
+
 }
 
 int DL::App::run() {

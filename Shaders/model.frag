@@ -49,10 +49,6 @@ void main() {
   vec3 norm = normalize(Normal);
   vec3 viewDir = normalize(viewPos - FragPos);
   vec2 uv = TexCoords;
-  if (material.id == 4) {
-    uv.x = TexCoords.x + sin(iTime * 0.18 * uv.x);
-    uv.y = TexCoords.y + sin(iTime * 0.25 * uv.y);
-  }
 
   vec3 result = CalcDirLight(dirLight, norm, viewDir, uv);
 
@@ -61,6 +57,8 @@ void main() {
   }
 
   FragColor = vec4(result, 1.0);
+  //FragColor = vec4(normalize(Normal) * 0.5 + 0.5, 1.0);
+  //FragColor = vec4(texture(material.diffuse, uv).rgb, 1.0);
 }
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec2 uv) {

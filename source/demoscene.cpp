@@ -3,10 +3,8 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
-#include <assimp/Importer.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
-#include <utility>
 
 DemoScene::DemoScene(std::string_view glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
@@ -92,6 +90,7 @@ void DemoScene::init() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
   camera_->lookAt({0.0f, 0.0f, 0.0f});
 }
+void DemoScene::update(float delta) {}
 
 void DemoScene::render(float delta) {
   auto time = static_cast<float>(glfwGetTime());
@@ -207,4 +206,7 @@ void DemoScene::onKey(int key) {
   }
 }
 
-void DemoScene::onScreenSizeChanged(glm::vec2 size) { screenSize_ = size; }
+void DemoScene::onScreenSizeChanged(glm::vec2 size) {
+  screenSize_ = size;
+  camera_->mScreenSize = size;
+}

@@ -5,6 +5,7 @@
 #include <string>
 #include "miniaudio.h"
 #include <map>
+#include <memory>
 
 struct AudioData {
   std::unique_ptr<ma_decoder> decoder;

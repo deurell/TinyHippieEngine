@@ -18,8 +18,8 @@ list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
 endif()
 
 if(EMSCRIPTEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
 endif()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
@@ -123,23 +123,23 @@ endif()
 target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})
 
 foreach(asset_dir IN ITEMS Shaders Resources)
-    add_custom_command(
-            TARGET tiny_hippie_engine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-                    $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
-            COMMENT "Copying ${asset_dir}" VERBATIM
-    )
+add_custom_command(
+        TARGET tiny_hippie_engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
+        COMMENT "Copying ${asset_dir}" VERBATIM
+)
 endforeach()
 
 if(EMSCRIPTEN)
-    foreach(asset_dir IN ITEMS Shaders Resources)
-        add_custom_command(
-                TARGET tiny_hippie_engine PRE_LINK
-                COMMAND ${CMAKE_COMMAND} -E copy_directory
-                        ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-                        ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
-                COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
-        )
-    endforeach()
+foreach(asset_dir IN ITEMS Shaders Resources)
+    add_custom_command(
+            TARGET tiny_hippie_engine PRE_LINK
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                    ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
+            COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
+    )
+endforeach()
 endif()

@@ -112,22 +112,6 @@ list(APPEND PLATFORM_LIBS glfw)
 set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
 
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
-
-add_custom_command(
-        TARGET tiny_hippie_engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
-        COMMENT "Copying shaders" VERBATIM
-)
-add_custom_command(
-        TARGET tiny_hippie_engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
-        COMMENT "Copying resources" VERBATIM
-)
-else()
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
 endif()
 
 if(APPLE)
@@ -137,3 +121,25 @@ endforeach()
 endif()
 
 target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})
+
+foreach(asset_dir IN ITEMS Shaders Resources)
+    add_custom_command(
+            TARGET tiny_hippie_engine POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+                    ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                    $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
+            COMMENT "Copying ${asset_dir}" VERBATIM
+    )
+endforeach()
+
+if(EMSCRIPTEN)
+    foreach(asset_dir IN ITEMS Shaders Resources)
+        add_custom_command(
+                TARGET tiny_hippie_engine PRE_LINK
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                        ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                        ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
+                COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
+        )
+    endforeach()
+endif()

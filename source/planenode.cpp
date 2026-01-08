@@ -49,10 +49,10 @@ void PlaneNode::initComponents() {
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
 
-  auto shaderModifier =
-      planeType == PlaneType::Spinner
-          ? [](DL::Shader &shader) { shader.setFloat("speed", 0.25f); }
-          : nullptr;
+  std::function<void(DL::Shader &)> shaderModifier;
+  if (planeType == PlaneType::Spinner) {
+    shaderModifier = [](DL::Shader &shader) { shader.setFloat("speed", 0.25f); };
+  }
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
       "PlaneVisualizer", *camera_, glslVersionString_, *this, shaderModifier,

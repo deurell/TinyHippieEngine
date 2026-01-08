@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "visualizerbase.h"
 #include <GLFW/glfw3.h>
+#include <functional>
 #include <glm/glm.hpp>
 #include <iostream>
 #include <string>

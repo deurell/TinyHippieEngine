@@ -1,5 +1,6 @@
 #include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
+#include <memory>
 #include <ranges>
 #include <string_view>
 

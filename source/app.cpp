@@ -240,3 +240,7 @@ void DL::App::calculateDeltaTime() {
   deltaTime_ = currentFrameTime - lastFrameTime_;
   lastFrameTime_ = currentFrameTime;
 }
+
+void DL::App::setFrameRateLimit(float fps) {
+  desiredFrameTime_ = fps > 0.0f ? 1.0f / fps : 0.0f;
+}

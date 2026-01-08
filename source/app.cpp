@@ -96,6 +96,7 @@ int DL::App::run() {
 
   glfwMakeContextCurrent(window_);
   glfwSwapInterval(1);
+  startFrameTime_ = lastFrameTime_ = static_cast<float>(glfwGetTime());
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     std::cout << "glad init failed";
@@ -136,18 +137,21 @@ int DL::App::run() {
   return 0;
 }
 
-void DL::App::update() { scene_->update(deltaTime_); }
+void DL::App::update() {
+  calculateDeltaTime();
+  if (window_) {
+    processInput(window_);
+  }
+  scene_->update(deltaTime_);
+}
 
 void DL::App::render() {
-  calculateDeltaTime();
   scene_->render(deltaTime_);
 
 #ifdef USE_IMGUI
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 #endif
-
-  processInput(window_);
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -170,11 +174,12 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS) {
-    scene_ = std::make_unique<SimpleScene>(glslVersionString_);
-    scene_->init();
-    scene_->onScreenSizeChanged(getScreenSize());
-  }
+}
+
+void DL::App::loadSimpleScene() {
+  scene_ = std::make_unique<SimpleScene>(glslVersionString_);
+  scene_->init();
+  scene_->onScreenSizeChanged(getScreenSize());
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
@@ -188,9 +193,16 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
 }
 
 void DL::App::onKey(int key, int scancode, int action, int mod) {
-  if (action == GLFW_RELEASE) {
-    scene_->onKey(key);
+  if (action != GLFW_RELEASE) {
+    return;
   }
+
+  if (key == GLFW_KEY_SPACE) {
+    loadSimpleScene();
+    return;
+  }
+
+  scene_->onKey(key);
 }
 
 void DL::App::basisInit() {
@@ -199,17 +211,26 @@ void DL::App::basisInit() {
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
 }
 
-void DL::App::onScreenSizeChanged(int width, int height) {
-  scene_->onScreenSizeChanged({width, height});
+void DL::App::onScreenSizeChanged(int /*width*/, int /*height*/) {
+  int frameWidth = 0;
+  int frameHeight = 0;
+  if (window_) {
+    glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
+  }
+  scene_->onScreenSizeChanged({frameWidth, frameHeight});
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
   glViewport(0, 0, width, height);
+  scene_->onScreenSizeChanged({width, height});
 }
 
 glm::vec2 DL::App::getScreenSize() {
-  int width, height;
-  glfwGetWindowSize(window_, &width, &height);
+  int width = static_cast<int>(screen_width);
+  int height = static_cast<int>(screen_height);
+  if (window_) {
+    glfwGetFramebufferSize(window_, &width, &height);
+  }
   return {width, height};
 }
 

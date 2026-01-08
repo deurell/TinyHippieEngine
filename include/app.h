@@ -35,6 +35,7 @@ private:
   void basisInit();
   glm::vec2 getScreenSize();
   void calculateDeltaTime();
+  void loadSimpleScene();
 
   GLFWwindow *window_{};
   std::unique_ptr<DL::IScene> scene_;

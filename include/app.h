@@ -32,7 +32,7 @@ public:
   static constexpr float screen_height = 768;
 
 private:
-  void init();
+  bool init();
   void basisInit();
   glm::vec2 getScreenSize();
   void calculateDeltaTime();

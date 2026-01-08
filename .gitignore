@@ -7,3 +7,5 @@ cmake-build-debug/
 .idea/
 .DS_Store
 imgui.ini
+compile_commands.json
+out/

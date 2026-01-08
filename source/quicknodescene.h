@@ -27,5 +27,5 @@ private:
   float fOffset = glm::radians(20.0f);
   float fAmp = 20.0f;
 
-  static constexpr uint number_of_planes = 8;
+  static constexpr unsigned int number_of_planes = 8;
 };

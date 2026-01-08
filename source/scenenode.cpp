@@ -1,8 +1,8 @@
 #include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
-#include <string_view>
 #include <ranges>
+#include <string_view>
 
 namespace DL {
 
@@ -126,9 +126,11 @@ void SceneNode::markDirty() {
 }
 
 VisualizerBase *SceneNode::getVisualizer(std::string_view name) {
-  const auto iterator = std::ranges::find_if(visualizers, [&name](const auto &visualizer) {
-    return visualizer->getName() == name;
-  });
+  const auto iterator = std::find_if(visualizers.begin(), visualizers.end(),
+                                     [&name](const auto &visualizer) {
+                                       return visualizer->getName() == name;
+                                     });
+
   return iterator != visualizers.end() ? iterator->get() : nullptr;
 }
 

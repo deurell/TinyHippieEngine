@@ -73,9 +73,7 @@ void NodeExampleScene::update(float delta) {
   }
 
   float rotation2 = cos(time * 1.5) * glm::pi<float>();
-  if (plane1_) {
-    plane1_->setLocalRotation(glm::angleAxis(rotation2, glm::vec3(0, 1, 0)));
-  }
+  plane1_->setLocalRotation(glm::angleAxis(rotation2, glm::vec3(0, 1, 0)));
 
   const float theta = glm::radians(scrollAngle);
   float delta_y = scrollSpeed * cos(theta);

@@ -3,6 +3,7 @@
 //
 
 #include "audioplayer.h"
+#include "logger.h"
 #include <iostream>
 #include <locale>
 
@@ -35,7 +36,7 @@ AudioPlayer::~AudioPlayer() {
 
 void AudioPlayer::load(const std::string &name, const std::string &fileName) {
   if (audioData_.find(name) != audioData_.end()) {
-    std::cout << "Audio with name " << name << " already loaded." << std::endl;
+    DL::LogWarn("Audio already loaded", name);
     return;
   }
   AudioData audioData;
@@ -45,7 +46,7 @@ void AudioPlayer::load(const std::string &name, const std::string &fileName) {
 
   if (ma_decoder_init_file(fileName.c_str(), nullptr,
                            audioData.decoder.get()) != MA_SUCCESS) {
-    std::cout << "Unable to load audio file " << fileName << std::endl;
+    DL::LogError("Unable to load audio file", fileName);
     return;
   }
 
@@ -59,7 +60,7 @@ void AudioPlayer::load(const std::string &name, const std::string &fileName) {
 
   if (ma_device_init(nullptr, &deviceConfig, audioData.device.get()) !=
       MA_SUCCESS) {
-    std::cout << "Unable to initialize playback device." << std::endl;
+    DL::LogError("Unable to initialize playback device");
     ma_decoder_uninit(audioData.decoder.get());
     return;
   }
@@ -69,13 +70,13 @@ void AudioPlayer::load(const std::string &name, const std::string &fileName) {
 
 void AudioPlayer::play(const std::string &name) {
   if (audioData_.find(name) == audioData_.end()) {
-    std::cout << "Audio with name " << name << " not loaded." << std::endl;
+    DL::LogWarn("Audio not loaded", name);
     return;
   }
 
   auto &audioData = audioData_[name];
   if (ma_device_start(audioData.device.get()) != MA_SUCCESS) {
-    std::cout << "Unable to start playback device." << std::endl;
+    DL::LogError("Unable to start playback device");
     ma_device_uninit(audioData.device.get());
     ma_decoder_uninit(audioData.decoder.get());
     return;
@@ -84,7 +85,7 @@ void AudioPlayer::play(const std::string &name) {
 
 void AudioPlayer::stop(const std::string &name) {
   if (audioData_.find(name) == audioData_.end()) {
-    std::cout << "Audio with name " << name << " not loaded." << std::endl;
+    DL::LogWarn("Audio not loaded", name);
     return;
   }
 

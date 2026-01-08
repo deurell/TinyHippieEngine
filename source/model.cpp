@@ -1,4 +1,5 @@
 #include "model.h"
+#include "logger.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -99,11 +100,11 @@ unsigned int Model::TextureFromFile(const char *path,
                     GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    std::cout << "Texture loaded at path: " << path << std::endl;
+    LogInfo("Texture loaded", path);
     if (!useBasis)
       stbi_image_free(data);
   } else {
-    std::cout << "Texture failed to load at path: " << path << std::endl;
+    LogError("Texture failed to load", path);
     if (!useBasis)
       stbi_image_free(data);
   }
@@ -118,12 +119,12 @@ void Model::loadModel(std::string_view path) {
   config.mtl_search_path = directory;
 
   if (!reader.ParseFromFile(std::string(path), config)) {
-    std::cerr << "TinyObjReader Error: " << reader.Error() << std::endl;
+    LogError("TinyObjReader Error", reader.Error());
     return;
   }
 
   if (!reader.Warning().empty()) {
-    std::cout << "TinyObjReader Warning: " << reader.Warning() << std::endl;
+    LogWarn("TinyObjReader Warning", reader.Warning());
   }
 
   auto &attrib = reader.GetAttrib();

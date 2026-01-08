@@ -13,6 +13,7 @@
 #include "simplescene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
+#include "logger.h"
 #include <iostream>
 #include <thread>
 
@@ -47,7 +48,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 
 bool DL::App::init() {
   if (!glfwInit()) {
-    std::cerr << "glfw init failed" << std::endl;
+    LogError("GLFW initialization failed");
     return false;
   }
   basisInit();
@@ -105,8 +106,8 @@ int DL::App::run() {
   startFrameTime_ = lastFrameTime_ = static_cast<float>(glfwGetTime());
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-    std::cout << "glad init failed";
-    return -1;
+    LogError("GLAD initialization failed");
+    return EXIT_FAILURE;
   }
 
   int frameWidth, frameHeight;
@@ -215,6 +216,7 @@ void DL::App::basisInit() {
   basist::basisu_transcoder_init();
   codebook_ = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
+  LogInfo("BasisU transcoder initialized");
 }
 
 void DL::App::onScreenSizeChanged(int /*width*/, int /*height*/) {

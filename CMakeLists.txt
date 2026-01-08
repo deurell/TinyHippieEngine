@@ -11,16 +11,16 @@ add_compile_definitions(USE_IMGUI)
 
 set(PLATFORM_LIBS "")
 
-if (WIN32)
-    add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0 _SECURE_SCL=0)
-elseif (UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
-    list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
-endif ()
+if(WIN32)
+add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0 _SECURE_SCL=0)
+elseif(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
+endif()
 
-if (EMSCRIPTEN)
+if(EMSCRIPTEN)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
-endif ()
+endif()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h
         source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
@@ -93,48 +93,47 @@ add_library(basisu STATIC
 
 target_include_directories(basisu PUBLIC ${CMAKE_SOURCE_DIR}/transcoder)
 
-if (EMSCRIPTEN)
-    set_target_properties(
+if(EMSCRIPTEN)
+set_target_properties(
             tiny_hippie_engine
             PROPERTIES
             SUFFIX ".html"
-    )
-endif ()
+)
+endif()
 
 set(BUILD_STATIC_LIB ON CACHE BOOL "static" FORCE)
 
+if(NOT EMSCRIPTEN)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
+list(APPEND PLATFORM_LIBS glfw)
+set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
 
-if (NOT EMSCRIPTEN)
-    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
-    list(APPEND PLATFORM_LIBS glfw)
-    set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
+target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
-    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+add_custom_command(
+        TARGET tiny_hippie_engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
+        COMMENT "Copying shaders" VERBATIM
+)
+add_custom_command(
+        TARGET tiny_hippie_engine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
+        COMMENT "Copying resources" VERBATIM
+)
+else()
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
+endif()
 
-    add_custom_command(
-            TARGET tiny_hippie_engine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/Shaders ${CMAKE_CURRENT_BINARY_DIR}/Shaders
-            COMMENT "Copying shaders" VERBATIM
-    )
-    add_custom_command(
-            TARGET tiny_hippie_engine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/Resources ${CMAKE_CURRENT_BINARY_DIR}/Resources
-            COMMENT "Copying resources" VERBATIM
-    )
-else ()
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Resources/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Resources)
-    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
-endif ()
-
-if (APPLE)
-    foreach(target tiny_hippie_engine imgui basisu)
-        target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
-    endforeach()
-endif ()
+if(APPLE)
+foreach(target tiny_hippie_engine imgui basisu)
+    target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
+endforeach()
+endif()
 
 target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})

@@ -45,8 +45,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   app->onFramebufferSizeChanged(width, height);
 }
 
-void DL::App::init() {
-  glfwInit();
+bool DL::App::init() {
+  if (!glfwInit()) {
+    std::cerr << "glfw init failed" << std::endl;
+    return false;
+  }
   basisInit();
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
@@ -64,10 +67,13 @@ void DL::App::init() {
   scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
   // scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
   // scene_ = std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
+  return true;
 }
 
 int DL::App::run() {
-  init();
+  if (!init()) {
+    return EXIT_FAILURE;
+  }
 
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -83,9 +89,9 @@ int DL::App::run() {
   window_ = glfwCreateWindow(screen_width, screen_height, windows_title,
                              nullptr, nullptr);
   if (window_ == nullptr) {
-    std::cout << "window create failed";
+    std::cerr << "window create failed" << std::endl;
     glfwTerminate();
-    return -1;
+    return EXIT_FAILURE;
   }
 
   glfwSetWindowUserPointer(window_, this);
@@ -134,7 +140,7 @@ int DL::App::run() {
   glfwDestroyWindow(window_);
 #endif
   glfwTerminate();
-  return 0;
+  return EXIT_SUCCESS;
 }
 
 void DL::App::update() {

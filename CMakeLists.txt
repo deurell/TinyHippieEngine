@@ -1,28 +1,26 @@
-# cmake . -DCMAKE_TOOLCHAIN_FILE=/Users/mikael/tools/emsdk/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B web -G Ninja
+# cmake . -DCMAKE_TOOLCHAIN_FILE=/path/to/emscripten.cmake -DCMAKE_BUILD_TYPE=MinSizeRel -B web -G Ninja
 cmake_minimum_required(VERSION 3.15)
 
-project(tiny_hippie_engine)
+project(tiny_hippie_engine LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DUSE_IMGUI")
+add_compile_definitions(USE_IMGUI)
+
+set(PLATFORM_LIBS "")
 
 if (WIN32)
-    add_compile_options(-D_ITERATOR_DEBUG_LEVEL=0 -D_SECURE_SCL=0)
-elseif (UNIX AND NOT APPLE AND NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    set(LIBS ${LIBS} X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
-    set(CMAKE_CXX_LINK_EXECUTABLE "${CMAKE_CXX_LINK_EXECUTABLE} -ldl")
-elseif (APPLE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden -fvisibility-inlines-hidden")
+    add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0 _SECURE_SCL=0)
+elseif (UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+    list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
 endif ()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-    SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+if (EMSCRIPTEN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
 endif ()
-
-include_directories(${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/source ${CMAKE_SOURCE_DIR}/imgui ${CMAKE_SOURCE_DIR}/transcoder
-)
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/camera.h
         source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
@@ -54,6 +52,14 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/model.cpp
 )
 
+target_include_directories(tiny_hippie_engine
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/source
+        ${CMAKE_SOURCE_DIR}/imgui
+        ${CMAKE_SOURCE_DIR}/transcoder
+)
+
 add_library(imgui STATIC
         imgui/imconfig.h
         imgui/imgui.cpp
@@ -70,6 +76,11 @@ add_library(imgui STATIC
         imgui/imstb_truetype.h
 )
 
+target_include_directories(imgui
+        PUBLIC ${CMAKE_SOURCE_DIR}/imgui
+        PRIVATE ${CMAKE_SOURCE_DIR}/include
+)
+
 add_library(basisu STATIC
         transcoder/basisu_file_headers.h
         transcoder/basisu_global_selector_cb.h
@@ -80,7 +91,9 @@ add_library(basisu STATIC
         transcoder/basisu.h
 )
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+target_include_directories(basisu PUBLIC ${CMAKE_SOURCE_DIR}/transcoder)
+
+if (EMSCRIPTEN)
     set_target_properties(
             tiny_hippie_engine
             PROPERTIES
@@ -91,14 +104,15 @@ endif ()
 set(BUILD_STATIC_LIB ON CACHE BOOL "static" FORCE)
 
 
-if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Emscripten")
+if (NOT EMSCRIPTEN)
     set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
     set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
     add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
-    set(LIBS ${LIBS} glfw)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DIMGUI_IMPL_OPENGL_LOADER_GLAD")
+    list(APPEND PLATFORM_LIBS glfw)
     set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
+
+    target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
 
     add_custom_command(
             TARGET tiny_hippie_engine POST_BUILD
@@ -117,4 +131,10 @@ else ()
     file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/Shaders/ DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/Shaders)
 endif ()
 
-target_link_libraries(tiny_hippie_engine PRIVATE ${LIBS} imgui basisu)
+if (APPLE)
+    foreach(target tiny_hippie_engine imgui basisu)
+        target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
+    endforeach()
+endif ()
+
+target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})

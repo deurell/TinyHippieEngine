@@ -121,6 +121,9 @@ int DL::App::run() {
 #endif
 
   loadCurrentScene();
+#ifdef __APPLE__
+  setFrameRateLimit(60.0f);
+#endif
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);

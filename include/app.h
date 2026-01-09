@@ -2,6 +2,7 @@
 #include "basisu_transcoder.h"
 #include "camera.h"
 #include "iscene.h"
+#include "scenemanager.h"
 #include "model.h"
 #include "shader.h"
 #include <GLFW/glfw3.h>
@@ -34,17 +35,23 @@ public:
 private:
   bool init();
   void basisInit();
-  glm::vec2 getScreenSize();
   void calculateDeltaTime();
   void loadSimpleScene();
+  void loadCurrentScene();
+  void registerScenes();
 
   GLFWwindow *window_{};
   std::unique_ptr<DL::IScene> scene_;
+  SceneManager sceneManager_;
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
   float startFrameTime_ = 0.0f;
   float lastFrameTime_ = 0.0f;
   float desiredFrameTime_ = 0.0f;
+  bool nextSceneHeld_ = false;
+  bool prevSceneHeld_ = false;
+  glm::vec2 getWindowSize() const;
+  glm::vec2 getFramebufferSize() const;
 };
 } // namespace DL

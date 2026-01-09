@@ -20,6 +20,7 @@ public:
   void onClick(double x, double y) override;
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
+  void onFramebufferSizeChanged(glm::vec2 size) override;
 
   static constexpr int number_of_particles = 64;
 
@@ -28,6 +29,7 @@ private:
   double mTime = 0;
   std::unique_ptr<DL::Camera> mCamera;
   glm::vec2 mScreenSize{0, 0};
+  glm::vec2 framebufferSize_{0, 0};
   std::string mGlslVersionString;
 
   std::vector<std::unique_ptr<DL::Plane>> mPlanes = {};

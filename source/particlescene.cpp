@@ -50,8 +50,9 @@ void ParticleScene::initPlanes() {
 }
 
 void ParticleScene::render(float delta) {
+  glDisable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   particleSystem_->updatePhysics(delta);
 
@@ -70,11 +71,15 @@ void ParticleScene::render(float delta) {
 }
 
 void ParticleScene::onClick(double x, double y) {
-  float mouseX = static_cast<float>(x);
-  float mouseY = static_cast<float>(y);
-  float invertedY = mCamera->mScreenSize.y - mouseY;
-  glm::vec4 viewport(0.0f, 0.0f, mCamera->mScreenSize.x,
-                     mCamera->mScreenSize.y);
+  glm::vec2 scale(1.0f);
+  if (mScreenSize.x > 0.0f && mScreenSize.y > 0.0f) {
+    scale.x = framebufferSize_.x / mScreenSize.x;
+    scale.y = framebufferSize_.y / mScreenSize.y;
+  }
+  float mouseX = static_cast<float>(x) * scale.x;
+  float mouseY = static_cast<float>(y) * scale.y;
+  float invertedY = framebufferSize_.y - mouseY;
+  glm::vec4 viewport(0.0f, 0.0f, framebufferSize_.x, framebufferSize_.y);
   float desiredZ = 0.0f;
 
   glm::vec4 projected = mCamera->getPerspectiveTransform() *
@@ -104,5 +109,13 @@ void ParticleScene::onKey(int key) {
 
 void ParticleScene::onScreenSizeChanged(glm::vec2 size) {
   mScreenSize = size;
+  if (framebufferSize_.x == 0.0f || framebufferSize_.y == 0.0f) {
+    framebufferSize_ = size;
+    mCamera->mScreenSize = framebufferSize_;
+  }
+}
+
+void ParticleScene::onFramebufferSizeChanged(glm::vec2 size) {
+  framebufferSize_ = size;
   mCamera->mScreenSize = size;
 }

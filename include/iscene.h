@@ -12,5 +12,8 @@ public:
   virtual void onClick(double x, double y) = 0;
   virtual void onKey(int key) = 0;
   virtual void onScreenSizeChanged(glm::vec2 size) = 0;
+  virtual void onFramebufferSizeChanged(glm::vec2 size) {
+    onScreenSizeChanged(size);
+  }
 };
 } // namespace DL

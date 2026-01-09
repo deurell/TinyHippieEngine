@@ -36,4 +36,5 @@ private:
   float rotation_ = 0.0f;
   float scrollAngle = 0;
   float scrollSpeed = 0.04f;
+  glm::vec2 screenSize_{0, 0};
 };

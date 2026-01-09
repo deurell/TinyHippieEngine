@@ -10,6 +10,7 @@
 #include "nodeexamplescene.h"
 #include "particlescene.h"
 #include "quicknodescene.h"
+#include "scenemanager.h"
 #include "simplescene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
@@ -58,16 +59,12 @@ bool DL::App::init() {
   glslVersionString_ = "#version 330 core\n";
 #endif
 
-  // scene_ = std::make_unique<WildCopperScene>(glslVersionString_);
-  // scene_ = std::make_unique<TrueTypeScene>(glslVersionString_);
-  // scene_ = std::make_unique<GlosifyScene>(glslVersionString_,
-  // codebook_.get()); scene_ =
-  // std::make_unique<IntroScene>(glslVersionString_); scene_ =
-  // std::make_unique<C64Scene>(glslVersionString_, codebook_.get()); scene_ =
-  // std::make_unique<ParticleScene>(glslVersionString_);
-  scene_ = std::make_unique<QuickNodeScene>(glslVersionString_);
-  // scene_ = std::make_unique<NodeExampleScene>(glslVersionString_);
-  // scene_ = std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
+  registerScenes();
+  scene_ = sceneManager_.createCurrent(glslVersionString_);
+  if (!scene_) {
+    LogError("No scenes registered");
+    return false;
+  }
   return true;
 }
 
@@ -123,8 +120,7 @@ int DL::App::run() {
   ImGui_ImplOpenGL3_Init(glslVersionString_.c_str());
 #endif
 
-  scene_->init();
-  scene_->onScreenSizeChanged(getScreenSize());
+  loadCurrentScene();
 
 #ifdef __EMSCRIPTEN__
   emscripten_set_main_loop_arg(&renderloop_callback, this, -1, 1);
@@ -181,21 +177,76 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+  bool rightPressed = glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
+  bool leftPressed = glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
+
+  if (rightPressed && !nextSceneHeld_) {
+    sceneManager_.next();
+    loadCurrentScene();
+  }
+  if (leftPressed && !prevSceneHeld_) {
+    sceneManager_.previous();
+    loadCurrentScene();
+  }
+
+  nextSceneHeld_ = rightPressed;
+  prevSceneHeld_ = leftPressed;
 }
 
 void DL::App::loadSimpleScene() {
   scene_ = std::make_unique<SimpleScene>(glslVersionString_);
   scene_->init();
-  scene_->onScreenSizeChanged(getScreenSize());
+  scene_->onScreenSizeChanged(getWindowSize());
+  scene_->onFramebufferSizeChanged(getFramebufferSize());
+}
+
+void DL::App::loadCurrentScene() {
+  auto newScene = sceneManager_.createCurrent(glslVersionString_);
+  if (!newScene) {
+    LogError("Failed to create scene");
+    return;
+  }
+  scene_ = std::move(newScene);
+  scene_->init();
+  scene_->onScreenSizeChanged(getWindowSize());
+  scene_->onFramebufferSizeChanged(getFramebufferSize());
+}
+
+void DL::App::registerScenes() {
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<QuickNodeScene>(std::string(glsl));
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<NodeExampleScene>(std::string(glsl));
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<DemoScene>(glsl, codebook_.get());
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<TrueTypeScene>(glsl);
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<GlosifyScene>(std::string(glsl), codebook_.get());
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<IntroScene>(glsl);
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<C64Scene>(glsl, codebook_.get());
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<ParticleScene>(glsl);
+  });
+  sceneManager_.registerScene([this](std::string_view glsl) {
+    return std::make_unique<WildCopperScene>(glsl);
+  });
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
-    float mouseX = static_cast<float>(x);
-    float mouseY = static_cast<float>(y);
-    scene_->onClick(mouseX, mouseY);
+    scene_->onClick(static_cast<float>(x), static_cast<float>(y));
   }
 }
 
@@ -219,21 +270,25 @@ void DL::App::basisInit() {
   LogInfo("BasisU transcoder initialized");
 }
 
-void DL::App::onScreenSizeChanged(int /*width*/, int /*height*/) {
-  int frameWidth = 0;
-  int frameHeight = 0;
-  if (window_) {
-    glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  }
-  scene_->onScreenSizeChanged({frameWidth, frameHeight});
+void DL::App::onScreenSizeChanged(int width, int height) {
+  scene_->onScreenSizeChanged({width, height});
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
   glViewport(0, 0, width, height);
-  scene_->onScreenSizeChanged({width, height});
+  scene_->onFramebufferSizeChanged({width, height});
 }
 
-glm::vec2 DL::App::getScreenSize() {
+glm::vec2 DL::App::getWindowSize() const {
+  int width = static_cast<int>(screen_width);
+  int height = static_cast<int>(screen_height);
+  if (window_) {
+    glfwGetWindowSize(window_, &width, &height);
+  }
+  return {width, height};
+}
+
+glm::vec2 DL::App::getFramebufferSize() const {
   int width = static_cast<int>(screen_width);
   int height = static_cast<int>(screen_height);
   if (window_) {

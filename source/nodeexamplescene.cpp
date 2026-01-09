@@ -118,6 +118,7 @@ void NodeExampleScene::render(float delta) {
 }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
+  screenSize_ = size;
   SceneNode::onScreenSizeChanged(size);
 }
 

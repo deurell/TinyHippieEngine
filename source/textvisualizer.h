@@ -20,6 +20,8 @@ enum class TextAlignment { LEFT, CENTER };
 struct FontData {
   GLuint texture;
   std::shared_ptr<stbtt_packedchar[]> fontInfo;
+  float fontScale;
+  float fontSize;
 };
 
 class TextVisualizer : public VisualizerBase {
@@ -55,7 +57,7 @@ private:
   const float kerning_ = 2.0f;
 
   const float desiredPixelHeight_ = 18.0f;
-  float fontScale_;
+  float fontScale_ = 1.0f;
   float fontSize_ = 0.0f;
 
   const uint32_t fontAtlasWidth_ = 1024;

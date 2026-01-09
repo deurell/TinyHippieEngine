@@ -19,10 +19,13 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
   if (it != fontCache_.end()) {
     fontTexture_ = it->second.texture;
     fontCharInfo_ = it->second.fontInfo;
+    fontScale_ = it->second.fontScale;
+    fontSize_ = it->second.fontSize;
   } else {
     loadFontTexture(fontPath);
-    fontCache_.insert(std::make_pair(std::string(fontPath),
-                                     FontData{fontTexture_, fontCharInfo_}));
+    fontCache_.insert(std::make_pair(
+        std::string(fontPath),
+        FontData{fontTexture_, fontCharInfo_, fontScale_, fontSize_}));
   }
 
   initGraphics();

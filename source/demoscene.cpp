@@ -113,6 +113,14 @@ void DemoScene::render(float delta) {
   ImGui::End();
 #endif
 
+  pointLightPositions_[0].x = 2.0 * glm::cos(-1.5 * glfwGetTime());
+  pointLightPositions_[0].z = 4.0 * glm::cos(1.3 * glfwGetTime());
+  pointLightPositions_[0].y = 1.0 + 0.5 * glm::sin(-1.1 * glfwGetTime());
+
+  pointLightPositions_[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
+  pointLightPositions_[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
+  pointLightPositions_[1].y = 1.0 + 0.8f * glm::sin(-0.2 * glfwGetTime());
+
   lightingShader_->use();
 
   lightingShader_->setFloat("iTime", time);
@@ -136,14 +144,6 @@ void DemoScene::render(float delta) {
   lightingShader_->setFloat("pointLights[1].constant", 1.0f);
   lightingShader_->setFloat("pointLights[1].linear", 0.09);
   lightingShader_->setFloat("pointLights[1].quadratic", 0.032);
-
-  pointLightPositions_[0].x = 2.0 * glm::cos(-1.5 * glfwGetTime());
-  pointLightPositions_[0].z = 4.0 * glm::cos(1.3 * glfwGetTime());
-  pointLightPositions_[0].y = 1.0 + 0.5 * glm::sin(-1.1 * glfwGetTime());
-
-  pointLightPositions_[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
-  pointLightPositions_[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
-  pointLightPositions_[1].y = 1.0 + 0.8f * glm::sin(-0.2 * glfwGetTime());
 
   // view/projection transformations
   glm::mat4 projection = camera_->getPerspectiveTransform();

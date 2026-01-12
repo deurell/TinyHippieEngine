@@ -8,8 +8,6 @@ DL::PlaneVisualizer::PlaneVisualizer(
                      vertexShaderPath, fragmentShaderPath, node),
       shaderModifier_(shaderModifier) {
 
-  camera.lookAt({0, 0, 0});
-
   const float vertices[] = {
       // positions        // colors         // texture coords
       1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right

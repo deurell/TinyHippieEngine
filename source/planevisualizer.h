@@ -19,6 +19,8 @@ public:
       std::string vertexShaderPath = "Shaders/simple.vert",
       std::string fragmentShaderPath = "Shaders/simple.frag");
 
+  ~PlaneVisualizer() override;
+
   void render(const glm::mat4 &worldTransform, float delta) override;
   glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
 

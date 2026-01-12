@@ -18,6 +18,7 @@ public:
       std::string vertexShaderPath = "Shaders/image.vert",
       std::string fragmentShaderPath = "Shaders/image.frag");
 
+  ~ImageVisualizer() override;
   void render(const glm::mat4 &worldTransform, float delta) override;
 
 private:

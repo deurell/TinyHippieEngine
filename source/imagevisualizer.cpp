@@ -48,6 +48,21 @@ DL::ImageVisualizer::ImageVisualizer(
   glBindVertexArray(0);
 }
 
+DL::ImageVisualizer::~ImageVisualizer() {
+  if (VAO_ != 0) {
+    glDeleteVertexArrays(1, &VAO_);
+    VAO_ = 0;
+  }
+  if (VBO_ != 0) {
+    glDeleteBuffers(1, &VBO_);
+    VBO_ = 0;
+  }
+  if (EBO_ != 0) {
+    glDeleteBuffers(1, &EBO_);
+    EBO_ = 0;
+  }
+}
+
 void DL::ImageVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   shader_->use();
   glBindTexture(GL_TEXTURE_2D, texture_->mId);

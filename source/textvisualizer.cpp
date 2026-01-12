@@ -13,22 +13,49 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    const std::string fragmentShaderPath)
     : VisualizerBase(camera, name, glslVersionString, vertexShaderPath,
                      fragmentShaderPath, node),
-      text_(text) {
+      text_(text), fontPath_(fontPath) {
 
-  auto it = fontCache_.find(std::string(fontPath));
+  auto it = fontCache_.find(fontPath_);
   if (it != fontCache_.end()) {
+    it->second.refCount++;
     fontTexture_ = it->second.texture;
     fontCharInfo_ = it->second.fontInfo;
     fontScale_ = it->second.fontScale;
     fontSize_ = it->second.fontSize;
   } else {
-    loadFontTexture(fontPath);
-    fontCache_.insert(std::make_pair(
-        std::string(fontPath),
-        FontData{fontTexture_, fontCharInfo_, fontScale_, fontSize_}));
+    loadFontTexture(fontPath_);
+    if (fontTexture_ != 0) {
+      FontData data{};
+      data.texture = fontTexture_;
+      data.fontInfo = fontCharInfo_;
+      data.fontScale = fontScale_;
+      data.fontSize = fontSize_;
+      data.refCount = 1;
+      fontCache_.insert(std::make_pair(fontPath_, std::move(data)));
+    }
   }
 
   initGraphics();
+}
+
+DL::TextVisualizer::~TextVisualizer() {
+  if (VAO_ != 0) {
+    glDeleteVertexArrays(1, &VAO_);
+    VAO_ = 0;
+  }
+  if (VBO_ != 0) {
+    glDeleteBuffers(1, &VBO_);
+    VBO_ = 0;
+  }
+  if (UVBuffer_ != 0) {
+    glDeleteBuffers(1, &UVBuffer_);
+    UVBuffer_ = 0;
+  }
+  if (indexBuffer_ != 0) {
+    glDeleteBuffers(1, &indexBuffer_);
+    indexBuffer_ = 0;
+  }
+  releaseFont();
 }
 
 void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
@@ -232,4 +259,25 @@ void DL::TextVisualizer::initGraphics() {
                indices.data(), GL_STATIC_DRAW);
 
   glBindVertexArray(0);
+}
+
+void DL::TextVisualizer::releaseFont() {
+  if (fontPath_.empty()) {
+    return;
+  }
+  auto it = fontCache_.find(fontPath_);
+  if (it != fontCache_.end()) {
+    if (it->second.refCount > 0) {
+      it->second.refCount--;
+    }
+    if (it->second.refCount == 0) {
+      if (it->second.texture != 0) {
+        glDeleteTextures(1, &it->second.texture);
+      }
+      fontCache_.erase(it);
+    }
+  }
+  fontTexture_ = 0;
+  fontCharInfo_.reset();
+  fontPath_.clear();
 }

@@ -79,6 +79,16 @@ public:
     glDeleteShader(fragment);
   }
 
+  Shader(const Shader &) = delete;
+  Shader &operator=(const Shader &) = delete;
+
+  ~Shader() {
+    if (mId != 0) {
+      glDeleteProgram(mId);
+      mId = 0;
+    }
+  }
+
   void use() const { glUseProgram(mId); }
 
   void setInt(const std::string &name, int value) const {

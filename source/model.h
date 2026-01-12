@@ -25,7 +25,7 @@ public:
   Model(const std::string &path,
         basist::etc1_global_selector_codebook *codeBook);
 
-  void Draw(DL::Shader shader);
+  void Draw(DL::Shader &shader);
 
 private:
   static bool hasExtension(std::string_view full, std::string_view end);

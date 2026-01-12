@@ -14,7 +14,7 @@ Model::Model(const std::string &path,
   loadModel(path);
 }
 
-void Model::Draw(DL::Shader shader) {
+void Model::Draw(DL::Shader &shader) {
   for (auto &mesh : meshes)
     mesh.Draw(shader);
 }

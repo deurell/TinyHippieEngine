@@ -7,6 +7,7 @@
 #include "textsprite.h"
 #include "visualizerbase.h"
 #include <GLFW/glfw3.h>
+#include <cstdint>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -18,10 +19,11 @@ namespace DL {
 enum class TextAlignment { LEFT, CENTER };
 
 struct FontData {
-  GLuint texture;
+  GLuint texture = 0;
   std::shared_ptr<stbtt_packedchar[]> fontInfo;
-  float fontScale;
-  float fontSize;
+  float fontScale = 1.0f;
+  float fontSize = 0.0f;
+  std::uint32_t refCount = 0;
 };
 
 class TextVisualizer : public VisualizerBase {
@@ -32,6 +34,7 @@ public:
                           std::string vertexShaderPath,
                           std::string fragmentShaderPath);
 
+  ~TextVisualizer() override;
   void render(const glm::mat4 &worldTransform, float delta) override;
   void setText(std::string_view text) { text_ = text; }
   void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
@@ -45,6 +48,7 @@ private:
   void loadFontTexture(std::string_view fontPath);
   GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
+  void releaseFont();
 
   std::string_view text_;
   GLuint VAO_ = 0;
@@ -67,6 +71,7 @@ private:
   const uint8_t fontFirstChar_ = 32;
   const uint8_t fontCharCount_ = 255 - 32;
   std::shared_ptr<stbtt_packedchar[]> fontCharInfo_;
+  std::string fontPath_;
 };
 
 } // namespace DL

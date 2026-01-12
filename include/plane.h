@@ -17,7 +17,7 @@ public:
   Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
         const std::function<void(DL::Shader &)> &shaderModifier = nullptr);
 
-  ~Plane() = default;
+  ~Plane();
 
   void setRotation(const glm::vec3 &eulerAngles);
 

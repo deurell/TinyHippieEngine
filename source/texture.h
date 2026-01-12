@@ -132,7 +132,12 @@ public:
     mHeight = height;
   }
 
-  ~Texture() = default;
+  ~Texture() {
+    if (mId != 0) {
+      glDeleteTextures(1, &mId);
+      mId = 0;
+    }
+  }
 
   unsigned int mId;
   unsigned int mWidth;

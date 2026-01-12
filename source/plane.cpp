@@ -45,6 +45,21 @@ DL::Plane::Plane(std::unique_ptr<DL::Shader> shader, DL::Camera &camera,
   glBindVertexArray(0);
 }
 
+DL::Plane::~Plane() {
+  if (mVAO != 0) {
+    glDeleteVertexArrays(1, &mVAO);
+    mVAO = 0;
+  }
+  if (mVBO != 0) {
+    glDeleteBuffers(1, &mVBO);
+    mVBO = 0;
+  }
+  if (mEBO != 0) {
+    glDeleteBuffers(1, &mEBO);
+    mEBO = 0;
+  }
+}
+
 void DL::Plane::render(float /* delta */) const {
   mShader->use();
   mShader->setFloat("iTime", (float)glfwGetTime());

@@ -39,7 +39,7 @@ struct Material {
 };
 
 struct MeshTexture {
-  unsigned int id;
+  unsigned int id = 0;
   string type;
   string path;
 };
@@ -65,6 +65,41 @@ public:
     // now that we have all the required data, set the vertex buffers and its
     // attribute pointers.
     setupMesh();
+  }
+
+  Mesh(const Mesh &) = delete;
+  Mesh &operator=(const Mesh &) = delete;
+
+  Mesh(Mesh &&other) noexcept
+      : vertices(std::move(other.vertices)),
+        indices(std::move(other.indices)),
+        textures(std::move(other.textures)), material(other.material),
+        VAO(other.VAO), VBO(other.VBO), EBO(other.EBO) {
+    other.VAO = 0;
+    other.VBO = 0;
+    other.EBO = 0;
+  }
+
+  Mesh &operator=(Mesh &&other) noexcept {
+    if (this == &other) {
+      return *this;
+    }
+    destroyBuffers();
+    vertices = std::move(other.vertices);
+    indices = std::move(other.indices);
+    textures = std::move(other.textures);
+    material = other.material;
+    VAO = other.VAO;
+    VBO = other.VBO;
+    EBO = other.EBO;
+    other.VAO = 0;
+    other.VBO = 0;
+    other.EBO = 0;
+    return *this;
+  }
+
+  ~Mesh() {
+    destroyBuffers();
   }
 
   // render the mesh
@@ -121,6 +156,20 @@ public:
 private:
   /*  Render data  */
   unsigned int VBO, EBO = 0;
+  void destroyBuffers() {
+    if (VAO != 0) {
+      glDeleteVertexArrays(1, &VAO);
+      VAO = 0;
+    }
+    if (VBO != 0) {
+      glDeleteBuffers(1, &VBO);
+      VBO = 0;
+    }
+    if (EBO != 0) {
+      glDeleteBuffers(1, &EBO);
+      EBO = 0;
+    }
+  }
 
   /*  Functions    */
   // initializes all the buffer objects/arrays

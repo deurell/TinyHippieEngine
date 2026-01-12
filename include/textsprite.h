@@ -25,7 +25,7 @@ public:
   explicit TextSprite(std::string_view fontPath);
   TextSprite(std::string_view fontPath, std::string_view text);
   TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::string_view text);
-  ~TextSprite() = default;
+  ~TextSprite();
 
   void render(float delta) const;
   stbtt_packedchar *getFontCharInfoPtr();
@@ -52,5 +52,6 @@ private:
   const uint8_t mFontCharCount = 255 - 32;
   std::unique_ptr<stbtt_packedchar[]> mFontCharInfo;
   stbtt_packedchar *mFontCharInfoPtr = nullptr;
+  bool ownsTexture_ = true;
 };
 } // namespace DL

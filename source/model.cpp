@@ -2,6 +2,7 @@
 #include "logger.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <unordered_set>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
@@ -12,6 +13,15 @@ Model::Model(const std::string &path,
              basist::etc1_global_selector_codebook *codeBook)
     : mCodeBook(codeBook) {
   loadModel(path);
+}
+
+Model::~Model() {
+  std::unordered_set<unsigned int> deletedTextures;
+  for (const auto &tex : textures_loaded) {
+    if (tex.id != 0 && deletedTextures.insert(tex.id).second) {
+      glDeleteTextures(1, &tex.id);
+    }
+  }
 }
 
 void Model::Draw(DL::Shader &shader) {

@@ -25,6 +25,7 @@ public:
   Model(const std::string &path,
         basist::etc1_global_selector_codebook *codeBook);
 
+  ~Model();
   void Draw(DL::Shader &shader);
 
 private:

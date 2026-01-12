@@ -16,9 +16,32 @@ DL::TextSprite::TextSprite(std::string_view fontPath)
 DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar *fontInfo,
                            std::string_view text)
     : mFontTexture(texture), mFontCharInfoPtr(fontInfo),
-      mText(text) {
+      mText(text), ownsTexture_(false) {
   glBindTexture(GL_TEXTURE_2D, mFontTexture);
   init();
+}
+
+DL::TextSprite::~TextSprite() {
+  if (mVAO != 0) {
+    glDeleteVertexArrays(1, &mVAO);
+    mVAO = 0;
+  }
+  if (mVBO != 0) {
+    glDeleteBuffers(1, &mVBO);
+    mVBO = 0;
+  }
+  if (mUVBuffer != 0) {
+    glDeleteBuffers(1, &mUVBuffer);
+    mUVBuffer = 0;
+  }
+  if (mIndexBuffer != 0) {
+    glDeleteBuffers(1, &mIndexBuffer);
+    mIndexBuffer = 0;
+  }
+  if (ownsTexture_ && mFontTexture != 0) {
+    glDeleteTextures(1, &mFontTexture);
+    mFontTexture = 0;
+  }
 }
 
 void DL::TextSprite::render(float /*delta*/) const {

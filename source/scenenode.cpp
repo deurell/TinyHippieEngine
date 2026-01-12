@@ -18,10 +18,6 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
     worldTransform = parentWorldTransform * localTransform;
     dirty = false;
   }
-
-  for (auto &child : children) {
-    child->updateTransforms(worldTransform);
-  }
 }
 
 void SceneNode::setLocalPosition(const glm::vec3 &position) {

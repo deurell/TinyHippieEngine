@@ -16,9 +16,14 @@ void SimpleScene::init() {
   auto shader = std::make_unique<DL::Shader>(
       "Shaders/simple.vert", "Shaders/simple.frag", mGlslVersionString);
 
-  mPlane = std::make_unique<DL::Plane>(std::move(shader), *mCamera);
+  auto colorSetter = [](DL::Shader &shaderRef) {
+    shaderRef.setVec4f("baseColor", 0.2f, 0.7f, 1.0f, 1.0f);
+  };
+
+  mPlane =
+      std::make_unique<DL::Plane>(std::move(shader), *mCamera, colorSetter);
   mPlane->position = {0, 0, 0};
-  mPlane->scale = {16, 16, 1};
+  mPlane->scale = {1, 1, 1};
 }
 
 void SimpleScene::update(float delta) {

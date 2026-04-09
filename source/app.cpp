@@ -60,8 +60,7 @@ bool DL::App::init() {
 #endif
 
   registerScenes();
-  scene_ = sceneManager_.createCurrent(glslVersionString_);
-  if (!scene_) {
+  if (!sceneManager_.hasScenes()) {
     LogError("No scenes registered");
     return false;
   }
@@ -132,6 +131,7 @@ int DL::App::run() {
     update();
     render();
   }
+  scene_.reset();
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();

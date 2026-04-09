@@ -14,6 +14,21 @@ C64Scene::C64Scene(std::string_view glslVersion,
   audioPlayer_->play(audio_unlock);
 }
 
+C64Scene::~C64Scene() {
+  if (VAO_ != 0) {
+    glDeleteVertexArrays(1, &VAO_);
+    VAO_ = 0;
+  }
+  if (VBO_ != 0) {
+    glDeleteBuffers(1, &VBO_);
+    VBO_ = 0;
+  }
+  if (EBO_ != 0) {
+    glDeleteBuffers(1, &EBO_);
+    EBO_ = 0;
+  }
+}
+
 void C64Scene::init() {
   shader_ = std::make_unique<DL::Shader>("Shaders/c64.vert", "Shaders/c64.frag",
                                          glslVersionString_);

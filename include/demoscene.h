@@ -10,7 +10,7 @@ class DemoScene : public DL::IScene {
 public:
   DemoScene(std::string_view glslVersion,
             basist::etc1_global_selector_codebook *codeBook);
-  ~DemoScene() override = default;
+  ~DemoScene() override;
 
   void init() override;
   void update(float delta) override;
@@ -26,6 +26,7 @@ private:
   std::unique_ptr<DL::Model> model_;
   unsigned int lightVAO_ = 0;
   unsigned int cubeVAO_ = 0;
+  unsigned int cubeVBO_ = 0;
   glm::vec3 lightPos_ = {1.2f, 1.0f, 2.0f};
   static constexpr int point_light_count = 2;
   glm::vec3 pointLightPositions_[point_light_count] = {

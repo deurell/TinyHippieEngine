@@ -15,7 +15,7 @@ public:
 
   C64Scene(const C64Scene &rhs) = delete;
 
-  ~C64Scene() override = default;
+  ~C64Scene() override;
 
   void init() override;
   void update(float delta) override;

@@ -10,6 +10,21 @@ DemoScene::DemoScene(std::string_view glslVersion,
                      basist::etc1_global_selector_codebook *codeBook)
     : glslVersionString_(glslVersion), codeBook_(codeBook) {}
 
+DemoScene::~DemoScene() {
+  if (lightVAO_ != 0) {
+    glDeleteVertexArrays(1, &lightVAO_);
+    lightVAO_ = 0;
+  }
+  if (cubeVAO_ != 0) {
+    glDeleteVertexArrays(1, &cubeVAO_);
+    cubeVAO_ = 0;
+  }
+  if (cubeVBO_ != 0) {
+    glDeleteBuffers(1, &cubeVBO_);
+    cubeVBO_ = 0;
+  }
+}
+
 void DemoScene::init() {
   lampShader_ = std::make_unique<DL::Shader>(
       "Shaders/lamp.vert", "Shaders/lamp.frag", glslVersionString_);
@@ -58,9 +73,8 @@ void DemoScene::init() {
 
   glGenVertexArrays(1, &cubeVAO_);
   glBindVertexArray(cubeVAO_);
-  unsigned int VBO;
-  glGenBuffers(1, &VBO);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glGenBuffers(1, &cubeVBO_);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO_);
   glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), cubeVertices,
                GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
@@ -79,7 +93,7 @@ void DemoScene::init() {
   // lamp
   glGenVertexArrays(1, &lightVAO_);
   glBindVertexArray(lightVAO_);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glBindBuffer(GL_ARRAY_BUFFER, cubeVBO_);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                         (void *)nullptr);
   glEnableVertexAttribArray(0);

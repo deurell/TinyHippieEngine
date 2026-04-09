@@ -150,10 +150,12 @@ void DL::App::update() {
   if (window_) {
     processInput(window_);
   }
+  if (!scene_) return;
   scene_->update({deltaTime_, glfwGetTime()});
 }
 
 void DL::App::render() {
+  if (!scene_) return;
   scene_->render({deltaTime_, glfwGetTime()});
 
 #ifdef USE_IMGUI

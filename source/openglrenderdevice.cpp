@@ -189,6 +189,7 @@ public:
       if (texture_it != textures_.end()) {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture_it->second->id);
+        pipeline.setInt("texture0", 0);
         pipeline.setInt("texture1", 0);
       }
     }

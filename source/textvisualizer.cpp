@@ -191,8 +191,7 @@ void DL::TextVisualizer::initGraphics() {
   glm::vec2 offset(0.0f, 0.0f);
 
   std::vector<std::string> lines;
-  std::string strText = std::string(text_); // Convert string_view to string
-  std::stringstream ss(strText);
+  std::stringstream ss(text_);
   std::string line;
   while (std::getline(ss, line)) {
     lines.push_back(line);

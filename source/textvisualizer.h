@@ -34,7 +34,7 @@ public:
 
   ~TextVisualizer() override;
   void render(const glm::mat4 &worldTransform, float delta) override;
-  void setText(std::string_view text) { text_ = text; }
+  void setText(std::string text) { text_ = std::move(text); }
   void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
 
   float rotAngle1_ = 0.04f;
@@ -49,7 +49,7 @@ private:
   void releaseFont();
   [[nodiscard]] std::string fontCacheKey() const;
 
-  std::string_view text_;
+  std::string text_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   MeshHandle mesh_;
   TextureHandle fontTexture_;

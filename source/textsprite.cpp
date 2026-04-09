@@ -51,12 +51,25 @@ void DL::TextSprite::render(float /*delta*/) const {
 
 void DL::TextSprite::loadFontTexture(std::string_view fontPath) {
   std::ifstream iStream(std::string(fontPath), std::ios::binary);
+  if (!iStream) {
+    std::cout << "failed to open font: " << fontPath << '\n';
+    return;
+  }
   iStream.seekg(0, iStream.end);
-  const int size = iStream.tellg();
+  const std::streamoff size = iStream.tellg();
+  if (size <= 0) {
+    std::cout << "failed to read font: " << fontPath << '\n';
+    return;
+  }
   iStream.seekg(0, iStream.beg);
-  char *fontData = new char[size];
+  char *fontData = new char[static_cast<size_t>(size)];
 
   iStream.read((char *)fontData, size);
+  if (!iStream) {
+    std::cout << "failed to load font data: " << fontPath << '\n';
+    delete[] fontData;
+    return;
+  }
   iStream.close();
 
   auto atlasData =
@@ -158,7 +171,12 @@ void DL::TextSprite::init() {
 DL::GlyphInfo DL::TextSprite::makeGlyphInfo(char character, float offsetX,
                                             float offsetY) {
   stbtt_aligned_quad quad;
-  int chrRel = static_cast<uint8_t>(character - mFontFirstChar);
+  const uint8_t glyph = static_cast<uint8_t>(character);
+  const uint8_t firstChar = mFontFirstChar;
+  const uint8_t lastChar = static_cast<uint8_t>(mFontFirstChar + mFontCharCount);
+  const uint8_t clampedGlyph =
+      glyph >= firstChar && glyph < lastChar ? glyph : static_cast<uint8_t>('?');
+  int chrRel = static_cast<int>(clampedGlyph) - static_cast<int>(firstChar);
   stbtt_GetPackedQuad(getFontCharInfoPtr(), mFontAtlasWidth, mFontAtlasHeight,
                       chrRel, &offsetX, &offsetY, &quad, 1);
   auto xmin = quad.x0;

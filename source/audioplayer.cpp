@@ -69,16 +69,18 @@ void AudioPlayer::load(const std::string &name, const std::string &fileName) {
 }
 
 void AudioPlayer::play(const std::string &name) {
-  if (audioData_.find(name) == audioData_.end()) {
+  auto it = audioData_.find(name);
+  if (it == audioData_.end()) {
     DL::LogWarn("Audio not loaded", name);
     return;
   }
 
-  auto &audioData = audioData_[name];
+  auto &audioData = it->second;
   if (ma_device_start(audioData.device.get()) != MA_SUCCESS) {
     DL::LogError("Unable to start playback device");
     ma_device_uninit(audioData.device.get());
     ma_decoder_uninit(audioData.decoder.get());
+    audioData_.erase(it);
     return;
   }
 }

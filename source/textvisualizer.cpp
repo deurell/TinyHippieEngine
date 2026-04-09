@@ -87,12 +87,25 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
 
 void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   std::ifstream iStream(std::string(fontPath), std::ios::binary);
+  if (!iStream) {
+    std::cout << "Failed to open font: " << fontPath << std::endl;
+    return;
+  }
   iStream.seekg(0, std::ifstream::end);
-  const int size = iStream.tellg();
+  const std::streamoff size = iStream.tellg();
+  if (size <= 0) {
+    std::cout << "Failed to read font: " << fontPath << std::endl;
+    return;
+  }
   iStream.seekg(0, std::ifstream::beg);
 
-  std::unique_ptr<char[]> fontData = std::make_unique<char[]>(size);
+  std::unique_ptr<char[]> fontData =
+      std::make_unique<char[]>(static_cast<size_t>(size));
   iStream.read(fontData.get(), size);
+  if (!iStream) {
+    std::cout << "Failed to load font data: " << fontPath << std::endl;
+    return;
+  }
   iStream.close();
 
   stbtt_fontinfo fontInfo;
@@ -150,7 +163,12 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
 DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
                                                 float offsetY) {
   stbtt_aligned_quad quad;
-  int chrRel = static_cast<uint8_t>(character - fontFirstChar_);
+  const uint8_t glyph = static_cast<uint8_t>(character);
+  const uint8_t firstChar = fontFirstChar_;
+  const uint8_t lastChar = static_cast<uint8_t>(fontFirstChar_ + fontCharCount_);
+  const uint8_t clampedGlyph =
+      glyph >= firstChar && glyph < lastChar ? glyph : static_cast<uint8_t>('?');
+  int chrRel = static_cast<int>(clampedGlyph) - static_cast<int>(firstChar);
   stbtt_GetPackedQuad(fontCharInfo_.get(), fontAtlasWidth_, FontAtlasHeight_,
                       chrRel, &offsetX, &offsetY, &quad, 1);
 

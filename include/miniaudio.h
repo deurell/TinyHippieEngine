@@ -40255,7 +40255,8 @@ static ma_result ma_device_init__webaudio(ma_device* pDevice, const ma_device_co
             /* The node processing callback. */
             device.scriptNode.onaudioprocess = function(e) {
                 if (device.intermediaryBufferView == null || device.intermediaryBufferView.length == 0) {
-                    device.intermediaryBufferView = new Float32Array(Module.HEAPF32.buffer, pIntermediaryBuffer, bufferSize * channels);
+                    var heapF32 = (typeof HEAPF32 !== 'undefined') ? HEAPF32 : Module.HEAPF32;
+                    device.intermediaryBufferView = new Float32Array(heapF32.buffer, pIntermediaryBuffer, bufferSize * channels);
                 }
 
                 /* Do the capture side first. */

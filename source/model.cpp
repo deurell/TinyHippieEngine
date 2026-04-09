@@ -37,12 +37,14 @@ bool Model::hasExtension(std::string_view full, std::string_view end) {
 unsigned int Model::TextureFromFile(const char *path,
                                     const std::string &directory) {
   unsigned char *data = nullptr;
-  unsigned int textureID;
+  unsigned int textureID = 0;
   glGenTextures(1, &textureID);
   GLenum format = GL_RGB;
   GLint internal_format = GL_UNSIGNED_SHORT_5_6_5;
 
-  int width, height, nrComponents;
+  int width = 0;
+  int height = 0;
+  int nrComponents = 0;
 
   bool useBasis = false;
   basist::transcoder_texture_format transcoder_format =
@@ -61,11 +63,20 @@ unsigned int Model::TextureFromFile(const char *path,
     uint32_t level_index = 0;
 
     auto transcoder = std::make_unique<basist::basisu_transcoder>(mCodeBook);
-    transcoder->start_transcoding(buffer.data(), buffer.size());
+    if (buffer.empty() ||
+        !transcoder->start_transcoding(buffer.data(), buffer.size())) {
+      LogError("Basis texture failed to start transcoding", filename);
+      glDeleteTextures(1, &textureID);
+      return 0;
+    }
 
     basist::basisu_image_info imageInfo{};
-    transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
-                               image_index);
+    if (!transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
+                                    image_index)) {
+      LogError("Basis texture failed to read image info", filename);
+      glDeleteTextures(1, &textureID);
+      return 0;
+    }
 
     uint32_t dest_size = 0;
     if (basist::basis_transcoder_format_is_uncompressed(transcoder_format)) {
@@ -79,9 +90,13 @@ unsigned int Model::TextureFromFile(const char *path,
 
     dst_data.resize(dest_size);
 
-    transcoder->transcode_image_level(
+    if (!transcoder->transcode_image_level(
         buffer.data(), buffer.size(), image_index, level_index, dst_data.data(),
-        imageInfo.m_orig_width * imageInfo.m_orig_height, transcoder_format);
+        imageInfo.m_orig_width * imageInfo.m_orig_height, transcoder_format)) {
+      LogError("Basis texture failed to transcode", filename);
+      glDeleteTextures(1, &textureID);
+      return 0;
+    }
 
     data = dst_data.data();
     width = imageInfo.m_width;
@@ -98,7 +113,7 @@ unsigned int Model::TextureFromFile(const char *path,
       format = GL_RGBA;
   }
 
-  if (data) {
+  if (data && width > 0 && height > 0) {
     glBindTexture(GL_TEXTURE_2D, textureID);
     glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
                  internal_format, data);
@@ -115,6 +130,8 @@ unsigned int Model::TextureFromFile(const char *path,
       stbi_image_free(data);
   } else {
     LogError("Texture failed to load", path);
+    glDeleteTextures(1, &textureID);
+    textureID = 0;
     if (!useBasis)
       stbi_image_free(data);
   }
@@ -213,10 +230,12 @@ Mesh Model::processShape(const tinyobj::attrib_t &attrib,
       if (!srcMat.diffuse_texname.empty()) {
         MeshTexture tex;
         tex.id = TextureFromFile(srcMat.diffuse_texname.c_str(), directory);
-        tex.type = "texture_diffuse";
-        tex.path = srcMat.diffuse_texname;
-        textures.push_back(tex);
-        textures_loaded.push_back(tex);
+        if (tex.id != 0) {
+          tex.type = "texture_diffuse";
+          tex.path = srcMat.diffuse_texname;
+          textures.push_back(tex);
+          textures_loaded.push_back(tex);
+        }
       }
     }
   }

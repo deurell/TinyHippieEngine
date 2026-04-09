@@ -46,8 +46,9 @@ public:
   void roll(float angle) { rotate(angle, 0.0f, 0.0f, 1.0f); }
 
   glm::mat4 getPerspectiveTransform() const {
-    return glm::perspective(glm::radians(mFov), mScreenSize.x / mScreenSize.y,
-                            0.1f, 100.0f);
+    float width = mScreenSize.x > 0.0f ? mScreenSize.x : 1.0f;
+    float height = mScreenSize.y > 0.0f ? mScreenSize.y : 1.0f;
+    return glm::perspective(glm::radians(mFov), width / height, 0.1f, 100.0f);
   }
 
   static glm::mat4 getOrtoTransform(float left, float right, float bottom,

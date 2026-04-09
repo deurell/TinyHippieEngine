@@ -35,28 +35,37 @@ public:
     std::ifstream imageStream(std::string(imagePath), std::ios::binary);
     std::vector<unsigned char> buffer(
         std::istreambuf_iterator<char>(imageStream), {});
+    if (buffer.empty()) {
+      std::cout << "failed to load basis texture: " << imagePath << '\n';
+      return;
+    }
 
     uint32_t image_index = 0;
     uint32_t level_index = 0;
 
     auto transcoder = std::make_unique<basist::basisu_transcoder>(&codeBook);
-    bool success = transcoder->start_transcoding(buffer.data(), buffer.size());
-    basist::basis_texture_type textureType =
-        transcoder->get_texture_type(buffer.data(), buffer.size());
-    uint32_t imageCount =
-        transcoder->get_total_images(buffer.data(), buffer.size());
+    if (!transcoder->start_transcoding(buffer.data(), buffer.size())) {
+      std::cout << "failed to start transcoding basis texture: " << imagePath
+                << '\n';
+      return;
+    }
 
     basist::basisu_image_info imageInfo{};
-    transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
-                               image_index);
+    if (!transcoder->get_image_info(buffer.data(), buffer.size(), imageInfo,
+                                    image_index)) {
+      std::cout << "failed to read basis image info: " << imagePath << '\n';
+      return;
+    }
 
     basist::basisu_image_level_info levelInfo{};
-    transcoder->get_image_level_info(buffer.data(), buffer.size(), levelInfo,
-                                     image_index, level_index);
+    if (!transcoder->get_image_level_info(buffer.data(), buffer.size(),
+                                          levelInfo, image_index,
+                                          level_index)) {
+      std::cout << "failed to read basis level info: " << imagePath << '\n';
+      return;
+    }
     uint32_t dest_size = 0;
-    bool unCompressed = false;
     if (basist::basis_transcoder_format_is_uncompressed(transcoder_format)) {
-      unCompressed = true;
       const uint32_t bytes_per_pixel =
           basist::basis_get_uncompressed_bytes_per_pixel(transcoder_format);
       const uint32_t bytes_per_line = imageInfo.m_orig_width * bytes_per_pixel;
@@ -91,8 +100,12 @@ public:
         buffer.data(), buffer.size(), 0, 0, dst_data.data(),
         imageInfo.m_orig_width * imageInfo.m_orig_height, transcoder_format, 0,
         imageInfo.m_orig_width, nullptr, imageInfo.m_orig_height);
+    if (!status) {
+      std::cout << "failed to transcode basis texture: " << imagePath << '\n';
+      return;
+    }
 
-    if (dst_data.data()) {
+    if (!dst_data.empty()) {
       glTexImage2D(GL_TEXTURE_2D, 0, format, imageInfo.m_orig_width,
                    imageInfo.m_orig_height, 0, format, internal_format,
                    dst_data.data());
@@ -106,7 +119,7 @@ public:
 
   explicit Texture(const std::string &imagePath, int textureUnit, GLint format = GL_RGB,
                    bool flipImage = true)
-      : mId(0) {
+      : mId(0), mWidth(0), mHeight(0) {
 
     glGenTextures(1, &mId);
     glActiveTexture(textureUnit);
@@ -116,7 +129,9 @@ public:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-    int height, width, channels;
+    int height = 0;
+    int width = 0;
+    int channels = 0;
     stbi_set_flip_vertically_on_load(flipImage);
     const char *path = imagePath.c_str();
 
@@ -125,11 +140,12 @@ public:
       glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, (GLenum)format,
                    GL_UNSIGNED_BYTE, data);
       glGenerateMipmap(GL_TEXTURE_2D);
+      mWidth = width;
+      mHeight = height;
+    } else {
+      std::cout << "failed to load texture: " << imagePath << '\n';
     }
     stbi_image_free(data);
-
-    mWidth = width;
-    mHeight = height;
   }
 
   ~Texture() {
@@ -140,8 +156,8 @@ public:
   }
 
   unsigned int mId;
-  unsigned int mWidth;
-  unsigned int mHeight;
+  unsigned int mWidth = 0;
+  unsigned int mHeight = 0;
 
 private:
   static bool hasExtension(std::string_view full, std::string_view end) {

@@ -1,69 +1,39 @@
 #include "planevisualizer.h"
+#include <GLFW/glfw3.h>
 
 DL::PlaneVisualizer::PlaneVisualizer(
     std::string name, DL::Camera &camera, std::string_view glslVersionString,
-    SceneNode &node, const std::function<void(DL::Shader &)> &shaderModifier,
+    SceneNode &node, DL::IRenderDevice *renderDevice,
+    const std::function<void(std::vector<DL::UniformValue> &)> &uniformModifier,
     std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
                      vertexShaderPath, fragmentShaderPath, node),
-      shaderModifier_(shaderModifier) {
+      renderDevice_(renderDevice), uniformModifier_(uniformModifier) {
+  if (renderDevice_ == nullptr) {
+    return;
+  }
 
-  const float vertices[] = {
-      // positions        // colors         // texture coords
-      1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // top right
-      1.0f,  -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // bottom right
-      -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
-      -1.0f, 1.0f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f  // top left
-  };
-
-  const unsigned int indices[] = {0, 1, 3, 1, 2, 3};
-
-  glGenVertexArrays(1, &VAO_);
-  glGenBuffers(1, &VBO_);
-  glGenBuffers(1, &EBO_);
-
-  glBindVertexArray(VAO_);
-
-  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
-
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)nullptr);
-  glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(3 * sizeof(float)));
-  glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                        (void *)(6 * sizeof(float)));
-
-  glEnableVertexAttribArray(2);
-  glBindVertexArray(0);
+  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_,
+                                            glslVersionString_);
+  mesh_ = renderDevice_->createTexturedQuad();
 }
 
 DL::PlaneVisualizer::~PlaneVisualizer() {
-  if (VAO_ != 0) {
-    glDeleteVertexArrays(1, &VAO_);
-    VAO_ = 0;
-  }
-  if (VBO_ != 0) {
-    glDeleteBuffers(1, &VBO_);
-    VBO_ = 0;
-  }
-  if (EBO_ != 0) {
-    glDeleteBuffers(1, &EBO_);
-    EBO_ = 0;
+  if (renderDevice_ != nullptr) {
+    if (mesh_.valid()) {
+      renderDevice_->destroy(mesh_);
+    }
+    if (pipeline_.valid()) {
+      renderDevice_->destroy(pipeline_);
+    }
   }
 }
 
 void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
-  shader_->use();
-  shader_->setFloat("iTime", (float)glfwGetTime());
-  shader_->setVec4f("baseColor", baseColor);
-  glm::mat4 transform = glm::mat4(1.0f);
+  if (renderDevice_ == nullptr || !mesh_.valid() || !pipeline_.valid()) {
+    return;
+  }
+
   glm::mat4 model = glm::mat4(1.0f);
 
   auto position = extractPosition(worldTransform);
@@ -74,17 +44,22 @@ void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   model = model * glm::mat4_cast(rotation);
   model = glm::scale(model, scale);
 
-  shader_->setMat4f("model", model);
   glm::mat4 view = camera_.getViewMatrix();
-  shader_->setMat4f("view", view);
   glm::mat4 projectionMatrix = camera_.getPerspectiveTransform();
-  shader_->setMat4f("projection", projectionMatrix);
 
-  if (shaderModifier_) {
-    shaderModifier_(*shader_);
+  DL::DrawCommand command;
+  command.mesh = mesh_;
+  command.pipeline = pipeline_;
+  command.uniforms.push_back(
+      DL::UniformValue::makeFloat("iTime", static_cast<float>(glfwGetTime())));
+  command.uniforms.push_back(DL::UniformValue::makeVec4("baseColor", baseColor));
+  command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
+  command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
+  command.uniforms.push_back(
+      DL::UniformValue::makeMat4("projection", projectionMatrix));
+
+  if (uniformModifier_) {
+    uniformModifier_(command.uniforms);
   }
-
-  glBindVertexArray(VAO_);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr);
-  glBindVertexArray(0);
+  renderDevice_->draw(command);
 }

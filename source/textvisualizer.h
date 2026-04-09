@@ -3,14 +3,11 @@
 #include "camera.h"
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
-#include "shader.h"
+#include "renderdevice.h"
 #include "textsprite.h"
 #include "visualizerbase.h"
-#include <GLFW/glfw3.h>
 #include <cstdint>
-#include <iostream>
 #include <map>
-#include <memory>
 #include <string>
 #include <string_view>
 
@@ -19,7 +16,7 @@ namespace DL {
 enum class TextAlignment { LEFT, CENTER };
 
 struct FontData {
-  GLuint texture = 0;
+  TextureHandle texture;
   std::shared_ptr<stbtt_packedchar[]> fontInfo;
   float fontScale = 1.0f;
   float fontSize = 0.0f;
@@ -30,7 +27,8 @@ class TextVisualizer : public VisualizerBase {
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
                           std::string glslVersionString, SceneNode &node,
-                          std::string text, const std::string& fontPath,
+                          std::string text, const std::string &fontPath,
+                          DL::IRenderDevice *renderDevice,
                           std::string vertexShaderPath,
                           std::string fragmentShaderPath);
 
@@ -49,14 +47,13 @@ private:
   GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
   void releaseFont();
+  [[nodiscard]] std::string fontCacheKey() const;
 
   std::string_view text_;
-  GLuint VAO_ = 0;
-  GLuint VBO_ = 0;
-  GLuint UVBuffer_ = 0;
-  GLuint indexBuffer_ = 0;
-  uint16_t indexElementCount_ = 0;
-  GLuint fontTexture_ = 0;
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  MeshHandle mesh_;
+  TextureHandle fontTexture_;
+  PipelineHandle pipeline_;
   TextAlignment alignment_ = TextAlignment::CENTER;
   const float kerning_ = 2.0f;
 

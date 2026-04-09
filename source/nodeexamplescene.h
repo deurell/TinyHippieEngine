@@ -5,12 +5,14 @@
 #pragma once
 #include "plane.h"
 #include "planenode.h"
+#include "renderdevice.h"
 #include "scenenode.h"
 #include "textnode.h"
 
 class NodeExampleScene : public DL::SceneNode {
 public:
-  explicit NodeExampleScene(std::string glslVersionString);
+  explicit NodeExampleScene(std::string glslVersionString,
+                            DL::IRenderDevice *renderDevice = nullptr);
   ~NodeExampleScene() override = default;
 
   void init() override;
@@ -28,6 +30,7 @@ private:
                                          glm::quat rotation);
 
   std::string glslVersionString_;
+  DL::IRenderDevice *renderDevice_ = nullptr;
   PlaneNode *plane1_ = nullptr;
   PlaneNode *plane2_ = nullptr;
   

@@ -2,9 +2,10 @@
 #include "textvisualizer.h"
 
 TextNode::TextNode(std::string_view glslVersionString,
-                   DL::SceneNode *parentNode, std::string text)
+                   DL::SceneNode *parentNode, std::string text,
+                   DL::IRenderDevice *renderDevice)
     : DL::SceneNode(parentNode), glslVersionString_(glslVersionString.data()),
-      text_(text) {}
+      renderDevice_(renderDevice), text_(text) {}
 
 void TextNode::init() {
   initCamera();
@@ -29,7 +30,7 @@ void TextNode::initCamera() {
 void TextNode::initComponents() {
   auto component = std::make_unique<DL::TextVisualizer>(
       "main", *camera_, glslVersionString_, *this, text_,
-      "Resources/C64_Pro-STYLE.ttf", "Shaders/starwars.vert",
+      "Resources/C64_Pro-STYLE.ttf", renderDevice_, "Shaders/starwars.vert",
       "Shaders/starwars.frag");
   visualizers.emplace_back(std::move(component));
 }

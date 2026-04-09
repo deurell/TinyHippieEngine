@@ -3,6 +3,7 @@
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
 #include "plane.h"
+#include "renderdevice.h"
 #include "scenenode.h"
 #include "shader.h"
 #include <string_view>
@@ -11,6 +12,7 @@ class ImageNode : public DL::SceneNode {
 public:
   explicit ImageNode(std::string_view glslVersionString, std::string imagePath,
                      basist::etc1_global_selector_codebook *codeBook,
+                     DL::IRenderDevice *renderDevice,
                      DL::SceneNode *parentNode = nullptr);
   ~ImageNode() override = default;
   void init() override;
@@ -27,4 +29,5 @@ private:
   std::string mGlslVersionString;
   std::string imagePath_;
   basist::etc1_global_selector_codebook *codeBook_;
+  DL::IRenderDevice *renderDevice_ = nullptr;
 };

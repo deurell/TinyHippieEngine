@@ -1,5 +1,6 @@
 #include "textvisualizer.h"
 #include "app.h"
+#include <GLFW/glfw3.h>
 #include <sstream>
 #include <string>
 
@@ -9,13 +10,21 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    std::string glslVersionString,
                                    SceneNode &node, const std::string text,
                                    const std::string &fontPath,
+                                   DL::IRenderDevice *renderDevice,
                                    const std::string vertexShaderPath,
                                    const std::string fragmentShaderPath)
     : VisualizerBase(camera, name, glslVersionString, vertexShaderPath,
                      fragmentShaderPath, node),
-      text_(text), fontPath_(fontPath) {
+      text_(text), renderDevice_(renderDevice), fontPath_(fontPath) {
+  if (renderDevice_ == nullptr) {
+    return;
+  }
 
-  auto it = fontCache_.find(fontPath_);
+  pipeline_ =
+      renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_,
+                                    glslVersionString_);
+
+  auto it = fontCache_.find(fontCacheKey());
   if (it != fontCache_.end()) {
     it->second.refCount++;
     fontTexture_ = it->second.texture;
@@ -24,14 +33,14 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
     fontSize_ = it->second.fontSize;
   } else {
     loadFontTexture(fontPath_);
-    if (fontTexture_ != 0) {
+    if (fontTexture_.valid()) {
       FontData data{};
       data.texture = fontTexture_;
       data.fontInfo = fontCharInfo_;
       data.fontScale = fontScale_;
       data.fontSize = fontSize_;
       data.refCount = 1;
-      fontCache_.insert(std::make_pair(fontPath_, std::move(data)));
+      fontCache_.insert(std::make_pair(fontCacheKey(), std::move(data)));
     }
   }
 
@@ -39,27 +48,22 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
 }
 
 DL::TextVisualizer::~TextVisualizer() {
-  if (VAO_ != 0) {
-    glDeleteVertexArrays(1, &VAO_);
-    VAO_ = 0;
-  }
-  if (VBO_ != 0) {
-    glDeleteBuffers(1, &VBO_);
-    VBO_ = 0;
-  }
-  if (UVBuffer_ != 0) {
-    glDeleteBuffers(1, &UVBuffer_);
-    UVBuffer_ = 0;
-  }
-  if (indexBuffer_ != 0) {
-    glDeleteBuffers(1, &indexBuffer_);
-    indexBuffer_ = 0;
+  if (renderDevice_ != nullptr) {
+    if (mesh_.valid()) {
+      renderDevice_->destroy(mesh_);
+    }
+    if (pipeline_.valid()) {
+      renderDevice_->destroy(pipeline_);
+    }
   }
   releaseFont();
 }
 
 void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
-  shader_->use();
+  if (renderDevice_ == nullptr || !mesh_.valid() || !fontTexture_.valid() ||
+      !pipeline_.valid()) {
+    return;
+  }
 
   glm::mat4 model =
       glm::translate(glm::mat4(1.0f), extractPosition(worldTransform));
@@ -68,21 +72,24 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
 
   glm::mat4 viewMatrix = camera_.getViewMatrix();
   glm::mat4 perspectiveTransform = camera_.getPerspectiveTransform();
-  shader_->setMat4f("model", model);
-  shader_->setMat4f("view", viewMatrix);
-  shader_->setMat4f("projection", perspectiveTransform);
-  shader_->setFloat("iTime", static_cast<float>(glfwGetTime()));
-  shader_->setFloat("rotAngle1", rotAngle1_);
-  shader_->setFloat("rotAngle2", rotAngle2_);
-  shader_->setFloat("c1", color1_);
-  shader_->setFloat("c2", color2_);
 
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, fontTexture_);
-  shader_->setInt("texture1", 0);
-
-  glBindVertexArray(VAO_);
-  glDrawElements(GL_TRIANGLES, indexElementCount_, GL_UNSIGNED_SHORT, nullptr);
+  DrawCommand command;
+  command.mesh = mesh_;
+  command.pipeline = pipeline_;
+  command.texture = fontTexture_;
+  command.uniforms.push_back(
+      UniformValue::makeMat4("model", model));
+  command.uniforms.push_back(
+      UniformValue::makeMat4("view", viewMatrix));
+  command.uniforms.push_back(
+      UniformValue::makeMat4("projection", perspectiveTransform));
+  command.uniforms.push_back(
+      UniformValue::makeFloat("iTime", static_cast<float>(glfwGetTime())));
+  command.uniforms.push_back(UniformValue::makeFloat("rotAngle1", rotAngle1_));
+  command.uniforms.push_back(UniformValue::makeFloat("rotAngle2", rotAngle2_));
+  command.uniforms.push_back(UniformValue::makeFloat("c1", color1_));
+  command.uniforms.push_back(UniformValue::makeFloat("c2", color2_));
+  renderDevice_->draw(command);
 }
 
 void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
@@ -144,20 +151,10 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   }
 
   stbtt_PackEnd(&context);
-  glGenTextures(1, &fontTexture_);
-  glBindTexture(GL_TEXTURE_2D, fontTexture_);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                  GL_LINEAR_MIPMAP_LINEAR);
-
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, fontAtlasWidth_, FontAtlasHeight_, 0,
-               GL_RED, GL_UNSIGNED_BYTE, atlasData.get());
-  glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  if (renderDevice_ != nullptr) {
+    fontTexture_ = renderDevice_->createAlphaTexture(
+        atlasData.get(), fontAtlasWidth_, FontAtlasHeight_);
+  }
 }
 
 DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
@@ -252,49 +249,33 @@ void DL::TextVisualizer::initGraphics() {
     offset.x = 0.0f;          // Reset the X offset for the next line
   }
 
-  glGenVertexArrays(1, &VAO_);
-  glBindVertexArray(VAO_);
-
-  glGenBuffers(1, &VBO_);
-  glBindBuffer(GL_ARRAY_BUFFER, VBO_);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * vertices.size(),
-               vertices.data(), GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glEnableVertexAttribArray(0);
-
-  glGenBuffers(1, &UVBuffer_);
-  glBindBuffer(GL_ARRAY_BUFFER, UVBuffer_);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec2) * uvs.size(), uvs.data(),
-               GL_STATIC_DRAW);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glEnableVertexAttribArray(1);
-
-  indexElementCount_ = indices.size();
-  glGenBuffers(1, &indexBuffer_);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(uint16_t) * indexElementCount_,
-               indices.data(), GL_STATIC_DRAW);
-
-  glBindVertexArray(0);
+  if (renderDevice_ != nullptr) {
+    mesh_ = renderDevice_->createMesh(vertices, uvs, indices);
+  }
 }
 
 void DL::TextVisualizer::releaseFont() {
-  if (fontPath_.empty()) {
+  if (fontPath_.empty() || renderDevice_ == nullptr) {
     return;
   }
-  auto it = fontCache_.find(fontPath_);
+  auto it = fontCache_.find(fontCacheKey());
   if (it != fontCache_.end()) {
     if (it->second.refCount > 0) {
       it->second.refCount--;
     }
     if (it->second.refCount == 0) {
-      if (it->second.texture != 0) {
-        glDeleteTextures(1, &it->second.texture);
+      if (it->second.texture.valid()) {
+        renderDevice_->destroy(it->second.texture);
       }
       fontCache_.erase(it);
     }
   }
-  fontTexture_ = 0;
+  fontTexture_ = {};
   fontCharInfo_.reset();
   fontPath_.clear();
+}
+
+std::string DL::TextVisualizer::fontCacheKey() const {
+  return fontPath_ + "@" +
+         std::to_string(reinterpret_cast<std::uintptr_t>(renderDevice_));
 }

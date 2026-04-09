@@ -182,47 +182,31 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  bool rightPressed = glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
-  bool leftPressed = glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
-
-  if (rightPressed && !nextSceneHeld_) {
-    sceneManager_.next();
-    loadCurrentScene();
-  }
-  if (leftPressed && !prevSceneHeld_) {
-    sceneManager_.previous();
-    loadCurrentScene();
-  }
-
-  nextSceneHeld_ = rightPressed;
-  prevSceneHeld_ = leftPressed;
 }
 
 void DL::App::loadSimpleScene() {
-  scene_ = std::make_unique<SimpleScene>(glslVersionString_);
-  scene_->init();
-  scene_->onScreenSizeChanged(getWindowSize());
-  scene_->onFramebufferSizeChanged(getFramebufferSize());
+  scene_ = replacePreparedScene(
+      std::move(scene_),
+      std::make_unique<SimpleScene>(glslVersionString_, renderDevice_.get()),
+      getWindowSize(), getFramebufferSize());
 }
 
 void DL::App::loadCurrentScene() {
-  auto newScene = sceneManager_.createCurrent(glslVersionString_);
-  if (!newScene) {
+  auto previousScene = std::move(scene_);
+  scene_ = replacePreparedScene(std::move(previousScene),
+                                sceneManager_.createCurrent(glslVersionString_),
+                                getWindowSize(), getFramebufferSize());
+  if (!scene_) {
     LogError("Failed to create scene");
-    return;
   }
-  scene_ = std::move(newScene);
-  scene_->init();
-  scene_->onScreenSizeChanged(getWindowSize());
-  scene_->onFramebufferSizeChanged(getFramebufferSize());
 }
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<QuickNodeScene>(std::string(glsl));
+    return std::make_unique<QuickNodeScene>(std::string(glsl), renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<NodeExampleScene>(std::string(glsl));
+    return std::make_unique<NodeExampleScene>(std::string(glsl), renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
     return std::make_unique<DemoScene>(glsl, codebook_.get());
@@ -231,7 +215,8 @@ void DL::App::registerScenes() {
     return std::make_unique<TrueTypeScene>(glsl);
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<GlosifyScene>(std::string(glsl), codebook_.get());
+    return std::make_unique<GlosifyScene>(std::string(glsl), codebook_.get(),
+                                          renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
     return std::make_unique<IntroScene>(glsl);
@@ -251,12 +236,26 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
-    scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+    if (scene_) {
+      scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+    }
   }
 }
 
 void DL::App::onKey(int key, int scancode, int action, int mod) {
   if (action != GLFW_RELEASE) {
+    if (action == GLFW_PRESS) {
+      if (key == GLFW_KEY_RIGHT) {
+        sceneManager_.next();
+        loadCurrentScene();
+        return;
+      }
+      if (key == GLFW_KEY_LEFT) {
+        sceneManager_.previous();
+        loadCurrentScene();
+        return;
+      }
+    }
     return;
   }
 
@@ -265,7 +264,9 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
     return;
   }
 
-  scene_->onKey(key);
+  if (scene_) {
+    scene_->onKey(key);
+  }
 }
 
 void DL::App::basisInit() {
@@ -276,12 +277,16 @@ void DL::App::basisInit() {
 }
 
 void DL::App::onScreenSizeChanged(int width, int height) {
-  scene_->onScreenSizeChanged({width, height});
+  if (scene_) {
+    scene_->onScreenSizeChanged({width, height});
+  }
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
   glViewport(0, 0, width, height);
-  scene_->onFramebufferSizeChanged({width, height});
+  if (scene_) {
+    scene_->onFramebufferSizeChanged({width, height});
+  }
 }
 
 glm::vec2 DL::App::getWindowSize() const {

@@ -5,14 +5,15 @@
 
 #include "camera.h"
 #include "iscene.h"
-#include "plane.h"
+#include "renderdevice.h"
 #include "shader.h"
 #include <string_view>
 
 class SimpleScene : public DL::IScene {
 public:
-  explicit SimpleScene(std::string_view glslVersionString);
-  ~SimpleScene() override = default;
+  SimpleScene(std::string_view glslVersionString,
+              DL::IRenderDevice *renderDevice);
+  ~SimpleScene() override;
 
   void init() override;
   void update(const DL::FrameContext &ctx) override;
@@ -23,7 +24,9 @@ public:
 
 private:
   std::unique_ptr<DL::Camera> mCamera;
-  std::unique_ptr<DL::Plane> mPlane;
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::MeshHandle mesh_;
+  DL::PipelineHandle pipeline_;
   glm::vec2 mScreenSize{0, 0};
   std::string mGlslVersionString;
 };

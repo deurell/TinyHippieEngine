@@ -27,6 +27,16 @@ struct GLMesh {
   }
 };
 
+struct GLTextureResource {
+  GLuint id = 0;
+
+  ~GLTextureResource() {
+    if (id != 0) {
+      glDeleteTextures(1, &id);
+    }
+  }
+};
+
 class OpenGLRenderDevice final : public IRenderDevice {
 public:
   auto createTexturedQuad() -> MeshHandle override {
@@ -64,6 +74,51 @@ public:
     return storeResource<MeshHandle>(std::move(mesh), meshes_);
   }
 
+  auto createMesh(const std::vector<glm::vec3> &positions,
+                  const std::vector<glm::vec2> &uvs,
+                  const std::vector<std::uint16_t> &indices) -> MeshHandle override {
+    if (positions.empty() || positions.size() != uvs.size() || indices.empty()) {
+      return {};
+    }
+
+    std::vector<float> vertex_data;
+    vertex_data.reserve(positions.size() * 5);
+    for (std::size_t i = 0; i < positions.size(); ++i) {
+      vertex_data.push_back(positions[i].x);
+      vertex_data.push_back(positions[i].y);
+      vertex_data.push_back(positions[i].z);
+      vertex_data.push_back(uvs[i].x);
+      vertex_data.push_back(uvs[i].y);
+    }
+
+    std::vector<unsigned int> index_data(indices.begin(), indices.end());
+
+    auto mesh = std::make_unique<GLMesh>();
+    glGenVertexArrays(1, &mesh->vao);
+    glGenBuffers(1, &mesh->vbo);
+    glGenBuffers(1, &mesh->ebo);
+
+    glBindVertexArray(mesh->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertex_data.size() * sizeof(float)),
+                 vertex_data.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(index_data.size() * sizeof(unsigned int)),
+                 index_data.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)nullptr);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    mesh->index_count = static_cast<GLsizei>(index_data.size());
+    return storeResource<MeshHandle>(std::move(mesh), meshes_);
+  }
+
   auto createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) -> TextureHandle override {
@@ -71,6 +126,35 @@ public:
     if (texture->mId == 0) {
       return {};
     }
+    auto resource = std::make_unique<GLTextureResource>();
+    resource->id = texture->mId;
+    texture->mId = 0;
+    return storeResource<TextureHandle>(std::move(resource), textures_);
+  }
+
+  auto createAlphaTexture(const std::uint8_t *pixels, std::uint32_t width,
+                          std::uint32_t height) -> TextureHandle override {
+    if (pixels == nullptr || width == 0 || height == 0) {
+      return {};
+    }
+
+    auto texture = std::make_unique<GLTextureResource>();
+    glGenTextures(1, &texture->id);
+    if (texture->id == 0) {
+      return {};
+    }
+
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<GLsizei>(width),
+                 static_cast<GLsizei>(height), 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
+    glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
     return storeResource<TextureHandle>(std::move(texture), textures_);
   }
 
@@ -104,7 +188,7 @@ public:
       auto texture_it = textures_.find(command.texture.value);
       if (texture_it != textures_.end()) {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture_it->second->mId);
+        glBindTexture(GL_TEXTURE_2D, texture_it->second->id);
         pipeline.setInt("texture1", 0);
       }
     }
@@ -115,6 +199,8 @@ public:
       } else if (uniform.type == UniformValue::Type::Mat4) {
         auto matrix = uniform.mat4_value;
         pipeline.setMat4f(uniform.name, matrix);
+      } else if (uniform.type == UniformValue::Type::Vec4) {
+        pipeline.setVec4f(uniform.name, uniform.vec4_value);
       }
     }
 
@@ -135,7 +221,7 @@ private:
 
   std::size_t next_resource_id_ = 1;
   std::unordered_map<std::size_t, std::unique_ptr<GLMesh>> meshes_;
-  std::unordered_map<std::size_t, std::unique_ptr<Texture>> textures_;
+  std::unordered_map<std::size_t, std::unique_ptr<GLTextureResource>> textures_;
   std::unordered_map<std::size_t, std::unique_ptr<Shader>> pipelines_;
 };
 

@@ -11,7 +11,6 @@ TrueTypeScene::TrueTypeScene(std::string_view glslVersion)
     : mGlslVersionString(glslVersion) {}
 
 void TrueTypeScene::renderScroll(float delta) {
-
   mLabelShader->use();
 
   glm::vec3 pivot = {260, 0, 0};
@@ -29,9 +28,8 @@ void TrueTypeScene::renderScroll(float delta) {
   mLabelShader->setMat4f("model", rotate);
 
   glm::mat4 view = mLabelCamera->getViewMatrix();
-  mLabelShader->setMat4f("view", view);
-
   glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
+  mLabelShader->setMat4f("view", view);
   mLabelShader->setMat4f("projection", projectionMatrix);
 
   mLabelShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
@@ -39,7 +37,6 @@ void TrueTypeScene::renderScroll(float delta) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mTextSprite->mFontTexture);
   mLabelShader->setInt("texture1", 0);
-
   mTextSprite->render(delta);
 }
 
@@ -65,17 +62,15 @@ void TrueTypeScene::renderStatus(float delta) {
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, glm::vec3(-14.0, 9.0, 0.0) + mStatusOffset);
   model = glm::scale(model, glm::vec3(0.03, 0.03, 1.0));
-  mStatusShader->setMat4f("model", model);
   glm::mat4 view = mLabelCamera->getViewMatrix();
-  mStatusShader->setMat4f("view", view);
   glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
+  mStatusShader->setMat4f("model", model);
+  mStatusShader->setMat4f("view", view);
   mStatusShader->setMat4f("projection", projectionMatrix);
-
   mStatusShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mStatusSprite->mFontTexture);
   mStatusShader->setInt("texture1", 0);
-
   mStatusSprite->render(delta);
 }
 

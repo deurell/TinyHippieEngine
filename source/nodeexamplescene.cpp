@@ -11,8 +11,10 @@
 #include "textnode.h"
 #include "textvisualizer.h"
 
-NodeExampleScene::NodeExampleScene(std::string glslVersionString)
-    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)) {}
+NodeExampleScene::NodeExampleScene(std::string glslVersionString,
+                                   DL::IRenderDevice *renderDevice)
+    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)),
+      renderDevice_(renderDevice) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
@@ -51,7 +53,8 @@ that can save her people and restore
 freedom to the galaxy...
   )";
 
-  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
+  auto textNode =
+      std::make_unique<TextNode>(glslVersionString_, this, text, renderDevice_);
   textNode->init();
   textNode->setLocalPosition(INITIAL_TEXT_POSITION);
   textNode->setLocalScale({.1f, .1f, 1});
@@ -125,7 +128,8 @@ void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
 std::unique_ptr<PlaneNode> NodeExampleScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
+  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_, nullptr, nullptr,
+                                               renderDevice_);
   planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);

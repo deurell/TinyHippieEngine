@@ -25,7 +25,7 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html
 endif()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
-        include/renderdevice.h source/openglrenderdevice.cpp
+        include/renderdevice.h source/openglrenderdevice.cpp include/scenelifecycle.h source/scenelifecycle.cpp
         source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
         source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp include/app.h include/iscene.h include/demoscene.h include/c64scene.h include/truetypescene.h include/textsprite.h
         include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
@@ -63,6 +63,8 @@ target_include_directories(tiny_hippie_engine
         ${CMAKE_SOURCE_DIR}/transcoder
 )
 
+target_compile_definitions(tiny_hippie_engine PRIVATE GLFW_INCLUDE_NONE)
+
 add_library(imgui STATIC
         imgui/imconfig.h
         imgui/imgui.cpp
@@ -83,6 +85,8 @@ target_include_directories(imgui
         PUBLIC ${CMAKE_SOURCE_DIR}/imgui
         PRIVATE ${CMAKE_SOURCE_DIR}/include
 )
+
+target_compile_definitions(imgui PRIVATE GLFW_INCLUDE_NONE)
 
 add_library(basisu STATIC
         transcoder/basisu_file_headers.h
@@ -164,8 +168,11 @@ include(GoogleTest)
 
 add_executable(tiny_hippie_engine_tests
         tests/camera_test.cpp
+        tests/iscene_test.cpp
+        tests/scenelifecycle_test.cpp
         tests/scenemanager_test.cpp
         tests/scenenode_test.cpp
+        source/scenelifecycle.cpp
         source/scenenode.cpp
 )
 
@@ -174,6 +181,8 @@ target_include_directories(tiny_hippie_engine_tests
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/source
 )
+
+target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
 
 target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
 

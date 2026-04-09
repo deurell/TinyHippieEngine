@@ -7,9 +7,11 @@
 
 ImageNode::ImageNode(std::string_view glslVersionString, std::string imagePath,
                      basist::etc1_global_selector_codebook *codeBook,
+                     DL::IRenderDevice *renderDevice,
                      DL::SceneNode *parentNode)
     : SceneNode(parentNode), mGlslVersionString(glslVersionString.data()),
-      imagePath_(std::move(imagePath)), codeBook_(codeBook) {}
+      imagePath_(std::move(imagePath)), codeBook_(codeBook),
+      renderDevice_(renderDevice) {}
 
 void ImageNode::init() {
   SceneNode::init();
@@ -37,10 +39,9 @@ void ImageNode::initComponents() {
   std::string vertexShaderPath = "Shaders/image.vert";
   std::string fragmentShaderPath = "Shaders/image.frag";
   
-  auto texture = std::make_unique<DL::Texture>(imagePath_, GL_TEXTURE0, *codeBook_);
   auto visualizer = std::make_unique<DL::ImageVisualizer>(
       "ImageVisualizer", *mCamera, mGlslVersionString, *this,
-      std::move(texture), codeBook_);
+      imagePath_, codeBook_, renderDevice_);
 
   visualizers.emplace_back(std::move(visualizer));
 }

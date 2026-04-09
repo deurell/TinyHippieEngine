@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basisu_transcoder.h"
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
@@ -25,7 +26,7 @@ struct PipelineHandle {
 };
 
 struct UniformValue {
-  enum class Type { Float, Mat4 };
+  enum class Type { Float, Mat4, Vec4 };
 
   static UniformValue makeFloat(std::string name, float value) {
     UniformValue uniform;
@@ -43,10 +44,19 @@ struct UniformValue {
     return uniform;
   }
 
+  static UniformValue makeVec4(std::string name, const glm::vec4 &value) {
+    UniformValue uniform;
+    uniform.name = std::move(name);
+    uniform.type = Type::Vec4;
+    uniform.vec4_value = value;
+    return uniform;
+  }
+
   std::string name;
   Type type = Type::Float;
   float float_value = 0.0f;
   glm::mat4 mat4_value = glm::mat4(1.0f);
+  glm::vec4 vec4_value = glm::vec4(0.0f);
 };
 
 struct DrawCommand {
@@ -61,9 +71,16 @@ public:
   virtual ~IRenderDevice() = default;
 
   virtual auto createTexturedQuad() -> MeshHandle = 0;
+  virtual auto createMesh(const std::vector<glm::vec3> &positions,
+                          const std::vector<glm::vec2> &uvs,
+                          const std::vector<std::uint16_t> &indices)
+      -> MeshHandle = 0;
   virtual auto createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) -> TextureHandle = 0;
+  virtual auto createAlphaTexture(const std::uint8_t *pixels,
+                                  std::uint32_t width,
+                                  std::uint32_t height) -> TextureHandle = 0;
   virtual auto createPipeline(std::string_view vertex_path,
                               std::string_view fragment_path,
                               std::string_view glsl_version)

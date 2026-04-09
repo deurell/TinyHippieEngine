@@ -2,6 +2,7 @@
 #include "basisu_transcoder.h"
 #include "camera.h"
 #include "iscene.h"
+#include "scenelifecycle.h"
 #include "scenemanager.h"
 #include "model.h"
 #include "renderdevice.h"

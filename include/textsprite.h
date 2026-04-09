@@ -27,8 +27,8 @@ public:
   TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::string_view text);
   ~TextSprite();
 
-  void render(float delta) const;
   stbtt_packedchar *getFontCharInfoPtr();
+  void render(float delta) const;
 
   std::string mText;
   GLuint mVAO = 0;

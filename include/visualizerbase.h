@@ -4,7 +4,6 @@
 
 #pragma once
 #include "camera.h"
-#include "shader.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,9 +24,7 @@ public:
       : camera_(camera), name_(std::move(name)),
         glslVersionString_(std::move(glslVersionString)),
         vertexShaderPath_(std::move(vertexShaderPath)),
-        fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node),
-      shader_(std::make_unique<DL::Shader>(
-    vertexShaderPath_, fragmentShaderPath_, glslVersionString_)) {}
+        fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
   virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
   virtual ~VisualizerBase() = default;
@@ -65,7 +62,6 @@ protected:
   std::string glslVersionString_;
   std::string vertexShaderPath_;
   std::string fragmentShaderPath_;
-  std::unique_ptr<DL::Shader> shader_;
   DL::SceneNode &node_;
 };
 } // namespace DL

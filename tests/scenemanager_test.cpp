@@ -97,4 +97,21 @@ TEST(SceneManagerTest, PreviousWrapsToLastSceneFromStart) {
   EXPECT_EQ(dynamic_cast<StubScene *>(current.get())->glslVersion_, "scene_1");
 }
 
+TEST(SceneManagerTest, SingleSceneRemainsCurrentAcrossNavigation) {
+  DL::SceneManager manager;
+  manager.registerScene([](std::string_view) {
+    return std::make_unique<StubScene>("only_scene");
+  });
+
+  manager.next();
+  auto current = manager.createCurrent("");
+  ASSERT_NE(current, nullptr);
+  EXPECT_EQ(dynamic_cast<StubScene *>(current.get())->glslVersion_, "only_scene");
+
+  manager.previous();
+  current = manager.createCurrent("");
+  ASSERT_NE(current, nullptr);
+  EXPECT_EQ(dynamic_cast<StubScene *>(current.get())->glslVersion_, "only_scene");
+}
+
 } // namespace

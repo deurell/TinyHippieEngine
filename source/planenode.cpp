@@ -6,9 +6,10 @@
 #include "planevisualizer.h"
 
 PlaneNode::PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode, DL::Camera *camera)
+                     DL::SceneNode *parentNode, DL::Camera *camera,
+                     DL::IRenderDevice *renderDevice)
     : glslVersionString_(glslVersionString.data()), DL::SceneNode(parentNode),
-      camera_(camera) {}
+      camera_(camera), renderDevice_(renderDevice) {}
 
 void PlaneNode::init() {
   SceneNode::init();
@@ -20,8 +21,11 @@ void PlaneNode::init() {
 void PlaneNode::update(const DL::FrameContext &ctx) {
   SceneNode::update(ctx);
 
-  auto* visualizer= dynamic_cast<DL::PlaneVisualizer*>(getVisualizer("PlaneVisualizer"));
-  visualizer->baseColor = color;
+  auto *visualizer =
+      dynamic_cast<DL::PlaneVisualizer *>(getVisualizer("PlaneVisualizer"));
+  if (visualizer != nullptr) {
+    visualizer->baseColor = color;
+  }
 }
 
 void PlaneNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
@@ -49,14 +53,16 @@ void PlaneNode::initComponents() {
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
 
-  std::function<void(DL::Shader &)> shaderModifier;
+  std::function<void(std::vector<DL::UniformValue> &)> uniformModifier;
   if (planeType == PlaneType::Spinner) {
-    shaderModifier = [](DL::Shader &shader) { shader.setFloat("speed", 0.25f); };
+    uniformModifier = [](std::vector<DL::UniformValue> &uniforms) {
+      uniforms.push_back(DL::UniformValue::makeFloat("speed", 0.25f));
+    };
   }
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *camera_, glslVersionString_, *this, shaderModifier,
-      vertexShaderPath, fragmentShaderPath);
+      "PlaneVisualizer", *camera_, glslVersionString_, *this, renderDevice_,
+      uniformModifier, vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
 
   visualizers.emplace_back(std::move(visualizer));

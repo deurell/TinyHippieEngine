@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
+include(CTest)
+
 add_compile_definitions(USE_IMGUI)
 
 set(PLATFORM_LIBS "")
@@ -142,4 +144,35 @@ foreach(asset_dir IN ITEMS Shaders Resources)
             COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
     )
 endforeach()
+endif()
+
+if(BUILD_TESTING AND NOT EMSCRIPTEN)
+include(FetchContent)
+
+find_package(GTest CONFIG QUIET)
+if(NOT GTest_FOUND)
+    FetchContent_Declare(
+            googletest
+            URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(googletest)
+endif()
+
+include(GoogleTest)
+
+add_executable(tiny_hippie_engine_tests
+        tests/camera_test.cpp
+        tests/scenemanager_test.cpp
+)
+
+target_include_directories(tiny_hippie_engine_tests
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/source
+)
+
+target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
+
+gtest_discover_tests(tiny_hippie_engine_tests)
 endif()

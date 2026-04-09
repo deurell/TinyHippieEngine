@@ -41,15 +41,15 @@ void IntroScene::init() {
   mPlane2->scale = {40, 3, 1};
 }
 
-void IntroScene::update(float delta) {}
+void IntroScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void IntroScene::render(float delta) {
+void IntroScene::render(const DL::FrameContext &ctx) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-  renderLogo(delta);
-  mPlane->render(delta);
-  mPlane2->render(delta);
+  renderLogo(ctx.delta_time);
+  mPlane->render(ctx.delta_time);
+  mPlane2->render(ctx.delta_time);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();

@@ -14,7 +14,7 @@ TEST(SceneNodeTest, LocalTransformBecomesWorldTransformForRootNode) {
   node.setLocalPosition({1.0f, 2.0f, 3.0f});
   node.setLocalScale({2.0f, 3.0f, 4.0f});
 
-  node.update(0.0f);
+  node.update({});
 
   EXPECT_NEAR(node.getWorldPosition().x, 1.0f, 1e-6f);
   EXPECT_NEAR(node.getWorldPosition().y, 2.0f, 1e-6f);
@@ -33,7 +33,7 @@ TEST(SceneNodeTest, ChildWorldPositionIncludesParentTransform) {
   childPtr->setLocalPosition({0.0f, 5.0f, 0.0f});
   parent.addChild(std::move(child));
 
-  parent.update(0.0f);
+  parent.update({});
 
   EXPECT_NEAR(childPtr->getWorldPosition().x, 10.0f, 1e-6f);
   EXPECT_NEAR(childPtr->getWorldPosition().y, 5.0f, 1e-6f);
@@ -48,11 +48,11 @@ TEST(SceneNodeTest, MarkDirtyPropagatesToChildrenAfterParentChanges) {
   childPtr->setLocalPosition({1.0f, 0.0f, 0.0f});
   parent.addChild(std::move(child));
 
-  parent.update(0.0f);
+  parent.update({});
   EXPECT_NEAR(childPtr->getWorldPosition().x, 1.0f, 1e-6f);
 
   parent.setLocalPosition({2.0f, 0.0f, 0.0f});
-  parent.update(0.0f);
+  parent.update({});
 
   EXPECT_NEAR(childPtr->getWorldPosition().x, 3.0f, 1e-6f);
 }
@@ -63,7 +63,7 @@ TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
                                             glm::vec3(0.0f, 0.0f, 1.0f));
   node.setLocalRotation(rotation);
 
-  node.update(0.0f);
+  node.update({});
 
   const glm::quat worldRotation = node.getWorldRotation();
   EXPECT_NEAR(glm::angle(worldRotation), glm::angle(rotation), 1e-5f);

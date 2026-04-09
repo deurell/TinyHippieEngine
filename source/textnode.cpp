@@ -12,9 +12,9 @@ void TextNode::init() {
   SceneNode::init();
 }
 
-void TextNode::update(float delta) { SceneNode::update(delta); }
+void TextNode::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
 
-void TextNode::render(float delta) { SceneNode::render(delta); }
+void TextNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
 void TextNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);

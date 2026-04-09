@@ -106,6 +106,8 @@ int DL::App::run() {
     return EXIT_FAILURE;
   }
 
+  renderDevice_ = createOpenGLRenderDevice();
+
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
   glViewport(0, 0, frameWidth, frameHeight);
@@ -148,11 +150,11 @@ void DL::App::update() {
   if (window_) {
     processInput(window_);
   }
-  scene_->update(deltaTime_);
+  scene_->update({deltaTime_, glfwGetTime()});
 }
 
 void DL::App::render() {
-  scene_->render(deltaTime_);
+  scene_->render({deltaTime_, glfwGetTime()});
 
 #ifdef USE_IMGUI
   ImGui::Render();
@@ -235,7 +237,7 @@ void DL::App::registerScenes() {
     return std::make_unique<IntroScene>(glsl);
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<C64Scene>(glsl, codebook_.get());
+    return std::make_unique<C64Scene>(glsl, codebook_.get(), renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
     return std::make_unique<ParticleScene>(glsl);

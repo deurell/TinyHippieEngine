@@ -17,14 +17,14 @@ void PlaneNode::init() {
   setLocalPosition({0, 0, 0});
 }
 
-void PlaneNode::update(float delta) {
-  SceneNode::update(delta);
+void PlaneNode::update(const DL::FrameContext &ctx) {
+  SceneNode::update(ctx);
 
   auto* visualizer= dynamic_cast<DL::PlaneVisualizer*>(getVisualizer("PlaneVisualizer"));
   visualizer->baseColor = color;
 }
 
-void PlaneNode::render(float delta) { SceneNode::render(delta); }
+void PlaneNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);

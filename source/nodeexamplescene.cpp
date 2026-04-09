@@ -63,8 +63,8 @@ freedom to the galaxy...
   textNode_->getCamera().lookAt({0, 0, 0});
 }
 
-void NodeExampleScene::update(float delta) {
-  float time = glfwGetTime();
+void NodeExampleScene::update(const DL::FrameContext &ctx) {
+  float time = static_cast<float>(ctx.total_time);
   float rotation = sin(time * 5.0) * 0.6f;
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   if (plane2_) {
@@ -85,10 +85,10 @@ void NodeExampleScene::update(float delta) {
     wrapScrollText();
   }
 
-  SceneNode::update(delta);
+  SceneNode::update(ctx);
 }
 
-void NodeExampleScene::render(float delta) {
+void NodeExampleScene::render(const DL::FrameContext &ctx) {
   auto *textVisualizer =
       dynamic_cast<DL::TextVisualizer *>(textNode_->getVisualizer("main"));
 #ifdef USE_IMGUI
@@ -114,7 +114,7 @@ void NodeExampleScene::render(float delta) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  SceneNode::render(delta);
+  SceneNode::render(ctx);
 }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {

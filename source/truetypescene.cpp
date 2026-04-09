@@ -107,15 +107,15 @@ void TrueTypeScene::init() {
       mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
 }
 
-void TrueTypeScene::update(float /*delta*/) {}
+void TrueTypeScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void TrueTypeScene::render(float delta) {
+void TrueTypeScene::render(const DL::FrameContext &ctx) {
   if (mState == SceneState::INTRO &&
       (glfwGetTime() - mStateStartTime >= mDelayTime)) {
     mState = SceneState::RUNNING;
   }
-  mDelta = delta;
-  mScrollOffset += delta;
+  mDelta = ctx.delta_time;
+  mScrollOffset += ctx.delta_time;
   if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
     mState = SceneState::OUTRO;
@@ -131,9 +131,9 @@ void TrueTypeScene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
-  renderScroll(delta);
-  calculateStatus(delta);
-  renderStatus(delta);
+  renderScroll(ctx.delta_time);
+  calculateStatus(ctx.delta_time);
+  renderStatus(ctx.delta_time);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();

@@ -19,18 +19,18 @@ void QuickNodeScene::init() {
   }
 }
 
-void QuickNodeScene::update(float delta) {
-  SceneNode::update(delta);
-  bounce(delta);
+void QuickNodeScene::update(const DL::FrameContext &ctx) {
+  SceneNode::update(ctx);
+  bounce(ctx.delta_time);
 }
 
-void QuickNodeScene::render(float delta) {
+void QuickNodeScene::render(const DL::FrameContext &ctx) {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  SceneNode::render(delta);
+  SceneNode::render(ctx);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();

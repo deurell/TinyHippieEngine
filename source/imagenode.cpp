@@ -18,9 +18,9 @@ void ImageNode::init() {
   setLocalPosition({0, 0, 0});
 }
 
-void ImageNode::update(float delta) { SceneNode::update(delta); }
+void ImageNode::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
 
-void ImageNode::render(float delta) { SceneNode::render(delta); }
+void ImageNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
 void ImageNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);

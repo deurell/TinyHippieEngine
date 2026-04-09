@@ -14,8 +14,8 @@ public:
   ~NodeExampleScene() override = default;
 
   void init() override;
-  void update(float delta) override;
-  void render(float delta) override;
+  void update(const DL::FrameContext &ctx) override;
+  void render(const DL::FrameContext &ctx) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:

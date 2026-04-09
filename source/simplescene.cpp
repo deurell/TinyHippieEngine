@@ -26,15 +26,14 @@ void SimpleScene::init() {
   mPlane->scale = {1, 1, 1};
 }
 
-void SimpleScene::update(float delta) {
-}
+void SimpleScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void SimpleScene::render(float delta) {
+void SimpleScene::render(const DL::FrameContext &ctx) {
   glDisable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT);
 
-  mPlane->render(delta);
+  mPlane->render(ctx.delta_time);
 
 #ifdef USE_IMGUI
   ImGui_ImplOpenGL3_NewFrame();

@@ -41,7 +41,7 @@ void SceneNode::setLocalScale(const glm::vec3 &scale) {
 
 glm::vec3 SceneNode::getLocalScale() const { return localScale; }
 
-void SceneNode::update(float delta) {
+void SceneNode::update(const FrameContext &ctx) {
   if (parent) {
     updateTransforms(parent->getWorldTransform());
   } else {
@@ -49,18 +49,18 @@ void SceneNode::update(float delta) {
   }
 
   for (auto &child : children) {
-    child->update(delta);
+    child->update(ctx);
   }
 }
 
-void SceneNode::render(float delta) {
+void SceneNode::render(const FrameContext &ctx) {
 
   for (auto &visualizer : visualizers) {
-    visualizer->render(worldTransform, delta);
+    visualizer->render(worldTransform, ctx.delta_time);
   }
 
   for (auto &child : children) {
-    child->render(delta);
+    child->render(ctx);
   }
 }
 

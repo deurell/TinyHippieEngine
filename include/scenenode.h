@@ -24,8 +24,8 @@ public:
 
   // IScene methods
   void init() override;
-  void update(float delta) override;
-  void render(float delta) override;
+  void update(const FrameContext &ctx) override;
+  void render(const FrameContext &ctx) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;

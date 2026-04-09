@@ -17,8 +17,8 @@ public:
   ~TrueTypeScene() override = default;
 
   void init() override;
-  void update(float delta) override;
-  void render(float delta) override;
+  void update(const DL::FrameContext &ctx) override;
+  void render(const DL::FrameContext &ctx) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;

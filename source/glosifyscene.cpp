@@ -30,9 +30,9 @@ void DL::GlosifyScene::init() {
   addChild(std::move(imageNode));
 }
 
-void DL::GlosifyScene::update(float delta) { SceneNode::update(delta); }
+void DL::GlosifyScene::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
 
-void DL::GlosifyScene::render(float delta) {
+void DL::GlosifyScene::render(const DL::FrameContext &ctx) {
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
   glClearColor(0.0, 0.0, 0.0, 1.0);
@@ -47,7 +47,7 @@ void DL::GlosifyScene::render(float delta) {
   ImGui::End();
 #endif
 
-  SceneNode::render(delta);
+  SceneNode::render(ctx);
 }
 
 void DL::GlosifyScene::onScreenSizeChanged(glm::vec2 size) {

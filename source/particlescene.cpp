@@ -20,7 +20,7 @@ void ParticleScene::init() {
   }
 }
 
-void ParticleScene::update(float delta) {}
+void ParticleScene::update(const DL::FrameContext & /*ctx*/) {}
 
 void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
@@ -49,15 +49,15 @@ void ParticleScene::initPlanes() {
   }
 }
 
-void ParticleScene::render(float delta) {
+void ParticleScene::render(const DL::FrameContext &ctx) {
   glDisable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  particleSystem_->updatePhysics(delta);
+  particleSystem_->updatePhysics(ctx.delta_time);
 
   for (auto &plane : mPlanes) {
-    plane->render(delta);
+    plane->render(ctx.delta_time);
   }
 
 #ifdef USE_IMGUI

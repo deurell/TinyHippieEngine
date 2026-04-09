@@ -104,11 +104,11 @@ void DemoScene::init() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 5.0f, 7.0f));
   camera_->lookAt({0.0f, 0.0f, 0.0f});
 }
-void DemoScene::update(float delta) {}
+void DemoScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void DemoScene::render(float delta) {
-  auto time = static_cast<float>(glfwGetTime());
-  delta_ = delta;
+void DemoScene::render(const DL::FrameContext &ctx) {
+  auto time = static_cast<float>(ctx.total_time);
+  delta_ = ctx.delta_time;
   glClearColor(0.52f, 0.81f, .92f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -119,7 +119,7 @@ void DemoScene::render(float delta) {
 
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-  ImGui::Text("iTime: %.1f", glfwGetTime());
+  ImGui::Text("iTime: %.1f", ctx.total_time);
   ImGui::InputFloat3("mod", &modelTranslate_.x);
   ImGui::InputFloat3("cam", &camera_->mPosition.x);
   ImGui::InputFloat3("light", &pointLightPositions_[0].x);
@@ -127,13 +127,13 @@ void DemoScene::render(float delta) {
   ImGui::End();
 #endif
 
-  pointLightPositions_[0].x = 2.0 * glm::cos(-1.5 * glfwGetTime());
-  pointLightPositions_[0].z = 4.0 * glm::cos(1.3 * glfwGetTime());
-  pointLightPositions_[0].y = 1.0 + 0.5 * glm::sin(-1.1 * glfwGetTime());
+  pointLightPositions_[0].x = 2.0 * glm::cos(-1.5 * ctx.total_time);
+  pointLightPositions_[0].z = 4.0 * glm::cos(1.3 * ctx.total_time);
+  pointLightPositions_[0].y = 1.0 + 0.5 * glm::sin(-1.1 * ctx.total_time);
 
-  pointLightPositions_[1].x = 1.5 * glm::sin(0.9 * glfwGetTime());
-  pointLightPositions_[1].z = 1.5 * glm::cos(1.3 * glfwGetTime());
-  pointLightPositions_[1].y = 1.0 + 0.8f * glm::sin(-0.2 * glfwGetTime());
+  pointLightPositions_[1].x = 1.5 * glm::sin(0.9 * ctx.total_time);
+  pointLightPositions_[1].z = 1.5 * glm::cos(1.3 * ctx.total_time);
+  pointLightPositions_[1].y = 1.0 + 0.8f * glm::sin(-0.2 * ctx.total_time);
 
   lightingShader_->use();
 
@@ -170,7 +170,7 @@ void DemoScene::render(float delta) {
   glm::mat4 m2 = glm::mat4(1.0f);
   m2 = glm::scale(m2, glm::vec3(0.5f, 0.5f, 0.5f));
   m2 = glm::translate(m2, modelTranslate_);
-  m2 = glm::rotate(m2, glm::radians<float>(glfwGetTime()) * 10,
+  m2 = glm::rotate(m2, glm::radians<float>(time) * 10,
                    glm::vec3(0.0, 1.0, 0.0));
 
   lightingShader_->setMat4f("model", m2);

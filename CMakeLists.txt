@@ -164,6 +164,8 @@ include(GoogleTest)
 add_executable(tiny_hippie_engine_tests
         tests/camera_test.cpp
         tests/scenemanager_test.cpp
+        tests/scenenode_test.cpp
+        source/scenenode.cpp
 )
 
 target_include_directories(tiny_hippie_engine_tests

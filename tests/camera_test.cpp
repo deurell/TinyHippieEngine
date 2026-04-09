@@ -28,4 +28,23 @@ TEST(CameraTest, PerspectiveTransformUsesConfiguredAspectRatio) {
   EXPECT_NEAR(projection[0][0], expected, 1e-5f);
 }
 
+TEST(CameraTest, TranslateMovesPositionInLocalSpaceWithIdentityOrientation) {
+  DL::Camera camera({1.0f, 2.0f, 3.0f});
+
+  camera.translate({4.0f, -2.0f, 1.0f});
+
+  EXPECT_FLOAT_EQ(camera.getPosition().x, 5.0f);
+  EXPECT_FLOAT_EQ(camera.getPosition().y, 0.0f);
+  EXPECT_FLOAT_EQ(camera.getPosition().z, 4.0f);
+}
+
+TEST(CameraTest, OrthoTransformUsesProvidedBounds) {
+  const glm::mat4 projection = DL::Camera::getOrtoTransform(-2.0f, 6.0f, -3.0f, 5.0f);
+
+  EXPECT_NEAR(projection[0][0], 0.25f, 1e-6f);
+  EXPECT_NEAR(projection[1][1], 0.25f, 1e-6f);
+  EXPECT_NEAR(projection[3][0], -0.5f, 1e-6f);
+  EXPECT_NEAR(projection[3][1], -0.25f, 1e-6f);
+}
+
 } // namespace

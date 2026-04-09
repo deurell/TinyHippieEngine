@@ -53,17 +53,11 @@ void PlaneNode::initComponents() {
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
 
-  std::function<void(std::vector<DL::UniformValue> &)> uniformModifier;
-  if (planeType == PlaneType::Spinner) {
-    uniformModifier = [](std::vector<DL::UniformValue> &uniforms) {
-      uniforms.push_back(DL::UniformValue::makeFloat("speed", 0.25f));
-    };
-  }
-
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
       "PlaneVisualizer", *camera_, glslVersionString_, *this, renderDevice_,
-      uniformModifier, vertexShaderPath, fragmentShaderPath);
+      vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
+  visualizer->spinnerEnabled = planeType == PlaneType::Spinner;
 
   visualizers.emplace_back(std::move(visualizer));
 }

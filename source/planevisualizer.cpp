@@ -4,11 +4,10 @@
 DL::PlaneVisualizer::PlaneVisualizer(
     std::string name, DL::Camera &camera, std::string_view glslVersionString,
     SceneNode &node, DL::IRenderDevice *renderDevice,
-    const std::function<void(std::vector<DL::UniformValue> &)> &uniformModifier,
     std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
                      vertexShaderPath, fragmentShaderPath, node),
-      renderDevice_(renderDevice), uniformModifier_(uniformModifier) {
+      renderDevice_(renderDevice) {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -57,9 +56,9 @@ void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
   command.uniforms.push_back(
       DL::UniformValue::makeMat4("projection", projectionMatrix));
-
-  if (uniformModifier_) {
-    uniformModifier_(command.uniforms);
+  if (spinnerEnabled) {
+    command.uniforms.push_back(
+        DL::UniformValue::makeFloat("speed", spinnerSpeed));
   }
   renderDevice_->draw(command);
 }

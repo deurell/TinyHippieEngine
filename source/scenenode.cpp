@@ -108,11 +108,14 @@ void SceneNode::onScreenSizeChanged(glm::vec2 size) {
 }
 
 void SceneNode::addChild(std::unique_ptr<SceneNode> child) {
-  child->parent = this;
+  child->setParent(this);
   children.push_back(std::move(child));
 }
 
-void SceneNode::setParent(SceneNode *parentNode) { parent = parentNode; }
+void SceneNode::setParent(SceneNode *parentNode) {
+  parent = parentNode;
+  markDirty();
+}
 
 void SceneNode::markDirty() {
   dirty = true;

@@ -55,6 +55,20 @@ struct FramePassDesc {
   DepthMode depthMode = DepthMode::Disabled;
 };
 
+enum class TextureFormat {
+  R8,
+  RGB8,
+  RGBA8,
+};
+
+struct TextureDesc {
+  const std::uint8_t *pixels = nullptr;
+  std::uint32_t width = 0;
+  std::uint32_t height = 0;
+  TextureFormat format = TextureFormat::RGBA8;
+  bool generateMipmaps = true;
+};
+
 struct UniformValue {
   enum class Type { Int, Float, Mat4, Vec2, Vec3, Vec4 };
 
@@ -134,6 +148,7 @@ public:
   virtual TextureHandle createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;
+  virtual TextureHandle createTexture(const TextureDesc &desc) = 0;
   virtual TextureHandle createAlphaTexture(const std::uint8_t *pixels,
                                            std::uint32_t width,
                                            std::uint32_t height) = 0;

@@ -77,6 +77,22 @@ TEST(SceneNodeTest, MarkDirtyPropagatesToChildrenAfterParentChanges) {
   EXPECT_NEAR(childPtr->getWorldPosition().x, 3.0f, 1e-6f);
 }
 
+TEST(SceneNodeTest, ReparentingExistingNodeMarksWorldTransformDirty) {
+  auto child = std::make_unique<TestSceneNode>();
+  auto *childPtr = child.get();
+  childPtr->setLocalPosition({1.0f, 0.0f, 0.0f});
+  childPtr->update({});
+
+  EXPECT_NEAR(childPtr->getWorldPosition().x, 1.0f, 1e-6f);
+
+  TestSceneNode parent;
+  parent.setLocalPosition({10.0f, 0.0f, 0.0f});
+  parent.addChild(std::move(child));
+  parent.update({});
+
+  EXPECT_NEAR(childPtr->getWorldPosition().x, 11.0f, 1e-6f);
+}
+
 TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
   TestSceneNode node;
   const glm::quat rotation = glm::angleAxis(glm::half_pi<float>(),

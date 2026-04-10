@@ -38,6 +38,23 @@ struct GLTextureResource {
   }
 };
 
+struct GLTextureFormat {
+  GLint internalFormat = GL_RGBA8;
+  GLenum uploadFormat = GL_RGBA;
+};
+
+GLTextureFormat toGLTextureFormat(TextureFormat format) {
+  switch (format) {
+  case TextureFormat::R8:
+    return {GL_R8, GL_RED};
+  case TextureFormat::RGB8:
+    return {GL_RGB8, GL_RGB};
+  case TextureFormat::RGBA8:
+    return {GL_RGBA8, GL_RGBA};
+  }
+  return {GL_RGBA8, GL_RGBA};
+}
+
 class OpenGLRenderDevice final : public IRenderDevice {
 public:
   explicit OpenGLRenderDevice(std::string glslVersion)
@@ -139,7 +156,15 @@ public:
   TextureHandle createAlphaTexture(const std::uint8_t *pixels,
                                    std::uint32_t width,
                                    std::uint32_t height) override {
-    if (pixels == nullptr || width == 0 || height == 0) {
+    return createTexture({.pixels = pixels,
+                          .width = width,
+                          .height = height,
+                          .format = TextureFormat::R8,
+                          .generateMipmaps = true});
+  }
+
+  TextureHandle createTexture(const TextureDesc &desc) override {
+    if (desc.pixels == nullptr || desc.width == 0 || desc.height == 0) {
       return {};
     }
 
@@ -154,11 +179,18 @@ public:
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, static_cast<GLsizei>(width),
-                 static_cast<GLsizei>(height), 0, GL_RED, GL_UNSIGNED_BYTE, pixels);
-    glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    desc.generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+
+    const auto glFormat = toGLTextureFormat(desc.format);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internalFormat,
+                 static_cast<GLsizei>(desc.width),
+                 static_cast<GLsizei>(desc.height), 0, glFormat.uploadFormat,
+                 GL_UNSIGNED_BYTE, desc.pixels);
+    if (desc.generateMipmaps) {
+      glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+      glGenerateMipmap(GL_TEXTURE_2D);
+    }
 
     return storeResource<TextureHandle>(std::move(texture), textures_);
   }

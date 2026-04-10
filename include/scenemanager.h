@@ -3,25 +3,23 @@
 #include "iscene.h"
 #include <functional>
 #include <memory>
-#include <string_view>
 #include <vector>
 
 namespace DL {
 
 class SceneManager {
 public:
-  using SceneFactory =
-      std::function<std::unique_ptr<DL::IScene>(std::string_view glslVersion)>;
+  using SceneFactory = std::function<std::unique_ptr<DL::IScene>()>;
 
   void registerScene(SceneFactory factory) {
     factories_.push_back(std::move(factory));
   }
 
-  std::unique_ptr<DL::IScene> createCurrent(std::string_view glsl) const {
+  std::unique_ptr<DL::IScene> createCurrent() const {
     if (factories_.empty()) {
       return nullptr;
     }
-    return factories_[currentIndex_](glsl);
+    return factories_[currentIndex_]();
   }
 
   bool hasScenes() const { return !factories_.empty(); }

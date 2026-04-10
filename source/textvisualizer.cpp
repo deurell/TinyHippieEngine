@@ -176,8 +176,13 @@ bool DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
 
   stbtt_PackEnd(&context);
   if (renderDevice_ != nullptr) {
-    fontTexture_ = renderDevice_->createAlphaTexture(
-        atlasData.get(), fontAtlasWidth_, FontAtlasHeight_);
+    fontTexture_ = renderDevice_->createTexture({
+        .pixels = atlasData.get(),
+        .width = fontAtlasWidth_,
+        .height = FontAtlasHeight_,
+        .format = TextureFormat::R8,
+        .generateMipmaps = true,
+    });
   }
   return fontTexture_.valid();
 }

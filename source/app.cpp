@@ -110,7 +110,8 @@ int DL::App::run() {
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  glViewport(0, 0, frameWidth, frameHeight);
+  renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
+                             static_cast<std::uint32_t>(frameHeight));
 
 #ifdef USE_IMGUI
   IMGUI_CHECKVERSION();
@@ -165,7 +166,8 @@ void DL::App::render() {
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  glViewport(0, 0, frameWidth, frameHeight);
+  renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
+                             static_cast<std::uint32_t>(frameHeight));
   glfwSwapBuffers(window_);
   glfwPollEvents();
 
@@ -196,7 +198,7 @@ void DL::App::loadSimpleScene() {
 void DL::App::loadCurrentScene() {
   auto previousScene = std::move(scene_);
   scene_ = replacePreparedScene(std::move(previousScene),
-                                sceneManager_.createCurrent(glslVersionString_),
+                                sceneManager_.createCurrent(),
                                 getWindowSize(), getFramebufferSize());
   if (!scene_) {
     LogError("Failed to create scene");
@@ -204,32 +206,33 @@ void DL::App::loadCurrentScene() {
 }
 
 void DL::App::registerScenes() {
-  sceneManager_.registerScene([this](std::string_view glsl) {
+  sceneManager_.registerScene([this] {
     return std::make_unique<QuickNodeScene>(renderDevice_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
+  sceneManager_.registerScene([this] {
     return std::make_unique<NodeExampleScene>(renderDevice_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<DemoScene>(glsl, codebook_.get());
+  sceneManager_.registerScene([this] {
+    return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<TrueTypeScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<TrueTypeScene>(glslVersionString_);
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
+  sceneManager_.registerScene([this] {
     return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<IntroScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<IntroScene>(glslVersionString_);
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<C64Scene>(glsl, codebook_.get(), renderDevice_.get());
+  sceneManager_.registerScene([this] {
+    return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
+                                      renderDevice_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<ParticleScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<ParticleScene>(glslVersionString_);
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<WildCopperScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<WildCopperScene>(glslVersionString_);
   });
 }
 
@@ -284,7 +287,10 @@ void DL::App::onScreenSizeChanged(int width, int height) {
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
-  glViewport(0, 0, width, height);
+  if (renderDevice_) {
+    renderDevice_->setViewport(static_cast<std::uint32_t>(width),
+                               static_cast<std::uint32_t>(height));
+  }
   if (scene_) {
     scene_->onFramebufferSizeChanged({width, height});
   }

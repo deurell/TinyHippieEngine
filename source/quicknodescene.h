@@ -8,8 +8,7 @@ class PlaneNode;
 
 class QuickNodeScene : public DL::SceneNode {
 public:
-  explicit QuickNodeScene(std::string_view glslVersionString,
-                          DL::IRenderDevice *renderDevice = nullptr);
+  explicit QuickNodeScene(DL::IRenderDevice *renderDevice = nullptr);
   ~QuickNodeScene() override = default;
   void init() override;
   void update(const DL::FrameContext &ctx) override;
@@ -20,7 +19,6 @@ private:
   void bounce(double totalTime) const;
   [[nodiscard]] std::unique_ptr<PlaneNode> createPlane(DL::Camera *camera);
 
-  std::string glslVersionString_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   std::unique_ptr<DL::Camera> camera_ = nullptr;
 

@@ -1,17 +1,16 @@
 #include "imagevisualizer.h"
 
 DL::ImageVisualizer::ImageVisualizer(
-    std::string name, DL::Camera &camera, std::string_view glslVersionString,
-    SceneNode &node, std::string texturePath,
+    std::string name, DL::Camera &camera, SceneNode &node,
+    std::string texturePath,
     basist::etc1_global_selector_codebook *codeBook, DL::IRenderDevice *renderDevice,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     vertexShaderPath, fragmentShaderPath, node),
+    : VisualizerBase(camera, std::move(name), vertexShaderPath,
+                     fragmentShaderPath, node),
       renderDevice_(renderDevice), texturePath_(std::move(texturePath)),
       codeBook_(codeBook) {
   if (renderDevice_ != nullptr && codeBook_ != nullptr) {
-    pipeline_ = renderDevice_->createPipeline(vertexShaderPath, fragmentShaderPath,
-                                              glslVersionString);
+    pipeline_ = renderDevice_->createPipeline(vertexShaderPath, fragmentShaderPath);
     mesh_ = renderDevice_->createTexturedQuad();
     texture_ = renderDevice_->createBasisTexture(texturePath_, *codeBook_);
   }

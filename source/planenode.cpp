@@ -5,11 +5,9 @@
 #include "planenode.h"
 #include "planevisualizer.h"
 
-PlaneNode::PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode, DL::Camera *camera,
+PlaneNode::PlaneNode(DL::SceneNode *parentNode, DL::Camera *camera,
                      DL::IRenderDevice *renderDevice)
-    : glslVersionString_(glslVersionString.data()), DL::SceneNode(parentNode),
-      camera_(camera), renderDevice_(renderDevice) {}
+    : DL::SceneNode(parentNode), camera_(camera), renderDevice_(renderDevice) {}
 
 void PlaneNode::init() {
   SceneNode::init();
@@ -54,7 +52,7 @@ void PlaneNode::initComponents() {
                                        : "Shaders/spinner.frag";
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *camera_, glslVersionString_, *this, renderDevice_,
+      "PlaneVisualizer", *camera_, *this, renderDevice_,
       vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
   visualizer->spinnerEnabled = planeType == PlaneType::Spinner;

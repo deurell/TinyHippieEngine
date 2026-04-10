@@ -34,8 +34,8 @@ struct FontData {
 class TextVisualizer : public VisualizerBase {
 public:
   explicit TextVisualizer(std::string name, DL::Camera &camera,
-                          std::string glslVersionString, SceneNode &node,
-                          std::string text, const std::string &fontPath,
+                          SceneNode &node, std::string text,
+                          const std::string &fontPath,
                           DL::IRenderDevice *renderDevice,
                           std::string vertexShaderPath,
                           std::string fragmentShaderPath);

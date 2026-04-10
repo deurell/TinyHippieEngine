@@ -1,18 +1,18 @@
 #include "planevisualizer.h"
 
 DL::PlaneVisualizer::PlaneVisualizer(
-    std::string name, DL::Camera &camera, std::string_view glslVersionString,
-    SceneNode &node, DL::IRenderDevice *renderDevice,
+    std::string name, DL::Camera &camera, SceneNode &node,
+    DL::IRenderDevice *renderDevice,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::string(glslVersionString),
-                     vertexShaderPath, fragmentShaderPath, node),
+    : VisualizerBase(camera, std::move(name), vertexShaderPath,
+                     fragmentShaderPath, node),
       renderDevice_(renderDevice) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_,
-                                            glslVersionString_);
+  pipeline_ =
+      renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
   mesh_ = renderDevice_->createTexturedQuad();
 }
 

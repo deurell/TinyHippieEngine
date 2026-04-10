@@ -8,7 +8,7 @@
 
 class ImageNode : public DL::SceneNode {
 public:
-  explicit ImageNode(std::string_view glslVersionString, std::string imagePath,
+  explicit ImageNode(std::string imagePath,
                      basist::etc1_global_selector_codebook *codeBook,
                      DL::IRenderDevice *renderDevice,
                      DL::SceneNode *parentNode = nullptr);
@@ -24,7 +24,6 @@ private:
 
   std::unique_ptr<DL::Camera> mCamera;
   glm::vec2 mScreenSize{0, 0};
-  std::string mGlslVersionString;
   std::string imagePath_;
   basist::etc1_global_selector_codebook *codeBook_;
   DL::IRenderDevice *renderDevice_ = nullptr;

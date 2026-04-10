@@ -6,12 +6,11 @@
 
 namespace DL {
 
-auto prepareScene(std::unique_ptr<IScene> scene, glm::vec2 windowSize,
-                  glm::vec2 framebufferSize) -> std::unique_ptr<IScene>;
-auto replacePreparedScene(std::unique_ptr<IScene> currentScene,
-                          std::unique_ptr<IScene> nextScene,
-                          glm::vec2 windowSize,
-                          glm::vec2 framebufferSize)
-    -> std::unique_ptr<IScene>;
+std::unique_ptr<IScene> prepareScene(std::unique_ptr<IScene> scene,
+                                     glm::vec2 windowSize,
+                                     glm::vec2 framebufferSize);
+std::unique_ptr<IScene> replacePreparedScene(
+    std::unique_ptr<IScene> currentScene, std::unique_ptr<IScene> nextScene,
+    glm::vec2 windowSize, glm::vec2 framebufferSize);
 
 } // namespace DL

@@ -13,8 +13,7 @@ class PlaneNode : public DL::SceneNode {
 public:
   enum class PlaneType { Simple, Spinner };
 
-  explicit PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode = nullptr,
+  explicit PlaneNode(DL::SceneNode *parentNode = nullptr,
                      DL::Camera *camera = nullptr,
                      DL::IRenderDevice *renderDevice = nullptr);
 
@@ -34,5 +33,4 @@ private:
   DL::Camera *camera_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   glm::vec2 screenSize_{0, 0};
-  std::string glslVersionString_;
 };

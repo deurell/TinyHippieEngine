@@ -10,8 +10,8 @@ namespace DL {
 class ImageVisualizer : public VisualizerBase {
 public:
   explicit ImageVisualizer(
-      std::string name, DL::Camera &camera, std::string_view glslVersionString,
-      SceneNode &node, std::string texturePath,
+      std::string name, DL::Camera &camera, SceneNode &node,
+      std::string texturePath,
       basist::etc1_global_selector_codebook *codeBook, DL::IRenderDevice *renderDevice,
       std::string vertexShaderPath = "Shaders/image.vert",
       std::string fragmentShaderPath = "Shaders/image.frag");

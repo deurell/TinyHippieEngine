@@ -24,7 +24,7 @@ public:
 class TestVisualizer final : public DL::VisualizerBase {
 public:
   TestVisualizer(std::string name, DL::Camera &camera, DL::SceneNode &node)
-      : DL::VisualizerBase(camera, std::move(name), "", "", "", node) {}
+      : DL::VisualizerBase(camera, std::move(name), "", "", node) {}
 
   void render(const glm::mat4 &, const DL::FrameContext &) override {}
 };

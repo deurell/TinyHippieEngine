@@ -12,8 +12,7 @@ class PlaneNode;
 namespace DL {
 class GlosifyScene : public DL::SceneNode {
 public:
-  explicit GlosifyScene(std::string glslVersionString,
-                        basist::etc1_global_selector_codebook *codeBook,
+  explicit GlosifyScene(basist::etc1_global_selector_codebook *codeBook,
                         DL::IRenderDevice *renderDevice);
   ~GlosifyScene() override = default;
 
@@ -28,7 +27,6 @@ private:
   std::unique_ptr<ImageNode> createImage(glm::vec3 position, glm::vec3 scale,
                                          glm::quat rotation);
 
-  std::string glslVersionString_;
   PlaneNode *plane_node_ = nullptr;
   ImageNode *image_node_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_;

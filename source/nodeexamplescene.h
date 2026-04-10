@@ -10,8 +10,7 @@
 
 class NodeExampleScene : public DL::SceneNode {
 public:
-  explicit NodeExampleScene(std::string glslVersionString,
-                            DL::IRenderDevice *renderDevice = nullptr);
+  explicit NodeExampleScene(DL::IRenderDevice *renderDevice = nullptr);
   ~NodeExampleScene() override = default;
 
   void init() override;
@@ -28,7 +27,6 @@ private:
   std::unique_ptr<PlaneNode> createPlane(glm::vec3 position, glm::vec3 scale,
                                          glm::quat rotation);
 
-  std::string glslVersionString_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   PlaneNode *plane1_ = nullptr;
   PlaneNode *plane2_ = nullptr;

@@ -7,11 +7,9 @@
 #include "imgui.h"
 #include "planenode.h"
 
-DL::GlosifyScene::GlosifyScene(std::string glslVersionString,
-                               basist::etc1_global_selector_codebook *codeBook,
+DL::GlosifyScene::GlosifyScene(basist::etc1_global_selector_codebook *codeBook,
                                DL::IRenderDevice *renderDevice)
-    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)),
-      codeBook_(codeBook), renderDevice_(renderDevice) {}
+    : SceneNode(nullptr), codeBook_(codeBook), renderDevice_(renderDevice) {}
 
 void DL::GlosifyScene::init() {
   SceneNode::init();
@@ -56,8 +54,7 @@ void DL::GlosifyScene::onScreenSizeChanged(glm::vec2 size) {
 std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto planeNode =
-      std::make_unique<PlaneNode>(glslVersionString_, nullptr, nullptr, renderDevice_);
+  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_);
   planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);
@@ -69,8 +66,8 @@ std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
 std::unique_ptr<ImageNode> DL::GlosifyScene::createImage(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto imageNode = std::make_unique<ImageNode>(
-      glslVersionString_, "Resources/sup.basis", codeBook_, renderDevice_);
+  auto imageNode =
+      std::make_unique<ImageNode>("Resources/sup.basis", codeBook_, renderDevice_);
   imageNode->init();
   imageNode->setLocalPosition(position);
   imageNode->setLocalRotation(rotation);

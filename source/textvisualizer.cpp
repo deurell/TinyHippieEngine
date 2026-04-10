@@ -6,22 +6,18 @@
 static std::map<std::string, DL::FontData> fontCache_;
 
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
-                                   std::string glslVersionString,
                                    SceneNode &node, const std::string text,
                                    const std::string &fontPath,
                                    DL::IRenderDevice *renderDevice,
                                    const std::string vertexShaderPath,
                                    const std::string fragmentShaderPath)
-    : VisualizerBase(camera, name, glslVersionString, vertexShaderPath,
-                     fragmentShaderPath, node),
+    : VisualizerBase(camera, name, vertexShaderPath, fragmentShaderPath, node),
       text_(text), renderDevice_(renderDevice), fontPath_(fontPath) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ =
-      renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_,
-                                    glslVersionString_);
+  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
 
   auto it = fontCache_.find(fontCacheKey());
   if (it != fontCache_.end()) {

@@ -3,6 +3,7 @@
 #include "shader.h"
 #include "texture.h"
 #include <glad/glad.h>
+#include <string>
 #include <unordered_map>
 
 namespace DL {
@@ -39,7 +40,10 @@ struct GLTextureResource {
 
 class OpenGLRenderDevice final : public IRenderDevice {
 public:
-  auto createTexturedQuad() -> MeshHandle override {
+  explicit OpenGLRenderDevice(std::string glslVersion)
+      : glslVersion_(std::move(glslVersion)) {}
+
+  MeshHandle createTexturedQuad() override {
     static constexpr float vertices[] = {
         1.0f,  1.0f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,
         1.0f,  -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,
@@ -74,9 +78,9 @@ public:
     return storeResource<MeshHandle>(std::move(mesh), meshes_);
   }
 
-  auto createMesh(const std::vector<glm::vec3> &positions,
-                  const std::vector<glm::vec2> &uvs,
-                  const std::vector<std::uint16_t> &indices) -> MeshHandle override {
+  MeshHandle createMesh(const std::vector<glm::vec3> &positions,
+                        const std::vector<glm::vec2> &uvs,
+                        const std::vector<std::uint16_t> &indices) override {
     if (positions.empty() || positions.size() != uvs.size() || indices.empty()) {
       return {};
     }
@@ -119,9 +123,9 @@ public:
     return storeResource<MeshHandle>(std::move(mesh), meshes_);
   }
 
-  auto createBasisTexture(
+  TextureHandle createBasisTexture(
       std::string_view path,
-      basist::etc1_global_selector_codebook &codebook) -> TextureHandle override {
+      basist::etc1_global_selector_codebook &codebook) override {
     auto texture = std::make_unique<Texture>(path, GL_TEXTURE0, codebook);
     if (texture->mId == 0) {
       return {};
@@ -132,8 +136,9 @@ public:
     return storeResource<TextureHandle>(std::move(resource), textures_);
   }
 
-  auto createAlphaTexture(const std::uint8_t *pixels, std::uint32_t width,
-                          std::uint32_t height) -> TextureHandle override {
+  TextureHandle createAlphaTexture(const std::uint8_t *pixels,
+                                   std::uint32_t width,
+                                   std::uint32_t height) override {
     if (pixels == nullptr || width == 0 || height == 0) {
       return {};
     }
@@ -158,9 +163,14 @@ public:
     return storeResource<TextureHandle>(std::move(texture), textures_);
   }
 
-  auto createPipeline(std::string_view vertex_path,
-                      std::string_view fragment_path,
-                      std::string_view glsl_version) -> PipelineHandle override {
+  PipelineHandle createPipeline(std::string_view vertex_path,
+                                std::string_view fragment_path) override {
+    return createPipeline(vertex_path, fragment_path, glslVersion_);
+  }
+
+  PipelineHandle createPipeline(std::string_view vertex_path,
+                                std::string_view fragment_path,
+                                std::string_view glsl_version) override {
     auto shader =
         std::make_unique<Shader>(vertex_path, fragment_path, glsl_version);
     if (shader->mId == 0) {
@@ -246,15 +256,16 @@ public:
 
 private:
   template <typename Handle, typename T>
-  auto storeResource(std::unique_ptr<T> resource,
-                     std::unordered_map<std::size_t, std::unique_ptr<T>> &storage)
-      -> Handle {
+  Handle storeResource(
+      std::unique_ptr<T> resource,
+      std::unordered_map<std::size_t, std::unique_ptr<T>> &storage) {
     const std::size_t id = next_resource_id_++;
     storage.emplace(id, std::move(resource));
     return Handle{id};
   }
 
   std::size_t next_resource_id_ = 1;
+  std::string glslVersion_;
   std::unordered_map<std::size_t, std::unique_ptr<GLMesh>> meshes_;
   std::unordered_map<std::size_t, std::unique_ptr<GLTextureResource>> textures_;
   std::unordered_map<std::size_t, std::unique_ptr<Shader>> pipelines_;
@@ -262,8 +273,17 @@ private:
 
 } // namespace
 
-auto createOpenGLRenderDevice() -> std::unique_ptr<IRenderDevice> {
-  return std::make_unique<OpenGLRenderDevice>();
+std::unique_ptr<IRenderDevice> createOpenGLRenderDevice(
+    std::string_view glslVersion) {
+  return std::make_unique<OpenGLRenderDevice>(std::string(glslVersion));
+}
+
+std::unique_ptr<IRenderDevice> createOpenGLRenderDevice() {
+#ifdef __EMSCRIPTEN__
+  return createOpenGLRenderDevice("#version 300 es\n");
+#else
+  return createOpenGLRenderDevice("#version 330 core\n");
+#endif
 }
 
 } // namespace DL

@@ -106,7 +106,7 @@ int DL::App::run() {
     return EXIT_FAILURE;
   }
 
-  renderDevice_ = createOpenGLRenderDevice();
+  renderDevice_ = createOpenGLRenderDevice(glslVersionString_);
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -205,10 +205,10 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<QuickNodeScene>(std::string(glsl), renderDevice_.get());
+    return std::make_unique<QuickNodeScene>(renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<NodeExampleScene>(std::string(glsl), renderDevice_.get());
+    return std::make_unique<NodeExampleScene>(renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
     return std::make_unique<DemoScene>(glsl, codebook_.get());
@@ -217,8 +217,7 @@ void DL::App::registerScenes() {
     return std::make_unique<TrueTypeScene>(glsl);
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<GlosifyScene>(std::string(glsl), codebook_.get(),
-                                          renderDevice_.get());
+    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get());
   });
   sceneManager_.registerScene([this](std::string_view glsl) {
     return std::make_unique<IntroScene>(glsl);

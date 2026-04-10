@@ -6,9 +6,8 @@
 #include <memory>
 #include <ranges>
 
-QuickNodeScene::QuickNodeScene(std::string_view glslVersionString,
-                               DL::IRenderDevice *renderDevice)
-    : glslVersionString_(glslVersionString), renderDevice_(renderDevice) {}
+QuickNodeScene::QuickNodeScene(DL::IRenderDevice *renderDevice)
+    : renderDevice_(renderDevice) {}
 
 void QuickNodeScene::init() {
   SceneNode::init();
@@ -66,7 +65,7 @@ void QuickNodeScene::bounce(double totalTime) const {
 
 std::unique_ptr<PlaneNode> QuickNodeScene::createPlane(DL::Camera *camera) {
   auto planeNode =
-      std::make_unique<PlaneNode>(glslVersionString_, this, camera, renderDevice_);
+      std::make_unique<PlaneNode>(this, camera, renderDevice_);
   planeNode->init();
   return planeNode;
 }

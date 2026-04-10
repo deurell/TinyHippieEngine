@@ -8,8 +8,7 @@
 
 class TextNode : public DL::SceneNode {
 public:
-  explicit TextNode(std::string_view glslVersionString,
-                    DL::SceneNode *parentNode = nullptr,
+  explicit TextNode(DL::SceneNode *parentNode = nullptr,
                     std::string text = "text",
                     DL::IRenderDevice *renderDevice = nullptr);
 
@@ -28,6 +27,5 @@ private:
   std::unique_ptr<DL::Camera> camera_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   glm::vec2 screenSize_{0, 0};
-  std::string glslVersionString_;
   std::string text_;
 };

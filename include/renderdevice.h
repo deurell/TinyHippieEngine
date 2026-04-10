@@ -34,12 +34,12 @@ enum class ClearFlags : std::uint8_t {
   ColorDepth = Color | Depth,
 };
 
-inline constexpr auto operator|(ClearFlags lhs, ClearFlags rhs) -> ClearFlags {
+inline constexpr ClearFlags operator|(ClearFlags lhs, ClearFlags rhs) {
   return static_cast<ClearFlags>(static_cast<std::uint8_t>(lhs) |
                                 static_cast<std::uint8_t>(rhs));
 }
 
-inline constexpr auto hasFlag(ClearFlags flags, ClearFlags flag) -> bool {
+inline constexpr bool hasFlag(ClearFlags flags, ClearFlags flag) {
   return (static_cast<std::uint8_t>(flags) &
           static_cast<std::uint8_t>(flag)) != 0;
 }
@@ -127,21 +127,21 @@ class IRenderDevice {
 public:
   virtual ~IRenderDevice() = default;
 
-  virtual auto createTexturedQuad() -> MeshHandle = 0;
-  virtual auto createMesh(const std::vector<glm::vec3> &positions,
-                          const std::vector<glm::vec2> &uvs,
-                          const std::vector<std::uint16_t> &indices)
-      -> MeshHandle = 0;
-  virtual auto createBasisTexture(
+  virtual MeshHandle createTexturedQuad() = 0;
+  virtual MeshHandle createMesh(const std::vector<glm::vec3> &positions,
+                                const std::vector<glm::vec2> &uvs,
+                                const std::vector<std::uint16_t> &indices) = 0;
+  virtual TextureHandle createBasisTexture(
       std::string_view path,
-      basist::etc1_global_selector_codebook &codebook) -> TextureHandle = 0;
-  virtual auto createAlphaTexture(const std::uint8_t *pixels,
-                                  std::uint32_t width,
-                                  std::uint32_t height) -> TextureHandle = 0;
-  virtual auto createPipeline(std::string_view vertex_path,
-                              std::string_view fragment_path,
-                              std::string_view glsl_version)
-      -> PipelineHandle = 0;
+      basist::etc1_global_selector_codebook &codebook) = 0;
+  virtual TextureHandle createAlphaTexture(const std::uint8_t *pixels,
+                                           std::uint32_t width,
+                                           std::uint32_t height) = 0;
+  virtual PipelineHandle createPipeline(std::string_view vertex_path,
+                                        std::string_view fragment_path) = 0;
+  virtual PipelineHandle createPipeline(std::string_view vertex_path,
+                                        std::string_view fragment_path,
+                                        std::string_view glsl_version) = 0;
 
   virtual void destroy(MeshHandle handle) = 0;
   virtual void destroy(TextureHandle handle) = 0;
@@ -153,6 +153,8 @@ public:
   virtual void draw(const DrawCommand &command) = 0;
 };
 
-auto createOpenGLRenderDevice() -> std::unique_ptr<IRenderDevice>;
+std::unique_ptr<IRenderDevice> createOpenGLRenderDevice(
+    std::string_view glslVersion);
+std::unique_ptr<IRenderDevice> createOpenGLRenderDevice();
 
 } // namespace DL

@@ -9,8 +9,8 @@ namespace DL {
 class PlaneVisualizer : public VisualizerBase {
 public:
   explicit PlaneVisualizer(
-      std::string name, DL::Camera &camera, std::string_view glslVersionString,
-      SceneNode &node, DL::IRenderDevice *renderDevice,
+      std::string name, DL::Camera &camera, SceneNode &node,
+      DL::IRenderDevice *renderDevice,
       std::string vertexShaderPath = "Shaders/simple.vert",
       std::string fragmentShaderPath = "Shaders/simple.frag");
 

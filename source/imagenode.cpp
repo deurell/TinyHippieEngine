@@ -5,12 +5,11 @@
 #include "imagevisualizer.h"
 #include "planevisualizer.h"
 
-ImageNode::ImageNode(std::string_view glslVersionString, std::string imagePath,
+ImageNode::ImageNode(std::string imagePath,
                      basist::etc1_global_selector_codebook *codeBook,
                      DL::IRenderDevice *renderDevice,
                      DL::SceneNode *parentNode)
-    : SceneNode(parentNode), mGlslVersionString(glslVersionString.data()),
-      imagePath_(std::move(imagePath)), codeBook_(codeBook),
+    : SceneNode(parentNode), imagePath_(std::move(imagePath)), codeBook_(codeBook),
       renderDevice_(renderDevice) {}
 
 void ImageNode::init() {
@@ -40,8 +39,8 @@ void ImageNode::initComponents() {
   std::string fragmentShaderPath = "Shaders/image.frag";
   
   auto visualizer = std::make_unique<DL::ImageVisualizer>(
-      "ImageVisualizer", *mCamera, mGlslVersionString, *this,
-      imagePath_, codeBook_, renderDevice_);
+      "ImageVisualizer", *mCamera, *this, imagePath_, codeBook_,
+      renderDevice_);
 
   visualizers.emplace_back(std::move(visualizer));
 }

@@ -6,8 +6,8 @@
 #include "renderdevice.h"
 #include "scenenode.h"
 
-class ImageNode;
 class PlaneNode;
+class SpriteNode;
 
 namespace DL {
 class GlosifyScene : public DL::SceneNode {
@@ -24,11 +24,11 @@ public:
 private:
   std::unique_ptr<PlaneNode> createPlane(glm::vec3 position, glm::vec3 scale,
                                          glm::quat rotation);
-  std::unique_ptr<ImageNode> createImage(glm::vec3 position, glm::vec3 scale,
-                                         glm::quat rotation);
+  std::unique_ptr<SpriteNode> createSprite(glm::vec3 position, glm::vec3 scale,
+                                           glm::quat rotation);
 
   PlaneNode *plane_node_ = nullptr;
-  ImageNode *image_node_ = nullptr;
+  SpriteNode *sprite_node_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_;
   DL::IRenderDevice *renderDevice_ = nullptr;
 };

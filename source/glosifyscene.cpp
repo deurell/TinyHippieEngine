@@ -3,9 +3,9 @@
 //
 #include "glosifyscene.h"
 #include "debugui.h"
-#include "imagenode.h"
 #include "imgui.h"
 #include "planenode.h"
+#include "spritenode.h"
 
 DL::GlosifyScene::GlosifyScene(basist::etc1_global_selector_codebook *codeBook,
                                DL::IRenderDevice *renderDevice)
@@ -21,11 +21,11 @@ void DL::GlosifyScene::init() {
   plane_node_ = plane.get();
   addChild(std::move(plane));
 
-  auto imageNode =
-      createImage({0, 0, 10}, {3.0, 2.0, 1.0},
-                  glm::angleAxis(glm::radians(0.0f), glm::vec3(0, 0, 1)));
-  image_node_ = imageNode.get();
-  addChild(std::move(imageNode));
+  auto spriteNode =
+      createSprite({0, 0, 10}, {3.0, 2.0, 1.0},
+                   glm::angleAxis(glm::radians(0.0f), glm::vec3(0, 0, 1)));
+  sprite_node_ = spriteNode.get();
+  addChild(std::move(spriteNode));
 }
 
 void DL::GlosifyScene::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
@@ -63,14 +63,14 @@ std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
   return planeNode;
 }
 
-std::unique_ptr<ImageNode> DL::GlosifyScene::createImage(glm::vec3 position,
-                                                         glm::vec3 scale,
-                                                         glm::quat rotation) {
-  auto imageNode =
-      std::make_unique<ImageNode>("Resources/sup.basis", codeBook_, renderDevice_);
-  imageNode->init();
-  imageNode->setLocalPosition(position);
-  imageNode->setLocalRotation(rotation);
-  imageNode->setLocalScale(scale);
-  return imageNode;
+std::unique_ptr<SpriteNode> DL::GlosifyScene::createSprite(glm::vec3 position,
+                                                           glm::vec3 scale,
+                                                           glm::quat rotation) {
+  auto spriteNode = std::make_unique<SpriteNode>("Resources/sup.basis",
+                                                codeBook_, renderDevice_);
+  spriteNode->init();
+  spriteNode->setLocalPosition(position);
+  spriteNode->setLocalRotation(rotation);
+  spriteNode->setLocalScale(scale);
+  return spriteNode;
 }

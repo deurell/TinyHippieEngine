@@ -9,10 +9,6 @@ paths=(
   source/debugui.h
   source/glosifyscene.cpp
   source/glosifyscene.h
-  source/imagevisualizer.cpp
-  source/imagevisualizer.h
-  source/imagenode.cpp
-  source/imagenode.h
   source/nodeexamplescene.cpp
   source/nodeexamplescene.h
   source/openglrenderdevice.cpp

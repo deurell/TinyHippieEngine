@@ -3,14 +3,18 @@
 //
 
 #pragma once
+#include "basisu_global_selector_palette.h"
 #include "planenode.h"
 #include "renderdevice.h"
 #include "scenenode.h"
+#include "spritenode.h"
 #include "textnode.h"
 
 class NodeExampleScene : public DL::SceneNode {
 public:
-  explicit NodeExampleScene(DL::IRenderDevice *renderDevice = nullptr);
+  explicit NodeExampleScene(
+      DL::IRenderDevice *renderDevice = nullptr,
+      basist::etc1_global_selector_codebook *codeBook = nullptr);
   ~NodeExampleScene() override = default;
 
   void init() override;
@@ -21,15 +25,17 @@ public:
 private:
   void wrapScrollText();
 
-  static constexpr glm::vec3 INITIAL_TEXT_POSITION = {-53, -24, 0};
+  static constexpr glm::vec3 INITIAL_TEXT_POSITION = {0, -24, 0};
   static constexpr float TEXT_RESET_POSITION = 100;
 
   std::unique_ptr<PlaneNode> createPlane(glm::vec3 position, glm::vec3 scale,
                                          glm::quat rotation);
 
   DL::IRenderDevice *renderDevice_ = nullptr;
+  basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   PlaneNode *plane1_ = nullptr;
   PlaneNode *plane2_ = nullptr;
+  SpriteNode *spriteNode_ = nullptr;
   
   TextNode *textNode_ = nullptr;
   float scale_ = 1.0f;

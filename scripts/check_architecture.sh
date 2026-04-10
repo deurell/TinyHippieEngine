@@ -24,6 +24,10 @@ paths=(
   source/quicknodescene.h
   source/scenenode.cpp
   source/simplescene.cpp
+  source/spritenode.cpp
+  source/spritenode.h
+  source/spritevisualizer.cpp
+  source/spritevisualizer.h
   source/textnode.cpp
   source/textnode.h
   source/textvisualizer.cpp

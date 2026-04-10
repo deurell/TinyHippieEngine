@@ -6,27 +6,18 @@
 #include "glm/ext/scalar_constants.hpp"
 #include "imgui.h"
 #include "planenode.h"
+#include "spritenode.h"
 #include "textnode.h"
 #include "textvisualizer.h"
 
-NodeExampleScene::NodeExampleScene(DL::IRenderDevice *renderDevice)
-    : SceneNode(nullptr), renderDevice_(renderDevice) {}
+NodeExampleScene::NodeExampleScene(
+    DL::IRenderDevice *renderDevice,
+    basist::etc1_global_selector_codebook *codeBook)
+    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
   setLocalPosition({0, 0, 0});
-
-  auto plane =
-      createPlane({6, 4, 0}, {4, 2, 1},
-                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
-  plane1_ = plane.get();
-  addChild(std::move(plane));
-
-  auto plane2 =
-      createPlane({-6, 4, 0}, {2, 4, 1},
-                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
-  plane2_ = plane2.get();
-  addChild(std::move(plane2));
 
   std::string text = R"(
 A long time ago,
@@ -59,6 +50,26 @@ freedom to the galaxy...
 
   textNode_->getCamera().setPosition({0, -40, 40});
   textNode_->getCamera().lookAt({0, 0, 0});
+
+  auto spriteNode = std::make_unique<SpriteNode>(
+      "Resources/sup.basis", codeBook_, renderDevice_, this);
+  spriteNode->init();
+  spriteNode->setLocalPosition({0, -7, 0});
+  spriteNode->setLocalScale({5, 3, 1});
+  spriteNode_ = spriteNode.get();
+  addChild(std::move(spriteNode));
+
+  auto plane =
+      createPlane({6, 4, 0}, {4, 2, 1},
+                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
+  plane1_ = plane.get();
+  addChild(std::move(plane));
+
+  auto plane2 =
+      createPlane({-6, 4, 0}, {2, 4, 1},
+                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
+  plane2_ = plane2.get();
+  addChild(std::move(plane2));
 }
 
 void NodeExampleScene::update(const DL::FrameContext &ctx) {
@@ -68,6 +79,11 @@ void NodeExampleScene::update(const DL::FrameContext &ctx) {
   if (plane2_) {
     plane2_->setLocalScale({scale_, scale_, 1});
     plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+  }
+
+  if (spriteNode_) {
+    spriteNode_->setLocalRotation(
+        glm::angleAxis(time * 0.4f, glm::vec3(0, 1, 0)));
   }
 
   float rotation2 = cos(time * 1.5) * glm::pi<float>();
@@ -108,7 +124,7 @@ void NodeExampleScene::render(const DL::FrameContext &ctx) {
   if (renderDevice_ != nullptr) {
     renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
                                .clearFlags = DL::ClearFlags::ColorDepth,
-                               .depthMode = DL::DepthMode::Less});
+                               .depthMode = DL::DepthMode::Disabled});
   }
 
   SceneNode::render(ctx);

@@ -51,6 +51,10 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/imagenode.h
         source/imagevisualizer.cpp
         source/imagevisualizer.h
+        source/spritenode.cpp
+        source/spritenode.h
+        source/spritevisualizer.cpp
+        source/spritevisualizer.h
         source/quicknodescene.cpp
         source/quicknodescene.h
         source/model.cpp

@@ -209,7 +209,8 @@ void DL::App::registerScenes() {
     return std::make_unique<QuickNodeScene>(renderDevice_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<NodeExampleScene>(renderDevice_.get());
+    return std::make_unique<NodeExampleScene>(renderDevice_.get(),
+                                             codebook_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());

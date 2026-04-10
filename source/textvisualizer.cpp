@@ -234,8 +234,7 @@ void DL::TextVisualizer::initGraphics() {
     lines.push_back(line);
   }
 
-  const float viewportWidth =
-      layoutWidth_ > 0.0f ? layoutWidth_ : camera_.mScreenSize.x;
+  const float viewportWidth = layoutWidth_;
 
   // Calculate the width of a space character
   float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x -
@@ -251,8 +250,9 @@ void DL::TextVisualizer::initGraphics() {
             kerning_; // Include kerning in the width
       }
       totalLineWidth -= kerning_; // Remove the last kerning
-      offset.x = viewportWidth > 0.0f ? (viewportWidth - totalLineWidth) * 0.5f
-                                      : totalLineWidth * -0.5f;
+      offset.x = viewportWidth > 0.0f
+                     ? (viewportWidth - totalLineWidth) * 0.5f
+                     : totalLineWidth * -0.5f;
     }
 
     for (char c : line) {

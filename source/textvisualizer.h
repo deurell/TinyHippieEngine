@@ -43,8 +43,9 @@ public:
   ~TextVisualizer() override;
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx) override;
-  void setText(std::string text) { text_ = std::move(text); }
-  void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
+  void setText(std::string text);
+  void setAlignment(TextAlignment alignment);
+  void setLayoutWidth(float width);
 
   float rotAngle1_ = 0.04f;
   float rotAngle2_ = 0.5f;
@@ -52,9 +53,10 @@ public:
   float color2_ = 1.35f;
 
 private:
-  void loadFontTexture(std::string_view fontPath);
+  bool loadFontTexture(std::string_view fontPath);
   TextGlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
+  void destroyMesh();
   void releaseFont();
   [[nodiscard]] std::string fontCacheKey() const;
 
@@ -64,6 +66,7 @@ private:
   TextureHandle fontTexture_;
   PipelineHandle pipeline_;
   TextAlignment alignment_ = TextAlignment::CENTER;
+  float layoutWidth_ = 0.0f;
   const float kerning_ = 2.0f;
 
   const float desiredPixelHeight_ = 18.0f;

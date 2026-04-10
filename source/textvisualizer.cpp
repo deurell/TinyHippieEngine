@@ -1,5 +1,6 @@
 #include "textvisualizer.h"
-#include "app.h"
+#include <fstream>
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -27,8 +28,7 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
     fontScale_ = it->second.fontScale;
     fontSize_ = it->second.fontSize;
   } else {
-    loadFontTexture(fontPath_);
-    if (fontTexture_.valid()) {
+    if (loadFontTexture(fontPath_)) {
       FontData data{};
       data.texture = fontTexture_;
       data.fontInfo = fontCharInfo_;
@@ -36,6 +36,8 @@ DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
       data.fontSize = fontSize_;
       data.refCount = 1;
       fontCache_.insert(std::make_pair(fontCacheKey(), std::move(data)));
+    } else {
+      return;
     }
   }
 
@@ -88,17 +90,38 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
   renderDevice_->draw(command);
 }
 
-void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
+void DL::TextVisualizer::setText(std::string text) {
+  text_ = std::move(text);
+  initGraphics();
+}
+
+void DL::TextVisualizer::setAlignment(TextAlignment alignment) {
+  if (alignment_ == alignment) {
+    return;
+  }
+  alignment_ = alignment;
+  initGraphics();
+}
+
+void DL::TextVisualizer::setLayoutWidth(float width) {
+  if (layoutWidth_ == width) {
+    return;
+  }
+  layoutWidth_ = width;
+  initGraphics();
+}
+
+bool DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   std::ifstream iStream(std::string(fontPath), std::ios::binary);
   if (!iStream) {
     std::cout << "Failed to open font: " << fontPath << std::endl;
-    return;
+    return false;
   }
   iStream.seekg(0, std::ifstream::end);
   const std::streamoff size = iStream.tellg();
   if (size <= 0) {
     std::cout << "Failed to read font: " << fontPath << std::endl;
-    return;
+    return false;
   }
   iStream.seekg(0, std::ifstream::beg);
 
@@ -107,14 +130,14 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   iStream.read(fontData.get(), size);
   if (!iStream) {
     std::cout << "Failed to load font data: " << fontPath << std::endl;
-    return;
+    return false;
   }
   iStream.close();
 
   stbtt_fontinfo fontInfo;
   if (!stbtt_InitFont(&fontInfo, (unsigned char *)fontData.get(), 0)) {
     std::cout << "Failed to initialize font info." << std::endl;
-    return;
+    return false;
   }
 
   fontScale_ = stbtt_ScaleForPixelHeight(&fontInfo, desiredPixelHeight_);
@@ -136,14 +159,19 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(), fontAtlasWidth_,
                        FontAtlasHeight_, 0, 1, nullptr)) {
-    std::cout << "init font failed.";
+    std::cout << "init font failed." << std::endl;
+    fontCharInfo_.reset();
+    return false;
   }
   stbtt_PackSetOversampling(&context, fontOversampleX_, fontOversampleY_);
 
   if (!stbtt_PackFontRange(
           &context, reinterpret_cast<const unsigned char *>(fontData.get()), 0,
           fontSize_, fontFirstChar_, fontCharCount_, fontCharInfo_.get())) {
-    std::cout << "pack font failed";
+    std::cout << "pack font failed" << std::endl;
+    stbtt_PackEnd(&context);
+    fontCharInfo_.reset();
+    return false;
   }
 
   stbtt_PackEnd(&context);
@@ -151,6 +179,7 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
     fontTexture_ = renderDevice_->createAlphaTexture(
         atlasData.get(), fontAtlasWidth_, FontAtlasHeight_);
   }
+  return fontTexture_.valid();
 }
 
 DL::TextGlyphInfo DL::TextVisualizer::makeGlyphInfo(char character,
@@ -180,6 +209,12 @@ DL::TextGlyphInfo DL::TextVisualizer::makeGlyphInfo(char character,
 }
 
 void DL::TextVisualizer::initGraphics() {
+  if (renderDevice_ == nullptr || !fontTexture_.valid() || !fontCharInfo_) {
+    return;
+  }
+
+  destroyMesh();
+
   std::vector<glm::vec3> vertices;
   std::vector<glm::vec2> uvs;
   std::vector<uint16_t> indices;
@@ -194,9 +229,8 @@ void DL::TextVisualizer::initGraphics() {
     lines.push_back(line);
   }
 
-  float viewportWidth =
-      DL::App::screen_width; // Provide the width of your rendering area
-                             // (viewport or window)
+  const float viewportWidth =
+      layoutWidth_ > 0.0f ? layoutWidth_ : camera_.mScreenSize.x;
 
   // Calculate the width of a space character
   float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x -
@@ -212,7 +246,8 @@ void DL::TextVisualizer::initGraphics() {
             kerning_; // Include kerning in the width
       }
       totalLineWidth -= kerning_; // Remove the last kerning
-      offset.x = (viewportWidth - totalLineWidth) * 0.5f;
+      offset.x = viewportWidth > 0.0f ? (viewportWidth - totalLineWidth) * 0.5f
+                                      : totalLineWidth * -0.5f;
     }
 
     for (char c : line) {
@@ -247,6 +282,13 @@ void DL::TextVisualizer::initGraphics() {
 
   if (renderDevice_ != nullptr) {
     mesh_ = renderDevice_->createMesh(vertices, uvs, indices);
+  }
+}
+
+void DL::TextVisualizer::destroyMesh() {
+  if (renderDevice_ != nullptr && mesh_.valid()) {
+    renderDevice_->destroy(mesh_);
+    mesh_ = {};
   }
 }
 

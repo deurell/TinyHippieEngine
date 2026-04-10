@@ -19,6 +19,11 @@ void TextNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
   screenSize_ = size;
   camera_->mScreenSize = size;
+  auto *visualizer =
+      dynamic_cast<DL::TextVisualizer *>(getVisualizer("main"));
+  if (visualizer != nullptr) {
+    visualizer->setLayoutWidth(size.x);
+  }
 }
 
 void TextNode::initCamera() {

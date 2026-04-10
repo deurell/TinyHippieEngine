@@ -17,7 +17,8 @@ public:
       std::string fragmentShaderPath = "Shaders/image.frag");
 
   ~ImageVisualizer() override;
-  void render(const glm::mat4 &worldTransform, float delta) override;
+  void render(const glm::mat4 &worldTransform,
+              const DL::FrameContext &ctx) override;
 
 private:
   DL::IRenderDevice *renderDevice_ = nullptr;

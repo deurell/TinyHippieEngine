@@ -1,5 +1,4 @@
 #include "planevisualizer.h"
-#include <GLFW/glfw3.h>
 
 DL::PlaneVisualizer::PlaneVisualizer(
     std::string name, DL::Camera &camera, std::string_view glslVersionString,
@@ -28,7 +27,8 @@ DL::PlaneVisualizer::~PlaneVisualizer() {
   }
 }
 
-void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
+void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform,
+                                 const DL::FrameContext &ctx) {
   if (renderDevice_ == nullptr || !mesh_.valid() || !pipeline_.valid()) {
     return;
   }
@@ -50,7 +50,7 @@ void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   command.mesh = mesh_;
   command.pipeline = pipeline_;
   command.uniforms.push_back(
-      DL::UniformValue::makeFloat("iTime", static_cast<float>(glfwGetTime())));
+      DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
   command.uniforms.push_back(DL::UniformValue::makeVec4("baseColor", baseColor));
   command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
   command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));

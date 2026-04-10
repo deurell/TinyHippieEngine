@@ -17,7 +17,7 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  void bounce(float delta) const;
+  void bounce(double totalTime) const;
   [[nodiscard]] std::unique_ptr<PlaneNode> createPlane(DL::Camera *camera);
 
   std::string glslVersionString_;

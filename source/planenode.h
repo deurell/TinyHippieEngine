@@ -5,10 +5,8 @@
 #pragma once
 
 #include "camera.h"
-#include "plane.h"
 #include "renderdevice.h"
 #include "scenenode.h"
-#include "shader.h"
 #include <string_view>
 
 class PlaneNode : public DL::SceneNode {

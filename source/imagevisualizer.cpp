@@ -1,5 +1,4 @@
 #include "imagevisualizer.h"
-#include <GLFW/glfw3.h>
 
 DL::ImageVisualizer::ImageVisualizer(
     std::string name, DL::Camera &camera, std::string_view glslVersionString,
@@ -32,7 +31,8 @@ DL::ImageVisualizer::~ImageVisualizer() {
   }
 }
 
-void DL::ImageVisualizer::render(const glm::mat4 &worldTransform, float delta) {
+void DL::ImageVisualizer::render(const glm::mat4 &worldTransform,
+                                 const DL::FrameContext &ctx) {
   if (renderDevice_ == nullptr || !mesh_.valid() || !texture_.valid() ||
       !pipeline_.valid()) {
     return;
@@ -55,7 +55,7 @@ void DL::ImageVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   command.pipeline = pipeline_;
   command.texture = texture_;
   command.uniforms.push_back(
-      DL::UniformValue::makeFloat("iTime", static_cast<float>(glfwGetTime())));
+      DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
   command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
   command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
   command.uniforms.push_back(

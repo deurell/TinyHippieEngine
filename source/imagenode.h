@@ -2,10 +2,8 @@
 
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
-#include "plane.h"
 #include "renderdevice.h"
 #include "scenenode.h"
-#include "shader.h"
 #include <string_view>
 
 class ImageNode : public DL::SceneNode {

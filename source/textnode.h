@@ -3,7 +3,6 @@
 #include "camera.h"
 #include "renderdevice.h"
 #include "scenenode.h"
-#include "shader.h"
 #include <memory>
 #include <string_view>
 

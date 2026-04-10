@@ -3,7 +3,6 @@
 //
 
 #pragma once
-#include "plane.h"
 #include "planenode.h"
 #include "renderdevice.h"
 #include "scenenode.h"

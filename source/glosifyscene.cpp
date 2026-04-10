@@ -2,10 +2,9 @@
 // Created by Mikael Deurell on 2024-08-22.
 //
 #include "glosifyscene.h"
+#include "debugui.h"
 #include "imagenode.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 #include "planenode.h"
 
 DL::GlosifyScene::GlosifyScene(std::string glslVersionString,
@@ -34,15 +33,14 @@ void DL::GlosifyScene::init() {
 void DL::GlosifyScene::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
 
 void DL::GlosifyScene::render(const DL::FrameContext &ctx) {
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (renderDevice_ != nullptr) {
+    renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+                               .clearFlags = DL::ClearFlags::ColorDepth,
+                               .depthMode = DL::DepthMode::Less});
+  }
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("Glosify Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

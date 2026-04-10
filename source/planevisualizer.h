@@ -16,7 +16,8 @@ public:
 
   ~PlaneVisualizer() override;
 
-  void render(const glm::mat4 &worldTransform, float delta) override;
+  void render(const glm::mat4 &worldTransform,
+              const DL::FrameContext &ctx) override;
   glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
   bool spinnerEnabled = false;
   float spinnerSpeed = 0.25f;

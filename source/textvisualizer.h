@@ -4,16 +4,24 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "renderdevice.h"
-#include "textsprite.h"
+#include "stb_truetype.h"
 #include "visualizerbase.h"
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <string>
 #include <string_view>
 
 namespace DL {
 
 enum class TextAlignment { LEFT, CENTER };
+
+struct TextGlyphInfo {
+  glm::vec3 positions[4];
+  glm::vec2 uvs[4];
+  float offsetX = 0;
+  float offsetY = 0;
+};
 
 struct FontData {
   TextureHandle texture;
@@ -33,7 +41,8 @@ public:
                           std::string fragmentShaderPath);
 
   ~TextVisualizer() override;
-  void render(const glm::mat4 &worldTransform, float delta) override;
+  void render(const glm::mat4 &worldTransform,
+              const DL::FrameContext &ctx) override;
   void setText(std::string text) { text_ = std::move(text); }
   void setAlignment(TextAlignment alignment) { alignment_ = alignment; }
 
@@ -44,7 +53,7 @@ public:
 
 private:
   void loadFontTexture(std::string_view fontPath);
-  GlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
+  TextGlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
   void releaseFont();
   [[nodiscard]] std::string fontCacheKey() const;

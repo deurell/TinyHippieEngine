@@ -173,6 +173,34 @@ public:
   void destroy(TextureHandle handle) override { textures_.erase(handle.value); }
   void destroy(PipelineHandle handle) override { pipelines_.erase(handle.value); }
 
+  void setViewport(std::uint32_t width, std::uint32_t height) override {
+    glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
+  }
+
+  void beginFrame(const FramePassDesc &desc) override {
+    if (desc.depthMode == DepthMode::Less) {
+      glEnable(GL_DEPTH_TEST);
+      glDepthFunc(GL_LESS);
+    } else {
+      glDisable(GL_DEPTH_TEST);
+    }
+
+    GLbitfield clearMask = 0;
+    if (hasFlag(desc.clearFlags, ClearFlags::Color)) {
+      glClearColor(desc.clearColor.r, desc.clearColor.g, desc.clearColor.b,
+                   desc.clearColor.a);
+      clearMask |= GL_COLOR_BUFFER_BIT;
+    }
+    if (hasFlag(desc.clearFlags, ClearFlags::Depth)) {
+      clearMask |= GL_DEPTH_BUFFER_BIT;
+    }
+    if (clearMask != 0) {
+      glClear(clearMask);
+    }
+  }
+
+  void endFrame() override {}
+
   void draw(const DrawCommand &command) override {
     auto mesh_it = meshes_.find(command.mesh.value);
     auto pipeline_it = pipelines_.find(command.pipeline.value);
@@ -195,11 +223,17 @@ public:
     }
 
     for (const auto &uniform : command.uniforms) {
-      if (uniform.type == UniformValue::Type::Float) {
+      if (uniform.type == UniformValue::Type::Int) {
+        pipeline.setInt(uniform.name, uniform.int_value);
+      } else if (uniform.type == UniformValue::Type::Float) {
         pipeline.setFloat(uniform.name, uniform.float_value);
       } else if (uniform.type == UniformValue::Type::Mat4) {
         auto matrix = uniform.mat4_value;
         pipeline.setMat4f(uniform.name, matrix);
+      } else if (uniform.type == UniformValue::Type::Vec2) {
+        pipeline.setVec2f(uniform.name, uniform.vec2_value);
+      } else if (uniform.type == UniformValue::Type::Vec3) {
+        pipeline.setVec3f(uniform.name, uniform.vec3_value);
       } else if (uniform.type == UniformValue::Type::Vec4) {
         pipeline.setVec4f(uniform.name, uniform.vec4_value);
       }

@@ -26,7 +26,7 @@ public:
   TestVisualizer(std::string name, DL::Camera &camera, DL::SceneNode &node)
       : DL::VisualizerBase(camera, std::move(name), "", "", "", node) {}
 
-  void render(const glm::mat4 &, float) override {}
+  void render(const glm::mat4 &, const DL::FrameContext &) override {}
 };
 
 TEST(SceneNodeTest, LocalTransformBecomesWorldTransformForRootNode) {

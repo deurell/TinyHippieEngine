@@ -1,6 +1,5 @@
 #include "textvisualizer.h"
 #include "app.h"
-#include <GLFW/glfw3.h>
 #include <sstream>
 #include <string>
 
@@ -59,7 +58,8 @@ DL::TextVisualizer::~TextVisualizer() {
   releaseFont();
 }
 
-void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
+void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
+                                const DL::FrameContext &ctx) {
   if (renderDevice_ == nullptr || !mesh_.valid() || !fontTexture_.valid() ||
       !pipeline_.valid()) {
     return;
@@ -84,7 +84,7 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform, float delta) {
   command.uniforms.push_back(
       UniformValue::makeMat4("projection", perspectiveTransform));
   command.uniforms.push_back(
-      UniformValue::makeFloat("iTime", static_cast<float>(glfwGetTime())));
+      UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
   command.uniforms.push_back(UniformValue::makeFloat("rotAngle1", rotAngle1_));
   command.uniforms.push_back(UniformValue::makeFloat("rotAngle2", rotAngle2_));
   command.uniforms.push_back(UniformValue::makeFloat("c1", color1_));
@@ -157,8 +157,9 @@ void DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   }
 }
 
-DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
-                                                float offsetY) {
+DL::TextGlyphInfo DL::TextVisualizer::makeGlyphInfo(char character,
+                                                    float offsetX,
+                                                    float offsetY) {
   stbtt_aligned_quad quad;
   const uint8_t glyph = static_cast<uint8_t>(character);
   const uint8_t firstChar = fontFirstChar_;
@@ -172,7 +173,7 @@ DL::GlyphInfo DL::TextVisualizer::makeGlyphInfo(char character, float offsetX,
   auto [xmin, xmax] = std::minmax({quad.x0, quad.x1});
   auto [ymin, ymax] = std::minmax({-quad.y1, -quad.y0});
 
-  return GlyphInfo{
+  return TextGlyphInfo{
       {{xmin, ymin, 0}, {xmin, ymax, 0}, {xmax, ymax, 0}, {xmax, ymin, 0}},
       {{quad.s0, quad.t1},
        {quad.s0, quad.t0},
@@ -209,7 +210,7 @@ void DL::TextVisualizer::initGraphics() {
     if (alignment_ == TextAlignment::CENTER) {
       float totalLineWidth = 0.0f;
       for (char c : line) {
-        GlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
+        TextGlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
         totalLineWidth +=
             (glyphInfo.positions[2].x - glyphInfo.positions[0].x) +
             kerning_; // Include kerning in the width
@@ -219,7 +220,7 @@ void DL::TextVisualizer::initGraphics() {
     }
 
     for (char c : line) {
-      GlyphInfo glyphInfo = makeGlyphInfo(c, offset.x, offset.y);
+      TextGlyphInfo glyphInfo = makeGlyphInfo(c, offset.x, offset.y);
       for (int i = 0; i < 4; i++) {
         vertices.push_back(glyphInfo.positions[i]);
         uvs.push_back(glyphInfo.uvs[i]);

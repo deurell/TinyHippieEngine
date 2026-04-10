@@ -56,7 +56,7 @@ void SceneNode::update(const FrameContext &ctx) {
 void SceneNode::render(const FrameContext &ctx) {
 
   for (auto &visualizer : visualizers) {
-    visualizer->render(worldTransform, ctx.delta_time);
+    visualizer->render(worldTransform, ctx);
   }
 
   for (auto &child : children) {

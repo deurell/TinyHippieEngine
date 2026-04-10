@@ -4,6 +4,7 @@
 
 #pragma once
 #include "camera.h"
+#include "iscene.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,7 +27,8 @@ public:
         vertexShaderPath_(std::move(vertexShaderPath)),
         fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
-  virtual void render(const glm::mat4 &worldTransform, float delta) = 0;
+  virtual void render(const glm::mat4 &worldTransform,
+                      const DL::FrameContext &ctx) = 0;
   virtual ~VisualizerBase() = default;
 
   std::string_view getName() const { return name_; }

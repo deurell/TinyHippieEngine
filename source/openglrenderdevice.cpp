@@ -153,16 +153,6 @@ public:
     return storeResource<TextureHandle>(std::move(resource), textures_);
   }
 
-  TextureHandle createAlphaTexture(const std::uint8_t *pixels,
-                                   std::uint32_t width,
-                                   std::uint32_t height) override {
-    return createTexture({.pixels = pixels,
-                          .width = width,
-                          .height = height,
-                          .format = TextureFormat::R8,
-                          .generateMipmaps = true});
-  }
-
   TextureHandle createTexture(const TextureDesc &desc) override {
     if (desc.pixels == nullptr || desc.width == 0 || desc.height == 0) {
       return {};

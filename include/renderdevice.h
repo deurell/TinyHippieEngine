@@ -149,9 +149,6 @@ public:
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;
   virtual TextureHandle createTexture(const TextureDesc &desc) = 0;
-  virtual TextureHandle createAlphaTexture(const std::uint8_t *pixels,
-                                           std::uint32_t width,
-                                           std::uint32_t height) = 0;
   virtual PipelineHandle createPipeline(std::string_view vertex_path,
                                         std::string_view fragment_path) = 0;
   virtual PipelineHandle createPipeline(std::string_view vertex_path,

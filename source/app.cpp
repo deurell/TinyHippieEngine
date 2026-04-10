@@ -190,8 +190,7 @@ void DL::App::processInput(GLFWwindow *window) {
 
 void DL::App::loadSimpleScene() {
   scene_ = replacePreparedScene(
-      std::move(scene_),
-      std::make_unique<SimpleScene>(glslVersionString_, renderDevice_.get()),
+      std::move(scene_), std::make_unique<SimpleScene>(renderDevice_.get()),
       getWindowSize(), getFramebufferSize());
 }
 

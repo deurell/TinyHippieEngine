@@ -6,13 +6,10 @@
 #include "camera.h"
 #include "iscene.h"
 #include "renderdevice.h"
-#include "shader.h"
-#include <string_view>
 
 class SimpleScene : public DL::IScene {
 public:
-  SimpleScene(std::string_view glslVersionString,
-              DL::IRenderDevice *renderDevice);
+  explicit SimpleScene(DL::IRenderDevice *renderDevice);
   ~SimpleScene() override;
 
   void init() override;
@@ -28,5 +25,4 @@ private:
   DL::MeshHandle mesh_;
   DL::PipelineHandle pipeline_;
   glm::vec2 mScreenSize{0, 0};
-  std::string mGlslVersionString;
 };

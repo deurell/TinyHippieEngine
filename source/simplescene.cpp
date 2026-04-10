@@ -3,13 +3,12 @@
 //
 
 #include "simplescene.h"
+#include "debugui.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#include <iostream>
 
-SimpleScene::SimpleScene(std::string_view glslVersionString,
-                         DL::IRenderDevice *renderDevice)
-    : renderDevice_(renderDevice), mGlslVersionString(glslVersionString) {}
+SimpleScene::SimpleScene(DL::IRenderDevice *renderDevice)
+    : renderDevice_(renderDevice) {}
 
 SimpleScene::~SimpleScene() {
   if (renderDevice_ != nullptr) {
@@ -28,18 +27,19 @@ void SimpleScene::init() {
   if (renderDevice_ == nullptr) {
     return;
   }
-  pipeline_ = renderDevice_->createPipeline("Shaders/simple.vert",
-                                            "Shaders/simple.frag",
-                                            mGlslVersionString);
+  pipeline_ =
+      renderDevice_->createPipeline("Shaders/simple.vert", "Shaders/simple.frag");
   mesh_ = renderDevice_->createTexturedQuad();
 }
 
 void SimpleScene::update(const DL::FrameContext & /*ctx*/) {}
 
 void SimpleScene::render(const DL::FrameContext &ctx) {
-  glDisable(GL_DEPTH_TEST);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+  if (renderDevice_ != nullptr) {
+    renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+                               .clearFlags = DL::ClearFlags::Color,
+                               .depthMode = DL::DepthMode::Disabled});
+  }
 
   if (renderDevice_ != nullptr && mesh_.valid() && pipeline_.valid()) {
     glm::mat4 model = glm::mat4(1.0f);
@@ -61,9 +61,7 @@ void SimpleScene::render(const DL::FrameContext &ctx) {
   }
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("simple scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

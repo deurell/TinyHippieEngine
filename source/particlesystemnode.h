@@ -11,15 +11,22 @@
 class ParticleSystemNode : public DL::SceneNode {
 public:
   enum class EmissionPattern { Random, Spokes };
+  enum class EmissionMode { Burst, Continuous };
 
   struct Config {
     struct Emission {
-      int count = 64;
+      int maxParticles = 128;
+      int burstCount = 64;
+      float rate = 32.0f;
+      EmissionMode mode = EmissionMode::Burst;
       EmissionPattern pattern = EmissionPattern::Random;
       int spokes = 16;
       float spread = 0.35f;
+      float spawnRadius = 0.0f;
       float angleJitter = glm::radians(4.0f);
       float upwardBias = 0.18f;
+      glm::vec3 direction{0.0f, 1.0f, 0.0f};
+      float coneAngle = glm::radians(25.0f);
     } emission;
 
     struct Motion {
@@ -83,14 +90,24 @@ public:
 
   void resetParticles();
   void explode(const glm::vec3 &worldPosition);
+  void startEmitting();
+  void stopEmitting();
+  void setEmitterPosition(const glm::vec3 &position);
 
   const std::vector<ParticleState> &getParticles() const { return particles_; }
   const Config &getConfig() const { return config_; }
 
 private:
+  ParticleState *findInactiveParticle();
+  void spawnParticle(ParticleState &particle, std::size_t emissionIndex,
+                     const glm::vec3 &origin);
+
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::Camera *camera_ = nullptr;
   Config config_;
   std::mt19937 twister_;
+  glm::vec3 emitterPosition_{0.0f, 0.0f, 0.0f};
+  float spawnAccumulator_ = 0.0f;
+  bool emitting_ = false;
   std::vector<ParticleState> particles_;
 };

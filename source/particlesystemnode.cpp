@@ -18,9 +18,12 @@ glm::vec3 randomDirection(std::mt19937 &twister) {
   return glm::normalize(direction);
 }
 
-glm::vec3 randomBurstDirection(std::mt19937 &twister, float zScale) {
+glm::vec3 randomBurstDirection(std::mt19937 &twister,
+                               const ParticleSystemNode::Config &config) {
   auto direction = randomDirection(twister);
-  direction.z *= zScale;
+  direction.z *= config.emission.spread;
+  direction += glm::normalize(config.emission.direction) *
+               config.emission.upwardBias;
   if (glm::length2(direction) < 0.0001f) {
     return {0.0f, 1.0f, 0.0f};
   }
@@ -67,6 +70,15 @@ glm::vec4 randomColor(std::mt19937 &twister, const glm::vec4 &minColor,
   };
 }
 
+glm::vec3 randomInUnitSphere(std::mt19937 &twister) {
+  std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+  glm::vec3 point{0.0f};
+  do {
+    point = {dist(twister), dist(twister), dist(twister)};
+  } while (glm::length2(point) > 1.0f);
+  return point;
+}
+
 } // namespace
 
 ParticleSystemNode::ParticleSystemNode(DL::IRenderDevice *renderDevice,
@@ -86,12 +98,18 @@ ParticleSystemNode::ParticleSystemNode(DL::IRenderDevice *renderDevice,
 
 ParticleSystemNode::Config ParticleSystemNode::Config::softGlowBurst() {
   Config config;
-  config.emission.count = 128;
+  config.emission.maxParticles = 128;
+  config.emission.burstCount = 128;
+  config.emission.rate = 48.0f;
+  config.emission.mode = EmissionMode::Burst;
   config.emission.pattern = EmissionPattern::Random;
   config.emission.spokes = 10;
   config.emission.spread = 0.18f;
+  config.emission.spawnRadius = 0.0f;
   config.emission.angleJitter = glm::radians(1.0f);
   config.emission.upwardBias = 0.05f;
+  config.emission.direction = {0.0f, 1.0f, 0.0f};
+  config.emission.coneAngle = glm::radians(22.0f);
 
   config.motion.gravity = {0.0f, -13.0f, 0.0f};
   config.motion.drag = 0.18f;
@@ -126,9 +144,9 @@ void ParticleSystemNode::init() {
       "ParticleVisualizer", *camera_, *this, renderDevice_);
   visualizers.emplace_back(std::move(visualizer));
 
-  particles_.reserve(static_cast<std::size_t>(config_.emission.count));
+  particles_.reserve(static_cast<std::size_t>(config_.emission.maxParticles));
 
-  for (int i = 0; i < config_.emission.count; ++i) {
+  for (int i = 0; i < config_.emission.maxParticles; ++i) {
     ParticleState state;
     state.rotationAxis = randomDirection(twister_);
     state.angularSpeed = randomRange(twister_, config_.motion.angularSpeedMin,
@@ -139,6 +157,7 @@ void ParticleSystemNode::init() {
   }
 
   resetParticles();
+  emitting_ = config_.emission.mode == EmissionMode::Continuous;
 }
 
 void ParticleSystemNode::update(const DL::FrameContext &ctx) {
@@ -171,6 +190,20 @@ void ParticleSystemNode::update(const DL::FrameContext &ctx) {
     particle.rotation = glm::angleAxis(angle, particle.rotationAxis);
   }
 
+  if (config_.emission.mode == EmissionMode::Continuous && emitting_) {
+    spawnAccumulator_ += config_.emission.rate * ctx.delta_time;
+    const int particlesToSpawn = static_cast<int>(spawnAccumulator_);
+    spawnAccumulator_ -= static_cast<float>(particlesToSpawn);
+
+    for (int i = 0; i < particlesToSpawn; ++i) {
+      if (auto *particle = findInactiveParticle()) {
+        spawnParticle(*particle, static_cast<std::size_t>(i), emitterPosition_);
+      } else {
+        break;
+      }
+    }
+  }
+
   SceneNode::update(ctx);
 }
 
@@ -185,33 +218,70 @@ void ParticleSystemNode::resetParticles() {
     particle.scale = {0.0f, 0.0f, 0.0f};
     particle.color = config_.appearance.endColor;
   }
+  spawnAccumulator_ = 0.0f;
 }
 
 void ParticleSystemNode::explode(const glm::vec3 &worldPosition) {
-  for (std::size_t i = 0; i < particles_.size(); ++i) {
-    auto &particle = particles_[i];
-    particle.alive = true;
-    particle.age = 0.0f;
-    particle.lifetime = randomRange(twister_, config_.life.min, config_.life.max);
-    particle.startColor =
-        randomColor(twister_, config_.appearance.startColorMin,
-                    config_.appearance.startColorMax);
-    particle.position = worldPosition;
-    particle.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-    particle.scale = config_.appearance.startSize;
-    particle.color = particle.startColor;
-    const glm::vec3 direction =
-        config_.emission.pattern == EmissionPattern::Spokes
-            ? patternedBurstDirection(twister_, static_cast<int>(i), config_)
-            : randomBurstDirection(twister_, config_.emission.spread);
-    const float ringSpeed =
-        config_.emission.pattern == EmissionPattern::Spokes &&
-                (i / static_cast<std::size_t>(std::max(1, config_.emission.spokes))) % 2 != 0
-            ? 0.82f
-            : 1.0f;
-    particle.velocity = direction *
-                        randomRange(twister_, config_.motion.speedMin,
-                                    config_.motion.speedMax) *
-                        ringSpeed;
+  emitterPosition_ = worldPosition;
+  const std::size_t spawnCount = std::min(
+      static_cast<std::size_t>(config_.emission.burstCount), particles_.size());
+  for (std::size_t i = 0; i < spawnCount; ++i) {
+    spawnParticle(particles_[i], i, worldPosition);
   }
+}
+
+void ParticleSystemNode::startEmitting() { emitting_ = true; }
+
+void ParticleSystemNode::stopEmitting() { emitting_ = false; }
+
+void ParticleSystemNode::setEmitterPosition(const glm::vec3 &position) {
+  emitterPosition_ = position;
+}
+
+ParticleSystemNode::ParticleState *ParticleSystemNode::findInactiveParticle() {
+  for (auto &particle : particles_) {
+    if (!particle.alive) {
+      return &particle;
+    }
+  }
+  return nullptr;
+}
+
+void ParticleSystemNode::spawnParticle(ParticleState &particle,
+                                       std::size_t emissionIndex,
+                                       const glm::vec3 &origin) {
+  particle.alive = true;
+  particle.age = 0.0f;
+  particle.lifetime = randomRange(twister_, config_.life.min, config_.life.max);
+  particle.startColor =
+      randomColor(twister_, config_.appearance.startColorMin,
+                  config_.appearance.startColorMax);
+  particle.position =
+      origin + randomInUnitSphere(twister_) * config_.emission.spawnRadius;
+  particle.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+  particle.scale = config_.appearance.startSize;
+  particle.color = particle.startColor;
+
+  glm::vec3 direction = config_.emission.pattern == EmissionPattern::Spokes
+                            ? patternedBurstDirection(
+                                  twister_, static_cast<int>(emissionIndex), config_)
+                            : randomBurstDirection(twister_, config_);
+
+  if (config_.emission.mode == EmissionMode::Continuous) {
+    const glm::vec3 emitterDir = glm::normalize(config_.emission.direction);
+    const float cone = std::tan(config_.emission.coneAngle);
+    direction = glm::normalize(emitterDir + direction * cone);
+  }
+
+  const float ringSpeed =
+      config_.emission.pattern == EmissionPattern::Spokes &&
+              (emissionIndex /
+               static_cast<std::size_t>(std::max(1, config_.emission.spokes))) %
+                  2 != 0
+          ? 0.82f
+          : 1.0f;
+  particle.velocity =
+      direction *
+      randomRange(twister_, config_.motion.speedMin, config_.motion.speedMax) *
+      ringSpeed;
 }

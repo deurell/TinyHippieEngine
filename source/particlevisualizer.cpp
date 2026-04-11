@@ -50,8 +50,23 @@ void DL::ParticleVisualizer::render(const glm::mat4 &worldTransform,
     command.mesh = mesh_;
     command.pipeline = pipeline_;
     command.blendMode = DL::BlendMode::Additive;
+    const auto &config = particleNode_.getConfig();
     command.uniforms.push_back(DL::UniformValue::makeFloat(
         "iTime", static_cast<float>(ctx.total_time)));
+    command.uniforms.push_back(DL::UniformValue::makeFloat(
+        "paletteSteps", config.render.paletteSteps));
+    command.uniforms.push_back(DL::UniformValue::makeFloat(
+        "coreRadius", config.render.coreRadius));
+    command.uniforms.push_back(DL::UniformValue::makeFloat(
+        "haloRadius", config.render.haloRadius));
+    command.uniforms.push_back(DL::UniformValue::makeFloat(
+        "outerRadius", config.render.outerRadius));
+    command.uniforms.push_back(DL::UniformValue::makeFloat(
+        "sparkleAmount", config.render.sparkle));
+    command.uniforms.push_back(
+        DL::UniformValue::makeVec4("hotColor", config.render.hotColor));
+    command.uniforms.push_back(
+        DL::UniformValue::makeVec4("deepColor", config.render.deepColor));
     command.uniforms.push_back(
         DL::UniformValue::makeVec4("baseColor", particle.color));
     command.uniforms.push_back(

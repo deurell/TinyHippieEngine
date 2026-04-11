@@ -3,15 +3,32 @@ precision mediump int;
 
 in vec2 TexCoord;
 uniform vec4 baseColor;
+uniform vec4 hotColor;
+uniform vec4 deepColor;
+uniform float paletteSteps;
+uniform float coreRadius;
+uniform float haloRadius;
+uniform float outerRadius;
+uniform float sparkleAmount;
 out vec4 FragColor;
 
 void main() {
     vec2 uv = TexCoord * 2.0 - 1.0;
     float dist = length(uv);
-    float core = smoothstep(0.45, 0.0, dist);
-    float halo = smoothstep(1.0, 0.15, dist);
-    float intensity = core + halo * 0.35;
-    float alpha = clamp(intensity, 0.0, 1.0);
-    vec3 color = baseColor.rgb * (0.4 + intensity * 1.6);
+    if (dist > outerRadius) {
+        discard;
+    }
+
+    float normalized = 1.0 - clamp(dist / max(outerRadius, 0.0001), 0.0, 1.0);
+    float stepped = floor(normalized * max(paletteSteps, 1.0)) / max(paletteSteps, 1.0);
+    float core = dist < coreRadius ? 1.0 : 0.0;
+    float halo = dist < haloRadius ? 0.75 : 0.35;
+    float sparkleMask = mod(floor((uv.x + uv.y + 2.0) * 6.0), 2.0) == 0.0 ? 1.0 : (1.0 - sparkleAmount);
+    float sparkle = mix(1.0, sparkleMask, clamp(sparkleAmount, 0.0, 1.0));
+    float intensity = max(stepped * halo, core) * sparkle;
+    float alpha = intensity;
+    vec3 color = mix(deepColor.rgb, baseColor.rgb, stepped);
+    color = mix(color, hotColor.rgb, core);
+    color *= 0.65 + intensity * 1.35;
     FragColor = vec4(color, alpha);
 }

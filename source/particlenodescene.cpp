@@ -15,23 +15,9 @@ void ParticleNodeScene::init() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 36.0f));
   camera_->lookAt({0.0f, 0.0f, 0.0f});
 
-  ParticleSystemNode::Config particleConfig;
-  particleConfig.particleCount = 128;
-  particleConfig.gravity = {0.0f, -16.0f, 0.0f};
-  particleConfig.drag = 0.45f;
-  particleConfig.speedMin = 8.0f;
-  particleConfig.speedMax = 16.0f;
-  particleConfig.directionZScale = 0.45f;
-  particleConfig.angularSpeedMin = glm::radians(-540.0f);
-  particleConfig.angularSpeedMax = glm::radians(540.0f);
-  particleConfig.startScale = {0.18f, 0.18f, 0.18f};
-  particleConfig.endScale = {0.02f, 0.02f, 0.02f};
-  particleConfig.lifetimeMin = 0.7f;
-  particleConfig.lifetimeMax = 1.2f;
-  particleConfig.startColorMin = {0.95f, 0.55f, 0.15f, 1.0f};
-  particleConfig.startColorMax = {1.0f, 0.95f, 0.55f, 1.0f};
-  particleConfig.endColor = {0.18f, 0.02f, 0.01f, 1.0f};
+  const auto particleConfig = ParticleSystemNode::Config::softGlowBurst();
 
+  
   auto particleSystemNode =
       std::make_unique<ParticleSystemNode>(renderDevice_, camera_.get(),
                                            particleConfig, this);

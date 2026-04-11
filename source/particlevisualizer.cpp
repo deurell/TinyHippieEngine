@@ -1,6 +1,7 @@
 #include "particlevisualizer.h"
 
 #include "particlesystemnode.h"
+#include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 DL::ParticleVisualizer::ParticleVisualizer(
@@ -41,16 +42,30 @@ void DL::ParticleVisualizer::render(const glm::mat4 &worldTransform,
       continue;
     }
 
+    const auto &config = particleNode_.getConfig();
+    glm::vec3 renderScale = particle.scale;
+    glm::quat renderRotation = particle.rotation;
+    const float speed = glm::length(particle.velocity);
+    if (config.render.stretchByVelocity > 0.0f && speed > 0.001f) {
+      const float stretch =
+          std::min(1.0f + speed * config.render.stretchByVelocity,
+                   config.render.maxStretch);
+      renderScale.y *= stretch;
+      const glm::vec3 velocityDir = glm::normalize(particle.velocity);
+      const float angle = std::atan2(velocityDir.y, velocityDir.x) -
+                          glm::half_pi<float>();
+      renderRotation = glm::angleAxis(angle, glm::vec3(0.0f, 0.0f, 1.0f));
+    }
+
     const glm::mat4 localParticleTransform =
         glm::translate(glm::mat4(1.0f), particle.position) *
-        glm::mat4_cast(particle.rotation) *
-        glm::scale(glm::mat4(1.0f), particle.scale);
+        glm::mat4_cast(renderRotation) *
+        glm::scale(glm::mat4(1.0f), renderScale);
 
     DL::DrawCommand command;
     command.mesh = mesh_;
     command.pipeline = pipeline_;
-    command.blendMode = DL::BlendMode::Additive;
-    const auto &config = particleNode_.getConfig();
+    command.blendMode = config.render.blendMode;
     command.uniforms.push_back(DL::UniformValue::makeFloat(
         "iTime", static_cast<float>(ctx.total_time)));
     command.uniforms.push_back(DL::UniformValue::makeFloat(

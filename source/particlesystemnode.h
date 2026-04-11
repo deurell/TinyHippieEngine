@@ -52,16 +52,20 @@ public:
     } appearance;
 
     struct RenderStyle {
+      DL::BlendMode blendMode = DL::BlendMode::Additive;
       float paletteSteps = 4.0f;
       float coreRadius = 0.22f;
       float haloRadius = 0.55f;
       float outerRadius = 1.0f;
       float sparkle = 0.18f;
+      float stretchByVelocity = 0.0f;
+      float maxStretch = 1.0f;
       glm::vec4 hotColor{1.0f, 0.95f, 0.75f, 1.0f};
       glm::vec4 deepColor{0.9f, 0.35f, 0.08f, 1.0f};
     } render;
 
     static Config softGlowBurst();
+    static Config waterFountain();
   };
 
   struct ParticleState {

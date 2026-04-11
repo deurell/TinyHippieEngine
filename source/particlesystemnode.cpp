@@ -121,19 +121,66 @@ ParticleSystemNode::Config ParticleSystemNode::Config::softGlowBurst() {
   config.life.min = 1.1f;
   config.life.max = 1.5f;
 
-  config.appearance.startSize = {0.28f, 0.28f, 0.28f};
+  config.appearance.startSize = {5.28f, 5.28f, 5.28f};
   config.appearance.endSize = {0.1f, 0.1f, 0.1f};
   config.appearance.startColorMin = {0.9f, 0.6f, 0.22f, 1.0f};
   config.appearance.startColorMax = {1.0f, 0.88f, 0.52f, 1.0f};
   config.appearance.endColor = {0.26f, 0.09f, 0.02f, 1.0f};
 
   config.render.paletteSteps = 2.0f;
+  config.render.blendMode = DL::BlendMode::Additive;
   config.render.coreRadius = 0.14f;
   config.render.haloRadius = 0.5f;
   config.render.outerRadius = 0.9f;
   config.render.sparkle = 0.02f;
+  config.render.stretchByVelocity = 1.1f;
+  config.render.maxStretch = 2.0f;
   config.render.hotColor = {1.0f, 0.92f, 0.68f, 1.0f};
   config.render.deepColor = {0.88f, 0.3f, 0.04f, 1.0f};
+  return config;
+}
+
+ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
+  Config config;
+  config.emission.maxParticles = 192;
+  config.emission.burstCount = 96;
+  config.emission.rate = 84.0f;
+  config.emission.mode = EmissionMode::Continuous;
+  config.emission.pattern = EmissionPattern::Random;
+  config.emission.spokes = 8;
+  config.emission.spread = 0.08f;
+  config.emission.spawnRadius = 0.18f;
+  config.emission.angleJitter = glm::radians(1.0f);
+  config.emission.upwardBias = 0.0f;
+  config.emission.direction = {0.0f, 1.0f, 0.0f};
+  config.emission.coneAngle = glm::radians(12.0f);
+
+  config.motion.gravity = {0.0f, -19.0f, 0.0f};
+  config.motion.drag = 0.04f;
+  config.motion.speedMin = 11.0f;
+  config.motion.speedMax = 15.0f;
+  config.motion.angularSpeedMin = glm::radians(-40.0f);
+  config.motion.angularSpeedMax = glm::radians(40.0f);
+
+  config.life.min = 1.2f;
+  config.life.max = 1.8f;
+
+  config.appearance.startSize = {0.42f, 0.56f, 0.42f};
+  config.appearance.endSize = {0.2f, 0.32f, 0.2f};
+  config.appearance.startColorMin = {0.45f, 0.78f, 0.98f, 1.0f};
+  config.appearance.startColorMax = {0.85f, 0.95f, 1.0f, 1.0f};
+  config.appearance.endColor = {0.08f, 0.22f, 0.45f, 1.0f};
+
+  config.render.blendMode = DL::BlendMode::Alpha;
+  config.render.paletteSteps = 2.0f;
+  config.render.coreRadius = 0.14f;
+  config.render.haloRadius = 0.42f;
+  config.render.outerRadius = 0.9f;
+  config.render.sparkle = 0.0f;
+  config.render.stretchByVelocity = 0.045f;
+  config.render.maxStretch = 2.8f;
+  config.render.hotColor = {0.82f, 0.94f, 1.0f, 1.0f};
+  config.render.deepColor = {0.16f, 0.42f, 0.82f, 1.0f};
   return config;
 }
 

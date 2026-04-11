@@ -29,6 +29,7 @@ void main() {
     float alpha = intensity;
     vec3 color = mix(deepColor.rgb, baseColor.rgb, stepped);
     color = mix(color, hotColor.rgb, core);
-    color *= 0.65 + intensity * 1.35;
+    color *= 0.85 + intensity * 0.55;
+    alpha *= 0.82;
     FragColor = vec4(color, alpha);
 }

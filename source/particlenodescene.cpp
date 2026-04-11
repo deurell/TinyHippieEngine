@@ -15,13 +15,14 @@ void ParticleNodeScene::init() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 36.0f));
   camera_->lookAt({0.0f, 0.0f, 0.0f});
 
-  const auto particleConfig = ParticleSystemNode::Config::softGlowBurst();
+  const auto particleConfig = ParticleSystemNode::Config::waterFountain();
 
   
   auto particleSystemNode =
       std::make_unique<ParticleSystemNode>(renderDevice_, camera_.get(),
                                            particleConfig, this);
   particleSystemNode->init();
+  particleSystemNode->setEmitterPosition({0.0f, -10.0f, 0.0f});
   particleSystemNode_ = particleSystemNode.get();
   addChild(std::move(particleSystemNode));
 }
@@ -52,13 +53,20 @@ void ParticleNodeScene::render(const DL::FrameContext &ctx) {
 
 void ParticleNodeScene::onClick(double x, double y) {
   if (particleSystemNode_ != nullptr) {
-    particleSystemNode_->explode(screenToWorld(x, y, 0.0f));
+    const glm::vec3 worldPosition = screenToWorld(x, y, 0.0f);
+    if (particleSystemNode_->getConfig().emission.mode ==
+        ParticleSystemNode::EmissionMode::Continuous) {
+      particleSystemNode_->setEmitterPosition(worldPosition);
+    } else {
+      particleSystemNode_->explode(worldPosition);
+    }
   }
 }
 
 void ParticleNodeScene::onKey(int key) {
   if (key == GLFW_KEY_1 && particleSystemNode_ != nullptr) {
     particleSystemNode_->resetParticles();
+    particleSystemNode_->setEmitterPosition({0.0f, -10.0f, 0.0f});
   }
 }
 

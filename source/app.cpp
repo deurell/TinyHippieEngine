@@ -10,6 +10,7 @@
 #include "nodeexamplescene.h"
 #include "particlescene.h"
 #include "particlenodescene.h"
+#include "phongshapescene.h"
 #include "quicknodescene.h"
 #include "meshnodescene.h"
 #include "scenemanager.h"
@@ -219,6 +220,9 @@ void DL::App::registerScenes() {
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhongShapeScene>(renderDevice_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());

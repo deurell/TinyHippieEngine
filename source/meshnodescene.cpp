@@ -31,7 +31,7 @@ void MeshNodeScene::update(const DL::FrameContext &ctx) {
 
 void MeshNodeScene::render(const DL::FrameContext &ctx) {
   if (renderDevice_ != nullptr) {
-    renderDevice_->beginFrame({.clearColor = {0.04f, 0.05f, 0.08f, 1.0f},
+    renderDevice_->beginFrame({.clearColor = {0.70f, 0.90f, 1.00f, 1.0f},
                                .clearFlags = DL::ClearFlags::ColorDepth,
                                .depthMode = DL::DepthMode::Less});
   }

@@ -67,6 +67,14 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/meshnode.cpp
         source/meshnodescene.h
         source/meshnodescene.cpp
+        source/shapegeometry.h
+        source/shapegeometry.cpp
+        source/shapevisualizer.h
+        source/shapevisualizer.cpp
+        source/phongshapenode.h
+        source/phongshapenode.cpp
+        source/phongshapescene.h
+        source/phongshapescene.cpp
         include/particlenodescene.h
 )
 

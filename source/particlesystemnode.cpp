@@ -121,7 +121,7 @@ ParticleSystemNode::Config ParticleSystemNode::Config::softGlowBurst() {
   config.life.min = 1.1f;
   config.life.max = 1.5f;
 
-  config.appearance.startSize = {5.28f, 5.28f, 5.28f};
+  config.appearance.startSize = {0.28f, 0.28f, 0.28f};
   config.appearance.endSize = {0.1f, 0.1f, 0.1f};
   config.appearance.startColorMin = {0.9f, 0.6f, 0.22f, 1.0f};
   config.appearance.startColorMax = {1.0f, 0.88f, 0.52f, 1.0f};

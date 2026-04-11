@@ -11,6 +11,7 @@
 #include "particlescene.h"
 #include "particlenodescene.h"
 #include "quicknodescene.h"
+#include "meshnodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
 #include "truetypescene.h"
@@ -217,6 +218,9 @@ void DL::App::registerScenes() {
                                              codebook_.get());
   });
   sceneManager_.registerScene([this] {
+    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get());
+  });
+  sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });
   sceneManager_.registerScene([this] {
@@ -251,14 +255,21 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
 }
 
 void DL::App::onKey(int key, int scancode, int action, int mod) {
+#ifdef USE_IMGUI
+  const bool imguiWantsKeyboard = ImGui::GetCurrentContext() != nullptr &&
+                                  ImGui::GetIO().WantCaptureKeyboard;
+#else
+  const bool imguiWantsKeyboard = false;
+#endif
+
   if (action != GLFW_RELEASE) {
     if (action == GLFW_PRESS) {
-      if (key == GLFW_KEY_RIGHT) {
+      if (!imguiWantsKeyboard && key == GLFW_KEY_RIGHT) {
         sceneManager_.next();
         loadCurrentScene();
         return;
       }
-      if (key == GLFW_KEY_LEFT) {
+      if (!imguiWantsKeyboard && key == GLFW_KEY_LEFT) {
         sceneManager_.previous();
         loadCurrentScene();
         return;
@@ -272,7 +283,7 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
     return;
   }
 
-  if (scene_) {
+  if (!imguiWantsKeyboard && scene_) {
     scene_->onKey(key);
   }
 }

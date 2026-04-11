@@ -59,6 +59,14 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/particlevisualizer.h
         source/particlenodescene.cpp
         source/model.cpp
+        source/meshasset.h
+        source/meshasset.cpp
+        source/meshvisualizer.h
+        source/meshvisualizer.cpp
+        source/meshnode.h
+        source/meshnode.cpp
+        source/meshnodescene.h
+        source/meshnodescene.cpp
         include/particlenodescene.h
 )
 

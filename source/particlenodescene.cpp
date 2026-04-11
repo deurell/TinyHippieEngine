@@ -10,6 +10,12 @@
 ParticleNodeScene::ParticleNodeScene(DL::IRenderDevice *renderDevice)
     : renderDevice_(renderDevice) {}
 
+namespace {
+
+constexpr glm::vec3 defaultEmitterPosition{0.0f, 0.0f, 0.0f};
+
+} // namespace
+
 void ParticleNodeScene::init() {
   SceneNode::init();
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 36.0f));
@@ -22,7 +28,7 @@ void ParticleNodeScene::init() {
       std::make_unique<ParticleSystemNode>(renderDevice_, camera_.get(),
                                            particleConfig, this);
   particleSystemNode->init();
-  particleSystemNode->setEmitterPosition({0.0f, -10.0f, 0.0f});
+  particleSystemNode->setEmitterPosition(defaultEmitterPosition);
   particleSystemNode_ = particleSystemNode.get();
   addChild(std::move(particleSystemNode));
 }
@@ -44,8 +50,17 @@ void ParticleNodeScene::render(const DL::FrameContext &ctx) {
   DL::beginDebugUiFrame();
   ImGui::Begin("Particle Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-  if (ImGui::Button("reset") && particleSystemNode_ != nullptr) {
-    particleSystemNode_->resetParticles();
+  if (particleSystemNode_ != nullptr) {
+    const auto &config = particleSystemNode_->getConfig();
+    if (config.emission.mode == ParticleSystemNode::EmissionMode::Continuous) {
+      ImGui::TextUnformatted("Click to move emitter");
+    } else {
+      ImGui::TextUnformatted("Click to trigger burst");
+    }
+    if (ImGui::Button("center emitter")) {
+      particleSystemNode_->setEmitterPosition(defaultEmitterPosition);
+      particleSystemNode_->resetParticles();
+    }
   }
   ImGui::End();
 #endif
@@ -66,7 +81,7 @@ void ParticleNodeScene::onClick(double x, double y) {
 void ParticleNodeScene::onKey(int key) {
   if (key == GLFW_KEY_1 && particleSystemNode_ != nullptr) {
     particleSystemNode_->resetParticles();
-    particleSystemNode_->setEmitterPosition({0.0f, -10.0f, 0.0f});
+    particleSystemNode_->setEmitterPosition(defaultEmitterPosition);
   }
 }
 

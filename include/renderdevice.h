@@ -150,8 +150,9 @@ public:
 
   virtual MeshHandle createTexturedQuad() = 0;
   virtual MeshHandle createMesh(const std::vector<glm::vec3> &positions,
+                                const std::vector<glm::vec3> &normals,
                                 const std::vector<glm::vec2> &uvs,
-                                const std::vector<std::uint16_t> &indices) = 0;
+                                const std::vector<std::uint32_t> &indices) = 0;
   virtual TextureHandle createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;

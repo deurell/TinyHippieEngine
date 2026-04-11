@@ -222,9 +222,9 @@ void DL::TextVisualizer::initGraphics() {
 
   std::vector<glm::vec3> vertices;
   std::vector<glm::vec2> uvs;
-  std::vector<uint16_t> indices;
+  std::vector<std::uint32_t> indices;
 
-  uint16_t index = 0;
+  std::uint32_t index = 0;
   glm::vec2 offset(0.0f, 0.0f);
 
   std::vector<std::string> lines;
@@ -286,7 +286,7 @@ void DL::TextVisualizer::initGraphics() {
   }
 
   if (renderDevice_ != nullptr) {
-    mesh_ = renderDevice_->createMesh(vertices, uvs, indices);
+    mesh_ = renderDevice_->createMesh(vertices, {}, uvs, indices);
   }
 }
 

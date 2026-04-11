@@ -96,23 +96,30 @@ public:
   }
 
   MeshHandle createMesh(const std::vector<glm::vec3> &positions,
+                        const std::vector<glm::vec3> &normals,
                         const std::vector<glm::vec2> &uvs,
-                        const std::vector<std::uint16_t> &indices) override {
+                        const std::vector<std::uint32_t> &indices) override {
     if (positions.empty() || positions.size() != uvs.size() || indices.empty()) {
+      return {};
+    }
+    if (!normals.empty() && normals.size() != positions.size()) {
       return {};
     }
 
     std::vector<float> vertex_data;
-    vertex_data.reserve(positions.size() * 5);
+    vertex_data.reserve(positions.size() * 8);
     for (std::size_t i = 0; i < positions.size(); ++i) {
+      const glm::vec3 normal =
+          normals.empty() ? glm::vec3(0.0f, 0.0f, 1.0f) : normals[i];
       vertex_data.push_back(positions[i].x);
       vertex_data.push_back(positions[i].y);
       vertex_data.push_back(positions[i].z);
+      vertex_data.push_back(normal.x);
+      vertex_data.push_back(normal.y);
+      vertex_data.push_back(normal.z);
       vertex_data.push_back(uvs[i].x);
       vertex_data.push_back(uvs[i].y);
     }
-
-    std::vector<unsigned int> index_data(indices.begin(), indices.end());
 
     auto mesh = std::make_unique<GLMesh>();
     glGenVertexArrays(1, &mesh->vao);
@@ -125,18 +132,21 @@ public:
                  vertex_data.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(index_data.size() * sizeof(unsigned int)),
-                 index_data.data(), GL_STATIC_DRAW);
+                 static_cast<GLsizeiptr>(indices.size() * sizeof(std::uint32_t)),
+                 indices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)nullptr);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
     glBindVertexArray(0);
 
-    mesh->index_count = static_cast<GLsizei>(index_data.size());
+    mesh->index_count = static_cast<GLsizei>(indices.size());
     return storeResource<MeshHandle>(std::move(mesh), meshes_);
   }
 

@@ -37,11 +37,14 @@ private:
   struct GpuSubmesh {
     MeshHandle mesh;
     TextureHandle texture;
-    glm::vec3 fallbackColor{1.0f, 1.0f, 1.0f};
+    glm::vec3 diffuseColor{1.0f, 1.0f, 1.0f};
+    glm::vec3 ambientColor{0.4f, 0.4f, 0.4f};
+    glm::vec3 specularColor{0.2f, 0.2f, 0.2f};
+    float shininess = 16.0f;
     bool hasTexture = false;
   };
 
-  TextureHandle createFallbackTexture(const glm::vec4 &color);
+  TextureHandle createFallbackTexture();
   TextureHandle loadTexture(const MeshAssetSubmesh &submesh);
 
   DL::IRenderDevice *renderDevice_ = nullptr;

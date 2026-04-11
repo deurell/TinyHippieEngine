@@ -31,7 +31,10 @@ MeshVisualizer::MeshVisualizer(
     gpuSubmesh.mesh = renderDevice_->createMesh(
         submesh.positions, submesh.normals, submesh.uvs, submesh.indices);
     gpuSubmesh.texture = loadTexture(submesh);
-    gpuSubmesh.fallbackColor = glm::vec3(submesh.fallbackColor);
+    gpuSubmesh.diffuseColor = submesh.diffuseColor;
+    gpuSubmesh.ambientColor = submesh.ambientColor;
+    gpuSubmesh.specularColor = submesh.specularColor;
+    gpuSubmesh.shininess = submesh.shininess;
     gpuSubmesh.hasTexture = !submesh.texturePath.empty();
     if (gpuSubmesh.mesh.valid() && gpuSubmesh.texture.valid()) {
       submeshes_.push_back(gpuSubmesh);
@@ -99,25 +102,29 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     command.uniforms.push_back(
         DL::UniformValue::makeFloat("ambientStrength", settings_.ambientStrength));
     command.uniforms.push_back(
-        DL::UniformValue::makeFloat("specularStrength", settings_.specularStrength));
+        DL::UniformValue::makeFloat(
+            "specularStrength",
+            settings_.specularStrength *
+                std::max({submesh.specularColor.r, submesh.specularColor.g,
+                          submesh.specularColor.b})));
     command.uniforms.push_back(
-        DL::UniformValue::makeFloat("shininess", settings_.shininess));
+        DL::UniformValue::makeFloat(
+            "shininess",
+            submesh.shininess > 0.0f ? submesh.shininess : settings_.shininess));
     command.uniforms.push_back(
         DL::UniformValue::makeVec3(
-            "baseTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.fallbackColor));
+            "baseTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.diffuseColor));
+    command.uniforms.push_back(
+        DL::UniformValue::makeVec3(
+            "ambientTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.ambientColor));
     command.uniforms.push_back(
         DL::UniformValue::makeInt("debugNormals", debugNormals_ ? 1 : 0));
     renderDevice_->draw(command);
   }
 }
 
-TextureHandle MeshVisualizer::createFallbackTexture(const glm::vec4 &color) {
-  const auto clampToByte = [](float value) {
-    return static_cast<std::uint8_t>(
-        std::clamp(value, 0.0f, 1.0f) * 255.0f);
-  };
-  const std::uint8_t pixel[] = {clampToByte(color.r), clampToByte(color.g),
-                                clampToByte(color.b), clampToByte(color.a)};
+TextureHandle MeshVisualizer::createFallbackTexture() {
+  const std::uint8_t pixel[] = {255, 255, 255, 255};
   return renderDevice_->createTexture({.pixels = pixel,
                                        .width = 1,
                                        .height = 1,
@@ -134,7 +141,7 @@ TextureHandle MeshVisualizer::loadTexture(const MeshAssetSubmesh &submesh) {
       return texture;
     }
   }
-  return createFallbackTexture(submesh.fallbackColor);
+  return createFallbackTexture();
 }
 
 } // namespace DL

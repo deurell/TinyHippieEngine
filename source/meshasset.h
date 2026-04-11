@@ -13,7 +13,10 @@ struct MeshAssetSubmesh {
   std::vector<glm::vec2> uvs;
   std::vector<std::uint32_t> indices;
   std::string texturePath;
-  glm::vec4 fallbackColor{1.0f, 1.0f, 1.0f, 1.0f};
+  glm::vec3 diffuseColor{1.0f, 1.0f, 1.0f};
+  glm::vec3 ambientColor{0.4f, 0.4f, 0.4f};
+  glm::vec3 specularColor{0.2f, 0.2f, 0.2f};
+  float shininess = 16.0f;
 };
 
 struct MeshAsset {

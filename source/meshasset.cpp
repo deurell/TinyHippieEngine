@@ -115,9 +115,16 @@ MeshAsset loadObjMeshAsset(std::string_view path) {
         if (!material.diffuse_texname.empty()) {
           submesh.texturePath = directory + '/' + material.diffuse_texname;
         }
-        submesh.fallbackColor =
-            glm::vec4(material.diffuse[0], material.diffuse[1],
-                      material.diffuse[2], 1.0f);
+        submesh.diffuseColor =
+            glm::vec3(material.diffuse[0], material.diffuse[1],
+                      material.diffuse[2]);
+        submesh.ambientColor =
+            glm::vec3(material.ambient[0], material.ambient[1],
+                      material.ambient[2]);
+        submesh.specularColor =
+            glm::vec3(material.specular[0], material.specular[1],
+                      material.specular[2]);
+        submesh.shininess = material.shininess;
       }
 
       asset.submeshes.push_back(std::move(submesh));

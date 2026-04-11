@@ -55,6 +55,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/quicknodescene.h
         source/particlesystemnode.cpp
         source/particlesystemnode.h
+        source/particlevisualizer.cpp
+        source/particlevisualizer.h
         source/particlenodescene.cpp
         source/model.cpp
         include/particlenodescene.h

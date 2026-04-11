@@ -244,6 +244,17 @@ public:
     auto &pipeline = *pipeline_it->second;
     pipeline.use();
 
+    if (command.blendMode == BlendMode::Opaque) {
+      glDisable(GL_BLEND);
+    } else {
+      glEnable(GL_BLEND);
+      if (command.blendMode == BlendMode::Alpha) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+      } else if (command.blendMode == BlendMode::Additive) {
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+      }
+    }
+
     if (command.texture.valid()) {
       auto texture_it = textures_.find(command.texture.value);
       if (texture_it != textures_.end()) {
@@ -274,6 +285,10 @@ public:
     glBindVertexArray(mesh.vao);
     glDrawElements(GL_TRIANGLES, mesh.index_count, GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
+
+    if (command.blendMode != BlendMode::Opaque) {
+      glDisable(GL_BLEND);
+    }
   }
 
 private:

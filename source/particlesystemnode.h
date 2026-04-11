@@ -4,10 +4,9 @@
 #include "renderdevice.h"
 #include "scenenode.h"
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <random>
 #include <vector>
-
-class PlaneNode;
 
 class ParticleSystemNode : public DL::SceneNode {
 public:
@@ -29,6 +28,20 @@ public:
     glm::vec4 endColor{0.3f, 0.08f, 0.02f, 1.0f};
   };
 
+  struct ParticleState {
+    glm::vec3 position{0.0f};
+    glm::vec3 velocity{0.0f};
+    glm::quat rotation{1.0f, 0.0f, 0.0f, 0.0f};
+    glm::vec3 scale{0.0f};
+    glm::vec4 color{1.0f};
+    glm::vec3 rotationAxis{0.0f, 1.0f, 0.0f};
+    float angularSpeed = 0.0f;
+    float age = 0.0f;
+    float lifetime = 1.0f;
+    bool alive = false;
+    glm::vec4 startColor{1.0f};
+  };
+
   explicit ParticleSystemNode(DL::IRenderDevice *renderDevice,
                               DL::Camera *camera,
                               DL::SceneNode *parentNode = nullptr);
@@ -42,20 +55,9 @@ public:
   void resetParticles();
   void explode(const glm::vec3 &worldPosition);
 
+  const std::vector<ParticleState> &getParticles() const { return particles_; }
+
 private:
-  struct ParticleState {
-    PlaneNode *node = nullptr;
-    glm::vec3 velocity{0.0f};
-    glm::vec3 rotationAxis{0.0f, 1.0f, 0.0f};
-    float angularSpeed = 0.0f;
-    float age = 0.0f;
-    float lifetime = 1.0f;
-    bool alive = false;
-    glm::vec4 startColor{1.0f};
-  };
-
-  std::unique_ptr<PlaneNode> createParticleNode(const ParticleState &state);
-
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::Camera *camera_ = nullptr;
   Config config_;

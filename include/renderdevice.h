@@ -49,6 +49,12 @@ enum class DepthMode {
   Less,
 };
 
+enum class BlendMode {
+  Opaque,
+  Alpha,
+  Additive,
+};
+
 struct FramePassDesc {
   glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
   ClearFlags clearFlags = ClearFlags::ColorDepth;
@@ -134,6 +140,7 @@ struct DrawCommand {
   MeshHandle mesh;
   PipelineHandle pipeline;
   TextureHandle texture;
+  BlendMode blendMode = BlendMode::Opaque;
   std::vector<UniformValue> uniforms;
 };
 

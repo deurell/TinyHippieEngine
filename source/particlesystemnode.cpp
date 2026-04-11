@@ -1,6 +1,6 @@
 #include "particlesystemnode.h"
 
-#include "planenode.h"
+#include "particlevisualizer.h"
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
 
@@ -61,6 +61,10 @@ ParticleSystemNode::ParticleSystemNode(DL::IRenderDevice *renderDevice,
 void ParticleSystemNode::init() {
   SceneNode::init();
 
+  auto visualizer = std::make_unique<DL::ParticleVisualizer>(
+      "ParticleVisualizer", *camera_, *this, renderDevice_);
+  visualizers.emplace_back(std::move(visualizer));
+
   particles_.reserve(static_cast<std::size_t>(config_.particleCount));
 
   for (int i = 0; i < config_.particleCount; ++i) {
@@ -68,10 +72,8 @@ void ParticleSystemNode::init() {
     state.rotationAxis = randomDirection(twister_);
     state.angularSpeed = randomRange(twister_, config_.angularSpeedMin,
                                      config_.angularSpeedMax);
-
-    auto particleNode = createParticleNode(state);
-    state.node = particleNode.get();
-    addChild(std::move(particleNode));
+    state.scale = {0.0f, 0.0f, 0.0f};
+    state.color = config_.endColor;
     particles_.push_back(state);
   }
 
@@ -88,24 +90,21 @@ void ParticleSystemNode::update(const DL::FrameContext &ctx) {
     if (particle.age >= particle.lifetime) {
       particle.alive = false;
       particle.velocity = {0.0f, 0.0f, 0.0f};
-      particle.node->setLocalScale({0.0f, 0.0f, 0.0f});
-      particle.node->color = config_.endColor;
+      particle.scale = {0.0f, 0.0f, 0.0f};
+      particle.color = config_.endColor;
       continue;
     }
 
     particle.velocity += config_.gravity * ctx.delta_time;
     particle.velocity *= std::max(0.0f, 1.0f - config_.drag * ctx.delta_time);
-
-    const auto position = particle.node->getLocalPosition();
-    particle.node->setLocalPosition(position + particle.velocity * ctx.delta_time);
+    particle.position += particle.velocity * ctx.delta_time;
 
     const float t = particle.age / particle.lifetime;
-    particle.node->setLocalScale(
-        glm::mix(config_.startScale, config_.endScale, t));
-    particle.node->color = glm::mix(particle.startColor, config_.endColor, t);
+    particle.scale = glm::mix(config_.startScale, config_.endScale, t);
+    particle.color = glm::mix(particle.startColor, config_.endColor, t);
 
     const auto angle = static_cast<float>(ctx.total_time) * particle.angularSpeed;
-    particle.node->setLocalRotation(glm::angleAxis(angle, particle.rotationAxis));
+    particle.rotation = glm::angleAxis(angle, particle.rotationAxis);
   }
 
   SceneNode::update(ctx);
@@ -116,11 +115,11 @@ void ParticleSystemNode::resetParticles() {
     particle.alive = false;
     particle.age = 0.0f;
     particle.lifetime = config_.lifetimeMax;
+    particle.position = {0.0f, 0.0f, 0.0f};
     particle.velocity = {0.0f, 0.0f, 0.0f};
-    particle.node->setLocalPosition({0.0f, 0.0f, 0.0f});
-    particle.node->setLocalRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-    particle.node->setLocalScale({0.0f, 0.0f, 0.0f});
-    particle.node->color = config_.endColor;
+    particle.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    particle.scale = {0.0f, 0.0f, 0.0f};
+    particle.color = config_.endColor;
   }
 }
 
@@ -132,22 +131,12 @@ void ParticleSystemNode::explode(const glm::vec3 &worldPosition) {
         randomRange(twister_, config_.lifetimeMin, config_.lifetimeMax);
     particle.startColor =
         randomColor(twister_, config_.startColorMin, config_.startColorMax);
-    particle.node->setLocalPosition(worldPosition);
-    particle.node->setLocalScale(config_.startScale);
-    particle.node->color = particle.startColor;
+    particle.position = worldPosition;
+    particle.rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+    particle.scale = config_.startScale;
+    particle.color = particle.startColor;
     particle.velocity =
         randomBurstDirection(twister_, config_.directionZScale) *
         randomRange(twister_, config_.speedMin, config_.speedMax);
   }
-}
-
-std::unique_ptr<PlaneNode>
-ParticleSystemNode::createParticleNode(const ParticleState &state) {
-  auto particleNode =
-      std::make_unique<PlaneNode>(this, camera_, renderDevice_);
-  particleNode->planeType = PlaneNode::PlaneType::Simple;
-  particleNode->init();
-  particleNode->setLocalScale({0.0f, 0.0f, 0.0f});
-  particleNode->color = config_.endColor;
-  return particleNode;
 }

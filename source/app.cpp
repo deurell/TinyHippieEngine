@@ -9,6 +9,7 @@
 #include "introscene.h"
 #include "nodeexamplescene.h"
 #include "particlescene.h"
+#include "particlenodescene.h"
 #include "quicknodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
@@ -207,6 +208,9 @@ void DL::App::loadCurrentScene() {
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<QuickNodeScene>(renderDevice_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<ParticleNodeScene>(renderDevice_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<NodeExampleScene>(renderDevice_.get(),

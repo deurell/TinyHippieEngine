@@ -53,7 +53,11 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/spritevisualizer.h
         source/quicknodescene.cpp
         source/quicknodescene.h
+        source/particlesystemnode.cpp
+        source/particlesystemnode.h
+        source/particlenodescene.cpp
         source/model.cpp
+        include/particlenodescene.h
 )
 
 target_include_directories(tiny_hippie_engine

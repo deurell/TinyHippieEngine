@@ -163,10 +163,10 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
   config.motion.angularSpeedMax = glm::radians(40.0f);
 
   config.life.min = 1.2f;
-  config.life.max = 1.8f;
+  config.life.max = 2.8f;
 
   config.appearance.startSize = {0.42f, 0.56f, 0.42f};
-  config.appearance.endSize = {0.2f, 0.32f, 0.2f};
+  config.appearance.endSize = {1.2f, 1.32f, 1.2f};
   config.appearance.startColorMin = {0.45f, 0.78f, 0.98f, 1.0f};
   config.appearance.startColorMax = {0.85f, 0.95f, 1.0f, 1.0f};
   config.appearance.endColor = {0.08f, 0.22f, 0.45f, 1.0f};
@@ -177,8 +177,8 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
   config.render.haloRadius = 0.42f;
   config.render.outerRadius = 0.9f;
   config.render.sparkle = 0.0f;
-  config.render.stretchByVelocity = 0.045f;
-  config.render.maxStretch = 2.8f;
+  config.render.stretchByVelocity = 0.145f;
+  config.render.maxStretch = 4.8f;
   config.render.hotColor = {0.82f, 0.94f, 1.0f, 1.0f};
   config.render.deepColor = {0.16f, 0.42f, 0.82f, 1.0f};
   return config;

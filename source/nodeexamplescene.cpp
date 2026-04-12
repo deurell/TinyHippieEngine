@@ -124,7 +124,7 @@ void NodeExampleScene::render(const DL::FrameContext &ctx) {
   if (renderDevice_ != nullptr) {
     renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
                                .clearFlags = DL::ClearFlags::ColorDepth,
-                               .depthMode = DL::DepthMode::Disabled});
+                               .depthMode = DL::DepthMode::Less});
   }
 
   SceneNode::render(ctx);

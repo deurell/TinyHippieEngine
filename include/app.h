@@ -56,6 +56,8 @@ private:
   float startFrameTime_ = 0.0f;
   float lastFrameTime_ = 0.0f;
   float desiredFrameTime_ = 0.0f;
+  float fixedTimeAccumulator_ = 0.0f;
+  static constexpr float fixedTimeStep_ = 1.0f / 60.0f;
   bool nextSceneHeld_ = false;
   bool prevSceneHeld_ = false;
   glm::vec2 getWindowSize() const;

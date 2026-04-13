@@ -71,7 +71,20 @@ glm::vec3 SceneNode::getWorldPosition() {
 }
 
 glm::quat SceneNode::getWorldRotation() {
-  return glm::quat_cast(getWorldTransform());
+  glm::mat4 rotationMatrix = getWorldTransform();
+  const glm::vec3 scale = getWorldScale();
+
+  if (scale.x > 0.0f) {
+    rotationMatrix[0] /= scale.x;
+  }
+  if (scale.y > 0.0f) {
+    rotationMatrix[1] /= scale.y;
+  }
+  if (scale.z > 0.0f) {
+    rotationMatrix[2] /= scale.z;
+  }
+
+  return glm::normalize(glm::quat_cast(rotationMatrix));
 }
 
 glm::vec3 SceneNode::getWorldScale() {

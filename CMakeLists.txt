@@ -8,8 +8,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
 include(CTest)
+include(FetchContent)
 
 add_compile_definitions(USE_IMGUI)
+option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" ON)
 
 set(PLATFORM_LIBS "")
 
@@ -22,6 +24,15 @@ endif()
 if(EMSCRIPTEN)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+endif()
+
+if(TINY_ENGINE_ENABLE_PHYSICS)
+FetchContent_Declare(
+        reactphysics3d
+        GIT_REPOSITORY https://github.com/DanielChappuis/reactphysics3d.git
+        GIT_TAG v0.10.2
+)
+FetchContent_MakeAvailable(reactphysics3d)
 endif()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
@@ -85,6 +96,14 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/particlenodescene.h
 )
 
+if(TINY_ENGINE_ENABLE_PHYSICS)
+target_sources(tiny_hippie_engine PRIVATE
+        source/physicsworld.h source/physicsworld.cpp
+        source/physicsbodycomponent.h source/physicsbodycomponent.cpp
+        source/physicssandboxscene.h source/physicssandboxscene.cpp
+)
+endif()
+
 target_include_directories(tiny_hippie_engine
         PRIVATE
         ${CMAKE_SOURCE_DIR}/include
@@ -94,6 +113,9 @@ target_include_directories(tiny_hippie_engine
 )
 
 target_compile_definitions(tiny_hippie_engine PRIVATE GLFW_INCLUDE_NONE)
+if(TINY_ENGINE_ENABLE_PHYSICS)
+target_compile_definitions(tiny_hippie_engine PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+endif()
 
 add_library(imgui STATIC
         imgui/imconfig.h
@@ -157,6 +179,12 @@ foreach(target tiny_hippie_engine imgui basisu)
 endforeach()
 endif()
 
+if(TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
+target_link_libraries(tiny_hippie_engine PRIVATE reactphysics3d)
+elseif(TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
+target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
+endif()
+
 target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})
 
 foreach(asset_dir IN ITEMS Shaders Resources)
@@ -182,7 +210,6 @@ endforeach()
 endif()
 
 if(BUILD_TESTING AND NOT EMSCRIPTEN)
-include(FetchContent)
 
 find_package(GTest CONFIG QUIET)
 if(NOT GTest_FOUND)
@@ -217,6 +244,13 @@ add_executable(tiny_hippie_engine_tests
         source/scenenode.cpp
 )
 
+if(TINY_ENGINE_ENABLE_PHYSICS)
+target_sources(tiny_hippie_engine_tests PRIVATE
+        tests/physicsworld_test.cpp
+        source/physicsworld.cpp
+)
+endif()
+
 target_include_directories(tiny_hippie_engine_tests
         PRIVATE
         ${CMAKE_SOURCE_DIR}/include
@@ -224,6 +258,15 @@ target_include_directories(tiny_hippie_engine_tests
 )
 
 target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
+if(TINY_ENGINE_ENABLE_PHYSICS)
+target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+endif()
+
+if(TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
+target_link_libraries(tiny_hippie_engine_tests PRIVATE reactphysics3d)
+elseif(TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
+target_link_libraries(tiny_hippie_engine_tests PRIVATE ReactPhysics3D)
+endif()
 
 target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
 

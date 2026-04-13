@@ -13,6 +13,7 @@ public:
 
   virtual void init() = 0;
   virtual void update(const FrameContext &ctx) = 0;
+  virtual void fixedUpdate(const FrameContext &ctx) {}
   virtual void render(const FrameContext &ctx) = 0;
   virtual void onClick(double x, double y) = 0;
   virtual void onKey(int key) = 0;

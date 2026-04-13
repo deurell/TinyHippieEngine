@@ -12,6 +12,9 @@
 #include "nodeexamplescene.h"
 #include "particlescene.h"
 #include "particlenodescene.h"
+#if defined(TINY_ENGINE_ENABLE_PHYSICS)
+#include "physicssandboxscene.h"
+#endif
 #include "phongshapescene.h"
 #include "quicknodescene.h"
 #include "meshnodescene.h"
@@ -160,7 +163,13 @@ void DL::App::update() {
     processInput(window_);
   }
   if (!scene_) return;
-  scene_->update({deltaTime_, glfwGetTime()});
+  const auto frameTime = glfwGetTime();
+  fixedTimeAccumulator_ += deltaTime_;
+  while (fixedTimeAccumulator_ >= fixedTimeStep_) {
+    scene_->fixedUpdate({fixedTimeStep_, frameTime});
+    fixedTimeAccumulator_ -= fixedTimeStep_;
+  }
+  scene_->update({deltaTime_, frameTime});
 }
 
 void DL::App::render() {
@@ -219,12 +228,23 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
-    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
-                                            renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
     return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
                                                renderResourceCache_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
+                                           meshAssetCache_.get(),
+                                           renderResourceCache_.get());
+  });
+#if defined(TINY_ENGINE_ENABLE_PHYSICS)
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhysicsSandboxScene>(renderDevice_.get(),
+                                                 renderResourceCache_.get());
+  });
+#endif
+  sceneManager_.registerScene([this] {
+    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
+                                            renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<NodeExampleScene>(renderDevice_.get(),
@@ -233,11 +253,6 @@ void DL::App::registerScenes() {
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
-                                           meshAssetCache_.get(),
-                                           renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
                                            meshAssetCache_.get(),
                                            renderResourceCache_.get());
   });
@@ -271,7 +286,17 @@ void DL::App::registerScenes() {
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
+#ifdef USE_IMGUI
+  const bool imguiWantsMouse = ImGui::GetCurrentContext() != nullptr &&
+                               ImGui::GetIO().WantCaptureMouse;
+#else
+  const bool imguiWantsMouse = false;
+#endif
+
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    if (imguiWantsMouse) {
+      return;
+    }
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
     if (scene_) {

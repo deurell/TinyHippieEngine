@@ -54,7 +54,7 @@ private:
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
   PhongShapeNode *raycastMarkerNode_ = nullptr;
-  DL::PhysicsWorld physicsWorld_;
+  DL::PhysicsContext physicsContext_;
   std::vector<BodyBinding> bodyBindings_;
   bool paused_ = false;
   int fixedStepsLastFrame_ = 0;

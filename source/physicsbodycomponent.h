@@ -1,5 +1,6 @@
 #pragma once
 
+#include "physicscontext.h"
 #include "physicsworld.h"
 #include "scenenode.h"
 
@@ -7,7 +8,7 @@ namespace DL {
 
 class PhysicsBodyComponent {
 public:
-  PhysicsBodyComponent(PhysicsWorld &physicsWorld, SceneNode &node,
+  PhysicsBodyComponent(PhysicsContext &physicsContext, SceneNode &node,
                        const PhysicsBodyDesc &bodyDesc);
   ~PhysicsBodyComponent();
 
@@ -22,6 +23,7 @@ public:
   [[nodiscard]] PhysicsBodyHandle handle() const { return handle_; }
 
 private:
+  PhysicsContext *physicsContext_ = nullptr;
   PhysicsWorld *physicsWorld_ = nullptr;
   SceneNode *node_ = nullptr;
   PhysicsBodyHandle handle_;

@@ -98,6 +98,7 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
 
 if(TINY_ENGINE_ENABLE_PHYSICS)
 target_sources(tiny_hippie_engine PRIVATE
+        source/physicscontext.h source/physicscontext.cpp
         source/physicsworld.h source/physicsworld.cpp
         source/physicsbodycomponent.h source/physicsbodycomponent.cpp
         source/physicssandboxscene.h source/physicssandboxscene.cpp
@@ -247,7 +248,9 @@ add_executable(tiny_hippie_engine_tests
 if(TINY_ENGINE_ENABLE_PHYSICS)
 target_sources(tiny_hippie_engine_tests PRIVATE
         tests/physicsworld_test.cpp
+        source/physicscontext.cpp
         source/physicsworld.cpp
+        source/physicsbodycomponent.cpp
 )
 endif()
 

@@ -1,3 +1,4 @@
+#include "physicscontext.h"
 #include "physicsworld.h"
 #include <gtest/gtest.h>
 
@@ -73,4 +74,16 @@ TEST(PhysicsWorldTest, CollisionMasksCanDisableFloorContact) {
 
   const auto cubeState = world.getBodyState(cube);
   EXPECT_LT(cubeState.position.y, -1.5f);
+}
+
+TEST(PhysicsContextTest, ProxiesRaycastToPhysicsWorld) {
+  DL::PhysicsContext context;
+  context.world().createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({2.0f, 0.5f, 2.0f}),
+      .position = {0.0f, -1.0f, 0.0f},
+  });
+
+  const auto hit = context.raycast({0.0f, 3.0f, 0.0f}, {0.0f, -3.0f, 0.0f});
+  EXPECT_TRUE(hit.hasHit);
 }

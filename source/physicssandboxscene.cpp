@@ -17,7 +17,7 @@ void PhysicsSandboxScene::init() {
 
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 4.0f, 16.0f));
   camera_->lookAt({0.0f, 2.0f, 0.0f});
-  physicsWorld_.setGravity({0.0f, -9.81f, 0.0f});
+  physicsContext_.setGravity({0.0f, -9.81f, 0.0f});
 
   auto *floor = addShape(ShapeType::Cube, {0.0f, -1.0f, 0.0f},
                          {12.0f, 1.0f, 12.0f},
@@ -73,19 +73,7 @@ void PhysicsSandboxScene::fixedUpdate(const DL::FrameContext &ctx) {
   // Refresh world transforms before pushing node transforms into physics.
   SceneNode::update({0.0f, ctx.total_time});
 
-  for (auto &binding : bodyBindings_) {
-    if (binding.body != nullptr) {
-      binding.body->syncBeforeStep();
-    }
-  }
-
-  physicsWorld_.step(ctx.delta_time);
-
-  for (auto &binding : bodyBindings_) {
-    if (binding.body != nullptr) {
-      binding.body->syncAfterStep();
-    }
-  }
+  physicsContext_.step(ctx.delta_time);
 
   fixedStepsCurrentFrame_ += 1;
 }
@@ -137,7 +125,7 @@ void PhysicsSandboxScene::render(const DL::FrameContext &ctx) {
 void PhysicsSandboxScene::onClick(double x, double y) {
   const glm::vec3 rayStart = screenToWorld(x, y, 0.0f);
   const glm::vec3 rayEnd = screenToWorld(x, y, 1.0f);
-  lastRaycastHit_ = physicsWorld_.raycast(rayStart, rayEnd);
+  lastRaycastHit_ = physicsContext_.raycast(rayStart, rayEnd);
   updateRaycastMarker();
 }
 
@@ -194,7 +182,7 @@ PhongShapeNode *PhysicsSandboxScene::addShape(
 
 void PhysicsSandboxScene::addPhysicsBody(PhongShapeNode &node,
                                          const DL::PhysicsBodyDesc &bodyDesc) {
-  auto body = std::make_unique<DL::PhysicsBodyComponent>(physicsWorld_, node,
+  auto body = std::make_unique<DL::PhysicsBodyComponent>(physicsContext_, node,
                                                          bodyDesc);
   bodyBindings_.push_back(
       {.node = &node, .body = std::move(body), .spawnPosition = bodyDesc.position});

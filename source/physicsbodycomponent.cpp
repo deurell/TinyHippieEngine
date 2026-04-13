@@ -2,14 +2,21 @@
 
 namespace DL {
 
-PhysicsBodyComponent::PhysicsBodyComponent(PhysicsWorld &physicsWorld,
+PhysicsBodyComponent::PhysicsBodyComponent(PhysicsContext &physicsContext,
                                            SceneNode &node,
                                            const PhysicsBodyDesc &bodyDesc)
-    : physicsWorld_(&physicsWorld), node_(&node), bodyType_(bodyDesc.type) {
+    : physicsContext_(&physicsContext), physicsWorld_(&physicsContext.world()),
+      node_(&node), bodyType_(bodyDesc.type) {
   handle_ = physicsWorld_->createBody(bodyDesc);
+  if (handle_.valid()) {
+    physicsContext_->registerBody(*this);
+  }
 }
 
 PhysicsBodyComponent::~PhysicsBodyComponent() {
+  if (physicsContext_ != nullptr && handle_.valid()) {
+    physicsContext_->unregisterBody(*this);
+  }
   if (physicsWorld_ != nullptr && handle_.valid()) {
     physicsWorld_->destroyBody(handle_);
   }

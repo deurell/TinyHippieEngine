@@ -24,6 +24,11 @@ public:
   [[nodiscard]] PhysicsRaycastHit raycast(
       const glm::vec3 &start, const glm::vec3 &end,
       unsigned short categoryMaskBits = 0xFFFF) const;
+  void setDebugRenderingEnabled(bool enabled);
+  [[nodiscard]] bool isDebugRenderingEnabled() const;
+  void setDebugRenderSettings(const PhysicsDebugRenderSettings &settings);
+  [[nodiscard]] PhysicsDebugRenderSettings getDebugRenderSettings() const;
+  [[nodiscard]] std::vector<PhysicsDebugLine> getDebugLines() const;
   [[nodiscard]] PhysicsWorld &world() { return physicsWorld_; }
   [[nodiscard]] const PhysicsWorld &world() const { return physicsWorld_; }
 

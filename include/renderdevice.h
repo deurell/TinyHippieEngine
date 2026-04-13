@@ -18,6 +18,11 @@ struct MeshHandle {
   [[nodiscard]] bool valid() const { return value != 0; }
 };
 
+enum class PrimitiveType {
+  Triangles,
+  Lines,
+};
+
 struct TextureHandle {
   std::size_t value = 0;
   [[nodiscard]] bool valid() const { return value != 0; }
@@ -152,6 +157,7 @@ struct DrawCommand {
   PipelineHandle pipeline;
   TextureHandle texture;
   BlendMode blendMode = BlendMode::Opaque;
+  float lineWidth = 1.0f;
   std::vector<UniformValue> uniforms;
 };
 
@@ -174,6 +180,10 @@ public:
                                 const std::vector<std::uint32_t> &indices,
                                 const std::vector<std::array<std::uint16_t, 4>> &jointIndices = {},
                                 const std::vector<glm::vec4> &jointWeights = {}) = 0;
+  virtual MeshHandle createColoredMesh(const std::vector<glm::vec3> &positions,
+                                       const std::vector<glm::vec4> &colors,
+                                       const std::vector<std::uint32_t> &indices,
+                                       PrimitiveType primitiveType = PrimitiveType::Triangles) = 0;
   virtual TextureHandle createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;

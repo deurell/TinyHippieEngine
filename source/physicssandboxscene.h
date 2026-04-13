@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "physicsbodycomponent.h"
+#include "physicsdebugrenderer.h"
 #include "physicsworld.h"
 #include "phongshapenode.h"
 #include "renderdevice.h"
@@ -48,11 +49,13 @@ private:
   glm::vec3 screenToWorld(double x, double y, float depth) const;
   void updateRaycastMarker();
   void addPhysicsBody(PhongShapeNode &node, const DL::PhysicsBodyDesc &bodyDesc);
+  void applyPhysicsDebugSettings();
   void resetDynamicBodies();
 
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
+  std::unique_ptr<DL::PhysicsDebugRenderer> physicsDebugRenderer_;
   PhongShapeNode *raycastMarkerNode_ = nullptr;
   DL::PhysicsContext physicsContext_;
   std::vector<BodyBinding> bodyBindings_;
@@ -63,4 +66,7 @@ private:
   glm::vec2 framebufferSize_{0.0f, 0.0f};
   SpawnShape spawnShape_ = SpawnShape::Box;
   DL::PhysicsRaycastHit lastRaycastHit_;
+  bool showPhysicsDebug_ = false;
+  bool showVelocityVectors_ = false;
+  float velocityVectorScale_ = 0.2f;
 };

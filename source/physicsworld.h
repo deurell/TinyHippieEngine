@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
+#include <vector>
 
 namespace DL {
 
@@ -61,6 +62,23 @@ struct PhysicsRaycastHit {
   float fraction = 1.0f;
 };
 
+struct PhysicsDebugLine {
+  glm::vec3 start{0.0f};
+  glm::vec4 startColor{1.0f};
+  glm::vec3 end{0.0f};
+  glm::vec4 endColor{1.0f};
+};
+
+struct PhysicsDebugRenderSettings {
+  bool collisionShapes = true;
+  bool velocityVectors = false;
+  bool contactPoints = false;
+  bool contactNormals = false;
+  bool colliderAabbs = false;
+  bool broadphaseAabbs = false;
+  float velocityScale = 0.2f;
+};
+
 class PhysicsWorld {
 public:
   PhysicsWorld();
@@ -83,6 +101,11 @@ public:
   [[nodiscard]] PhysicsRaycastHit raycast(
       const glm::vec3 &start, const glm::vec3 &end,
       unsigned short categoryMaskBits = 0xFFFF) const;
+  void setDebugRenderingEnabled(bool enabled);
+  [[nodiscard]] bool isDebugRenderingEnabled() const;
+  void setDebugRenderSettings(const PhysicsDebugRenderSettings &settings);
+  [[nodiscard]] PhysicsDebugRenderSettings getDebugRenderSettings() const;
+  [[nodiscard]] std::vector<PhysicsDebugLine> getDebugLines() const;
 
 private:
   struct Impl;

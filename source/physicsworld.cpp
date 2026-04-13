@@ -1,5 +1,6 @@
 #include "physicsworld.h"
 
+#include <glm/gtc/constants.hpp>
 #include <reactphysics3d/reactphysics3d.h>
 #include <unordered_map>
 
@@ -13,6 +14,133 @@ reactphysics3d::Vector3 toRp3d(const glm::vec3 &value) {
 
 glm::vec3 toGlm(const reactphysics3d::Vector3 &value) {
   return {value.x, value.y, value.z};
+}
+
+glm::vec4 debugColorToGlm(std::uint32_t color) {
+  const float inv255 = 1.0f / 255.0f;
+  return {
+      static_cast<float>((color >> 16) & 0xFF) * inv255,
+      static_cast<float>((color >> 8) & 0xFF) * inv255,
+      static_cast<float>(color & 0xFF) * inv255,
+      1.0f,
+  };
+}
+
+PhysicsDebugLine makeDebugLine(const glm::vec3 &start, const glm::vec3 &end,
+                               const glm::vec4 &color) {
+  return {.start = start, .startColor = color, .end = end, .endColor = color};
+}
+
+glm::vec3 transformPoint(const glm::vec3 &position, const glm::quat &rotation,
+                         const glm::vec3 &localPoint) {
+  return position + rotation * localPoint;
+}
+
+void appendCircle(std::vector<PhysicsDebugLine> &lines, const glm::vec3 &position,
+                  const glm::quat &rotation, const glm::vec4 &color,
+                  float radius, int segments, const glm::vec3 &axisA,
+                  const glm::vec3 &axisB, const glm::vec3 &offset = glm::vec3(0.0f)) {
+  for (int i = 0; i < segments; ++i) {
+    const float angle0 =
+        (glm::two_pi<float>() * static_cast<float>(i)) / static_cast<float>(segments);
+    const float angle1 = (glm::two_pi<float>() * static_cast<float>(i + 1)) /
+                         static_cast<float>(segments);
+    const glm::vec3 local0 =
+        offset + (std::cos(angle0) * radius) * axisA + (std::sin(angle0) * radius) * axisB;
+    const glm::vec3 local1 =
+        offset + (std::cos(angle1) * radius) * axisA + (std::sin(angle1) * radius) * axisB;
+    lines.push_back(makeDebugLine(transformPoint(position, rotation, local0),
+                                  transformPoint(position, rotation, local1), color));
+  }
+}
+
+void appendBoxLines(std::vector<PhysicsDebugLine> &lines, const glm::vec3 &position,
+                    const glm::quat &rotation, const glm::vec3 &halfExtents,
+                    const glm::vec4 &color) {
+  const glm::vec3 corners[] = {
+      {-halfExtents.x, -halfExtents.y, -halfExtents.z},
+      {halfExtents.x, -halfExtents.y, -halfExtents.z},
+      {halfExtents.x, halfExtents.y, -halfExtents.z},
+      {-halfExtents.x, halfExtents.y, -halfExtents.z},
+      {-halfExtents.x, -halfExtents.y, halfExtents.z},
+      {halfExtents.x, -halfExtents.y, halfExtents.z},
+      {halfExtents.x, halfExtents.y, halfExtents.z},
+      {-halfExtents.x, halfExtents.y, halfExtents.z},
+  };
+  constexpr int edges[][2] = {
+      {0, 1}, {1, 2}, {2, 3}, {3, 0}, {4, 5}, {5, 6},
+      {6, 7}, {7, 4}, {0, 4}, {1, 5}, {2, 6}, {3, 7},
+  };
+  for (const auto &edge : edges) {
+    lines.push_back(makeDebugLine(transformPoint(position, rotation, corners[edge[0]]),
+                                  transformPoint(position, rotation, corners[edge[1]]), color));
+  }
+}
+
+void appendSphereLines(std::vector<PhysicsDebugLine> &lines, const glm::vec3 &position,
+                       const glm::quat &rotation, float radius,
+                       const glm::vec4 &color) {
+  constexpr int kSegments = 24;
+  appendCircle(lines, position, rotation, color, radius, kSegments,
+               {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f});
+  appendCircle(lines, position, rotation, color, radius, kSegments,
+               {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
+  appendCircle(lines, position, rotation, color, radius, kSegments,
+               {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f});
+}
+
+void appendCapsuleLines(std::vector<PhysicsDebugLine> &lines, const glm::vec3 &position,
+                        const glm::quat &rotation, float radius, float height,
+                        const glm::vec4 &color) {
+  constexpr int kSegments = 18;
+  const float halfHeight = height * 0.5f;
+
+  appendCircle(lines, position, rotation, color, radius, kSegments,
+               {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, halfHeight, 0.0f});
+  appendCircle(lines, position, rotation, color, radius, kSegments,
+               {1.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, -halfHeight, 0.0f});
+
+  const glm::vec3 offsets[] = {
+      {radius, 0.0f, 0.0f},
+      {-radius, 0.0f, 0.0f},
+      {0.0f, 0.0f, radius},
+      {0.0f, 0.0f, -radius},
+  };
+  for (const auto &offset : offsets) {
+    lines.push_back(makeDebugLine(
+        transformPoint(position, rotation, offset + glm::vec3(0.0f, halfHeight, 0.0f)),
+        transformPoint(position, rotation, offset + glm::vec3(0.0f, -halfHeight, 0.0f)),
+        color));
+  }
+
+  for (int i = 0; i < kSegments; ++i) {
+    const float angle0 = (glm::pi<float>() * static_cast<float>(i)) /
+                         static_cast<float>(kSegments);
+    const float angle1 = (glm::pi<float>() * static_cast<float>(i + 1)) /
+                         static_cast<float>(kSegments);
+
+    const glm::vec3 yz0(0.0f, std::cos(angle0) * radius, std::sin(angle0) * radius);
+    const glm::vec3 yz1(0.0f, std::cos(angle1) * radius, std::sin(angle1) * radius);
+    lines.push_back(makeDebugLine(
+        transformPoint(position, rotation, yz0 + glm::vec3(0.0f, halfHeight, 0.0f)),
+        transformPoint(position, rotation, yz1 + glm::vec3(0.0f, halfHeight, 0.0f)),
+        color));
+    lines.push_back(makeDebugLine(
+        transformPoint(position, rotation, -yz0 + glm::vec3(0.0f, -halfHeight, 0.0f)),
+        transformPoint(position, rotation, -yz1 + glm::vec3(0.0f, -halfHeight, 0.0f)),
+        color));
+
+    const glm::vec3 xy0(std::cos(angle0) * radius, std::sin(angle0) * radius, 0.0f);
+    const glm::vec3 xy1(std::cos(angle1) * radius, std::sin(angle1) * radius, 0.0f);
+    lines.push_back(makeDebugLine(
+        transformPoint(position, rotation, xy0 + glm::vec3(0.0f, halfHeight, 0.0f)),
+        transformPoint(position, rotation, xy1 + glm::vec3(0.0f, halfHeight, 0.0f)),
+        color));
+    lines.push_back(makeDebugLine(
+        transformPoint(position, rotation, -xy0 + glm::vec3(0.0f, -halfHeight, 0.0f)),
+        transformPoint(position, rotation, -xy1 + glm::vec3(0.0f, -halfHeight, 0.0f)),
+        color));
+  }
 }
 
 reactphysics3d::Quaternion toRp3d(const glm::quat &value) {
@@ -42,6 +170,7 @@ struct PhysicsWorld::Impl {
     reactphysics3d::RigidBody *body = nullptr;
     reactphysics3d::CollisionShape *shape = nullptr;
     reactphysics3d::Collider *collider = nullptr;
+    PhysicsShapeDesc shapeDesc;
     PhysicsShapeType shapeType = PhysicsShapeType::Box;
   };
 
@@ -49,6 +178,7 @@ struct PhysicsWorld::Impl {
   reactphysics3d::PhysicsWorld *world = nullptr;
   std::unordered_map<std::size_t, BodyEntry> bodies;
   std::size_t nextBodyId = 1;
+  PhysicsDebugRenderSettings debugSettings;
 
   Impl() {
     reactphysics3d::PhysicsWorld::WorldSettings settings;
@@ -173,6 +303,7 @@ PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
     return {};
   }
   body->setLinearVelocity(toRp3d(desc.linearVelocity));
+  body->setIsDebugEnabled(true);
   collider->setCollisionCategoryBits(desc.categoryBits);
   collider->setCollideWithMaskBits(desc.maskBits);
   if (desc.type == PhysicsBodyType::Dynamic) {
@@ -183,6 +314,7 @@ PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
   impl_->bodies.emplace(id, Impl::BodyEntry{.body = body,
                                             .shape = shape,
                                             .collider = collider,
+                                            .shapeDesc = desc.shape,
                                             .shapeType = desc.shape.type});
   return PhysicsBodyHandle{id};
 }
@@ -304,6 +436,104 @@ PhysicsRaycastHit PhysicsWorld::raycast(const glm::vec3 &start,
   impl_->world->raycast(reactphysics3d::Ray(toRp3d(start), toRp3d(end)),
                         &callback);
   return callback.hit;
+}
+
+void PhysicsWorld::setDebugRenderingEnabled(bool enabled) {
+  if (impl_ != nullptr && impl_->world != nullptr) {
+    impl_->world->setIsDebugRenderingEnabled(enabled);
+  }
+}
+
+bool PhysicsWorld::isDebugRenderingEnabled() const {
+  return impl_ != nullptr && impl_->world != nullptr &&
+         impl_->world->getIsDebugRenderingEnabled();
+}
+
+void PhysicsWorld::setDebugRenderSettings(
+    const PhysicsDebugRenderSettings &settings) {
+  if (impl_ == nullptr || impl_->world == nullptr) {
+    return;
+  }
+
+  impl_->debugSettings = settings;
+  auto &debugRenderer = impl_->world->getDebugRenderer();
+  debugRenderer.setIsDebugItemDisplayed(
+      reactphysics3d::DebugRenderer::DebugItem::COLLISION_SHAPE,
+      settings.collisionShapes);
+  debugRenderer.setIsDebugItemDisplayed(
+      reactphysics3d::DebugRenderer::DebugItem::CONTACT_POINT,
+      settings.contactPoints);
+  debugRenderer.setIsDebugItemDisplayed(
+      reactphysics3d::DebugRenderer::DebugItem::CONTACT_NORMAL,
+      settings.contactNormals);
+  debugRenderer.setIsDebugItemDisplayed(
+      reactphysics3d::DebugRenderer::DebugItem::COLLIDER_AABB,
+      settings.colliderAabbs);
+  debugRenderer.setIsDebugItemDisplayed(
+      reactphysics3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB,
+      settings.broadphaseAabbs);
+}
+
+PhysicsDebugRenderSettings PhysicsWorld::getDebugRenderSettings() const {
+  if (impl_ == nullptr) {
+    return {};
+  }
+  return impl_->debugSettings;
+}
+
+std::vector<PhysicsDebugLine> PhysicsWorld::getDebugLines() const {
+  std::vector<PhysicsDebugLine> lines;
+  if (impl_ == nullptr || impl_->world == nullptr ||
+      !impl_->world->getIsDebugRenderingEnabled()) {
+    return lines;
+  }
+
+  if (!impl_->debugSettings.collisionShapes &&
+      !impl_->debugSettings.velocityVectors) {
+    return lines;
+  }
+
+  const glm::vec4 shapeColor = debugColorToGlm(0x00ff00);
+  const glm::vec4 velocityColor = debugColorToGlm(0xffff00);
+  for (const auto &[_, entry] : impl_->bodies) {
+    if (entry.body == nullptr) {
+      continue;
+    }
+
+    const auto transform = entry.body->getTransform();
+    const glm::vec3 position = toGlm(transform.getPosition());
+    const glm::quat rotation = glm::normalize(toGlm(transform.getOrientation()));
+
+    if (impl_->debugSettings.collisionShapes) {
+      switch (entry.shapeType) {
+      case PhysicsShapeType::Box:
+        appendBoxLines(lines, position, rotation, entry.shapeDesc.halfExtents,
+                       shapeColor);
+        break;
+      case PhysicsShapeType::Sphere:
+        appendSphereLines(lines, position, rotation, entry.shapeDesc.radius,
+                          shapeColor);
+        break;
+      case PhysicsShapeType::Capsule:
+        appendCapsuleLines(lines, position, rotation, entry.shapeDesc.radius,
+                           entry.shapeDesc.height, shapeColor);
+        break;
+      }
+    }
+
+    if (impl_->debugSettings.velocityVectors &&
+        entry.body->getType() == reactphysics3d::BodyType::DYNAMIC) {
+      const glm::vec3 velocity = toGlm(entry.body->getLinearVelocity());
+      const float velocityLength = glm::length(velocity);
+      if (velocityLength > 0.0001f) {
+        lines.push_back(makeDebugLine(
+            position,
+            position + velocity * impl_->debugSettings.velocityScale,
+            velocityColor));
+      }
+    }
+  }
+  return lines;
 }
 
 } // namespace DL

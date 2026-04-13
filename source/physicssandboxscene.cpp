@@ -18,6 +18,7 @@ void PhysicsSandboxScene::init() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 4.0f, 16.0f));
   camera_->lookAt({0.0f, 2.0f, 0.0f});
   physicsContext_.setGravity({0.0f, -9.81f, 0.0f});
+  applyPhysicsDebugSettings();
 
   auto *floor = addShape(ShapeType::Cube, {0.0f, -1.0f, 0.0f},
                          {12.0f, 1.0f, 12.0f},
@@ -90,6 +91,18 @@ void PhysicsSandboxScene::render(const DL::FrameContext &ctx) {
   ImGui::Begin("Physics Sandbox");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Checkbox("Pause simulation", &paused_);
+  if (ImGui::Checkbox("Show physics debug", &showPhysicsDebug_)) {
+    applyPhysicsDebugSettings();
+  }
+  if (showPhysicsDebug_) {
+    if (ImGui::Checkbox("Show velocity vectors", &showVelocityVectors_)) {
+      applyPhysicsDebugSettings();
+    }
+    if (ImGui::SliderFloat("Velocity scale", &velocityVectorScale_, 0.02f,
+                           1.0f, "%.2f")) {
+      applyPhysicsDebugSettings();
+    }
+  }
   const char *spawnShapeLabels[] = {"Box", "Sphere", "Capsule"};
   int spawnShapeIndex = static_cast<int>(spawnShape_);
   if (ImGui::Combo("Spawn shape", &spawnShapeIndex, spawnShapeLabels,
@@ -120,6 +133,10 @@ void PhysicsSandboxScene::render(const DL::FrameContext &ctx) {
 #endif
 
   SceneNode::render(ctx);
+
+  if (showPhysicsDebug_ && physicsDebugRenderer_ != nullptr) {
+    physicsDebugRenderer_->render(physicsContext_.getDebugLines());
+  }
 }
 
 void PhysicsSandboxScene::onClick(double x, double y) {
@@ -279,6 +296,28 @@ void PhysicsSandboxScene::updateRaycastMarker() {
   } else {
     raycastMarkerNode_->setLocalPosition({0.0f, -1000.0f, 0.0f});
   }
+}
+
+void PhysicsSandboxScene::applyPhysicsDebugSettings() {
+  physicsContext_.setDebugRenderingEnabled(showPhysicsDebug_);
+  if (showPhysicsDebug_) {
+    if (physicsDebugRenderer_ == nullptr && renderDevice_ != nullptr &&
+        camera_ != nullptr) {
+      physicsDebugRenderer_ = std::make_unique<DL::PhysicsDebugRenderer>(
+          *camera_, *renderDevice_, renderResourceCache_);
+    }
+  } else {
+    physicsDebugRenderer_.reset();
+  }
+  physicsContext_.setDebugRenderSettings({
+      .collisionShapes = true,
+      .velocityVectors = showVelocityVectors_,
+      .contactPoints = false,
+      .contactNormals = false,
+      .colliderAabbs = false,
+      .broadphaseAabbs = false,
+      .velocityScale = velocityVectorScale_,
+  });
 }
 
 void PhysicsSandboxScene::resetDynamicBodies() {

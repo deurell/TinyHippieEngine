@@ -87,3 +87,45 @@ TEST(PhysicsContextTest, ProxiesRaycastToPhysicsWorld) {
   const auto hit = context.raycast({0.0f, 3.0f, 0.0f}, {0.0f, -3.0f, 0.0f});
   EXPECT_TRUE(hit.hasHit);
 }
+
+TEST(PhysicsWorldTest, StoresDebugRenderState) {
+  DL::PhysicsWorld world;
+  const DL::PhysicsDebugRenderSettings settings{
+      .collisionShapes = true,
+      .velocityVectors = true,
+      .contactPoints = true,
+      .contactNormals = true,
+      .colliderAabbs = true,
+      .broadphaseAabbs = true,
+      .velocityScale = 0.35f,
+  };
+
+  world.setDebugRenderSettings(settings);
+  world.setDebugRenderingEnabled(true);
+  EXPECT_TRUE(world.isDebugRenderingEnabled());
+
+  const auto applied = world.getDebugRenderSettings();
+  EXPECT_TRUE(applied.collisionShapes);
+  EXPECT_TRUE(applied.velocityVectors);
+  EXPECT_TRUE(applied.contactPoints);
+  EXPECT_TRUE(applied.contactNormals);
+  EXPECT_TRUE(applied.colliderAabbs);
+  EXPECT_TRUE(applied.broadphaseAabbs);
+  EXPECT_FLOAT_EQ(applied.velocityScale, 0.35f);
+}
+
+TEST(PhysicsWorldTest, ExposesDebugLinesWhenEnabled) {
+  DL::PhysicsWorld world;
+  world.setDebugRenderSettings({.collisionShapes = true});
+  world.setDebugRenderingEnabled(true);
+
+  const auto body = world.createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({0.5f, 0.5f, 0.5f}),
+      .position = {0.0f, 1.0f, 0.0f},
+  });
+  ASSERT_TRUE(body.valid());
+
+  const auto lines = world.getDebugLines();
+  EXPECT_FALSE(lines.empty());
+}

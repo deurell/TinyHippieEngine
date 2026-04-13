@@ -40,4 +40,25 @@ PhysicsRaycastHit PhysicsContext::raycast(const glm::vec3 &start,
   return physicsWorld_.raycast(start, end, categoryMaskBits);
 }
 
+void PhysicsContext::setDebugRenderingEnabled(bool enabled) {
+  physicsWorld_.setDebugRenderingEnabled(enabled);
+}
+
+bool PhysicsContext::isDebugRenderingEnabled() const {
+  return physicsWorld_.isDebugRenderingEnabled();
+}
+
+void PhysicsContext::setDebugRenderSettings(
+    const PhysicsDebugRenderSettings &settings) {
+  physicsWorld_.setDebugRenderSettings(settings);
+}
+
+PhysicsDebugRenderSettings PhysicsContext::getDebugRenderSettings() const {
+  return physicsWorld_.getDebugRenderSettings();
+}
+
+std::vector<PhysicsDebugLine> PhysicsContext::getDebugLines() const {
+  return physicsWorld_.getDebugLines();
+}
+
 } // namespace DL

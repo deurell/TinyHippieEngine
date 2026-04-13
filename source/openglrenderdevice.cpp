@@ -14,6 +14,7 @@ struct GLMesh {
   GLuint vbo = 0;
   GLuint ebo = 0;
   GLsizei index_count = 0;
+  PrimitiveType primitiveType = PrimitiveType::Triangles;
 
   ~GLMesh() {
     if (vao != 0) {
@@ -167,6 +168,55 @@ public:
     glBindVertexArray(0);
 
     mesh->index_count = static_cast<GLsizei>(indices.size());
+    mesh->primitiveType = PrimitiveType::Triangles;
+    return storeResource<MeshHandle>(std::move(mesh), meshes_);
+  }
+
+  MeshHandle createColoredMesh(const std::vector<glm::vec3> &positions,
+                               const std::vector<glm::vec4> &colors,
+                               const std::vector<std::uint32_t> &indices,
+                               PrimitiveType primitiveType) override {
+    if (positions.empty() || positions.size() != colors.size() ||
+        indices.empty()) {
+      return {};
+    }
+
+    struct VertexData {
+      glm::vec3 position;
+      glm::vec4 color;
+    };
+
+    std::vector<VertexData> vertexData;
+    vertexData.reserve(positions.size());
+    for (std::size_t i = 0; i < positions.size(); ++i) {
+      vertexData.push_back({.position = positions[i], .color = colors[i]});
+    }
+
+    auto mesh = std::make_unique<GLMesh>();
+    glGenVertexArrays(1, &mesh->vao);
+    glGenBuffers(1, &mesh->vbo);
+    glGenBuffers(1, &mesh->ebo);
+
+    glBindVertexArray(mesh->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
+    glBufferData(GL_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(vertexData.size() * sizeof(VertexData)),
+                 vertexData.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                 static_cast<GLsizeiptr>(indices.size() * sizeof(std::uint32_t)),
+                 indices.data(), GL_DYNAMIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, position));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, color));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
+    mesh->index_count = static_cast<GLsizei>(indices.size());
+    mesh->primitiveType = primitiveType;
     return storeResource<MeshHandle>(std::move(mesh), meshes_);
   }
 
@@ -333,7 +383,15 @@ public:
     }
 
     glBindVertexArray(mesh.vao);
-    glDrawElements(GL_TRIANGLES, mesh.index_count, GL_UNSIGNED_INT, nullptr);
+    const GLenum primitive =
+        mesh.primitiveType == PrimitiveType::Lines ? GL_LINES : GL_TRIANGLES;
+    if (mesh.primitiveType == PrimitiveType::Lines) {
+      glLineWidth(command.lineWidth);
+    }
+    glDrawElements(primitive, mesh.index_count, GL_UNSIGNED_INT, nullptr);
+    if (mesh.primitiveType == PrimitiveType::Lines) {
+      glLineWidth(1.0f);
+    }
     glBindVertexArray(0);
 
     if (command.blendMode != BlendMode::Opaque) {

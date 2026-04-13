@@ -8,8 +8,10 @@
 #include "spritenode.h"
 
 DL::GlosifyScene::GlosifyScene(basist::etc1_global_selector_codebook *codeBook,
-                               DL::IRenderDevice *renderDevice)
-    : SceneNode(nullptr), codeBook_(codeBook), renderDevice_(renderDevice) {}
+                               DL::IRenderDevice *renderDevice,
+                               DL::RenderResourceCache *renderResourceCache)
+    : SceneNode(nullptr), codeBook_(codeBook), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 void DL::GlosifyScene::init() {
   SceneNode::init();
@@ -54,7 +56,8 @@ void DL::GlosifyScene::onScreenSizeChanged(glm::vec2 size) {
 std::unique_ptr<PlaneNode> DL::GlosifyScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_);
+  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_,
+                                               renderResourceCache_);
   planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);
@@ -67,7 +70,8 @@ std::unique_ptr<SpriteNode> DL::GlosifyScene::createSprite(glm::vec3 position,
                                                            glm::vec3 scale,
                                                            glm::quat rotation) {
   auto spriteNode = std::make_unique<SpriteNode>("Resources/sup.basis",
-                                                codeBook_, renderDevice_);
+                                                codeBook_, renderDevice_,
+                                                renderResourceCache_);
   spriteNode->init();
   spriteNode->setLocalPosition(position);
   spriteNode->setLocalRotation(rotation);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "shapegeometry.h"
 #include "visualizerbase.h"
 
@@ -17,6 +18,7 @@ class ShapeVisualizer : public VisualizerBase {
 public:
   ShapeVisualizer(std::string name, Camera &camera, SceneNode &node,
                   GeneratedMeshData meshData, IRenderDevice *renderDevice,
+                  RenderResourceCache *resourceCache = nullptr,
                   std::string vertexShaderPath = "Shaders/phongshape.vert",
                   std::string fragmentShaderPath = "Shaders/phongshape.frag");
   ~ShapeVisualizer() override;
@@ -30,6 +32,7 @@ public:
 
 private:
   IRenderDevice *renderDevice_ = nullptr;
+  RenderResourceCache *resourceCache_ = nullptr;
   MeshHandle mesh_;
   PipelineHandle pipeline_;
 };

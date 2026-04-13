@@ -7,8 +7,10 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 
-ParticleNodeScene::ParticleNodeScene(DL::IRenderDevice *renderDevice)
-    : renderDevice_(renderDevice) {}
+ParticleNodeScene::ParticleNodeScene(DL::IRenderDevice *renderDevice,
+                                     DL::RenderResourceCache *renderResourceCache)
+    : renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 namespace {
 
@@ -26,6 +28,7 @@ void ParticleNodeScene::init() {
   
   auto particleSystemNode =
       std::make_unique<ParticleSystemNode>(renderDevice_, camera_.get(),
+                                           renderResourceCache_,
                                            particleConfig, this);
   particleSystemNode->init();
   particleSystemNode->setEmitterPosition(defaultEmitterPosition);

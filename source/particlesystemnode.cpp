@@ -83,15 +83,18 @@ glm::vec3 randomInUnitSphere(std::mt19937 &twister) {
 
 ParticleSystemNode::ParticleSystemNode(DL::IRenderDevice *renderDevice,
                                        DL::Camera *camera,
+                                       DL::RenderResourceCache *renderResourceCache,
                                        DL::SceneNode *parentNode)
-    : ParticleSystemNode(renderDevice, camera, Config{}, parentNode) {}
+    : ParticleSystemNode(renderDevice, camera, renderResourceCache, Config{},
+                         parentNode) {}
 
 ParticleSystemNode::ParticleSystemNode(DL::IRenderDevice *renderDevice,
                                        DL::Camera *camera,
+                                       DL::RenderResourceCache *renderResourceCache,
                                        Config config,
                                        DL::SceneNode *parentNode)
     : DL::SceneNode(parentNode), renderDevice_(renderDevice), camera_(camera),
-      config_(config) {
+      renderResourceCache_(renderResourceCache), config_(config) {
   std::random_device device;
   twister_ = std::mt19937(device());
 }
@@ -188,7 +191,8 @@ void ParticleSystemNode::init() {
   SceneNode::init();
 
   auto visualizer = std::make_unique<DL::ParticleVisualizer>(
-      "ParticleVisualizer", *camera_, *this, renderDevice_);
+      "ParticleVisualizer", *camera_, *this, renderDevice_,
+      renderResourceCache_);
   visualizers.emplace_back(std::move(visualizer));
 
   particles_.reserve(static_cast<std::size_t>(config_.emission.maxParticles));

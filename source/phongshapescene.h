@@ -2,11 +2,13 @@
 
 #include "phongshapenode.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 
 class PhongShapeScene : public DL::SceneNode {
 public:
-  explicit PhongShapeScene(DL::IRenderDevice *renderDevice = nullptr);
+  explicit PhongShapeScene(DL::IRenderDevice *renderDevice = nullptr,
+                           DL::RenderResourceCache *renderResourceCache = nullptr);
   ~PhongShapeScene() override = default;
 
   void init() override;
@@ -16,6 +18,7 @@ public:
 
 private:
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
   PhongShapeNode *cubeNode_ = nullptr;
   PhongShapeNode *sphereNode_ = nullptr;

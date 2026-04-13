@@ -4,41 +4,41 @@
 #include <sstream>
 #include <string>
 
-static std::map<std::string, DL::FontData> fontCache_;
-
 DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
                                    SceneNode &node, const std::string text,
                                    const std::string &fontPath,
                                    DL::IRenderDevice *renderDevice,
+                                   DL::RenderResourceCache *resourceCache,
                                    const std::string vertexShaderPath,
                                    const std::string fragmentShaderPath)
     : VisualizerBase(camera, name, vertexShaderPath, fragmentShaderPath, node),
-      text_(text), renderDevice_(renderDevice), fontPath_(fontPath) {
+      text_(text), renderDevice_(renderDevice), resourceCache_(resourceCache),
+      fontPath_(fontPath) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath_,
+                                                  fragmentShaderPath_);
 
-  auto it = fontCache_.find(fontCacheKey());
-  if (it != fontCache_.end()) {
-    it->second.refCount++;
-    fontTexture_ = it->second.texture;
-    fontCharInfo_ = it->second.fontInfo;
-    fontScale_ = it->second.fontScale;
-    fontSize_ = it->second.fontSize;
-  } else {
-    if (loadFontTexture(fontPath_)) {
-      FontData data{};
-      data.texture = fontTexture_;
-      data.fontInfo = fontCharInfo_;
-      data.fontScale = fontScale_;
-      data.fontSize = fontSize_;
-      data.refCount = 1;
-      fontCache_.insert(std::make_pair(fontCacheKey(), std::move(data)));
+  if (resourceCache_ != nullptr) {
+    if (const auto *fontAtlas = resourceCache_->acquireFontAtlas(
+            fontPath_, desiredPixelHeight_, fontAtlasWidth_, FontAtlasHeight_,
+            fontOversampleX_, fontOversampleY_, fontFirstChar_,
+            fontCharCount_)) {
+      fontTexture_ = fontAtlas->texture;
+      fontCharInfo_ = fontAtlas->fontInfo;
+      fontScale_ = fontAtlas->fontScale;
+      fontSize_ = fontAtlas->fontSize;
+      sharedFontTexture_ = true;
     } else {
       return;
     }
+  } else if (!loadFontTexture(fontPath_)) {
+    return;
   }
 
   initGraphics();
@@ -49,11 +49,13 @@ DL::TextVisualizer::~TextVisualizer() {
     if (mesh_.valid()) {
       renderDevice_->destroy(mesh_);
     }
-    if (pipeline_.valid()) {
+    if (pipeline_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(pipeline_);
     }
   }
-  releaseFont();
+  if (fontTexture_.valid() && !sharedFontTexture_ && renderDevice_ != nullptr) {
+    renderDevice_->destroy(fontTexture_);
+  }
 }
 
 void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
@@ -295,30 +297,4 @@ void DL::TextVisualizer::destroyMesh() {
     renderDevice_->destroy(mesh_);
     mesh_ = {};
   }
-}
-
-void DL::TextVisualizer::releaseFont() {
-  if (fontPath_.empty() || renderDevice_ == nullptr) {
-    return;
-  }
-  auto it = fontCache_.find(fontCacheKey());
-  if (it != fontCache_.end()) {
-    if (it->second.refCount > 0) {
-      it->second.refCount--;
-    }
-    if (it->second.refCount == 0) {
-      if (it->second.texture.valid()) {
-        renderDevice_->destroy(it->second.texture);
-      }
-      fontCache_.erase(it);
-    }
-  }
-  fontTexture_ = {};
-  fontCharInfo_.reset();
-  fontPath_.clear();
-}
-
-std::string DL::TextVisualizer::fontCacheKey() const {
-  return fontPath_ + "@" +
-         std::to_string(reinterpret_cast<std::uintptr_t>(renderDevice_));
 }

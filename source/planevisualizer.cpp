@@ -2,26 +2,30 @@
 
 DL::PlaneVisualizer::PlaneVisualizer(
     std::string name, DL::Camera &camera, SceneNode &node,
-    DL::IRenderDevice *renderDevice,
+    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), vertexShaderPath,
                      fragmentShaderPath, node),
-      renderDevice_(renderDevice) {
+      renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ =
-      renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
-  mesh_ = renderDevice_->createTexturedQuad();
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath_,
+                                                  fragmentShaderPath_);
+  mesh_ = resourceCache_ != nullptr ? resourceCache_->acquireTexturedQuad()
+                                    : renderDevice_->createTexturedQuad();
 }
 
 DL::PlaneVisualizer::~PlaneVisualizer() {
   if (renderDevice_ != nullptr) {
-    if (mesh_.valid()) {
+    if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
     }
-    if (pipeline_.valid()) {
+    if (pipeline_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(pipeline_);
     }
   }

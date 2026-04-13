@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -84,8 +85,10 @@ public:
 
   explicit ParticleSystemNode(DL::IRenderDevice *renderDevice,
                               DL::Camera *camera,
+                              DL::RenderResourceCache *renderResourceCache = nullptr,
                               DL::SceneNode *parentNode = nullptr);
   ParticleSystemNode(DL::IRenderDevice *renderDevice, DL::Camera *camera,
+                     DL::RenderResourceCache *renderResourceCache,
                      Config config, DL::SceneNode *parentNode);
   ~ParticleSystemNode() override = default;
 
@@ -108,6 +111,7 @@ private:
 
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::Camera *camera_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   Config config_;
   std::mt19937 twister_;
   glm::vec3 emitterPosition_{0.0f, 0.0f, 0.0f};

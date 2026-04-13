@@ -2,6 +2,7 @@
 
 #include "basisu_global_selector_palette.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "visualizerbase.h"
 #include <glm/glm.hpp>
 #include <string>
@@ -15,6 +16,7 @@ public:
       std::string texturePath,
       basist::etc1_global_selector_codebook *codeBook,
       DL::IRenderDevice *renderDevice,
+      DL::RenderResourceCache *resourceCache = nullptr,
       std::string vertexShaderPath = "Shaders/image.vert",
       std::string fragmentShaderPath = "Shaders/image.frag");
 
@@ -32,6 +34,7 @@ private:
   PipelineHandle pipeline_;
   std::string texturePath_;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
 };
 
 } // namespace DL

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "camera.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include "shapevisualizer.h"
 #include <memory>
@@ -14,6 +15,7 @@ enum class ShapeType {
 class PhongShapeNode : public DL::SceneNode {
 public:
   PhongShapeNode(ShapeType shapeType, DL::IRenderDevice *renderDevice,
+                 DL::RenderResourceCache *renderResourceCache = nullptr,
                  DL::SceneNode *parentNode = nullptr,
                  DL::Camera *camera = nullptr);
   ~PhongShapeNode() override = default;
@@ -32,6 +34,7 @@ private:
 
   ShapeType shapeType_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> localCamera_;
   DL::Camera *camera_ = nullptr;
   DL::ShapeVisualizer *visualizer_ = nullptr;

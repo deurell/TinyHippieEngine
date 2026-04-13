@@ -5,15 +5,20 @@ namespace DL {
 ShapeVisualizer::ShapeVisualizer(std::string name, Camera &camera,
                                  SceneNode &node, GeneratedMeshData meshData,
                                  IRenderDevice *renderDevice,
+                                 RenderResourceCache *resourceCache,
                                  std::string vertexShaderPath,
                                  std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
-      renderDevice_(renderDevice) {
+      renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;
   }
-  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath_,
+                                                  fragmentShaderPath_);
   mesh_ = renderDevice_->createMesh(meshData.positions, meshData.normals,
                                     meshData.uvs, meshData.indices);
 }
@@ -25,7 +30,7 @@ ShapeVisualizer::~ShapeVisualizer() {
   if (mesh_.valid()) {
     renderDevice_->destroy(mesh_);
   }
-  if (pipeline_.valid()) {
+  if (pipeline_.valid() && resourceCache_ == nullptr) {
     renderDevice_->destroy(pipeline_);
   }
 }

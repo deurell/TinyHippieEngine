@@ -6,8 +6,10 @@
 #include "planevisualizer.h"
 
 PlaneNode::PlaneNode(DL::SceneNode *parentNode, DL::Camera *camera,
-                     DL::IRenderDevice *renderDevice)
-    : DL::SceneNode(parentNode), camera_(camera), renderDevice_(renderDevice) {}
+                     DL::IRenderDevice *renderDevice,
+                     DL::RenderResourceCache *renderResourceCache)
+    : DL::SceneNode(parentNode), camera_(camera), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 void PlaneNode::init() {
   SceneNode::init();
@@ -52,7 +54,7 @@ void PlaneNode::initComponents() {
                                        : "Shaders/spinner.frag";
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *camera_, *this, renderDevice_,
+      "PlaneVisualizer", *camera_, *this, renderDevice_, renderResourceCache_,
       vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
   visualizer->spinnerEnabled = planeType == PlaneType::Spinner;

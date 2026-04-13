@@ -12,8 +12,10 @@
 
 NodeExampleScene::NodeExampleScene(
     DL::IRenderDevice *renderDevice,
-    basist::etc1_global_selector_codebook *codeBook)
-    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook) {}
+    basist::etc1_global_selector_codebook *codeBook,
+    DL::RenderResourceCache *renderResourceCache)
+    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook),
+      renderResourceCache_(renderResourceCache) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
@@ -40,7 +42,8 @@ that can save her people and restore
 freedom to the galaxy...
   )";
 
-  auto textNode = std::make_unique<TextNode>(this, text, renderDevice_);
+  auto textNode =
+      std::make_unique<TextNode>(this, text, renderDevice_, renderResourceCache_);
   textNode->init();
   textNode->setLocalPosition(INITIAL_TEXT_POSITION);
   textNode->setLocalScale({.1f, .1f, 1});
@@ -52,7 +55,7 @@ freedom to the galaxy...
   textNode_->getCamera().lookAt({0, 0, 0});
 
   auto spriteNode = std::make_unique<SpriteNode>(
-      "Resources/sup.basis", codeBook_, renderDevice_, this);
+      "Resources/sup.basis", codeBook_, renderDevice_, renderResourceCache_, this);
   spriteNode->init();
   spriteNode->setLocalPosition({0, -7, 0});
   spriteNode->setLocalScale({5, 3, 1});
@@ -138,7 +141,8 @@ void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
 std::unique_ptr<PlaneNode> NodeExampleScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_);
+  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_,
+                                               renderResourceCache_);
   planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);

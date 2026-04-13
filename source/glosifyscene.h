@@ -4,6 +4,7 @@
 #pragma once
 #include "basisu_global_selector_palette.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 
 class PlaneNode;
@@ -13,7 +14,8 @@ namespace DL {
 class GlosifyScene : public DL::SceneNode {
 public:
   explicit GlosifyScene(basist::etc1_global_selector_codebook *codeBook,
-                        DL::IRenderDevice *renderDevice);
+                        DL::IRenderDevice *renderDevice,
+                        DL::RenderResourceCache *renderResourceCache = nullptr);
   ~GlosifyScene() override = default;
 
   void init() override;
@@ -31,5 +33,6 @@ private:
   SpriteNode *sprite_node_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
 };
 } // namespace DL

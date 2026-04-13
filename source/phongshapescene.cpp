@@ -3,16 +3,18 @@
 #include "debugui.h"
 #include "imgui.h"
 
-PhongShapeScene::PhongShapeScene(DL::IRenderDevice *renderDevice)
-    : SceneNode(nullptr), renderDevice_(renderDevice) {}
+PhongShapeScene::PhongShapeScene(DL::IRenderDevice *renderDevice,
+                                 DL::RenderResourceCache *renderResourceCache)
+    : SceneNode(nullptr), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 void PhongShapeScene::init() {
   SceneNode::init();
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 1.5f, 9.0f));
   camera_->lookAt({0.0f, 0.0f, 0.0f});
 
-  auto cube = std::make_unique<PhongShapeNode>(ShapeType::Cube, renderDevice_, this,
-                                               camera_.get());
+  auto cube = std::make_unique<PhongShapeNode>(
+      ShapeType::Cube, renderDevice_, renderResourceCache_, this, camera_.get());
   cube->setMaterial({.diffuse = {0.96f, 0.38f, 0.24f},
                      .ambient = {0.35f, 0.18f, 0.14f},
                      .specular = {0.35f, 0.35f, 0.35f},
@@ -22,8 +24,8 @@ void PhongShapeScene::init() {
   cubeNode_ = cube.get();
   addChild(std::move(cube));
 
-  auto sphere = std::make_unique<PhongShapeNode>(ShapeType::Sphere, renderDevice_, this,
-                                                 camera_.get());
+  auto sphere = std::make_unique<PhongShapeNode>(
+      ShapeType::Sphere, renderDevice_, renderResourceCache_, this, camera_.get());
   sphere->setMaterial({.diffuse = {0.2f, 0.7f, 0.92f},
                        .ambient = {0.14f, 0.24f, 0.32f},
                        .specular = {0.55f, 0.55f, 0.6f},
@@ -33,8 +35,9 @@ void PhongShapeScene::init() {
   sphereNode_ = sphere.get();
   addChild(std::move(sphere));
 
-  auto cylinder = std::make_unique<PhongShapeNode>(ShapeType::Cylinder, renderDevice_, this,
-                                                   camera_.get());
+  auto cylinder = std::make_unique<PhongShapeNode>(
+      ShapeType::Cylinder, renderDevice_, renderResourceCache_, this,
+      camera_.get());
   cylinder->setMaterial({.diffuse = {0.75f, 0.84f, 0.28f},
                          .ambient = {0.25f, 0.3f, 0.14f},
                          .specular = {0.25f, 0.25f, 0.2f},

@@ -3,6 +3,7 @@
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <string>
 
@@ -11,6 +12,7 @@ public:
   explicit SpriteNode(std::string imagePath,
                       basist::etc1_global_selector_codebook *codeBook,
                       DL::IRenderDevice *renderDevice,
+                      DL::RenderResourceCache *renderResourceCache = nullptr,
                       DL::SceneNode *parentNode = nullptr,
                       DL::Camera *camera = nullptr);
 
@@ -30,5 +32,6 @@ private:
   std::unique_ptr<DL::Camera> localCamera_;
   DL::Camera *camera_ = nullptr;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
 };

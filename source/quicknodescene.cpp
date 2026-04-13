@@ -6,8 +6,9 @@
 #include <memory>
 #include <ranges>
 
-QuickNodeScene::QuickNodeScene(DL::IRenderDevice *renderDevice)
-    : renderDevice_(renderDevice) {}
+QuickNodeScene::QuickNodeScene(DL::IRenderDevice *renderDevice,
+                               DL::RenderResourceCache *renderResourceCache)
+    : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache) {}
 
 void QuickNodeScene::init() {
   SceneNode::init();
@@ -65,7 +66,8 @@ void QuickNodeScene::bounce(double totalTime) const {
 
 std::unique_ptr<PlaneNode> QuickNodeScene::createPlane(DL::Camera *camera) {
   auto planeNode =
-      std::make_unique<PlaneNode>(this, camera, renderDevice_);
+      std::make_unique<PlaneNode>(this, camera, renderDevice_,
+                                  renderResourceCache_);
   planeNode->init();
   return planeNode;
 }

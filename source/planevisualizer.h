@@ -1,5 +1,6 @@
 #pragma once
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "visualizerbase.h"
 #include <glm/glm.hpp>
 #include <string>
@@ -11,6 +12,7 @@ public:
   explicit PlaneVisualizer(
       std::string name, DL::Camera &camera, SceneNode &node,
       DL::IRenderDevice *renderDevice,
+      DL::RenderResourceCache *resourceCache = nullptr,
       std::string vertexShaderPath = "Shaders/simple.vert",
       std::string fragmentShaderPath = "Shaders/simple.frag");
 
@@ -24,6 +26,7 @@ public:
 
 private:
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
   MeshHandle mesh_;
   PipelineHandle pipeline_;
 };

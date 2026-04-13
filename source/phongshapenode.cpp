@@ -2,9 +2,11 @@
 
 PhongShapeNode::PhongShapeNode(ShapeType shapeType,
                                DL::IRenderDevice *renderDevice,
+                               DL::RenderResourceCache *renderResourceCache,
                                DL::SceneNode *parentNode, DL::Camera *camera)
     : DL::SceneNode(parentNode), shapeType_(shapeType),
-      renderDevice_(renderDevice), camera_(camera) {}
+      renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
+      camera_(camera) {}
 
 void PhongShapeNode::init() {
   SceneNode::init();
@@ -48,7 +50,8 @@ void PhongShapeNode::initComponents() {
     return;
   }
   auto visualizer = std::make_unique<DL::ShapeVisualizer>(
-      "ShapeVisualizer", *camera_, *this, buildMeshData(), renderDevice_);
+      "ShapeVisualizer", *camera_, *this, buildMeshData(), renderDevice_,
+      renderResourceCache_);
   visualizer_ = visualizer.get();
   visualizer_->material = material_;
   visualizers.emplace_back(std::move(visualizer));

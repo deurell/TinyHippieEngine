@@ -7,30 +7,35 @@ DL::SpriteVisualizer::SpriteVisualizer(
     std::string name, DL::Camera &camera, SceneNode &node,
     std::string texturePath,
     basist::etc1_global_selector_codebook *codeBook,
-    DL::IRenderDevice *renderDevice,
+    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), vertexShaderPath,
                      fragmentShaderPath, node),
       renderDevice_(renderDevice), texturePath_(std::move(texturePath)),
-      codeBook_(codeBook) {
+      codeBook_(codeBook), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ = renderDevice_->createPipeline(vertexShaderPath, fragmentShaderPath);
-  mesh_ = renderDevice_->createTexturedQuad();
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath,
+                                                  fragmentShaderPath);
+  mesh_ = resourceCache_ != nullptr ? resourceCache_->acquireTexturedQuad()
+                                    : renderDevice_->createTexturedQuad();
   loadTexture();
 }
 
 DL::SpriteVisualizer::~SpriteVisualizer() {
   if (renderDevice_ != nullptr) {
-    if (mesh_.valid()) {
+    if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
     }
-    if (texture_.valid()) {
+    if (texture_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(texture_);
     }
-    if (pipeline_.valid()) {
+    if (pipeline_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(pipeline_);
     }
   }
@@ -69,7 +74,9 @@ bool DL::SpriteVisualizer::loadTexture() {
     return false;
   }
 
-  texture_ = renderDevice_->createBasisTexture(texturePath_, *codeBook_);
+  texture_ = resourceCache_ != nullptr
+                 ? resourceCache_->acquireBasisTexture(texturePath_, *codeBook_)
+                 : renderDevice_->createBasisTexture(texturePath_, *codeBook_);
   if (!texture_.valid()) {
     std::cerr << "Failed to load sprite texture: " << texturePath_ << "\n";
     return false;

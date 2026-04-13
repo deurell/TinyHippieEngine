@@ -6,6 +6,7 @@
 
 #include "camera.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <string_view>
 
@@ -15,7 +16,8 @@ public:
 
   explicit PlaneNode(DL::SceneNode *parentNode = nullptr,
                      DL::Camera *camera = nullptr,
-                     DL::IRenderDevice *renderDevice = nullptr);
+                     DL::IRenderDevice *renderDevice = nullptr,
+                     DL::RenderResourceCache *renderResourceCache = nullptr);
 
   ~PlaneNode() override = default;
   void init() override;
@@ -32,5 +34,6 @@ private:
   std::unique_ptr<DL::Camera> localCamera_;
   DL::Camera *camera_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
 };

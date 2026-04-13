@@ -1,6 +1,7 @@
 #pragma once
 #include "camera.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <memory>
 
@@ -8,7 +9,8 @@ class PlaneNode;
 
 class QuickNodeScene : public DL::SceneNode {
 public:
-  explicit QuickNodeScene(DL::IRenderDevice *renderDevice = nullptr);
+  explicit QuickNodeScene(DL::IRenderDevice *renderDevice = nullptr,
+                          DL::RenderResourceCache *renderResourceCache = nullptr);
   ~QuickNodeScene() override = default;
   void init() override;
   void update(const DL::FrameContext &ctx) override;
@@ -20,6 +22,7 @@ private:
   [[nodiscard]] std::unique_ptr<PlaneNode> createPlane(DL::Camera *camera);
 
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_ = nullptr;
 
   float f1 = 1.1f;

@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "stb_truetype.h"
 #include "visualizerbase.h"
 #include <cstdint>
@@ -28,7 +29,6 @@ struct FontData {
   std::shared_ptr<stbtt_packedchar[]> fontInfo;
   float fontScale = 1.0f;
   float fontSize = 0.0f;
-  std::uint32_t refCount = 0;
 };
 
 class TextVisualizer : public VisualizerBase {
@@ -37,6 +37,7 @@ public:
                           SceneNode &node, std::string text,
                           const std::string &fontPath,
                           DL::IRenderDevice *renderDevice,
+                          DL::RenderResourceCache *resourceCache,
                           std::string vertexShaderPath,
                           std::string fragmentShaderPath);
 
@@ -57,11 +58,10 @@ private:
   TextGlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
   void initGraphics();
   void destroyMesh();
-  void releaseFont();
-  [[nodiscard]] std::string fontCacheKey() const;
 
   std::string text_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
   MeshHandle mesh_;
   TextureHandle fontTexture_;
   PipelineHandle pipeline_;
@@ -81,6 +81,7 @@ private:
   const uint8_t fontCharCount_ = 255 - 32;
   std::shared_ptr<stbtt_packedchar[]> fontCharInfo_;
   std::string fontPath_;
+  bool sharedFontTexture_ = false;
 };
 
 } // namespace DL

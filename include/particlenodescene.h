@@ -3,13 +3,15 @@
 #include "camera.h"
 #include "particlesystemnode.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <glm/glm.hpp>
 #include <memory>
 
 class ParticleNodeScene : public DL::SceneNode {
 public:
-  explicit ParticleNodeScene(DL::IRenderDevice *renderDevice);
+  explicit ParticleNodeScene(DL::IRenderDevice *renderDevice,
+                             DL::RenderResourceCache *renderResourceCache = nullptr);
   ~ParticleNodeScene() override = default;
 
   void init() override;
@@ -26,6 +28,7 @@ private:
   glm::vec3 screenToWorld(double x, double y, float worldZ) const;
 
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
   ParticleSystemNode *particleSystemNode_ = nullptr;
   glm::vec2 screenSize_{0.0f, 0.0f};

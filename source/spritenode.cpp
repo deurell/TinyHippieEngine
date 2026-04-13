@@ -6,9 +6,11 @@
 SpriteNode::SpriteNode(std::string imagePath,
                        basist::etc1_global_selector_codebook *codeBook,
                        DL::IRenderDevice *renderDevice,
+                       DL::RenderResourceCache *renderResourceCache,
                        DL::SceneNode *parentNode, DL::Camera *camera)
     : SceneNode(parentNode), imagePath_(std::move(imagePath)),
-      codeBook_(codeBook), camera_(camera), renderDevice_(renderDevice) {}
+      codeBook_(codeBook), camera_(camera), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 void SpriteNode::init() {
   SceneNode::init();
@@ -44,6 +46,6 @@ void SpriteNode::initComponents() {
 
   auto visualizer = std::make_unique<DL::SpriteVisualizer>(
       "SpriteVisualizer", *camera_, *this, imagePath_, codeBook_,
-      renderDevice_);
+      renderDevice_, renderResourceCache_);
   visualizers.emplace_back(std::move(visualizer));
 }

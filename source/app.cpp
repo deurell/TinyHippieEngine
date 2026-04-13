@@ -213,14 +213,17 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
-    return std::make_unique<QuickNodeScene>(renderDevice_.get());
+    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
+                                            renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<ParticleNodeScene>(renderDevice_.get());
+    return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
+                                               renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<NodeExampleScene>(renderDevice_.get(),
-                                             codebook_.get());
+                                             codebook_.get(),
+                                             renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
@@ -232,7 +235,10 @@ void DL::App::registerScenes() {
                                            meshAssetCache_.get(),
                                            renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this] { return std::make_unique<PhongShapeScene>(renderDevice_.get()); });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhongShapeScene>(renderDevice_.get(),
+                                             renderResourceCache_.get());
+  });
   sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });
@@ -240,7 +246,8 @@ void DL::App::registerScenes() {
     return std::make_unique<TrueTypeScene>(glslVersionString_);
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get());
+    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get(),
+                                          renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<IntroScene>(glslVersionString_);

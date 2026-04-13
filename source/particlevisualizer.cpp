@@ -6,26 +6,32 @@
 
 DL::ParticleVisualizer::ParticleVisualizer(
     std::string name, DL::Camera &camera, ParticleSystemNode &node,
-    DL::IRenderDevice *renderDevice, std::string vertexShaderPath,
+    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
+    std::string vertexShaderPath,
     std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
-      particleNode_(node), renderDevice_(renderDevice) {
+      particleNode_(node), renderDevice_(renderDevice),
+      resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;
   }
 
-  pipeline_ =
-      renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
-  mesh_ = renderDevice_->createTexturedQuad();
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath_,
+                                                  fragmentShaderPath_);
+  mesh_ = resourceCache_ != nullptr ? resourceCache_->acquireTexturedQuad()
+                                    : renderDevice_->createTexturedQuad();
 }
 
 DL::ParticleVisualizer::~ParticleVisualizer() {
   if (renderDevice_ != nullptr) {
-    if (mesh_.valid()) {
+    if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
     }
-    if (pipeline_.valid()) {
+    if (pipeline_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(pipeline_);
     }
   }

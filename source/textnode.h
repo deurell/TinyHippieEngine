@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <memory>
 #include <string_view>
@@ -10,7 +11,8 @@ class TextNode : public DL::SceneNode {
 public:
   explicit TextNode(DL::SceneNode *parentNode = nullptr,
                     std::string text = "text",
-                    DL::IRenderDevice *renderDevice = nullptr);
+                    DL::IRenderDevice *renderDevice = nullptr,
+                    DL::RenderResourceCache *renderResourceCache = nullptr);
 
   ~TextNode() override = default;
 
@@ -26,6 +28,7 @@ private:
 
   std::unique_ptr<DL::Camera> camera_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
   std::string text_;
 };

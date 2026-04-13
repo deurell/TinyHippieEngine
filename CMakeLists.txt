@@ -27,6 +27,8 @@ endif()
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
+        source/meshassetcache.h source/meshassetcache.cpp
+        source/renderresourcecache.h source/renderresourcecache.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
         include/renderdevice.h source/openglrenderdevice.cpp include/scenelifecycle.h source/scenelifecycle.cpp
@@ -200,9 +202,11 @@ add_executable(tiny_hippie_engine_tests
         tests/camera_test.cpp
         tests/iscene_test.cpp
         tests/meshasset_test.cpp
+        tests/meshassetcache_test.cpp
         tests/skinning_test.cpp
         source/animationclip.cpp
         source/animationplayer.cpp
+        source/meshassetcache.cpp
         source/skinning.cpp
         tests/scenelifecycle_test.cpp
         tests/scenemanager_test.cpp

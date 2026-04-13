@@ -3,7 +3,9 @@
 #include "animationplayer.h"
 #include "basisu_global_selector_palette.h"
 #include "meshasset.h"
+#include "meshassetcache.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "skinning.h"
 #include "visualizerbase.h"
 #include <vector>
@@ -21,9 +23,10 @@ struct MeshVisualizerSettings {
 class MeshVisualizer : public VisualizerBase {
 public:
   MeshVisualizer(std::string name, DL::Camera &camera, SceneNode &node,
-                 MeshAsset asset,
+                 std::shared_ptr<const MeshAsset> asset,
                  basist::etc1_global_selector_codebook *codeBook,
                  DL::IRenderDevice *renderDevice,
+                 DL::RenderResourceCache *resourceCache = nullptr,
                  std::string vertexShaderPath = "Shaders/meshnode.vert",
                  std::string fragmentShaderPath = "Shaders/meshnode.frag");
   ~MeshVisualizer() override;
@@ -53,9 +56,11 @@ public:
   [[nodiscard]] std::size_t animationClipIndex() const {
     return animationPlayer_.clipIndex();
   }
-  [[nodiscard]] bool hasAnimations() const { return !asset_.animations.empty(); }
+  [[nodiscard]] bool hasAnimations() const {
+    return asset_ != nullptr && !asset_->animations.empty();
+  }
   [[nodiscard]] std::size_t animationClipCount() const {
-    return asset_.animations.size();
+    return asset_ != nullptr ? asset_->animations.size() : 0u;
   }
   [[nodiscard]] float animationTime() const { return animationPlayer_.time(); }
 
@@ -68,6 +73,7 @@ private:
     glm::vec3 specularColor{0.2f, 0.2f, 0.2f};
     float shininess = 16.0f;
     bool hasTexture = false;
+    bool sharedTexture = false;
     int skinIndex = -1;
   };
 
@@ -75,9 +81,10 @@ private:
   TextureHandle loadTexture(const MeshAssetSubmesh &submesh);
 
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   PipelineHandle pipeline_;
-  MeshAsset asset_;
+  std::shared_ptr<const MeshAsset> asset_;
   std::vector<GpuSubmesh> submeshes_;
   bool debugNormals_ = false;
   MeshVisualizerSettings settings_;

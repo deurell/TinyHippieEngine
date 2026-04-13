@@ -4,10 +4,13 @@
 
 MeshNode::MeshNode(std::string assetPath,
                    basist::etc1_global_selector_codebook *codeBook,
-                   DL::IRenderDevice *renderDevice, DL::SceneNode *parentNode,
-                   DL::Camera *camera)
+                   DL::IRenderDevice *renderDevice,
+                   DL::MeshAssetCache *meshAssetCache,
+                   DL::RenderResourceCache *renderResourceCache,
+                   DL::SceneNode *parentNode, DL::Camera *camera)
     : SceneNode(parentNode), assetPath_(std::move(assetPath)),
-      codeBook_(codeBook), camera_(camera), renderDevice_(renderDevice) {}
+      codeBook_(codeBook), camera_(camera), renderDevice_(renderDevice),
+      meshAssetCache_(meshAssetCache), renderResourceCache_(renderResourceCache) {}
 
 void MeshNode::init() {
   SceneNode::init();
@@ -111,8 +114,10 @@ void MeshNode::initComponents() {
   }
 
   auto visualizer = std::make_unique<DL::MeshVisualizer>(
-      "MeshVisualizer", *camera_, *this, DL::loadMeshAsset(assetPath_),
-      codeBook_, renderDevice_);
+      "MeshVisualizer", *camera_, *this,
+      meshAssetCache_ != nullptr ? meshAssetCache_->load(assetPath_)
+                                 : std::make_shared<DL::MeshAsset>(DL::loadMeshAsset(assetPath_)),
+      codeBook_, renderDevice_, renderResourceCache_);
   meshVisualizer_ = visualizer.get();
   meshVisualizer_->setDebugNormals(debugNormals_);
   meshVisualizer_->setSettings(visualizerSettings_);

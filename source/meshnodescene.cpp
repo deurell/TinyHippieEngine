@@ -4,14 +4,18 @@
 #include "imgui.h"
 
 MeshNodeScene::MeshNodeScene(DL::IRenderDevice *renderDevice,
-                             basist::etc1_global_selector_codebook *codeBook)
-    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook) {}
+                             basist::etc1_global_selector_codebook *codeBook,
+                             DL::MeshAssetCache *meshAssetCache,
+                             DL::RenderResourceCache *renderResourceCache)
+    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook),
+      meshAssetCache_(meshAssetCache), renderResourceCache_(renderResourceCache) {}
 
 void MeshNodeScene::init() {
   SceneNode::init();
 
   auto meshNode = std::make_unique<MeshNode>("Resources/bridge.obj", codeBook_,
-                                             renderDevice_, this);
+                                             renderDevice_, meshAssetCache_,
+                                             renderResourceCache_, this);
   meshNode->init();
   meshNode->setVisualizerSettings(visualizerSettings_);
   meshNode->setLocalPosition({0.0f, -4.0f, 0.0f});

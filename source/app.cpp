@@ -111,6 +111,9 @@ int DL::App::run() {
   }
 
   renderDevice_ = createOpenGLRenderDevice(glslVersionString_);
+  meshAssetCache_ = std::make_unique<DL::MeshAssetCache>();
+  renderResourceCache_ =
+      std::make_unique<DL::RenderResourceCache>(*renderDevice_);
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -220,14 +223,16 @@ void DL::App::registerScenes() {
                                              codebook_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get());
+    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
+                                           meshAssetCache_.get(),
+                                           renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get());
+    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
+                                           meshAssetCache_.get(),
+                                           renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<PhongShapeScene>(renderDevice_.get());
-  });
+  sceneManager_.registerScene([this] { return std::make_unique<PhongShapeScene>(renderDevice_.get()); });
   sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });

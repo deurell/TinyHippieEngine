@@ -2,6 +2,8 @@
 #include "basisu_transcoder.h"
 #include "camera.h"
 #include "iscene.h"
+#include "meshassetcache.h"
+#include "renderresourcecache.h"
 #include "scenelifecycle.h"
 #include "scenemanager.h"
 #include "model.h"
@@ -47,6 +49,8 @@ private:
   SceneManager sceneManager_;
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;
   std::unique_ptr<DL::IRenderDevice> renderDevice_;
+  std::unique_ptr<DL::MeshAssetCache> meshAssetCache_;
+  std::unique_ptr<DL::RenderResourceCache> renderResourceCache_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
   float startFrameTime_ = 0.0f;

@@ -6,24 +6,31 @@
 namespace DL {
 
 MeshVisualizer::MeshVisualizer(
-    std::string name, DL::Camera &camera, SceneNode &node, MeshAsset asset,
+    std::string name, DL::Camera &camera, SceneNode &node,
+    std::shared_ptr<const MeshAsset> asset,
     basist::etc1_global_selector_codebook *codeBook,
-    DL::IRenderDevice *renderDevice, std::string vertexShaderPath,
+    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
+    std::string vertexShaderPath,
     std::string fragmentShaderPath)
     : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
-      renderDevice_(renderDevice), codeBook_(codeBook), pipeline_(), asset_(std::move(asset)) {
-  if (renderDevice_ == nullptr) {
+      renderDevice_(renderDevice), resourceCache_(resourceCache),
+      codeBook_(codeBook), pipeline_(), asset_(std::move(asset)) {
+  if (renderDevice_ == nullptr || asset_ == nullptr) {
     return;
   }
 
-  pipeline_ = renderDevice_->createPipeline(vertexShaderPath_, fragmentShaderPath_);
+  pipeline_ = resourceCache_ != nullptr
+                  ? resourceCache_->acquirePipeline(vertexShaderPath_,
+                                                    fragmentShaderPath_)
+                  : renderDevice_->createPipeline(vertexShaderPath_,
+                                                  fragmentShaderPath_);
   if (!pipeline_.valid()) {
     return;
   }
 
-  submeshes_.reserve(asset_.submeshes.size());
-  for (const auto &submesh : asset_.submeshes) {
+  submeshes_.reserve(asset_->submeshes.size());
+  for (const auto &submesh : asset_->submeshes) {
     if (submesh.indices.empty()) {
       continue;
     }
@@ -38,6 +45,7 @@ MeshVisualizer::MeshVisualizer(
     gpuSubmesh.specularColor = submesh.specularColor;
     gpuSubmesh.shininess = submesh.shininess;
     gpuSubmesh.hasTexture = !submesh.texturePath.empty();
+    gpuSubmesh.sharedTexture = resourceCache_ != nullptr;
     gpuSubmesh.skinIndex = submesh.skinIndex;
     if (gpuSubmesh.mesh.valid() && gpuSubmesh.texture.valid()) {
       submeshes_.push_back(gpuSubmesh);
@@ -60,22 +68,24 @@ MeshVisualizer::~MeshVisualizer() {
     if (submesh.mesh.valid()) {
       renderDevice_->destroy(submesh.mesh);
     }
-    if (submesh.texture.valid()) {
+    if (submesh.texture.valid() && !submesh.sharedTexture) {
       renderDevice_->destroy(submesh.texture);
     }
   }
-  if (pipeline_.valid()) {
+  if (pipeline_.valid() && resourceCache_ == nullptr) {
     renderDevice_->destroy(pipeline_);
   }
 }
 
 void MeshVisualizer::updateAnimation(float deltaTime) {
-  animationPlayer_.update(asset_.animations, deltaTime);
+  if (asset_ != nullptr) {
+    animationPlayer_.update(asset_->animations, deltaTime);
+  }
 }
 
 void MeshVisualizer::render(const glm::mat4 &worldTransform,
                             const DL::FrameContext &ctx) {
-  if (renderDevice_ == nullptr || !pipeline_.valid()) {
+  if (renderDevice_ == nullptr || !pipeline_.valid() || asset_ == nullptr) {
     return;
   }
 
@@ -85,10 +95,10 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
   model = glm::scale(model, extractScale(worldTransform));
 
   AnimationPose pose;
-  if (!asset_.animations.empty() &&
-      animationPlayer_.clipIndex() < asset_.animations.size()) {
-    pose = makeAnimationPose(asset_.nodes.size());
-    evaluateAnimationClip(asset_.animations[animationPlayer_.clipIndex()],
+  if (!asset_->animations.empty() &&
+      animationPlayer_.clipIndex() < asset_->animations.size()) {
+    pose = makeAnimationPose(asset_->nodes.size());
+    evaluateAnimationClip(asset_->animations[animationPlayer_.clipIndex()],
                           animationPlayer_.time(), pose);
   }
 
@@ -100,7 +110,7 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
         continue;
       }
       skinMatricesBySkin.emplace(
-          submesh.skinIndex, computeSkinMatrices(asset_, submesh.skinIndex, pose));
+          submesh.skinIndex, computeSkinMatrices(*asset_, submesh.skinIndex, pose));
     }
   }
 
@@ -160,6 +170,9 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
 }
 
 TextureHandle MeshVisualizer::createFallbackTexture() {
+  if (resourceCache_ != nullptr) {
+    return resourceCache_->acquireWhiteTexture();
+  }
   const std::uint8_t pixel[] = {255, 255, 255, 255};
   return renderDevice_->createTexture({.pixels = pixel,
                                        .width = 1,
@@ -171,8 +184,11 @@ TextureHandle MeshVisualizer::createFallbackTexture() {
 TextureHandle MeshVisualizer::loadTexture(const MeshAssetSubmesh &submesh) {
   if (!submesh.texturePath.empty() && codeBook_ != nullptr &&
       submesh.texturePath.ends_with(".basis")) {
-    auto texture =
-        renderDevice_->createBasisTexture(submesh.texturePath, *codeBook_);
+    auto texture = resourceCache_ != nullptr
+                       ? resourceCache_->acquireBasisTexture(submesh.texturePath,
+                                                             *codeBook_)
+                       : renderDevice_->createBasisTexture(submesh.texturePath,
+                                                           *codeBook_);
     if (texture.valid()) {
       return texture;
     }

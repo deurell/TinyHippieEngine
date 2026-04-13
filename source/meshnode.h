@@ -2,9 +2,11 @@
 
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
+#include "meshassetcache.h"
 #include "meshasset.h"
 #include "meshvisualizer.h"
 #include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <memory>
 
@@ -13,6 +15,8 @@ public:
   explicit MeshNode(std::string assetPath,
                     basist::etc1_global_selector_codebook *codeBook,
                     DL::IRenderDevice *renderDevice,
+                    DL::MeshAssetCache *meshAssetCache = nullptr,
+                    DL::RenderResourceCache *renderResourceCache = nullptr,
                     DL::SceneNode *parentNode = nullptr,
                     DL::Camera *camera = nullptr);
   ~MeshNode() override = default;
@@ -47,6 +51,8 @@ private:
   std::unique_ptr<DL::Camera> localCamera_;
   DL::Camera *camera_ = nullptr;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::MeshAssetCache *meshAssetCache_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0.0f, 0.0f};
   DL::MeshVisualizer *meshVisualizer_ = nullptr;
   bool debugNormals_ = false;

@@ -179,6 +179,7 @@ void DL::App::render() {
   if (renderDevice_ != nullptr) {
     DL::drawFrameStatsOverlay(deltaTime_, renderDevice_->getRenderStats());
   }
+  DL::drawLogWindow();
 
 #ifdef USE_IMGUI
   ImGui::Render();
@@ -223,6 +224,8 @@ void DL::App::loadCurrentScene() {
                                 getWindowSize(), getFramebufferSize());
   if (!scene_) {
     LogError("Failed to create scene");
+  } else {
+    Logger::instance().logEvent(LogLevel::Info, "scene", "scene_loaded");
   }
 }
 
@@ -317,11 +320,13 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
     if (action == GLFW_PRESS) {
       if (!imguiWantsKeyboard && key == GLFW_KEY_RIGHT) {
         sceneManager_.next();
+        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_next");
         loadCurrentScene();
         return;
       }
       if (!imguiWantsKeyboard && key == GLFW_KEY_LEFT) {
         sceneManager_.previous();
+        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_previous");
         loadCurrentScene();
         return;
       }
@@ -330,6 +335,7 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
   }
 
   if (key == GLFW_KEY_SPACE) {
+    Logger::instance().logEvent(LogLevel::Info, "scene", "load_simple_scene");
     loadSimpleScene();
     return;
   }
@@ -344,6 +350,7 @@ void DL::App::basisInit() {
   codebook_ = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
   LogInfo("BasisU transcoder initialized");
+  Logger::instance().logEvent(LogLevel::Info, "assets", "basisu_initialized");
 }
 
 void DL::App::onScreenSizeChanged(int width, int height) {

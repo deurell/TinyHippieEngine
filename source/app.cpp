@@ -1,6 +1,7 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
 #include "c64scene.h"
+#include "debugui.h"
 #include "demoscene.h"
 #include "glosifyscene.h"
 #include "gltfnodescene.h"
@@ -164,11 +165,16 @@ void DL::App::update() {
 
 void DL::App::render() {
   if (!scene_) return;
+  DL::beginDebugUiFrame();
   scene_->render({deltaTime_, glfwGetTime()});
+  if (renderDevice_ != nullptr) {
+    DL::drawFrameStatsOverlay(deltaTime_, renderDevice_->getRenderStats());
+  }
 
 #ifdef USE_IMGUI
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  DL::endDebugUiFrame();
 #endif
 
   int frameWidth, frameHeight;

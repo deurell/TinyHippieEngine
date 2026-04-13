@@ -1,7 +1,6 @@
 #include "particlescene.h"
+#include "debugui.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {
@@ -61,9 +60,7 @@ void ParticleScene::render(const DL::FrameContext &ctx) {
   }
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("fireworks scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

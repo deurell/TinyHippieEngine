@@ -1,7 +1,6 @@
 #include "demoscene.h"
+#include "debugui.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>
@@ -113,10 +112,7 @@ void DemoScene::render(const DL::FrameContext &ctx) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
-
+  DL::beginDebugUiFrame();
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("iTime: %.1f", ctx.total_time);

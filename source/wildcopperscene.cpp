@@ -1,4 +1,5 @@
 #include "wildcopperscene.h"
+#include "debugui.h"
 #include "GLFW/glfw3.h"
 #include <cmath>
 
@@ -41,9 +42,7 @@ void WildCopperScene::render(const DL::FrameContext &ctx) {
   renderScroller(ctx.delta_time);
   mPlane->render(ctx.delta_time);
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("wild_copper");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

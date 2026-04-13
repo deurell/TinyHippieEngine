@@ -1,7 +1,6 @@
 #include "truetypescene.h"
+#include "debugui.h"
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -131,9 +130,7 @@ void TrueTypeScene::render(const DL::FrameContext &ctx) {
   renderStatus(ctx.delta_time);
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollOffset: %.1f", mScrollOffset);

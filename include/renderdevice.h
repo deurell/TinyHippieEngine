@@ -155,6 +155,14 @@ struct DrawCommand {
   std::vector<UniformValue> uniforms;
 };
 
+struct RenderStats {
+  std::uint32_t drawCalls = 0;
+  std::uint32_t triangles = 0;
+  std::uint32_t meshCount = 0;
+  std::uint32_t textureCount = 0;
+  std::uint32_t pipelineCount = 0;
+};
+
 class IRenderDevice {
 public:
   virtual ~IRenderDevice() = default;
@@ -184,6 +192,7 @@ public:
   virtual void beginFrame(const FramePassDesc &desc) = 0;
   virtual void endFrame() = 0;
   virtual void draw(const DrawCommand &command) = 0;
+  [[nodiscard]] virtual RenderStats getRenderStats() const = 0;
 };
 
 std::unique_ptr<IRenderDevice> createOpenGLRenderDevice(

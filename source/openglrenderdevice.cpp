@@ -240,6 +240,13 @@ public:
   }
 
   void beginFrame(const FramePassDesc &desc) override {
+    frameStats_.drawCalls = 0;
+    frameStats_.triangles = 0;
+    frameStats_.meshCount = static_cast<std::uint32_t>(meshes_.size());
+    frameStats_.textureCount = static_cast<std::uint32_t>(textures_.size());
+    frameStats_.pipelineCount =
+        static_cast<std::uint32_t>(pipelines_.size());
+
     if (desc.depthMode == DepthMode::Less) {
       glEnable(GL_DEPTH_TEST);
       glDepthFunc(GL_LESS);
@@ -263,6 +270,10 @@ public:
 
   void endFrame() override {}
 
+  [[nodiscard]] RenderStats getRenderStats() const override {
+    return frameStats_;
+  }
+
   void draw(const DrawCommand &command) override {
     auto mesh_it = meshes_.find(command.mesh.value);
     auto pipeline_it = pipelines_.find(command.pipeline.value);
@@ -272,6 +283,10 @@ public:
 
     auto &mesh = *mesh_it->second;
     auto &pipeline = *pipeline_it->second;
+    frameStats_.drawCalls += 1;
+    frameStats_.triangles +=
+        static_cast<std::uint32_t>(mesh.index_count >= 3 ? mesh.index_count / 3
+                                                         : 0);
     pipeline.use();
 
     if (command.blendMode == BlendMode::Opaque) {
@@ -341,6 +356,7 @@ private:
   std::unordered_map<std::size_t, std::unique_ptr<GLMesh>> meshes_;
   std::unordered_map<std::size_t, std::unique_ptr<GLTextureResource>> textures_;
   std::unordered_map<std::size_t, std::unique_ptr<Shader>> pipelines_;
+  RenderStats frameStats_;
 };
 
 } // namespace

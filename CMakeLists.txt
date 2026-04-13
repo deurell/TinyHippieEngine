@@ -25,6 +25,8 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html
 endif()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
+        source/animationclip.h source/animationclip.cpp
+        source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
         include/renderdevice.h source/openglrenderdevice.cpp include/scenelifecycle.h source/scenelifecycle.cpp
         source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
@@ -192,9 +194,13 @@ endif()
 include(GoogleTest)
 
 add_executable(tiny_hippie_engine_tests
+        tests/animationclip_test.cpp
         tests/camera_test.cpp
         tests/iscene_test.cpp
         tests/meshasset_test.cpp
+        tests/skinning_test.cpp
+        source/animationclip.cpp
+        source/skinning.cpp
         tests/scenelifecycle_test.cpp
         tests/scenemanager_test.cpp
         tests/scenenode_test.cpp

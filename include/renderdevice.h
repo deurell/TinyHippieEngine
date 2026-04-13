@@ -2,6 +2,7 @@
 
 #include "basisu_transcoder.h"
 #include <cstdint>
+#include <array>
 #include <glm/glm.hpp>
 #include <memory>
 #include <string>
@@ -141,6 +142,7 @@ struct DrawCommand {
   PipelineHandle pipeline;
   TextureHandle texture;
   BlendMode blendMode = BlendMode::Opaque;
+  std::vector<glm::mat4> skinMatrices;
   std::vector<UniformValue> uniforms;
 };
 
@@ -152,7 +154,9 @@ public:
   virtual MeshHandle createMesh(const std::vector<glm::vec3> &positions,
                                 const std::vector<glm::vec3> &normals,
                                 const std::vector<glm::vec2> &uvs,
-                                const std::vector<std::uint32_t> &indices) = 0;
+                                const std::vector<std::uint32_t> &indices,
+                                const std::vector<std::array<std::uint16_t, 4>> &jointIndices = {},
+                                const std::vector<glm::vec4> &jointWeights = {}) = 0;
   virtual TextureHandle createBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;

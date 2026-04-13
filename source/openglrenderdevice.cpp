@@ -98,27 +98,41 @@ public:
   MeshHandle createMesh(const std::vector<glm::vec3> &positions,
                         const std::vector<glm::vec3> &normals,
                         const std::vector<glm::vec2> &uvs,
-                        const std::vector<std::uint32_t> &indices) override {
+                        const std::vector<std::uint32_t> &indices,
+                        const std::vector<std::array<std::uint16_t, 4>> &jointIndices,
+                        const std::vector<glm::vec4> &jointWeights) override {
     if (positions.empty() || positions.size() != uvs.size() || indices.empty()) {
       return {};
     }
     if (!normals.empty() && normals.size() != positions.size()) {
       return {};
     }
+    if ((!jointIndices.empty() && jointIndices.size() != positions.size()) ||
+        (!jointWeights.empty() && jointWeights.size() != positions.size())) {
+      return {};
+    }
 
-    std::vector<float> vertex_data;
-    vertex_data.reserve(positions.size() * 8);
+    struct VertexData {
+      glm::vec3 position;
+      glm::vec3 normal;
+      glm::vec2 uv;
+      std::array<std::uint16_t, 4> joints;
+      glm::vec4 weights;
+    };
+
+    std::vector<VertexData> vertex_data;
+    vertex_data.reserve(positions.size());
     for (std::size_t i = 0; i < positions.size(); ++i) {
-      const glm::vec3 normal =
-          normals.empty() ? glm::vec3(0.0f, 0.0f, 1.0f) : normals[i];
-      vertex_data.push_back(positions[i].x);
-      vertex_data.push_back(positions[i].y);
-      vertex_data.push_back(positions[i].z);
-      vertex_data.push_back(normal.x);
-      vertex_data.push_back(normal.y);
-      vertex_data.push_back(normal.z);
-      vertex_data.push_back(uvs[i].x);
-      vertex_data.push_back(uvs[i].y);
+      vertex_data.push_back({
+          .position = positions[i],
+          .normal = normals.empty() ? glm::vec3(0.0f, 0.0f, 1.0f) : normals[i],
+          .uv = uvs[i],
+          .joints = jointIndices.empty()
+                        ? std::array<std::uint16_t, 4>{0, 0, 0, 0}
+                        : jointIndices[i],
+          .weights = jointWeights.empty() ? glm::vec4(1.0f, 0.0f, 0.0f, 0.0f)
+                                          : jointWeights[i],
+      });
     }
 
     auto mesh = std::make_unique<GLMesh>();
@@ -128,22 +142,28 @@ public:
 
     glBindVertexArray(mesh->vao);
     glBindBuffer(GL_ARRAY_BUFFER, mesh->vbo);
-    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertex_data.size() * sizeof(float)),
+    glBufferData(GL_ARRAY_BUFFER, static_cast<GLsizeiptr>(vertex_data.size() * sizeof(VertexData)),
                  vertex_data.data(), GL_STATIC_DRAW);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh->ebo);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,
                  static_cast<GLsizeiptr>(indices.size() * sizeof(std::uint32_t)),
                  indices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, position));
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, normal));
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, uv));
     glEnableVertexAttribArray(2);
+    glVertexAttribIPointer(3, 4, GL_UNSIGNED_SHORT, sizeof(VertexData),
+                           (void *)offsetof(VertexData, joints));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(VertexData),
+                          (void *)offsetof(VertexData, weights));
+    glEnableVertexAttribArray(4);
     glBindVertexArray(0);
 
     mesh->index_count = static_cast<GLsizei>(indices.size());
@@ -290,6 +310,12 @@ public:
       } else if (uniform.type == UniformValue::Type::Vec4) {
         pipeline.setVec4f(uniform.name, uniform.vec4_value);
       }
+    }
+
+    pipeline.setInt("useSkinning", command.skinMatrices.empty() ? 0 : 1);
+    if (!command.skinMatrices.empty()) {
+      pipeline.setMat4Array("boneMatrices", command.skinMatrices.data(),
+                            command.skinMatrices.size());
     }
 
     glBindVertexArray(mesh.vao);

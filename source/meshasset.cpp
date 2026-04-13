@@ -4,6 +4,7 @@
 #include "cgltf.h"
 #include "logger.h"
 #include <glm/geometric.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat3x3.hpp>
 #include <glm/mat4x4.hpp>
@@ -51,6 +52,54 @@ std::string resolveUri(std::string_view directory, const char *uri) {
     return std::string(uriView);
   }
   return std::string(directory) + '/' + std::string(uriView);
+}
+
+AnimationInterpolation toAnimationInterpolation(
+    cgltf_interpolation_type interpolation) {
+  switch (interpolation) {
+  case cgltf_interpolation_type_step:
+    return AnimationInterpolation::Step;
+  case cgltf_interpolation_type_cubic_spline:
+    return AnimationInterpolation::CubicSpline;
+  case cgltf_interpolation_type_linear:
+  default:
+    return AnimationInterpolation::Linear;
+  }
+}
+
+AnimationTargetPath toAnimationTargetPath(cgltf_animation_path_type path) {
+  switch (path) {
+  case cgltf_animation_path_type_rotation:
+    return AnimationTargetPath::Rotation;
+  case cgltf_animation_path_type_scale:
+    return AnimationTargetPath::Scale;
+  case cgltf_animation_path_type_weights:
+    return AnimationTargetPath::Weights;
+  case cgltf_animation_path_type_translation:
+  default:
+    return AnimationTargetPath::Translation;
+  }
+}
+
+int nodeIndex(const cgltf_data &data, const cgltf_node *node) {
+  if (node == nullptr) {
+    return -1;
+  }
+  return static_cast<int>(node - data.nodes);
+}
+
+int meshIndex(const cgltf_data &data, const cgltf_mesh *mesh) {
+  if (mesh == nullptr) {
+    return -1;
+  }
+  return static_cast<int>(mesh - data.meshes);
+}
+
+int skinIndex(const cgltf_data &data, const cgltf_skin *skin) {
+  if (skin == nullptr) {
+    return -1;
+  }
+  return static_cast<int>(skin - data.skins);
 }
 
 glm::mat4 toMat4(const cgltf_float *matrixData) {
@@ -109,7 +158,8 @@ const cgltf_accessor *findAttribute(const cgltf_primitive &primitive,
   return cgltf_find_accessor(&primitive, type, 0);
 }
 
-void populatePrimitive(const cgltf_primitive &primitive,
+void populatePrimitive(const cgltf_data &data, const cgltf_node &node,
+                       const cgltf_primitive &primitive,
                        const glm::mat4 &worldTransform,
                        std::string_view assetDirectory, MeshAsset &asset) {
   if (primitive.type != cgltf_primitive_type_triangles) {
@@ -123,6 +173,10 @@ void populatePrimitive(const cgltf_primitive &primitive,
   }
 
   MeshAssetSubmesh submesh;
+  submesh.sourceNodeIndex = nodeIndex(data, &node);
+  submesh.skinIndex = skinIndex(data, node.skin);
+  const glm::mat4 geometryTransform =
+      submesh.skinIndex >= 0 ? glm::mat4(1.0f) : worldTransform;
   submesh.positions.resize(positionAccessor->count);
   submesh.uvs.assign(positionAccessor->count, glm::vec2(0.0f));
 
@@ -134,6 +188,17 @@ void populatePrimitive(const cgltf_primitive &primitive,
 
   const cgltf_accessor *uvAccessor =
       findAttribute(primitive, cgltf_attribute_type_texcoord);
+  const cgltf_accessor *jointAccessor =
+      findAttribute(primitive, cgltf_attribute_type_joints);
+  const cgltf_accessor *weightAccessor =
+      findAttribute(primitive, cgltf_attribute_type_weights);
+
+  if (jointAccessor != nullptr && weightAccessor != nullptr &&
+      jointAccessor->count == positionAccessor->count &&
+      weightAccessor->count == positionAccessor->count) {
+    submesh.jointIndices.resize(positionAccessor->count);
+    submesh.jointWeights.resize(positionAccessor->count, glm::vec4(0.0f));
+  }
 
   for (cgltf_size vertexIndex = 0; vertexIndex < positionAccessor->count;
        ++vertexIndex) {
@@ -142,13 +207,15 @@ void populatePrimitive(const cgltf_primitive &primitive,
       continue;
     }
     submesh.positions[vertexIndex] =
-        transformPosition(worldTransform, {positionData[0], positionData[1], positionData[2]});
+        transformPosition(geometryTransform,
+                          {positionData[0], positionData[1], positionData[2]});
 
     if (!submesh.normals.empty()) {
       cgltf_float normalData[3] = {0.0f, 0.0f, 1.0f};
       if (cgltf_accessor_read_float(normalAccessor, vertexIndex, normalData, 3)) {
         submesh.normals[vertexIndex] =
-            transformNormal(worldTransform, {normalData[0], normalData[1], normalData[2]});
+            transformNormal(geometryTransform,
+                            {normalData[0], normalData[1], normalData[2]});
       }
     }
 
@@ -156,6 +223,21 @@ void populatePrimitive(const cgltf_primitive &primitive,
       cgltf_float uvData[2] = {0.0f, 0.0f};
       if (cgltf_accessor_read_float(uvAccessor, vertexIndex, uvData, 2)) {
         submesh.uvs[vertexIndex] = {uvData[0], uvData[1]};
+      }
+    }
+
+    if (!submesh.jointIndices.empty()) {
+      cgltf_uint joints[4] = {0, 0, 0, 0};
+      cgltf_float weights[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+      if (cgltf_accessor_read_uint(jointAccessor, vertexIndex, joints, 4) &&
+          cgltf_accessor_read_float(weightAccessor, vertexIndex, weights, 4)) {
+        submesh.jointIndices[vertexIndex] = {
+            static_cast<std::uint16_t>(joints[0]),
+            static_cast<std::uint16_t>(joints[1]),
+            static_cast<std::uint16_t>(joints[2]),
+            static_cast<std::uint16_t>(joints[3])};
+        submesh.jointWeights[vertexIndex] = {weights[0], weights[1], weights[2],
+                                             weights[3]};
       }
     }
   }
@@ -207,8 +289,8 @@ void populatePrimitive(const cgltf_primitive &primitive,
   asset.submeshes.push_back(std::move(submesh));
 }
 
-void appendNodeMesh(const cgltf_node &node, std::string_view assetDirectory,
-                    MeshAsset &asset) {
+void appendNodeMesh(const cgltf_data &data, const cgltf_node &node,
+                    std::string_view assetDirectory, MeshAsset &asset) {
   if (node.mesh == nullptr) {
     return;
   }
@@ -219,16 +301,157 @@ void appendNodeMesh(const cgltf_node &node, std::string_view assetDirectory,
 
   for (cgltf_size primitiveIndex = 0; primitiveIndex < node.mesh->primitives_count;
        ++primitiveIndex) {
-    populatePrimitive(node.mesh->primitives[primitiveIndex], worldTransform,
-                      assetDirectory, asset);
+    populatePrimitive(data, node, node.mesh->primitives[primitiveIndex],
+                      worldTransform, assetDirectory, asset);
   }
 }
 
-void appendSceneNodeMeshes(const cgltf_node &node, std::string_view assetDirectory,
-                           MeshAsset &asset) {
-  appendNodeMesh(node, assetDirectory, asset);
+void appendSceneNodeMeshes(const cgltf_data &data, const cgltf_node &node,
+                           std::string_view assetDirectory, MeshAsset &asset) {
+  appendNodeMesh(data, node, assetDirectory, asset);
   for (cgltf_size childIndex = 0; childIndex < node.children_count; ++childIndex) {
-    appendSceneNodeMeshes(*node.children[childIndex], assetDirectory, asset);
+    appendSceneNodeMeshes(data, *node.children[childIndex], assetDirectory, asset);
+  }
+}
+
+void importNodes(const cgltf_data &data, MeshAsset &asset) {
+  asset.nodes.reserve(data.nodes_count);
+  for (cgltf_size i = 0; i < data.nodes_count; ++i) {
+    const auto &srcNode = data.nodes[i];
+    cgltf_float localMatrix[16] = {};
+    cgltf_float worldMatrix[16] = {};
+    cgltf_node_transform_local(&srcNode, localMatrix);
+    cgltf_node_transform_world(&srcNode, worldMatrix);
+
+    MeshAssetNode node;
+    if (srcNode.name != nullptr) {
+      node.name = srcNode.name;
+    }
+    node.parentIndex = nodeIndex(data, srcNode.parent);
+    node.meshIndex = meshIndex(data, srcNode.mesh);
+    node.skinIndex = skinIndex(data, srcNode.skin);
+    node.localTransform = toMat4(localMatrix);
+    node.worldTransform = toMat4(worldMatrix);
+    if (srcNode.has_translation) {
+      node.baseTranslation = {srcNode.translation[0], srcNode.translation[1],
+                              srcNode.translation[2]};
+    }
+    if (srcNode.has_rotation) {
+      node.baseRotation = glm::normalize(glm::quat(
+          srcNode.rotation[3], srcNode.rotation[0], srcNode.rotation[1],
+          srcNode.rotation[2]));
+    }
+    if (srcNode.has_scale) {
+      node.baseScale = {srcNode.scale[0], srcNode.scale[1], srcNode.scale[2]};
+    }
+    if (srcNode.has_matrix &&
+        (!srcNode.has_translation || !srcNode.has_rotation || !srcNode.has_scale)) {
+      glm::vec3 skew;
+      glm::vec4 perspective;
+      glm::decompose(node.localTransform, node.baseScale, node.baseRotation,
+                     node.baseTranslation, skew, perspective);
+      node.baseRotation = glm::normalize(node.baseRotation);
+    }
+    asset.nodes.push_back(std::move(node));
+  }
+}
+
+void importSkins(const cgltf_data &data, MeshAsset &asset) {
+  asset.skins.reserve(data.skins_count);
+  for (cgltf_size i = 0; i < data.skins_count; ++i) {
+    const auto &srcSkin = data.skins[i];
+    MeshAssetSkin skin;
+    if (srcSkin.name != nullptr) {
+      skin.name = srcSkin.name;
+    }
+    skin.skeletonRootNodeIndex = nodeIndex(data, srcSkin.skeleton);
+    skin.jointNodeIndices.reserve(srcSkin.joints_count);
+    for (cgltf_size jointIndex = 0; jointIndex < srcSkin.joints_count; ++jointIndex) {
+      skin.jointNodeIndices.push_back(nodeIndex(data, srcSkin.joints[jointIndex]));
+    }
+
+    if (srcSkin.inverse_bind_matrices != nullptr) {
+      skin.inverseBindMatrices.resize(srcSkin.inverse_bind_matrices->count,
+                                      glm::mat4(1.0f));
+      for (cgltf_size matrixIndex = 0;
+           matrixIndex < srcSkin.inverse_bind_matrices->count; ++matrixIndex) {
+        cgltf_float matrixData[16] = {};
+        if (cgltf_accessor_read_float(srcSkin.inverse_bind_matrices, matrixIndex,
+                                      matrixData, 16)) {
+          skin.inverseBindMatrices[matrixIndex] = toMat4(matrixData);
+        }
+      }
+    }
+
+    asset.skins.push_back(std::move(skin));
+  }
+}
+
+void importAnimations(const cgltf_data &data, MeshAsset &asset) {
+  asset.animations.reserve(data.animations_count);
+  for (cgltf_size animationIndex = 0; animationIndex < data.animations_count;
+       ++animationIndex) {
+    const auto &srcAnimation = data.animations[animationIndex];
+    AnimationClip clip;
+    if (srcAnimation.name != nullptr) {
+      clip.name = srcAnimation.name;
+    }
+
+    clip.samplers.reserve(srcAnimation.samplers_count);
+    for (cgltf_size samplerIndex = 0; samplerIndex < srcAnimation.samplers_count;
+         ++samplerIndex) {
+      const auto &srcSampler = srcAnimation.samplers[samplerIndex];
+      if (srcSampler.input == nullptr || srcSampler.output == nullptr ||
+          srcSampler.input->count == 0 || srcSampler.output->count == 0) {
+        clip.samplers.emplace_back();
+        continue;
+      }
+
+      AnimationSampler sampler;
+      sampler.interpolation = toAnimationInterpolation(srcSampler.interpolation);
+      if (sampler.interpolation == AnimationInterpolation::CubicSpline) {
+        LogWarn("Cubic spline animation imported as raw sampler data; evaluator does not yet support tangents");
+      }
+
+      sampler.times.resize(srcSampler.input->count);
+      for (cgltf_size keyIndex = 0; keyIndex < srcSampler.input->count; ++keyIndex) {
+        cgltf_float timeValue = 0.0f;
+        if (cgltf_accessor_read_float(srcSampler.input, keyIndex, &timeValue, 1)) {
+          sampler.times[keyIndex] = timeValue;
+          clip.duration = std::max(clip.duration, timeValue);
+        }
+      }
+
+      const cgltf_size componentCount = cgltf_num_components(srcSampler.output->type);
+      sampler.values.resize(srcSampler.output->count, glm::vec4(0.0f));
+      for (cgltf_size keyIndex = 0; keyIndex < srcSampler.output->count; ++keyIndex) {
+        cgltf_float value[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        if (cgltf_accessor_read_float(srcSampler.output, keyIndex, value,
+                                      std::min<cgltf_size>(componentCount, 4))) {
+          sampler.values[keyIndex] = {value[0], value[1], value[2], value[3]};
+        }
+      }
+
+      clip.samplers.push_back(std::move(sampler));
+    }
+
+    clip.channels.reserve(srcAnimation.channels_count);
+    for (cgltf_size channelIndex = 0; channelIndex < srcAnimation.channels_count;
+         ++channelIndex) {
+      const auto &srcChannel = srcAnimation.channels[channelIndex];
+      if (srcChannel.target_node == nullptr || srcChannel.sampler == nullptr) {
+        continue;
+      }
+
+      AnimationChannel channel;
+      channel.nodeIndex = nodeIndex(data, srcChannel.target_node);
+      channel.path = toAnimationTargetPath(srcChannel.target_path);
+      channel.samplerIndex =
+          static_cast<std::size_t>(srcChannel.sampler - srcAnimation.samplers);
+      clip.channels.push_back(std::move(channel));
+    }
+
+    asset.animations.push_back(std::move(clip));
   }
 }
 
@@ -392,6 +615,10 @@ MeshAsset loadGltfMeshAsset(std::string_view path) {
     LogWarn("glTF asset validation reported issues", path);
   }
 
+  importNodes(*data, asset);
+  importSkins(*data, asset);
+  importAnimations(*data, asset);
+
   const std::string assetDirectory = directoryName(path);
   cgltf_scene *scene = data->scene;
   if (scene == nullptr && data->scenes_count > 0) {
@@ -400,12 +627,12 @@ MeshAsset loadGltfMeshAsset(std::string_view path) {
 
   if (scene != nullptr) {
     for (cgltf_size nodeIndex = 0; nodeIndex < scene->nodes_count; ++nodeIndex) {
-      appendSceneNodeMeshes(*scene->nodes[nodeIndex], assetDirectory, asset);
+      appendSceneNodeMeshes(*data, *scene->nodes[nodeIndex], assetDirectory, asset);
     }
   } else {
     for (cgltf_size nodeIndex = 0; nodeIndex < data->nodes_count; ++nodeIndex) {
       if (data->nodes[nodeIndex].parent == nullptr) {
-        appendSceneNodeMeshes(data->nodes[nodeIndex], assetDirectory, asset);
+        appendSceneNodeMeshes(*data, data->nodes[nodeIndex], assetDirectory, asset);
       }
     }
   }

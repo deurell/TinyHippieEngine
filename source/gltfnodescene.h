@@ -23,8 +23,9 @@ private:
   DL::IRenderDevice *renderDevice_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
-  glm::vec3 cameraTarget_{0.0f, 0.0f, 0.0f};
+  glm::vec3 cameraTarget_{0.0f, 2.5f, 0.0f};
   MeshNode *meshNode_ = nullptr;
+  bool animationEnabled_ = true;
   bool debugNormals_ = false;
   DL::MeshVisualizerSettings visualizerSettings_;
 };

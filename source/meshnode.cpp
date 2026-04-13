@@ -42,6 +42,22 @@ void MeshNode::setVisualizerSettings(
   }
 }
 
+void MeshNode::setAnimationEnabled(bool enabled) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationEnabled(enabled);
+  }
+}
+
+void MeshNode::setAnimationTime(float time) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationTime(time);
+  }
+}
+
+bool MeshNode::hasAnimations() const {
+  return meshVisualizer_ != nullptr && meshVisualizer_->hasAnimations();
+}
+
 void MeshNode::initCamera() {
   if (camera_ != nullptr) {
     return;

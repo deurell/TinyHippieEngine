@@ -1,8 +1,10 @@
 #pragma once
 
 #include "basisu_global_selector_palette.h"
+#include "animationclip.h"
 #include "meshasset.h"
 #include "renderdevice.h"
+#include "skinning.h"
 #include "visualizerbase.h"
 #include <vector>
 
@@ -32,6 +34,10 @@ public:
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
   void setSettings(const MeshVisualizerSettings &settings) { settings_ = settings; }
   [[nodiscard]] const MeshVisualizerSettings &settings() const { return settings_; }
+  void setAnimationEnabled(bool enabled) { animationEnabled_ = enabled; }
+  void setAnimationClipIndex(std::size_t index) { animationClipIndex_ = index; }
+  void setAnimationTime(float time) { animationTime_ = time; }
+  [[nodiscard]] bool hasAnimations() const { return !asset_.animations.empty(); }
 
 private:
   struct GpuSubmesh {
@@ -42,6 +48,7 @@ private:
     glm::vec3 specularColor{0.2f, 0.2f, 0.2f};
     float shininess = 16.0f;
     bool hasTexture = false;
+    int skinIndex = -1;
   };
 
   TextureHandle createFallbackTexture();
@@ -54,6 +61,9 @@ private:
   std::vector<GpuSubmesh> submeshes_;
   bool debugNormals_ = false;
   MeshVisualizerSettings settings_;
+  bool animationEnabled_ = true;
+  std::size_t animationClipIndex_ = 0;
+  float animationTime_ = 0.0f;
 };
 
 } // namespace DL

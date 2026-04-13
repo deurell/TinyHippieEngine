@@ -126,6 +126,13 @@ public:
                        glm::value_ptr(m));
   }
 
+  void setMat4Array(const std::string &name, const glm::mat4 *matrices,
+                    std::size_t count) {
+    glUniformMatrix4fv(glGetUniformLocation(mId, name.c_str()),
+                       static_cast<GLsizei>(count), GL_FALSE,
+                       glm::value_ptr(matrices[0]));
+  }
+
   unsigned int mId;
 };
 } // namespace DL

@@ -11,12 +11,11 @@ void GltfNodeScene::init() {
   SceneNode::init();
   camera_ = std::make_unique<DL::Camera>(glm::vec3(0.0f, 0.0f, 12.0f));
   camera_->lookAt(cameraTarget_);
-
   auto meshNode = std::make_unique<MeshNode>("Resources/BrainStem.glb", codeBook_,
                                              renderDevice_, this, camera_.get());
   meshNode->init();
   meshNode->setVisualizerSettings(visualizerSettings_);
-  meshNode->setLocalPosition({0.0f, -3.5f, 0.0f});
+  meshNode->setLocalPosition({0.0f, -1.0f, 0.0f});
   meshNode->setLocalScale({4.0f, 4.0f, 4.0f});
   meshNode_ = meshNode.get();
   addChild(std::move(meshNode));
@@ -24,9 +23,13 @@ void GltfNodeScene::init() {
 
 void GltfNodeScene::update(const DL::FrameContext &ctx) {
   if (meshNode_ != nullptr) {
-    meshNode_->setLocalRotation(
-        glm::angleAxis(static_cast<float>(ctx.total_time) * 0.45f,
-                       glm::vec3(0.0f, 1.0f, 0.0f)));
+    const glm::quat baseRotation =
+        glm::angleAxis(-glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f));
+    meshNode_->setLocalRotation(baseRotation);
+    meshNode_->setAnimationEnabled(animationEnabled_);
+    if (animationEnabled_ && meshNode_->hasAnimations()) {
+      meshNode_->setAnimationTime(static_cast<float>(ctx.total_time));
+    }
   }
   SceneNode::update(ctx);
 }
@@ -44,6 +47,9 @@ void GltfNodeScene::render(const DL::FrameContext &ctx) {
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   if (ImGui::Checkbox("Debug normals", &debugNormals_) && meshNode_ != nullptr) {
     meshNode_->setDebugNormals(debugNormals_);
+  }
+  if (meshNode_ != nullptr && meshNode_->hasAnimations()) {
+    ImGui::Checkbox("Play animation", &animationEnabled_);
   }
   bool changed = false;
   if (camera_ != nullptr) {

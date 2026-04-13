@@ -27,6 +27,9 @@ public:
   [[nodiscard]] const DL::MeshVisualizerSettings &visualizerSettings() const {
     return visualizerSettings_;
   }
+  void setAnimationEnabled(bool enabled);
+  void setAnimationTime(float time);
+  [[nodiscard]] bool hasAnimations() const;
 
 private:
   void initCamera();

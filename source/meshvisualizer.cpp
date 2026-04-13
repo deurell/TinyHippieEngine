@@ -29,13 +29,15 @@ MeshVisualizer::MeshVisualizer(
 
     GpuSubmesh gpuSubmesh;
     gpuSubmesh.mesh = renderDevice_->createMesh(
-        submesh.positions, submesh.normals, submesh.uvs, submesh.indices);
+        submesh.positions, submesh.normals, submesh.uvs, submesh.indices,
+        submesh.jointIndices, submesh.jointWeights);
     gpuSubmesh.texture = loadTexture(submesh);
     gpuSubmesh.diffuseColor = submesh.diffuseColor;
     gpuSubmesh.ambientColor = submesh.ambientColor;
     gpuSubmesh.specularColor = submesh.specularColor;
     gpuSubmesh.shininess = submesh.shininess;
     gpuSubmesh.hasTexture = !submesh.texturePath.empty();
+    gpuSubmesh.skinIndex = submesh.skinIndex;
     if (gpuSubmesh.mesh.valid() && gpuSubmesh.texture.valid()) {
       submeshes_.push_back(gpuSubmesh);
     } else {
@@ -77,6 +79,12 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
   model = model * glm::mat4_cast(extractRotation(worldTransform));
   model = glm::scale(model, extractScale(worldTransform));
 
+  AnimationPose pose;
+  if (animationEnabled_ && animationClipIndex_ < asset_.animations.size()) {
+    pose = makeAnimationPose(asset_.nodes.size());
+    evaluateAnimationClip(asset_.animations[animationClipIndex_], animationTime_, pose);
+  }
+
   for (const auto &submesh : submeshes_) {
     if (!submesh.mesh.valid() || !submesh.texture.valid()) {
       continue;
@@ -86,6 +94,10 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     command.mesh = submesh.mesh;
     command.pipeline = pipeline_;
     command.texture = submesh.texture;
+    if (!pose.nodes.empty() && submesh.skinIndex >= 0) {
+      command.skinMatrices =
+          computeSkinMatrices(asset_, submesh.skinIndex, pose);
+    }
     command.uniforms.push_back(
         DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
     command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));

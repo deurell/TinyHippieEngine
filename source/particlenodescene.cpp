@@ -1,7 +1,9 @@
 #include "particlenodescene.h"
 
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include <GLFW/glfw3.h>
 #include <cmath>
 #include <glm/ext/matrix_clip_space.hpp>

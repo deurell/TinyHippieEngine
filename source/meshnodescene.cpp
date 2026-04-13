@@ -1,7 +1,9 @@
 #include "meshnodescene.h"
 
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 
 MeshNodeScene::MeshNodeScene(DL::IRenderDevice *renderDevice,
                              basist::etc1_global_selector_codebook *codeBook,

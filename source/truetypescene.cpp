@@ -1,6 +1,8 @@
 #include "truetypescene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include "texture.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>

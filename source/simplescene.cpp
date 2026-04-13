@@ -4,7 +4,9 @@
 
 #include "simplescene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include <iostream>
 
 SimpleScene::SimpleScene(DL::IRenderDevice *renderDevice)

@@ -1,7 +1,9 @@
 #include "gltfnodescene.h"
 
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 
 GltfNodeScene::GltfNodeScene(DL::IRenderDevice *renderDevice,
                              basist::etc1_global_selector_codebook *codeBook,

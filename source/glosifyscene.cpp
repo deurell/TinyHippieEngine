@@ -3,7 +3,9 @@
 //
 #include "glosifyscene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include "planenode.h"
 #include "spritenode.h"
 

@@ -1,8 +1,10 @@
 #pragma once
 
+#ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#endif
 #include "stb_truetype.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>

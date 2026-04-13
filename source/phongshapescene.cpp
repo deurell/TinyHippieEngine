@@ -1,7 +1,9 @@
 #include "phongshapescene.h"
 
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 
 PhongShapeScene::PhongShapeScene(DL::IRenderDevice *renderDevice,
                                  DL::RenderResourceCache *renderResourceCache)

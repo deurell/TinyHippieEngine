@@ -10,7 +10,7 @@ set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 include(CTest)
 include(FetchContent)
 
-add_compile_definitions(USE_IMGUI)
+option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
 option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" ON)
 
 set(PLATFORM_LIBS "")
@@ -110,15 +110,19 @@ target_include_directories(tiny_hippie_engine
         PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/source
-        ${CMAKE_SOURCE_DIR}/imgui
         ${CMAKE_SOURCE_DIR}/transcoder
 )
 
 target_compile_definitions(tiny_hippie_engine PRIVATE GLFW_INCLUDE_NONE)
+if(TINY_ENGINE_ENABLE_IMGUI)
+target_compile_definitions(tiny_hippie_engine PRIVATE USE_IMGUI)
+target_include_directories(tiny_hippie_engine PRIVATE ${CMAKE_SOURCE_DIR}/imgui)
+endif()
 if(TINY_ENGINE_ENABLE_PHYSICS)
 target_compile_definitions(tiny_hippie_engine PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
 endif()
 
+if(TINY_ENGINE_ENABLE_IMGUI)
 add_library(imgui STATIC
         imgui/imconfig.h
         imgui/imgui.cpp
@@ -141,6 +145,7 @@ target_include_directories(imgui
 )
 
 target_compile_definitions(imgui PRIVATE GLFW_INCLUDE_NONE)
+endif()
 
 add_library(basisu STATIC
         transcoder/basisu_file_headers.h
@@ -172,11 +177,17 @@ add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
 list(APPEND PLATFORM_LIBS glfw)
 set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
 
+if(TINY_ENGINE_ENABLE_IMGUI)
 target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+endif()
 endif()
 
 if(APPLE)
-foreach(target tiny_hippie_engine imgui basisu)
+set(visibility_targets tiny_hippie_engine basisu)
+if(TINY_ENGINE_ENABLE_IMGUI)
+list(APPEND visibility_targets imgui)
+endif()
+foreach(target ${visibility_targets})
     target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
 endforeach()
 endif()
@@ -187,7 +198,10 @@ elseif(TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
 target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
 endif()
 
-target_link_libraries(tiny_hippie_engine PRIVATE imgui basisu ${PLATFORM_LIBS})
+target_link_libraries(tiny_hippie_engine PRIVATE basisu ${PLATFORM_LIBS})
+if(TINY_ENGINE_ENABLE_IMGUI)
+target_link_libraries(tiny_hippie_engine PRIVATE imgui)
+endif()
 
 foreach(asset_dir IN ITEMS Shaders Resources)
 add_custom_command(

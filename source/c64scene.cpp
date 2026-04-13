@@ -1,6 +1,8 @@
 #include "c64scene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include <iostream>
 
 C64Scene::C64Scene(std::string_view glslVersion,

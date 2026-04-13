@@ -1,6 +1,8 @@
 #include "demoscene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/euler_angles.hpp>

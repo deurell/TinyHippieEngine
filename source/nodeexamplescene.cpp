@@ -4,7 +4,9 @@
 #include "nodeexamplescene.h"
 #include "debugui.h"
 #include "glm/ext/scalar_constants.hpp"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 #include "planenode.h"
 #include "spritenode.h"
 #include "textnode.h"

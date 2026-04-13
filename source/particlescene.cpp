@@ -1,6 +1,8 @@
 #include "particlescene.h"
 #include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
+#endif
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {

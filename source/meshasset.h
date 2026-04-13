@@ -23,6 +23,8 @@ struct MeshAsset {
   std::vector<MeshAssetSubmesh> submeshes;
 };
 
+MeshAsset loadMeshAsset(std::string_view path);
 MeshAsset loadObjMeshAsset(std::string_view path);
+MeshAsset loadGltfMeshAsset(std::string_view path);
 
 } // namespace DL

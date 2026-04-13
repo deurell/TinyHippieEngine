@@ -57,7 +57,7 @@ void MeshNode::initComponents() {
   }
 
   auto visualizer = std::make_unique<DL::MeshVisualizer>(
-      "MeshVisualizer", *camera_, *this, DL::loadObjMeshAsset(assetPath_),
+      "MeshVisualizer", *camera_, *this, DL::loadMeshAsset(assetPath_),
       codeBook_, renderDevice_);
   meshVisualizer_ = visualizer.get();
   meshVisualizer_->setDebugNormals(debugNormals_);

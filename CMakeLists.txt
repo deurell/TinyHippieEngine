@@ -59,6 +59,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/particlevisualizer.h
         source/particlenodescene.cpp
         source/model.cpp
+        source/gltfnodescene.h
+        source/gltfnodescene.cpp
         source/meshasset.h
         source/meshasset.cpp
         source/meshvisualizer.h
@@ -192,9 +194,12 @@ include(GoogleTest)
 add_executable(tiny_hippie_engine_tests
         tests/camera_test.cpp
         tests/iscene_test.cpp
+        tests/meshasset_test.cpp
         tests/scenelifecycle_test.cpp
         tests/scenemanager_test.cpp
         tests/scenenode_test.cpp
+        source/logger.cpp
+        source/meshasset.cpp
         source/scenelifecycle.cpp
         source/scenenode.cpp
 )

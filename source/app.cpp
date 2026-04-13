@@ -3,6 +3,7 @@
 #include "c64scene.h"
 #include "demoscene.h"
 #include "glosifyscene.h"
+#include "gltfnodescene.h"
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
@@ -217,6 +218,9 @@ void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<NodeExampleScene>(renderDevice_.get(),
                                              codebook_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get());

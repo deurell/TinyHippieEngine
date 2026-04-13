@@ -303,6 +303,11 @@ public:
       } else if (uniform.type == UniformValue::Type::Mat4) {
         auto matrix = uniform.mat4_value;
         pipeline.setMat4f(uniform.name, matrix);
+      } else if (uniform.type == UniformValue::Type::Mat4Array) {
+        if (!uniform.mat4_array_value.empty()) {
+          pipeline.setMat4Array(uniform.name, uniform.mat4_array_value.data(),
+                                uniform.mat4_array_value.size());
+        }
       } else if (uniform.type == UniformValue::Type::Vec2) {
         pipeline.setVec2f(uniform.name, uniform.vec2_value);
       } else if (uniform.type == UniformValue::Type::Vec3) {
@@ -310,12 +315,6 @@ public:
       } else if (uniform.type == UniformValue::Type::Vec4) {
         pipeline.setVec4f(uniform.name, uniform.vec4_value);
       }
-    }
-
-    pipeline.setInt("useSkinning", command.skinMatrices.empty() ? 0 : 1);
-    if (!command.skinMatrices.empty()) {
-      pipeline.setMat4Array("boneMatrices", command.skinMatrices.data(),
-                            command.skinMatrices.size());
     }
 
     glBindVertexArray(mesh.vao);

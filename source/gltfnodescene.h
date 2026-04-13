@@ -25,7 +25,6 @@ private:
   std::unique_ptr<DL::Camera> camera_;
   glm::vec3 cameraTarget_{0.0f, 2.5f, 0.0f};
   MeshNode *meshNode_ = nullptr;
-  bool animationEnabled_ = true;
   bool debugNormals_ = false;
   DL::MeshVisualizerSettings visualizerSettings_;
 };

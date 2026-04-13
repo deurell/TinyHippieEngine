@@ -15,7 +15,12 @@ void MeshNode::init() {
   initComponents();
 }
 
-void MeshNode::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
+void MeshNode::update(const DL::FrameContext &ctx) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->updateAnimation(ctx.delta_time);
+  }
+  SceneNode::update(ctx);
+}
 
 void MeshNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
@@ -42,16 +47,49 @@ void MeshNode::setVisualizerSettings(
   }
 }
 
-void MeshNode::setAnimationEnabled(bool enabled) {
+void MeshNode::setAnimationPlaying(bool playing) {
   if (meshVisualizer_ != nullptr) {
-    meshVisualizer_->setAnimationEnabled(enabled);
+    meshVisualizer_->setAnimationPlaying(playing);
   }
 }
 
-void MeshNode::setAnimationTime(float time) {
+bool MeshNode::isAnimationPlaying() const {
+  return meshVisualizer_ != nullptr && meshVisualizer_->isAnimationPlaying();
+}
+
+void MeshNode::setAnimationLooping(bool looping) {
   if (meshVisualizer_ != nullptr) {
-    meshVisualizer_->setAnimationTime(time);
+    meshVisualizer_->setAnimationLooping(looping);
   }
+}
+
+bool MeshNode::isAnimationLooping() const {
+  return meshVisualizer_ != nullptr && meshVisualizer_->isAnimationLooping();
+}
+
+void MeshNode::setAnimationPlaybackSpeed(float speed) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationPlaybackSpeed(speed);
+  }
+}
+
+float MeshNode::animationPlaybackSpeed() const {
+  return meshVisualizer_ != nullptr ? meshVisualizer_->animationPlaybackSpeed()
+                                    : 1.0f;
+}
+
+void MeshNode::setAnimationClipIndex(std::size_t index) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationClipIndex(index);
+  }
+}
+
+std::size_t MeshNode::animationClipIndex() const {
+  return meshVisualizer_ != nullptr ? meshVisualizer_->animationClipIndex() : 0u;
+}
+
+std::size_t MeshNode::animationClipCount() const {
+  return meshVisualizer_ != nullptr ? meshVisualizer_->animationClipCount() : 0u;
 }
 
 bool MeshNode::hasAnimations() const {

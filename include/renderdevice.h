@@ -77,7 +77,7 @@ struct TextureDesc {
 };
 
 struct UniformValue {
-  enum class Type { Int, Float, Mat4, Vec2, Vec3, Vec4 };
+  enum class Type { Int, Float, Mat4, Mat4Array, Vec2, Vec3, Vec4 };
 
   static UniformValue makeInt(std::string name, int value) {
     UniformValue uniform;
@@ -127,11 +127,21 @@ struct UniformValue {
     return uniform;
   }
 
+  static UniformValue makeMat4Array(std::string name,
+                                    std::vector<glm::mat4> values) {
+    UniformValue uniform;
+    uniform.name = std::move(name);
+    uniform.type = Type::Mat4Array;
+    uniform.mat4_array_value = std::move(values);
+    return uniform;
+  }
+
   std::string name;
   Type type = Type::Float;
   int int_value = 0;
   float float_value = 0.0f;
   glm::mat4 mat4_value = glm::mat4(1.0f);
+  std::vector<glm::mat4> mat4_array_value;
   glm::vec2 vec2_value = glm::vec2(0.0f);
   glm::vec3 vec3_value = glm::vec3(0.0f);
   glm::vec4 vec4_value = glm::vec4(0.0f);
@@ -142,7 +152,6 @@ struct DrawCommand {
   PipelineHandle pipeline;
   TextureHandle texture;
   BlendMode blendMode = BlendMode::Opaque;
-  std::vector<glm::mat4> skinMatrices;
   std::vector<UniformValue> uniforms;
 };
 

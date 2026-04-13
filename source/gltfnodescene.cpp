@@ -23,13 +23,8 @@ void GltfNodeScene::init() {
 
 void GltfNodeScene::update(const DL::FrameContext &ctx) {
   if (meshNode_ != nullptr) {
-    const glm::quat baseRotation =
-        glm::angleAxis(-glm::half_pi<float>(), glm::vec3(1.0f, 0.0f, 0.0f));
+    const glm::quat baseRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
     meshNode_->setLocalRotation(baseRotation);
-    meshNode_->setAnimationEnabled(animationEnabled_);
-    if (animationEnabled_ && meshNode_->hasAnimations()) {
-      meshNode_->setAnimationTime(static_cast<float>(ctx.total_time));
-    }
   }
   SceneNode::update(ctx);
 }
@@ -49,7 +44,14 @@ void GltfNodeScene::render(const DL::FrameContext &ctx) {
     meshNode_->setDebugNormals(debugNormals_);
   }
   if (meshNode_ != nullptr && meshNode_->hasAnimations()) {
-    ImGui::Checkbox("Play animation", &animationEnabled_);
+    bool playAnimation = meshNode_->isAnimationPlaying();
+    if (ImGui::Checkbox("Play animation", &playAnimation)) {
+      meshNode_->setAnimationPlaying(playAnimation);
+    }
+    float playbackSpeed = meshNode_->animationPlaybackSpeed();
+    if (ImGui::SliderFloat("Playback speed", &playbackSpeed, 0.0f, 2.0f)) {
+      meshNode_->setAnimationPlaybackSpeed(playbackSpeed);
+    }
   }
   bool changed = false;
   if (camera_ != nullptr) {

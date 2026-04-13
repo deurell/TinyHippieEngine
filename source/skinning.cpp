@@ -25,23 +25,42 @@ glm::mat4 localTransformForNode(const MeshAssetNode &node,
   return composeTransform(translation, rotation, scale);
 }
 
+glm::mat4 evaluateWorldTransformRecursive(
+    const MeshAsset &asset, const AnimationPose &pose, std::size_t nodeIndex,
+    std::vector<glm::mat4> &worldTransforms, std::vector<bool> &evaluated) {
+  if (evaluated[nodeIndex]) {
+    return worldTransforms[nodeIndex];
+  }
+
+  const auto &node = asset.nodes[nodeIndex];
+  const AnimatedNodeTransform *animated =
+      nodeIndex < pose.nodes.size() ? &pose.nodes[nodeIndex] : nullptr;
+  const glm::mat4 localTransform = localTransformForNode(node, animated);
+
+  if (node.parentIndex >= 0 &&
+      static_cast<std::size_t>(node.parentIndex) < asset.nodes.size()) {
+    worldTransforms[nodeIndex] =
+        evaluateWorldTransformRecursive(asset, pose,
+                                        static_cast<std::size_t>(node.parentIndex),
+                                        worldTransforms, evaluated) *
+        localTransform;
+  } else {
+    worldTransforms[nodeIndex] = localTransform;
+  }
+
+  evaluated[nodeIndex] = true;
+  return worldTransforms[nodeIndex];
+}
+
 } // namespace
 
 std::vector<glm::mat4> evaluateNodeWorldTransforms(const MeshAsset &asset,
                                                    const AnimationPose &pose) {
   std::vector<glm::mat4> worldTransforms(asset.nodes.size(), glm::mat4(1.0f));
+  std::vector<bool> evaluated(asset.nodes.size(), false);
   for (std::size_t nodeIndex = 0; nodeIndex < asset.nodes.size(); ++nodeIndex) {
-    const auto &node = asset.nodes[nodeIndex];
-    const AnimatedNodeTransform *animated =
-        nodeIndex < pose.nodes.size() ? &pose.nodes[nodeIndex] : nullptr;
-    const glm::mat4 localTransform = localTransformForNode(node, animated);
-    if (node.parentIndex >= 0 &&
-        static_cast<std::size_t>(node.parentIndex) < worldTransforms.size()) {
-      worldTransforms[nodeIndex] =
-          worldTransforms[static_cast<std::size_t>(node.parentIndex)] * localTransform;
-    } else {
-      worldTransforms[nodeIndex] = localTransform;
-    }
+    evaluateWorldTransformRecursive(asset, pose, nodeIndex, worldTransforms,
+                                    evaluated);
   }
   return worldTransforms;
 }

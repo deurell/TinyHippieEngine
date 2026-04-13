@@ -1,7 +1,7 @@
 #pragma once
 
+#include "animationplayer.h"
 #include "basisu_global_selector_palette.h"
-#include "animationclip.h"
 #include "meshasset.h"
 #include "renderdevice.h"
 #include "skinning.h"
@@ -34,10 +34,30 @@ public:
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
   void setSettings(const MeshVisualizerSettings &settings) { settings_ = settings; }
   [[nodiscard]] const MeshVisualizerSettings &settings() const { return settings_; }
-  void setAnimationEnabled(bool enabled) { animationEnabled_ = enabled; }
-  void setAnimationClipIndex(std::size_t index) { animationClipIndex_ = index; }
-  void setAnimationTime(float time) { animationTime_ = time; }
+  void updateAnimation(float deltaTime);
+  void setAnimationPlaying(bool playing) { animationPlayer_.setPlaying(playing); }
+  [[nodiscard]] bool isAnimationPlaying() const {
+    return animationPlayer_.isPlaying();
+  }
+  void setAnimationLooping(bool looping) { animationPlayer_.setLooping(looping); }
+  [[nodiscard]] bool isAnimationLooping() const {
+    return animationPlayer_.isLooping();
+  }
+  void setAnimationPlaybackSpeed(float speed) {
+    animationPlayer_.setPlaybackSpeed(speed);
+  }
+  [[nodiscard]] float animationPlaybackSpeed() const {
+    return animationPlayer_.playbackSpeed();
+  }
+  void setAnimationClipIndex(std::size_t index) { animationPlayer_.setClipIndex(index); }
+  [[nodiscard]] std::size_t animationClipIndex() const {
+    return animationPlayer_.clipIndex();
+  }
   [[nodiscard]] bool hasAnimations() const { return !asset_.animations.empty(); }
+  [[nodiscard]] std::size_t animationClipCount() const {
+    return asset_.animations.size();
+  }
+  [[nodiscard]] float animationTime() const { return animationPlayer_.time(); }
 
 private:
   struct GpuSubmesh {
@@ -61,9 +81,7 @@ private:
   std::vector<GpuSubmesh> submeshes_;
   bool debugNormals_ = false;
   MeshVisualizerSettings settings_;
-  bool animationEnabled_ = true;
-  std::size_t animationClipIndex_ = 0;
-  float animationTime_ = 0.0f;
+  AnimationPlayer animationPlayer_;
 };
 
 } // namespace DL

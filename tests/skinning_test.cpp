@@ -26,6 +26,23 @@ TEST(SkinningTest, EvaluatesAnimatedWorldTransforms) {
   EXPECT_FLOAT_EQ(worldTransforms[1][3].y, 2.0f);
 }
 
+TEST(SkinningTest, EvaluatesWorldTransformsWhenParentAppearsAfterChild) {
+  DL::MeshAsset asset;
+  asset.nodes.resize(2);
+  asset.nodes[0].parentIndex = 1;
+  asset.nodes[0].baseTranslation = {0.0f, 2.0f, 0.0f};
+  asset.nodes[1].parentIndex = -1;
+  asset.nodes[1].baseTranslation = {3.0f, 0.0f, 0.0f};
+
+  const auto pose = DL::makeAnimationPose(asset.nodes.size());
+  const auto worldTransforms = DL::evaluateNodeWorldTransforms(asset, pose);
+
+  ASSERT_EQ(worldTransforms.size(), 2u);
+  EXPECT_FLOAT_EQ(worldTransforms[0][3].x, 3.0f);
+  EXPECT_FLOAT_EQ(worldTransforms[0][3].y, 2.0f);
+  EXPECT_FLOAT_EQ(worldTransforms[1][3].x, 3.0f);
+}
+
 TEST(SkinningTest, ComputesBrainStemSkinMatrices) {
   const auto asset = DL::loadGltfMeshAsset("../Resources/BrainStem.glb");
   ASSERT_EQ(asset.skins.size(), 1u);

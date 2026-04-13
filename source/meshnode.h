@@ -27,8 +27,15 @@ public:
   [[nodiscard]] const DL::MeshVisualizerSettings &visualizerSettings() const {
     return visualizerSettings_;
   }
-  void setAnimationEnabled(bool enabled);
-  void setAnimationTime(float time);
+  void setAnimationPlaying(bool playing);
+  [[nodiscard]] bool isAnimationPlaying() const;
+  void setAnimationLooping(bool looping);
+  [[nodiscard]] bool isAnimationLooping() const;
+  void setAnimationPlaybackSpeed(float speed);
+  [[nodiscard]] float animationPlaybackSpeed() const;
+  void setAnimationClipIndex(std::size_t index);
+  [[nodiscard]] std::size_t animationClipIndex() const;
+  [[nodiscard]] std::size_t animationClipCount() const;
   [[nodiscard]] bool hasAnimations() const;
 
 private:

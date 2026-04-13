@@ -1,6 +1,7 @@
 #include "meshvisualizer.h"
 
 #include <cstdint>
+#include <unordered_map>
 
 namespace DL {
 
@@ -68,6 +69,10 @@ MeshVisualizer::~MeshVisualizer() {
   }
 }
 
+void MeshVisualizer::updateAnimation(float deltaTime) {
+  animationPlayer_.update(asset_.animations, deltaTime);
+}
+
 void MeshVisualizer::render(const glm::mat4 &worldTransform,
                             const DL::FrameContext &ctx) {
   if (renderDevice_ == nullptr || !pipeline_.valid()) {
@@ -80,9 +85,23 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
   model = glm::scale(model, extractScale(worldTransform));
 
   AnimationPose pose;
-  if (animationEnabled_ && animationClipIndex_ < asset_.animations.size()) {
+  if (!asset_.animations.empty() &&
+      animationPlayer_.clipIndex() < asset_.animations.size()) {
     pose = makeAnimationPose(asset_.nodes.size());
-    evaluateAnimationClip(asset_.animations[animationClipIndex_], animationTime_, pose);
+    evaluateAnimationClip(asset_.animations[animationPlayer_.clipIndex()],
+                          animationPlayer_.time(), pose);
+  }
+
+  std::unordered_map<int, std::vector<glm::mat4>> skinMatricesBySkin;
+  if (!pose.nodes.empty()) {
+    for (const auto &submesh : submeshes_) {
+      if (submesh.skinIndex < 0 ||
+          skinMatricesBySkin.contains(submesh.skinIndex)) {
+        continue;
+      }
+      skinMatricesBySkin.emplace(
+          submesh.skinIndex, computeSkinMatrices(asset_, submesh.skinIndex, pose));
+    }
   }
 
   for (const auto &submesh : submeshes_) {
@@ -94,10 +113,6 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     command.mesh = submesh.mesh;
     command.pipeline = pipeline_;
     command.texture = submesh.texture;
-    if (!pose.nodes.empty() && submesh.skinIndex >= 0) {
-      command.skinMatrices =
-          computeSkinMatrices(asset_, submesh.skinIndex, pose);
-    }
     command.uniforms.push_back(
         DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
     command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
@@ -129,6 +144,15 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     command.uniforms.push_back(
         DL::UniformValue::makeVec3(
             "ambientTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.ambientColor));
+    const auto skinMatrixIt = skinMatricesBySkin.find(submesh.skinIndex);
+    const bool useSkinning =
+        skinMatrixIt != skinMatricesBySkin.end() && !skinMatrixIt->second.empty();
+    command.uniforms.push_back(
+        DL::UniformValue::makeInt("useSkinning", useSkinning ? 1 : 0));
+    if (useSkinning) {
+      command.uniforms.push_back(
+          DL::UniformValue::makeMat4Array("boneMatrices", skinMatrixIt->second));
+    }
     command.uniforms.push_back(
         DL::UniformValue::makeInt("debugNormals", debugNormals_ ? 1 : 0));
     renderDevice_->draw(command);

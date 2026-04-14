@@ -35,16 +35,40 @@ void renderloop_callback(void *arg) {
 }
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mod);
+#endif
   if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onClick(button, action, mod);
   }
 }
 
+void cursorpos_callback(GLFWwindow *window, double x, double y) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_CursorPosCallback(window, x, y);
+#endif
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+#endif
+}
+
 void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+#endif
   if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onKey(key, scancode, action, mods);
   }
+}
+
+void char_callback(GLFWwindow *window, unsigned int c) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_CharCallback(window, c);
+#endif
 }
 
 void window_size_callback(GLFWwindow *window, int width, int height) {
@@ -103,7 +127,10 @@ int DL::App::run() {
 
   glfwSetWindowUserPointer(window_, this);
   glfwSetMouseButtonCallback(window_, mouseclick_callback);
+  glfwSetCursorPosCallback(window_, cursorpos_callback);
+  glfwSetScrollCallback(window_, scroll_callback);
   glfwSetKeyCallback(window_, keyclick_callback);
+  glfwSetCharCallback(window_, char_callback);
   glfwSetWindowSizeCallback(window_, window_size_callback);
   glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
 
@@ -132,7 +159,7 @@ int DL::App::run() {
   ImGuiIO &io = ImGui::GetIO();
   (void)io;
   applyDebugUiStyle();
-  ImGui_ImplGlfw_InitForOpenGL(window_, true);
+  ImGui_ImplGlfw_InitForOpenGL(window_, false);
   ImGui_ImplOpenGL3_Init(glslVersionString_.c_str());
 #endif
 

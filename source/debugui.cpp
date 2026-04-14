@@ -307,36 +307,64 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
     const float fps =
         frameTimeSeconds > 0.0 ? static_cast<float>(1.0 / frameTimeSeconds)
                                : 0.0f;
-    bool paused = app.simulationPaused();
-    if (ImGui::Checkbox("Pause fixed step", &paused)) {
-      app.setSimulationPaused(paused);
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Step")) {
-      app.requestSimulationStep();
-    }
-
+    constexpr ImGuiTreeNodeFlags sectionFlags = ImGuiTreeNodeFlags_DefaultOpen;
     const glm::vec2 windowSize = app.windowSize();
     const glm::vec2 framebufferSize = app.framebufferSize();
-    ImGui::Text("FPS %.1f", fps);
-    ImGui::Text("Frame %.2f ms", frameMs);
-    ImGui::Text("Fixed step %.2f ms", app.fixedTimeStep() * 1000.0f);
-    ImGui::Text("Fixed updates last frame %d", app.lastFixedUpdateCount());
-    ImGui::Separator();
-    ImGui::Text("Window %.0f x %.0f", windowSize.x, windowSize.y);
-    ImGui::Text("Framebuffer %.0f x %.0f", framebufferSize.x, framebufferSize.y);
-    ImGui::Separator();
-    ImGui::Text("Draw calls %u", renderStats.drawCalls);
-    ImGui::Text("Triangles %u", renderStats.triangles);
-    ImGui::Text("Meshes %u", renderStats.meshCount);
-    ImGui::Text("Textures %u", renderStats.textureCount);
-    ImGui::Text("Pipelines %u", renderStats.pipelineCount);
-    ImGui::Separator();
-    ImGui::Text("Audio clips %zu", app.audioSystem().loadedClipCount());
-    ImGui::Text("Audio sounds %zu", app.audioSystem().activeSoundCount());
-    float masterVolume = app.audioSystem().masterVolume();
-    if (ImGui::SliderFloat("Master volume", &masterVolume, 0.0f, 2.0f, "%.2f")) {
-      app.audioSystem().setMasterVolume(masterVolume);
+
+    if (ImGui::CollapsingHeader("Timing", sectionFlags)) {
+      bool paused = app.simulationPaused();
+      if (ImGui::Checkbox("Pause fixed step", &paused)) {
+        app.setSimulationPaused(paused);
+      }
+      ImGui::SameLine();
+      if (ImGui::Button("Step")) {
+        app.requestSimulationStep();
+      }
+      ImGui::Text("FPS %.1f", fps);
+      ImGui::Text("Frame %.2f ms", frameMs);
+      ImGui::Text("Fixed step %.2f ms", app.fixedTimeStep() * 1000.0f);
+      ImGui::Text("Fixed updates last frame %d", app.lastFixedUpdateCount());
+    }
+
+    if (ImGui::CollapsingHeader("Window", sectionFlags)) {
+      ImGui::Text("Window %.0f x %.0f", windowSize.x, windowSize.y);
+      ImGui::Text("Framebuffer %.0f x %.0f", framebufferSize.x,
+                  framebufferSize.y);
+    }
+
+    if (ImGui::CollapsingHeader("Rendering", sectionFlags)) {
+      ImGui::Text("Draw calls %u", renderStats.drawCalls);
+      ImGui::Text("Triangles %u", renderStats.triangles);
+      ImGui::Text("Meshes %u", renderStats.meshCount);
+      ImGui::Text("Textures %u", renderStats.textureCount);
+      ImGui::Text("Pipelines %u", renderStats.pipelineCount);
+    }
+
+    if (ImGui::CollapsingHeader("Audio", sectionFlags)) {
+      ImGui::Text("Audio clips %zu", app.audioSystem().loadedClipCount());
+      ImGui::Text("Audio sounds %zu", app.audioSystem().activeSoundCount());
+      float masterVolume = app.audioSystem().masterVolume();
+      if (ImGui::SliderFloat("Master volume", &masterVolume, 0.0f, 2.0f,
+                             "%.2f")) {
+        app.audioSystem().setMasterVolume(masterVolume);
+      }
+      ImGui::TextUnformatted("Audio groups");
+      for (int i = 0; i < static_cast<int>(DL::AudioGroup::Count); ++i) {
+        const auto group = static_cast<DL::AudioGroup>(i);
+        ImGui::PushID(i);
+        bool muted = app.audioSystem().isGroupMuted(group);
+        if (ImGui::Checkbox("Mute", &muted)) {
+          app.audioSystem().setGroupMuted(group, muted);
+        }
+        ImGui::SameLine();
+        ImGui::Text("%s (%zu)", DL::AudioSystem::groupLabel(group),
+                    app.audioSystem().activeSoundCount(group));
+        float groupVolume = app.audioSystem().groupVolume(group);
+        if (ImGui::SliderFloat("Volume", &groupVolume, 0.0f, 2.0f, "%.2f")) {
+          app.audioSystem().setGroupVolume(group, groupVolume);
+        }
+        ImGui::PopID();
+      }
     }
   }
   ImGui::End();

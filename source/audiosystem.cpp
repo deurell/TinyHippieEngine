@@ -19,6 +19,12 @@ bool AudioSystem::init() {
     return false;
   }
 
+  if (!initGroups()) {
+    ma_engine_uninit(&engine_);
+    LogError("Failed to initialize audio groups");
+    return false;
+  }
+
   initialized_ = true;
   setMasterVolume(masterVolume_);
   LogInfo("Audio engine initialized");
@@ -31,9 +37,11 @@ void AudioSystem::shutdown() {
   }
 
   stopAll();
+  uninitGroups();
   ma_engine_uninit(&engine_);
   initialized_ = false;
   clips_.clear();
+  nextSoundId_ = 1;
   LogInfo("Audio engine shut down");
 }
 
@@ -61,13 +69,15 @@ bool AudioSystem::hasClip(const std::string &name) const {
 }
 
 AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
+                                              AudioGroup group,
                                               float volume) {
-  return playInternal(name, false, volume);
+  return playInternal(name, group, false, volume);
 }
 
 AudioSystem::SoundId AudioSystem::playLoop(const std::string &name,
+                                           AudioGroup group,
                                            float volume) {
-  return playInternal(name, true, volume);
+  return playInternal(name, group, true, volume);
 }
 
 void AudioSystem::stop(SoundId id) {
@@ -98,9 +108,79 @@ void AudioSystem::setMasterVolume(float volume) {
   }
 }
 
+void AudioSystem::setGroupVolume(AudioGroup group, float volume) {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return;
+  }
+
+  groupStates_[index].volume = std::max(0.0f, volume);
+  applyGroupGain(group);
+}
+
+float AudioSystem::groupVolume(AudioGroup group) const {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return 1.0f;
+  }
+  return groupStates_[index].volume;
+}
+
+void AudioSystem::setGroupMuted(AudioGroup group, bool muted) {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return;
+  }
+
+  groupStates_[index].muted = muted;
+  applyGroupGain(group);
+}
+
+bool AudioSystem::isGroupMuted(AudioGroup group) const {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return false;
+  }
+  return groupStates_[index].muted;
+}
+
+const char *AudioSystem::groupLabel(AudioGroup group) {
+  switch (group) {
+  case AudioGroup::Music:
+    return "Music";
+  case AudioGroup::SFX:
+    return "SFX";
+  case AudioGroup::UI:
+    return "UI";
+  case AudioGroup::Ambience:
+    return "Ambience";
+  case AudioGroup::Count:
+    break;
+  }
+  return "Unknown";
+}
+
+std::size_t AudioSystem::activeSoundCount(AudioGroup group) const {
+  std::size_t count = 0;
+  for (const auto &entry : activeSounds_) {
+    if (entry.second.group == group) {
+      ++count;
+    }
+  }
+  return count;
+}
+
 AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
-                                               bool loop, float volume) {
+                                               AudioGroup group,
+                                               bool loop,
+                                               float volume) {
   if (!initialized_ && !init()) {
+    return kInvalidSoundId;
+  }
+
+  const std::size_t groupIndex = toGroupIndex(group);
+  if (groupIndex >= kGroupCount || !groupStates_[groupIndex].initialized) {
+    LogError("Audio group unavailable", groupLabel(group));
     return kInvalidSoundId;
   }
 
@@ -113,8 +193,9 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
   cleanupFinishedSounds();
 
   auto sound = std::make_unique<ma_sound>();
-  if (ma_sound_init_from_file(&engine_, clipIt->second.c_str(), 0, nullptr,
-                              nullptr, sound.get()) != MA_SUCCESS) {
+  if (ma_sound_init_from_file(&engine_, clipIt->second.c_str(), 0,
+                              &groupStates_[groupIndex].soundGroup, nullptr,
+                              sound.get()) != MA_SUCCESS) {
     LogError("Unable to create sound", clipIt->second);
     return kInvalidSoundId;
   }
@@ -129,8 +210,57 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
   }
 
   const SoundId soundId = nextSoundId_++;
-  activeSounds_[soundId] = {std::move(sound), loop};
+  activeSounds_[soundId] = {std::move(sound), loop, group};
   return soundId;
+}
+
+bool AudioSystem::initGroups() {
+  for (std::size_t i = 0; i < kGroupCount; ++i) {
+    auto &state = groupStates_[i];
+    if (ma_sound_group_init(&engine_, 0, nullptr, &state.soundGroup) !=
+        MA_SUCCESS) {
+      for (std::size_t j = 0; j < i; ++j) {
+        if (groupStates_[j].initialized) {
+          ma_sound_group_uninit(&groupStates_[j].soundGroup);
+          groupStates_[j].initialized = false;
+        }
+      }
+      return false;
+    }
+    state.initialized = true;
+    applyGroupGain(static_cast<AudioGroup>(i));
+  }
+  return true;
+}
+
+void AudioSystem::uninitGroups() {
+  for (std::size_t i = 0; i < kGroupCount; ++i) {
+    auto &state = groupStates_[i];
+    if (!state.initialized) {
+      continue;
+    }
+    ma_sound_group_uninit(&state.soundGroup);
+    state.initialized = false;
+  }
+}
+
+void AudioSystem::applyGroupGain(AudioGroup group) {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return;
+  }
+
+  auto &state = groupStates_[index];
+  if (!state.initialized) {
+    return;
+  }
+
+  const float gain = state.muted ? 0.0f : state.volume;
+  ma_sound_group_set_volume(&state.soundGroup, gain);
+}
+
+std::size_t AudioSystem::toGroupIndex(AudioGroup group) {
+  return static_cast<std::size_t>(group);
 }
 
 void AudioSystem::cleanupFinishedSounds() {

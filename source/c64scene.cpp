@@ -32,7 +32,7 @@ void C64Scene::init() {
   }
   if (audioSystem_ != nullptr) {
     audioSystem_->loadClip(kAudioUnlock, "Resources/unlock.wav");
-    audioSystem_->playOneShot(kAudioUnlock);
+    audioSystem_->playOneShot(kAudioUnlock, DL::AudioGroup::SFX);
   }
   pipeline_ = renderDevice_->createPipeline("Shaders/c64.vert",
                                             "Shaders/c64.frag",

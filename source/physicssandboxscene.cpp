@@ -26,6 +26,7 @@ void PhysicsSandboxScene::init() {
                           .ambient = {0.18f, 0.18f, 0.2f},
                           .specular = {0.08f, 0.08f, 0.08f},
                           .shininess = 6.0f});
+  floor->setDebugName("Floor");
   addPhysicsBody(*floor, {.type = DL::PhysicsBodyType::Static,
                           .shape = DL::PhysicsShapeDesc::makeBox(
                               {6.0f, 0.5f, 6.0f}),
@@ -37,6 +38,7 @@ void PhysicsSandboxScene::init() {
                          .ambient = {0.28f, 0.16f, 0.12f},
                          .specular = {0.25f, 0.25f, 0.25f},
                          .shininess = 20.0f});
+  cube->setDebugName("Dynamic Cube");
   addPhysicsBody(*cube, {.type = DL::PhysicsBodyType::Dynamic,
                          .shape = DL::PhysicsShapeDesc::makeBox(
                              {0.6f, 0.6f, 0.6f}),
@@ -48,6 +50,7 @@ void PhysicsSandboxScene::init() {
                            .ambient = {0.14f, 0.22f, 0.28f},
                            .specular = {0.4f, 0.45f, 0.5f},
                            .shininess = 28.0f});
+  sphere->setDebugName("Dynamic Sphere");
   addPhysicsBody(*sphere, {.type = DL::PhysicsBodyType::Dynamic,
                            .shape = DL::PhysicsShapeDesc::makeSphere(0.5f),
                            .position = sphere->getLocalPosition()});
@@ -58,6 +61,7 @@ void PhysicsSandboxScene::init() {
                                  .ambient = {0.05f, 0.3f, 0.1f},
                                  .specular = {0.2f, 0.2f, 0.2f},
                                  .shininess = 12.0f});
+  raycastMarkerNode_->setDebugName("Raycast Marker");
 }
 
 void PhysicsSandboxScene::update(const DL::FrameContext &ctx) {

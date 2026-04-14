@@ -9,7 +9,7 @@ A tiny cross-platform demo engine for experimenting with GL/ImGui scenes on macO
 
 ## Requirements
 - CMake ≥ 3.15, Ninja/Make, a C++20 compiler (Clang/GCC/MSVC).
-- For Web builds you’ll need the Emscripten SDK; set `EMS` to the path containing `emscripten.cmake`.
+- For Web builds you’ll need the Emscripten SDK; set `EMS` to either your emsdk root or the direct `upstream/emscripten` directory.
 
 ## Building
 
@@ -21,7 +21,7 @@ CONFIG=Debug scripts/build_desktop.sh   # change build type
 
 ### WebAssembly (WebGL2)
 ```bash
-export EMS="$HOME/emsdk/upstream/emscripten"
+export EMS="$HOME/emsdk"   # or "$HOME/emsdk/upstream/emscripten"
 scripts/build_web.sh                    # emits web/tiny_hippie_engine.html
 ```
 Serve `web/` via `python -m http.server` and open the HTML to run in a browser.

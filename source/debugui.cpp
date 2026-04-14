@@ -11,6 +11,7 @@ namespace DL {
 
 namespace {
 bool frameStarted = false;
+constexpr float kOverlayAlpha = 0.72f;
 
 const char *levelLabel(LogLevel level) {
   switch (level) {
@@ -56,6 +57,48 @@ LogLevel levelFromIndex(int index) {
 }
 }
 
+void applyDebugUiStyle() {
+#ifdef USE_IMGUI
+  ImGui::StyleColorsLight();
+
+  ImGuiStyle &style = ImGui::GetStyle();
+  style.WindowRounding = 10.0f;
+  style.ChildRounding = 8.0f;
+  style.FrameRounding = 6.0f;
+  style.PopupRounding = 8.0f;
+  style.GrabRounding = 6.0f;
+  style.ScrollbarRounding = 8.0f;
+  style.WindowBorderSize = 1.0f;
+  style.FrameBorderSize = 0.0f;
+
+  ImVec4 *colors = style.Colors;
+  colors[ImGuiCol_WindowBg] = ImVec4(0.97f, 0.98f, 0.99f, kOverlayAlpha);
+  colors[ImGuiCol_ChildBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.18f);
+  colors[ImGuiCol_PopupBg] = ImVec4(0.98f, 0.98f, 0.99f, 0.90f);
+  colors[ImGuiCol_Border] = ImVec4(0.68f, 0.74f, 0.80f, 0.55f);
+  colors[ImGuiCol_TitleBg] = ImVec4(0.89f, 0.92f, 0.96f, 0.76f);
+  colors[ImGuiCol_TitleBgActive] = ImVec4(0.82f, 0.88f, 0.95f, 0.88f);
+  colors[ImGuiCol_MenuBarBg] = ImVec4(0.92f, 0.95f, 0.98f, 0.80f);
+  colors[ImGuiCol_FrameBg] = ImVec4(1.0f, 1.0f, 1.0f, 0.68f);
+  colors[ImGuiCol_FrameBgHovered] = ImVec4(0.80f, 0.88f, 0.96f, 0.78f);
+  colors[ImGuiCol_FrameBgActive] = ImVec4(0.74f, 0.84f, 0.95f, 0.86f);
+  colors[ImGuiCol_Header] = ImVec4(0.70f, 0.82f, 0.94f, 0.42f);
+  colors[ImGuiCol_HeaderHovered] = ImVec4(0.55f, 0.75f, 0.95f, 0.66f);
+  colors[ImGuiCol_HeaderActive] = ImVec4(0.48f, 0.71f, 0.94f, 0.82f);
+  colors[ImGuiCol_Button] = ImVec4(0.52f, 0.74f, 0.96f, 0.54f);
+  colors[ImGuiCol_ButtonHovered] = ImVec4(0.40f, 0.67f, 0.94f, 0.78f);
+  colors[ImGuiCol_ButtonActive] = ImVec4(0.34f, 0.61f, 0.90f, 0.88f);
+  colors[ImGuiCol_ScrollbarBg] = ImVec4(0.86f, 0.90f, 0.95f, 0.30f);
+  colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.56f, 0.67f, 0.78f, 0.55f);
+  colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.46f, 0.60f, 0.76f, 0.72f);
+  colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.40f, 0.54f, 0.72f, 0.86f);
+  colors[ImGuiCol_Separator] = ImVec4(0.67f, 0.73f, 0.80f, 0.45f);
+  colors[ImGuiCol_ResizeGrip] = ImVec4(0.49f, 0.67f, 0.88f, 0.28f);
+  colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.41f, 0.63f, 0.89f, 0.58f);
+  colors[ImGuiCol_ResizeGripActive] = ImVec4(0.35f, 0.58f, 0.85f, 0.80f);
+#endif
+}
+
 void beginDebugUiFrame() {
 #ifdef USE_IMGUI
   if (frameStarted) {
@@ -79,7 +122,7 @@ void drawFrameStatsOverlay(double frameTimeSeconds,
 #ifdef USE_IMGUI
   beginDebugUiFrame();
 
-  ImGui::SetNextWindowBgAlpha(0.92f);
+  ImGui::SetNextWindowBgAlpha(kOverlayAlpha);
   ImGui::SetNextWindowPos(ImVec2(12.0f, 12.0f), ImGuiCond_FirstUseEver);
   ImGui::SetNextWindowSize(ImVec2(0.0f, 0.0f), ImGuiCond_FirstUseEver);
   ImGuiWindowFlags flags =
@@ -114,6 +157,7 @@ void drawLogWindow() {
     return;
   }
 
+  ImGui::SetNextWindowBgAlpha(kOverlayAlpha);
   ImGui::SetNextWindowSize(ImVec2(620.0f, 280.0f), ImGuiCond_FirstUseEver);
   if (!ImGui::Begin("Logs", &visible)) {
     ImGui::End();

@@ -4,6 +4,7 @@
 
 namespace DL {
 
+void applyDebugUiStyle();
 void beginDebugUiFrame();
 void endDebugUiFrame();
 void drawFrameStatsOverlay(double frameTimeSeconds,

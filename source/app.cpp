@@ -130,7 +130,8 @@ int DL::App::run() {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
-  ImGui::StyleColorsLight();
+  (void)io;
+  applyDebugUiStyle();
   ImGui_ImplGlfw_InitForOpenGL(window_, true);
   ImGui_ImplOpenGL3_Init(glslVersionString_.c_str());
 #endif

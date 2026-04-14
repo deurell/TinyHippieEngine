@@ -13,8 +13,6 @@ namespace DL {
 enum class AudioGroup : std::uint8_t {
   Music = 0,
   SFX,
-  UI,
-  Ambience,
   Count
 };
 

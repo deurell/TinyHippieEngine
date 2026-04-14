@@ -150,10 +150,6 @@ const char *AudioSystem::groupLabel(AudioGroup group) {
     return "Music";
   case AudioGroup::SFX:
     return "SFX";
-  case AudioGroup::UI:
-    return "UI";
-  case AudioGroup::Ambience:
-    return "Ambience";
   case AudioGroup::Count:
     break;
   }

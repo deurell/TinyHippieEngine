@@ -7,6 +7,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace DL {
 
@@ -33,7 +34,8 @@ public:
   void shutdown();
   [[nodiscard]] bool isInitialized() const { return initialized_; }
 
-  bool loadClip(const std::string &name, const std::string &fileName);
+  bool loadClip(const std::string &name, const std::string &fileName,
+                std::size_t oneShotPoolSize = 8);
   [[nodiscard]] bool hasClip(const std::string &name) const;
 
   SoundId playOneShot(const std::string &name,
@@ -52,6 +54,8 @@ public:
   [[nodiscard]] float groupVolume(AudioGroup group) const;
   void setGroupMuted(AudioGroup group, bool muted);
   [[nodiscard]] bool isGroupMuted(AudioGroup group) const;
+  void setGroupVoiceLimit(AudioGroup group, std::size_t maxVoices);
+  [[nodiscard]] std::size_t groupVoiceLimit(AudioGroup group) const;
 
   [[nodiscard]] static const char *groupLabel(AudioGroup group);
   [[nodiscard]] float masterVolume() const { return masterVolume_; }
@@ -62,6 +66,9 @@ public:
   [[nodiscard]] std::size_t activeSoundCount(AudioGroup group) const;
 
 private:
+  static constexpr std::size_t kInvalidClipVoiceIndex =
+      static_cast<std::size_t>(-1);
+
   struct GroupState {
     ma_sound_group soundGroup{};
     bool initialized = false;
@@ -69,17 +76,39 @@ private:
     bool muted = false;
   };
 
-  struct ActiveSound {
+  struct ClipVoice {
     std::unique_ptr<ma_sound> sound;
-    bool looping = false;
-    AudioGroup group = AudioGroup::SFX;
+    SoundId activeSoundId = kInvalidSoundId;
   };
 
+  struct ClipData {
+    std::string fileName;
+    std::vector<ClipVoice> sfxPool;
+    std::size_t nextSfxPoolIndex = 0;
+  };
+
+  struct ActiveSound {
+    std::unique_ptr<ma_sound> ownedSound;
+    ma_sound *sound = nullptr;
+    bool looping = false;
+    AudioGroup group = AudioGroup::SFX;
+    std::string clipName;
+    std::size_t clipVoiceIndex = kInvalidClipVoiceIndex;
+    std::uint64_t startOrdinal = 0;
+  };
+
+  SoundId playPooledSfxOneShot(const std::string &clipName,
+                               ClipData &clip,
+                               float volume);
   SoundId playInternal(const std::string &name, AudioGroup group, bool loop,
                        float volume);
   bool initGroups();
   void uninitGroups();
   void applyGroupGain(AudioGroup group);
+  bool ensureSfxPool(ClipData &clip, std::size_t desiredSize);
+  bool enforceGroupVoiceLimit(AudioGroup group);
+  void releaseActiveSoundResources(ActiveSound &activeSound);
+  void removeActiveSound(SoundId id);
   [[nodiscard]] static std::size_t toGroupIndex(AudioGroup group);
   void cleanupFinishedSounds();
 
@@ -87,8 +116,10 @@ private:
   bool initialized_ = false;
   float masterVolume_ = 1.0f;
   SoundId nextSoundId_ = 1;
+  std::uint64_t soundOrdinalCounter_ = 1;
   std::array<GroupState, kGroupCount> groupStates_{};
-  std::map<std::string, std::string> clips_;
+  std::array<std::size_t, kGroupCount> groupVoiceLimits_ = {1, 32};
+  std::map<std::string, ClipData> clips_;
   std::map<SoundId, ActiveSound> activeSounds_;
 };
 

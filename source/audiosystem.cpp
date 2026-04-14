@@ -4,6 +4,7 @@
 #include "audiosystem.h"
 #include "logger.h"
 #include <algorithm>
+#include <limits>
 
 namespace DL {
 
@@ -37,15 +38,26 @@ void AudioSystem::shutdown() {
   }
 
   stopAll();
+  for (auto &[name, clip] : clips_) {
+    for (auto &voice : clip.sfxPool) {
+      if (voice.sound) {
+        ma_sound_uninit(voice.sound.get());
+      }
+      voice.activeSoundId = kInvalidSoundId;
+    }
+  }
+  clips_.clear();
+
   uninitGroups();
   ma_engine_uninit(&engine_);
   initialized_ = false;
-  clips_.clear();
   nextSoundId_ = 1;
+  soundOrdinalCounter_ = 1;
   LogInfo("Audio engine shut down");
 }
 
-bool AudioSystem::loadClip(const std::string &name, const std::string &fileName) {
+bool AudioSystem::loadClip(const std::string &name, const std::string &fileName,
+                           std::size_t oneShotPoolSize) {
   if (name.empty() || fileName.empty()) {
     LogWarn("Audio clip load ignored", "empty clip name or path");
     return false;
@@ -55,12 +67,28 @@ bool AudioSystem::loadClip(const std::string &name, const std::string &fileName)
     return false;
   }
 
-  auto it = clips_.find(name);
-  if (it != clips_.end()) {
+  auto existing = clips_.find(name);
+  if (existing != clips_.end()) {
+    if (existing->second.fileName != fileName) {
+      LogWarn("Audio clip already loaded with different file", name);
+    }
+    if (oneShotPoolSize > existing->second.sfxPool.size() &&
+        !ensureSfxPool(existing->second, oneShotPoolSize)) {
+      return false;
+    }
     return true;
   }
 
-  clips_[name] = fileName;
+  ClipData clip;
+  clip.fileName = fileName;
+  auto [it, inserted] = clips_.emplace(name, std::move(clip));
+  if (!inserted) {
+    return false;
+  }
+  if (!ensureSfxPool(it->second, oneShotPoolSize)) {
+    clips_.erase(it);
+    return false;
+  }
   return true;
 }
 
@@ -71,6 +99,20 @@ bool AudioSystem::hasClip(const std::string &name) const {
 AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
                                               AudioGroup group,
                                               float volume) {
+  if (!initialized_ && !init()) {
+    return kInvalidSoundId;
+  }
+
+  const auto clipIt = clips_.find(name);
+  if (clipIt == clips_.end()) {
+    LogWarn("Audio clip not loaded", name);
+    return kInvalidSoundId;
+  }
+
+  cleanupFinishedSounds();
+  if (group == AudioGroup::SFX) {
+    return playPooledSfxOneShot(name, clipIt->second, volume);
+  }
   return playInternal(name, group, false, volume);
 }
 
@@ -80,23 +122,12 @@ AudioSystem::SoundId AudioSystem::playLoop(const std::string &name,
   return playInternal(name, group, true, volume);
 }
 
-void AudioSystem::stop(SoundId id) {
-  auto it = activeSounds_.find(id);
-  if (it == activeSounds_.end()) {
-    return;
-  }
-
-  ma_sound_stop(it->second.sound.get());
-  ma_sound_uninit(it->second.sound.get());
-  activeSounds_.erase(it);
-}
+void AudioSystem::stop(SoundId id) { removeActiveSound(id); }
 
 void AudioSystem::stopAll() {
-  for (auto &entry : activeSounds_) {
-    ma_sound_stop(entry.second.sound.get());
-    ma_sound_uninit(entry.second.sound.get());
+  while (!activeSounds_.empty()) {
+    removeActiveSound(activeSounds_.begin()->first);
   }
-  activeSounds_.clear();
 }
 
 void AudioSystem::update() { cleanupFinishedSounds(); }
@@ -144,6 +175,22 @@ bool AudioSystem::isGroupMuted(AudioGroup group) const {
   return groupStates_[index].muted;
 }
 
+void AudioSystem::setGroupVoiceLimit(AudioGroup group, std::size_t maxVoices) {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return;
+  }
+  groupVoiceLimits_[index] = maxVoices;
+}
+
+std::size_t AudioSystem::groupVoiceLimit(AudioGroup group) const {
+  const std::size_t index = toGroupIndex(group);
+  if (index >= kGroupCount) {
+    return 0;
+  }
+  return groupVoiceLimits_[index];
+}
+
 const char *AudioSystem::groupLabel(AudioGroup group) {
   switch (group) {
   case AudioGroup::Music:
@@ -158,12 +205,77 @@ const char *AudioSystem::groupLabel(AudioGroup group) {
 
 std::size_t AudioSystem::activeSoundCount(AudioGroup group) const {
   std::size_t count = 0;
-  for (const auto &entry : activeSounds_) {
-    if (entry.second.group == group) {
+  for (const auto &[id, active] : activeSounds_) {
+    if (active.group == group) {
       ++count;
     }
   }
   return count;
+}
+
+AudioSystem::SoundId AudioSystem::playPooledSfxOneShot(const std::string &clipName,
+                                                       ClipData &clip,
+                                                       float volume) {
+  if (clip.sfxPool.empty()) {
+    return playInternal(clipName, AudioGroup::SFX, false, volume);
+  }
+
+  if (!enforceGroupVoiceLimit(AudioGroup::SFX)) {
+    LogWarn("SFX voice limit reached", clipName);
+    return kInvalidSoundId;
+  }
+
+  const std::size_t poolSize = clip.sfxPool.size();
+  std::size_t selected = kInvalidClipVoiceIndex;
+  for (std::size_t offset = 0; offset < poolSize; ++offset) {
+    const std::size_t index = (clip.nextSfxPoolIndex + offset) % poolSize;
+    const SoundId activeId = clip.sfxPool[index].activeSoundId;
+    if (activeId == kInvalidSoundId) {
+      selected = index;
+      break;
+    }
+    if (activeSounds_.find(activeId) == activeSounds_.end()) {
+      clip.sfxPool[index].activeSoundId = kInvalidSoundId;
+      selected = index;
+      break;
+    }
+  }
+
+  if (selected == kInvalidClipVoiceIndex) {
+    selected = clip.nextSfxPoolIndex % poolSize;
+    const SoundId stealId = clip.sfxPool[selected].activeSoundId;
+    if (stealId != kInvalidSoundId) {
+      removeActiveSound(stealId);
+    }
+  }
+  clip.nextSfxPoolIndex = (selected + 1) % poolSize;
+
+  auto &voice = clip.sfxPool[selected];
+  if (!voice.sound) {
+    return kInvalidSoundId;
+  }
+
+  ma_sound_stop(voice.sound.get());
+  ma_sound_seek_to_pcm_frame(voice.sound.get(), 0);
+  ma_sound_set_looping(voice.sound.get(), MA_FALSE);
+  ma_sound_set_volume(voice.sound.get(), std::max(0.0f, volume));
+  if (ma_sound_start(voice.sound.get()) != MA_SUCCESS) {
+    LogError("Unable to start pooled sound", clip.fileName);
+    return kInvalidSoundId;
+  }
+
+  const SoundId soundId = nextSoundId_++;
+  voice.activeSoundId = soundId;
+
+  ActiveSound active;
+  active.sound = voice.sound.get();
+  active.looping = false;
+  active.group = AudioGroup::SFX;
+  active.clipName = clipName;
+  active.clipVoiceIndex = selected;
+  active.startOrdinal = soundOrdinalCounter_++;
+  activeSounds_[soundId] = std::move(active);
+  return soundId;
 }
 
 AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
@@ -187,26 +299,35 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
   }
 
   cleanupFinishedSounds();
+  if (!enforceGroupVoiceLimit(group)) {
+    LogWarn("Audio group voice limit reached", groupLabel(group));
+    return kInvalidSoundId;
+  }
 
   auto sound = std::make_unique<ma_sound>();
-  if (ma_sound_init_from_file(&engine_, clipIt->second.c_str(), 0,
+  if (ma_sound_init_from_file(&engine_, clipIt->second.fileName.c_str(), 0,
                               &groupStates_[groupIndex].soundGroup, nullptr,
                               sound.get()) != MA_SUCCESS) {
-    LogError("Unable to create sound", clipIt->second);
+    LogError("Unable to create sound", clipIt->second.fileName);
     return kInvalidSoundId;
   }
 
   ma_sound_set_looping(sound.get(), loop ? MA_TRUE : MA_FALSE);
   ma_sound_set_volume(sound.get(), std::max(0.0f, volume));
-
   if (ma_sound_start(sound.get()) != MA_SUCCESS) {
-    LogError("Unable to start sound", clipIt->second);
+    LogError("Unable to start sound", clipIt->second.fileName);
     ma_sound_uninit(sound.get());
     return kInvalidSoundId;
   }
 
   const SoundId soundId = nextSoundId_++;
-  activeSounds_[soundId] = {std::move(sound), loop, group};
+  ActiveSound active;
+  active.ownedSound = std::move(sound);
+  active.sound = active.ownedSound.get();
+  active.looping = loop;
+  active.group = group;
+  active.startOrdinal = soundOrdinalCounter_++;
+  activeSounds_[soundId] = std::move(active);
   return soundId;
 }
 
@@ -255,15 +376,130 @@ void AudioSystem::applyGroupGain(AudioGroup group) {
   ma_sound_group_set_volume(&state.soundGroup, gain);
 }
 
+bool AudioSystem::ensureSfxPool(ClipData &clip, std::size_t desiredSize) {
+  const std::size_t sfxIndex = toGroupIndex(AudioGroup::SFX);
+  if (sfxIndex >= kGroupCount || !groupStates_[sfxIndex].initialized) {
+    return false;
+  }
+  if (desiredSize == 0 || clip.sfxPool.size() >= desiredSize) {
+    return true;
+  }
+
+  const std::size_t oldSize = clip.sfxPool.size();
+  clip.sfxPool.reserve(desiredSize);
+  for (std::size_t i = oldSize; i < desiredSize; ++i) {
+    ClipVoice voice;
+    voice.sound = std::make_unique<ma_sound>();
+    if (ma_sound_init_from_file(&engine_, clip.fileName.c_str(), 0,
+                                &groupStates_[sfxIndex].soundGroup, nullptr,
+                                voice.sound.get()) != MA_SUCCESS) {
+      LogError("Unable to initialize pooled SFX voice", clip.fileName);
+      if (voice.sound) {
+        ma_sound_uninit(voice.sound.get());
+      }
+      for (std::size_t rollback = oldSize; rollback < clip.sfxPool.size();
+           ++rollback) {
+        if (clip.sfxPool[rollback].sound) {
+          ma_sound_uninit(clip.sfxPool[rollback].sound.get());
+        }
+      }
+      clip.sfxPool.resize(oldSize);
+      return false;
+    }
+    ma_sound_set_looping(voice.sound.get(), MA_FALSE);
+    ma_sound_stop(voice.sound.get());
+    clip.sfxPool.push_back(std::move(voice));
+  }
+  if (clip.nextSfxPoolIndex >= clip.sfxPool.size()) {
+    clip.nextSfxPoolIndex = 0;
+  }
+  return true;
+}
+
+bool AudioSystem::enforceGroupVoiceLimit(AudioGroup group) {
+  const std::size_t groupIndex = toGroupIndex(group);
+  if (groupIndex >= kGroupCount) {
+    return false;
+  }
+
+  const std::size_t limit = groupVoiceLimits_[groupIndex];
+  if (limit == 0) {
+    return false;
+  }
+
+  while (activeSoundCount(group) >= limit) {
+    SoundId candidate = kInvalidSoundId;
+    std::uint64_t oldest = std::numeric_limits<std::uint64_t>::max();
+    for (const auto &[id, active] : activeSounds_) {
+      if (active.group != group || active.looping) {
+        continue;
+      }
+      if (active.startOrdinal < oldest) {
+        oldest = active.startOrdinal;
+        candidate = id;
+      }
+    }
+    if (candidate == kInvalidSoundId) {
+      oldest = std::numeric_limits<std::uint64_t>::max();
+      for (const auto &[id, active] : activeSounds_) {
+        if (active.group != group) {
+          continue;
+        }
+        if (active.startOrdinal < oldest) {
+          oldest = active.startOrdinal;
+          candidate = id;
+        }
+      }
+    }
+    if (candidate == kInvalidSoundId) {
+      return false;
+    }
+    removeActiveSound(candidate);
+  }
+
+  return true;
+}
+
+void AudioSystem::releaseActiveSoundResources(ActiveSound &activeSound) {
+  if (activeSound.sound == nullptr) {
+    return;
+  }
+
+  ma_sound_stop(activeSound.sound);
+  if (activeSound.clipVoiceIndex != kInvalidClipVoiceIndex) {
+    auto clipIt = clips_.find(activeSound.clipName);
+    if (clipIt != clips_.end() &&
+        activeSound.clipVoiceIndex < clipIt->second.sfxPool.size()) {
+      clipIt->second.sfxPool[activeSound.clipVoiceIndex].activeSoundId =
+          kInvalidSoundId;
+    }
+  } else if (activeSound.ownedSound) {
+    ma_sound_uninit(activeSound.ownedSound.get());
+    activeSound.ownedSound.reset();
+  }
+
+  activeSound.sound = nullptr;
+}
+
+void AudioSystem::removeActiveSound(SoundId id) {
+  auto it = activeSounds_.find(id);
+  if (it == activeSounds_.end()) {
+    return;
+  }
+
+  releaseActiveSoundResources(it->second);
+  activeSounds_.erase(it);
+}
+
 std::size_t AudioSystem::toGroupIndex(AudioGroup group) {
   return static_cast<std::size_t>(group);
 }
 
 void AudioSystem::cleanupFinishedSounds() {
   for (auto it = activeSounds_.begin(); it != activeSounds_.end();) {
-    if (!it->second.looping &&
-        ma_sound_is_playing(it->second.sound.get()) == MA_FALSE) {
-      ma_sound_uninit(it->second.sound.get());
+    if (!it->second.looping && it->second.sound != nullptr &&
+        ma_sound_is_playing(it->second.sound) == MA_FALSE) {
+      releaseActiveSoundResources(it->second);
       it = activeSounds_.erase(it);
       continue;
     }

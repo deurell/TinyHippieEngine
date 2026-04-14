@@ -190,7 +190,6 @@ void DL::App::render() {
   DL::beginDebugUiFrame();
   scene_->render({deltaTime_, glfwGetTime()});
   if (renderDevice_ != nullptr) {
-    DL::drawFrameStatsOverlay(deltaTime_, renderDevice_->getRenderStats());
     DL::drawEngineDebugWindows(*this, deltaTime_, renderDevice_->getRenderStats());
   }
   DL::drawLogWindow();

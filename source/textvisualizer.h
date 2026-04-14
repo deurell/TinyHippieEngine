@@ -33,8 +33,7 @@ struct FontData {
 
 class TextVisualizer : public VisualizerBase {
 public:
-  explicit TextVisualizer(std::string name, DL::Camera &camera,
-                          SceneNode &node, std::string text,
+  explicit TextVisualizer(DL::Camera &camera, SceneNode &node, std::string text,
                           const std::string &fontPath,
                           DL::IRenderDevice *renderDevice,
                           DL::RenderResourceCache *resourceCache,
@@ -44,6 +43,9 @@ public:
   ~TextVisualizer() override;
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "TextVisualizer";
+  }
   void setText(std::string text);
   void setAlignment(TextAlignment alignment);
   void setLayoutWidth(float width);

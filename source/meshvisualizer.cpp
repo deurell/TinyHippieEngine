@@ -6,13 +6,13 @@
 namespace DL {
 
 MeshVisualizer::MeshVisualizer(
-    std::string name, DL::Camera &camera, SceneNode &node,
+    DL::Camera &camera, SceneNode &node,
     std::shared_ptr<const MeshAsset> asset,
     basist::etc1_global_selector_codebook *codeBook,
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
+    : VisualizerBase(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache),
       codeBook_(codeBook), pipeline_(), asset_(std::move(asset)) {

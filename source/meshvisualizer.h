@@ -22,7 +22,7 @@ struct MeshVisualizerSettings {
 
 class MeshVisualizer : public VisualizerBase {
 public:
-  MeshVisualizer(std::string name, DL::Camera &camera, SceneNode &node,
+  MeshVisualizer(DL::Camera &camera, SceneNode &node,
                  std::shared_ptr<const MeshAsset> asset,
                  basist::etc1_global_selector_codebook *codeBook,
                  DL::IRenderDevice *renderDevice,
@@ -33,6 +33,9 @@ public:
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "MeshVisualizer";
+  }
   void setDebugNormals(bool enabled) { debugNormals_ = enabled; }
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
   void setSettings(const MeshVisualizerSettings &settings) { settings_ = settings; }

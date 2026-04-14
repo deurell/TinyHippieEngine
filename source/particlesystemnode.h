@@ -94,6 +94,9 @@ public:
 
   void init() override;
   void update(const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "ParticleSystemNode";
+  }
 
   void resetParticles();
   void explode(const glm::vec3 &worldPosition);

@@ -22,6 +22,9 @@ public:
   void update(const DL::FrameContext &ctx) override;
   void render(const DL::FrameContext &ctx) override;
   void onScreenSizeChanged(glm::vec2 size) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "SpriteNode";
+  }
 
 private:
   void initCamera();

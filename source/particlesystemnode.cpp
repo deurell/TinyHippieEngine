@@ -191,9 +191,9 @@ void ParticleSystemNode::init() {
   SceneNode::init();
 
   auto visualizer = std::make_unique<DL::ParticleVisualizer>(
-      "ParticleVisualizer", *camera_, *this, renderDevice_,
+      *camera_, *this, renderDevice_,
       renderResourceCache_);
-  visualizers.emplace_back(std::move(visualizer));
+  addRenderComponent(std::move(visualizer));
 
   particles_.reserve(static_cast<std::size_t>(config_.emission.maxParticles));
 

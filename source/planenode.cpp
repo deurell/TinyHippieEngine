@@ -21,10 +21,8 @@ void PlaneNode::init() {
 void PlaneNode::update(const DL::FrameContext &ctx) {
   SceneNode::update(ctx);
 
-  auto *visualizer =
-      dynamic_cast<DL::PlaneVisualizer *>(getVisualizer("PlaneVisualizer"));
-  if (visualizer != nullptr) {
-    visualizer->baseColor = color;
+  if (planeVisualizer_ != nullptr) {
+    planeVisualizer_->baseColor = color;
   }
 }
 
@@ -54,10 +52,10 @@ void PlaneNode::initComponents() {
                                        : "Shaders/spinner.frag";
 
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *camera_, *this, renderDevice_, renderResourceCache_,
+      *camera_, *this, renderDevice_, renderResourceCache_,
       vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
   visualizer->spinnerEnabled = planeType == PlaneType::Spinner;
-
-  visualizers.emplace_back(std::move(visualizer));
+  planeVisualizer_ = visualizer.get();
+  addRenderComponent(std::move(visualizer));
 }

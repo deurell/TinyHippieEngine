@@ -10,8 +10,8 @@ namespace DL {
 
 class ParticleVisualizer : public VisualizerBase {
 public:
-  ParticleVisualizer(std::string name, DL::Camera &camera,
-                     ParticleSystemNode &node, DL::IRenderDevice *renderDevice,
+  ParticleVisualizer(DL::Camera &camera, ParticleSystemNode &node,
+                     DL::IRenderDevice *renderDevice,
                      DL::RenderResourceCache *resourceCache = nullptr,
                      std::string vertexShaderPath = "Shaders/particlefx.vert",
                      std::string fragmentShaderPath = "Shaders/particlefx.frag");
@@ -20,6 +20,9 @@ public:
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "ParticleVisualizer";
+  }
 
 private:
   ParticleSystemNode &particleNode_;

@@ -1,17 +1,25 @@
 #include "debugui.h"
+#include "app.h"
 #include "logger.h"
+#include "scenenode.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace DL {
 
 namespace {
 bool frameStarted = false;
 constexpr float kOverlayAlpha = 0.72f;
+SceneNode *selectedNode = nullptr;
+SceneNode *rotationEditorNode = nullptr;
+glm::vec3 rotationEditorEulerDegrees(0.0f);
 
 const char *levelLabel(LogLevel level) {
   switch (level) {
@@ -53,6 +61,141 @@ LogLevel levelFromIndex(int index) {
     return LogLevel::Error;
   default:
     return LogLevel::Info;
+  }
+}
+
+bool nodeExistsInSubtree(SceneNode *root, const SceneNode *candidate) {
+  if (root == nullptr || candidate == nullptr) {
+    return false;
+  }
+  if (root == candidate) {
+    return true;
+  }
+  for (const auto &child : root->children) {
+    if (nodeExistsInSubtree(child.get(), candidate)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+const char *nodeLabel(SceneNode &node, std::size_t index) {
+  if (!node.getDebugName().empty() && node.getDebugName() != "SceneNode") {
+    return node.getDebugName().data();
+  }
+  if (!node.hasParent()) {
+    return node.debugTypeName().data();
+  }
+  if (node.debugTypeName() != "SceneNode") {
+    return node.debugTypeName().data();
+  }
+  thread_local std::string label;
+  label = "Node ";
+  label += std::to_string(index);
+  return label.c_str();
+}
+
+void drawSceneNodeTree(SceneNode &node, std::size_t index = 0) {
+  ImGuiTreeNodeFlags flags =
+      ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick |
+      ImGuiTreeNodeFlags_SpanAvailWidth;
+  if (node.children.empty()) {
+    flags |= ImGuiTreeNodeFlags_Leaf;
+  }
+  if (selectedNode == &node) {
+    flags |= ImGuiTreeNodeFlags_Selected;
+  }
+
+  const bool open =
+      ImGui::TreeNodeEx(static_cast<void *>(&node), flags, "%s", nodeLabel(node, index));
+  if (ImGui::IsItemClicked()) {
+    selectedNode = &node;
+  }
+
+  if (open) {
+    for (std::size_t childIndex = 0; childIndex < node.children.size(); ++childIndex) {
+      drawSceneNodeTree(*node.children[childIndex], childIndex);
+    }
+    ImGui::TreePop();
+  }
+}
+
+void drawNodeInspector(SceneNode &node) {
+  glm::vec3 localPosition = node.getLocalPosition();
+  glm::vec3 localScale = node.getLocalScale();
+  if (rotationEditorNode != &node) {
+    rotationEditorNode = &node;
+    rotationEditorEulerDegrees =
+        glm::degrees(glm::eulerAngles(node.getLocalRotation()));
+  }
+
+  ImGui::Text("Label %s", nodeLabel(node, 0));
+  ImGui::Text("Children %zu", node.children.size());
+  ImGui::Text("Render components %zu", node.renderComponentCount());
+  bool debugOverride = node.isDebugTransformOverrideEnabled();
+  if (ImGui::Checkbox("Override animated transform", &debugOverride)) {
+    node.setDebugTransformOverrideEnabled(debugOverride);
+  }
+  ImGui::Separator();
+
+  if (ImGui::DragFloat3("Local position", glm::value_ptr(localPosition), 0.05f)) {
+    if (node.isDebugTransformOverrideEnabled()) {
+      node.setDebugLocalPosition(localPosition);
+    } else {
+      node.setLocalPosition(localPosition);
+    }
+  }
+  if (ImGui::DragFloat3("Local rotation", glm::value_ptr(rotationEditorEulerDegrees),
+                        0.5f)) {
+    const glm::quat rotation = glm::quat(glm::radians(rotationEditorEulerDegrees));
+    if (node.isDebugTransformOverrideEnabled()) {
+      node.setDebugLocalRotation(rotation);
+    } else {
+      node.setLocalRotation(rotation);
+    }
+  }
+  if (ImGui::DragFloat3("Local scale", glm::value_ptr(localScale), 0.05f, 0.001f, 100.0f)) {
+    if (node.isDebugTransformOverrideEnabled()) {
+      node.setDebugLocalScale(localScale);
+    } else {
+      node.setLocalScale(localScale);
+    }
+  }
+
+  if (ImGui::Button("Reset transform")) {
+    if (node.isDebugTransformOverrideEnabled()) {
+      node.setDebugLocalPosition(glm::vec3(0.0f));
+      node.setDebugLocalRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+      node.setDebugLocalScale(glm::vec3(1.0f));
+    } else {
+      node.setLocalPosition(glm::vec3(0.0f));
+      node.setLocalRotation(glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+      node.setLocalScale(glm::vec3(1.0f));
+    }
+    rotationEditorEulerDegrees = glm::vec3(0.0f);
+  }
+
+  const glm::vec3 worldPosition = node.getWorldPosition();
+  const glm::vec3 worldScale = node.getWorldScale();
+  const glm::vec3 worldRotationEuler =
+      glm::degrees(glm::eulerAngles(node.getWorldRotation()));
+
+  ImGui::Separator();
+  ImGui::Text("World position %.2f %.2f %.2f", worldPosition.x, worldPosition.y,
+              worldPosition.z);
+  ImGui::Text("World rotation %.1f %.1f %.1f", worldRotationEuler.x,
+              worldRotationEuler.y, worldRotationEuler.z);
+  ImGui::Text("World scale %.2f %.2f %.2f", worldScale.x, worldScale.y,
+              worldScale.z);
+
+  if (node.renderComponentCount() > 0) {
+    ImGui::Separator();
+    ImGui::TextUnformatted("Components");
+    for (const auto &component : node.renderComponents()) {
+      const std::string_view typeName = component->debugTypeName();
+      ImGui::BulletText("%.*s", static_cast<int>(typeName.size()),
+                        typeName.data());
+    }
   }
 }
 }
@@ -142,6 +285,72 @@ void drawFrameStatsOverlay(double frameTimeSeconds,
     ImGui::Text("Cached shader programs %u", renderStats.pipelineCount);
   }
   ImGui::End();
+#endif
+}
+
+void drawEngineDebugWindows(App &app, double frameTimeSeconds,
+                            const RenderStats &renderStats) {
+#ifdef USE_IMGUI
+  beginDebugUiFrame();
+
+  auto *rootNode = dynamic_cast<SceneNode *>(app.currentScene());
+  if (selectedNode != nullptr &&
+      (rootNode == nullptr || !nodeExistsInSubtree(rootNode, selectedNode))) {
+    selectedNode = rootNode;
+  } else if (selectedNode == nullptr) {
+    selectedNode = rootNode;
+  }
+
+  ImGui::SetNextWindowSize(ImVec2(310.0f, 260.0f), ImGuiCond_FirstUseEver);
+  if (ImGui::Begin("Engine")) {
+    const float frameMs = static_cast<float>(frameTimeSeconds * 1000.0);
+    const float fps =
+        frameTimeSeconds > 0.0 ? static_cast<float>(1.0 / frameTimeSeconds)
+                               : 0.0f;
+    bool paused = app.simulationPaused();
+    if (ImGui::Checkbox("Pause fixed step", &paused)) {
+      app.setSimulationPaused(paused);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Step")) {
+      app.requestSimulationStep();
+    }
+
+    const glm::vec2 windowSize = app.windowSize();
+    const glm::vec2 framebufferSize = app.framebufferSize();
+    ImGui::Text("FPS %.1f", fps);
+    ImGui::Text("Frame %.2f ms", frameMs);
+    ImGui::Text("Fixed step %.2f ms", app.fixedTimeStep() * 1000.0f);
+    ImGui::Text("Fixed updates last frame %d", app.lastFixedUpdateCount());
+    ImGui::Separator();
+    ImGui::Text("Window %.0f x %.0f", windowSize.x, windowSize.y);
+    ImGui::Text("Framebuffer %.0f x %.0f", framebufferSize.x, framebufferSize.y);
+    ImGui::Separator();
+    ImGui::Text("Draw calls %u", renderStats.drawCalls);
+    ImGui::Text("Triangles %u", renderStats.triangles);
+    ImGui::Text("Meshes %u", renderStats.meshCount);
+    ImGui::Text("Textures %u", renderStats.textureCount);
+    ImGui::Text("Pipelines %u", renderStats.pipelineCount);
+  }
+  ImGui::End();
+
+  if (rootNode != nullptr) {
+    ImGui::SetNextWindowSize(ImVec2(280.0f, 420.0f), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Scene Tree")) {
+      drawSceneNodeTree(*rootNode);
+    }
+    ImGui::End();
+
+    ImGui::SetNextWindowSize(ImVec2(360.0f, 420.0f), ImGuiCond_FirstUseEver);
+    if (ImGui::Begin("Inspector")) {
+      if (selectedNode != nullptr) {
+        drawNodeInspector(*selectedNode);
+      } else {
+        ImGui::TextUnformatted("No node selected.");
+      }
+    }
+    ImGui::End();
+  }
 #endif
 }
 

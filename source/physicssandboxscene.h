@@ -27,6 +27,9 @@ public:
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   void onFramebufferSizeChanged(glm::vec2 size) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "PhysicsSandboxScene";
+  }
 
 private:
   struct BodyBinding {

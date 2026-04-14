@@ -12,8 +12,7 @@ namespace DL {
 class SpriteVisualizer : public VisualizerBase {
 public:
   explicit SpriteVisualizer(
-      std::string name, DL::Camera &camera, SceneNode &node,
-      std::string texturePath,
+      DL::Camera &camera, SceneNode &node, std::string texturePath,
       basist::etc1_global_selector_codebook *codeBook,
       DL::IRenderDevice *renderDevice,
       DL::RenderResourceCache *resourceCache = nullptr,
@@ -24,6 +23,9 @@ public:
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "SpriteVisualizer";
+  }
 
 private:
   bool loadTexture();

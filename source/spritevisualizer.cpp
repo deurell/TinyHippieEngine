@@ -4,13 +4,11 @@
 #include <utility>
 
 DL::SpriteVisualizer::SpriteVisualizer(
-    std::string name, DL::Camera &camera, SceneNode &node,
-    std::string texturePath,
+    DL::Camera &camera, SceneNode &node, std::string texturePath,
     basist::etc1_global_selector_codebook *codeBook,
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), vertexShaderPath,
-                     fragmentShaderPath, node),
+    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
       renderDevice_(renderDevice), texturePath_(std::move(texturePath)),
       codeBook_(codeBook), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {

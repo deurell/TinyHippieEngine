@@ -1,11 +1,10 @@
 #include "planevisualizer.h"
 
 DL::PlaneVisualizer::PlaneVisualizer(
-    std::string name, DL::Camera &camera, SceneNode &node,
-    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
+    DL::Camera &camera, SceneNode &node, DL::IRenderDevice *renderDevice,
+    DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), vertexShaderPath,
-                     fragmentShaderPath, node),
+    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
       renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;

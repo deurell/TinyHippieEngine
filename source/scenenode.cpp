@@ -20,26 +20,65 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   }
 }
 
-void SceneNode::setLocalPosition(const glm::vec3 &position) {
+void SceneNode::applyLocalPosition(const glm::vec3 &position) {
   localPosition = position;
   markDirty();
 }
 
+void SceneNode::setLocalPosition(const glm::vec3 &position) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalPosition(position);
+}
+
 glm::vec3 SceneNode::getLocalPosition() const { return localPosition; }
 
-void SceneNode::setLocalRotation(const glm::quat &rotation) {
+void SceneNode::setDebugLocalPosition(const glm::vec3 &position) {
+  applyLocalPosition(position);
+}
+
+void SceneNode::applyLocalRotation(const glm::quat &rotation) {
   localRotation = rotation;
   markDirty();
 }
 
+void SceneNode::setLocalRotation(const glm::quat &rotation) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalRotation(rotation);
+}
+
 glm::quat SceneNode::getLocalRotation() const { return localRotation; }
 
-void SceneNode::setLocalScale(const glm::vec3 &scale) {
+void SceneNode::setDebugLocalRotation(const glm::quat &rotation) {
+  applyLocalRotation(rotation);
+}
+
+void SceneNode::applyLocalScale(const glm::vec3 &scale) {
   localScale = scale;
   markDirty();
 }
 
+void SceneNode::setLocalScale(const glm::vec3 &scale) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalScale(scale);
+}
+
 glm::vec3 SceneNode::getLocalScale() const { return localScale; }
+
+void SceneNode::setDebugLocalScale(const glm::vec3 &scale) { applyLocalScale(scale); }
+
+void SceneNode::setDebugName(std::string name) { debugName_ = std::move(name); }
+
+std::string_view SceneNode::getDebugName() const { return debugName_; }
+
+void SceneNode::setDebugTransformOverrideEnabled(bool enabled) {
+  debugTransformOverrideEnabled_ = enabled;
+}
 
 void SceneNode::update(const FrameContext &ctx) {
   if (parent) {
@@ -55,8 +94,8 @@ void SceneNode::update(const FrameContext &ctx) {
 
 void SceneNode::render(const FrameContext &ctx) {
 
-  for (auto &visualizer : visualizers) {
-    visualizer->render(worldTransform, ctx);
+  for (auto &component : renderComponents_) {
+    component->render(worldTransform, ctx);
   }
 
   for (auto &child : children) {
@@ -137,13 +176,8 @@ void SceneNode::markDirty() {
   }
 }
 
-VisualizerBase *SceneNode::getVisualizer(std::string_view name) {
-  const auto iterator = std::find_if(visualizers.begin(), visualizers.end(),
-                                     [&name](const auto &visualizer) {
-                                       return visualizer->getName() == name;
-                                     });
-
-  return iterator != visualizers.end() ? iterator->get() : nullptr;
+void SceneNode::addRenderComponent(std::unique_ptr<VisualizerBase> component) {
+  renderComponents_.push_back(std::move(component));
 }
 
 } // namespace DL

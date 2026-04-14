@@ -31,6 +31,14 @@ public:
   void onScreenSizeChanged(int width, int height);
   void onFramebufferSizeChanged(int width, int height);
   void setFrameRateLimit(float fps);
+  IScene *currentScene() const { return scene_.get(); }
+  glm::vec2 windowSize() const { return getWindowSize(); }
+  glm::vec2 framebufferSize() const { return getFramebufferSize(); }
+  float fixedTimeStep() const { return fixedTimeStep_; }
+  int lastFixedUpdateCount() const { return lastFixedUpdateCount_; }
+  bool simulationPaused() const { return simulationPaused_; }
+  void setSimulationPaused(bool paused) { simulationPaused_ = paused; }
+  void requestSimulationStep() { ++requestedSimulationSteps_; }
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1024;
@@ -58,6 +66,9 @@ private:
   float desiredFrameTime_ = 0.0f;
   float fixedTimeAccumulator_ = 0.0f;
   static constexpr float fixedTimeStep_ = 1.0f / 60.0f;
+  int lastFixedUpdateCount_ = 0;
+  int requestedSimulationSteps_ = 0;
+  bool simulationPaused_ = false;
   bool nextSceneHeld_ = false;
   bool prevSceneHeld_ = false;
   glm::vec2 getWindowSize() const;

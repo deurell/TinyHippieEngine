@@ -109,7 +109,7 @@ void NodeExampleScene::update(const DL::FrameContext &ctx) {
 
 void NodeExampleScene::render(const DL::FrameContext &ctx) {
   auto *textVisualizer =
-      dynamic_cast<DL::TextVisualizer *>(textNode_->getVisualizer("main"));
+      textNode_ != nullptr ? textNode_->getTextVisualizer() : nullptr;
 #ifdef USE_IMGUI
   DL::beginDebugUiFrame();
   ImGui::Begin("Node Scene");

@@ -4,14 +4,14 @@
 #include <sstream>
 #include <string>
 
-DL::TextVisualizer::TextVisualizer(std::string name, DL::Camera &camera,
-                                   SceneNode &node, const std::string text,
+DL::TextVisualizer::TextVisualizer(DL::Camera &camera, SceneNode &node,
+                                   const std::string text,
                                    const std::string &fontPath,
                                    DL::IRenderDevice *renderDevice,
                                    DL::RenderResourceCache *resourceCache,
                                    const std::string vertexShaderPath,
                                    const std::string fragmentShaderPath)
-    : VisualizerBase(camera, name, vertexShaderPath, fragmentShaderPath, node),
+    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
       text_(text), renderDevice_(renderDevice), resourceCache_(resourceCache),
       fontPath_(fontPath) {
   if (renderDevice_ == nullptr) {

@@ -25,6 +25,9 @@ public:
   void update(const DL::FrameContext &ctx) override;
   void render(const DL::FrameContext &ctx) override;
   void onScreenSizeChanged(glm::vec2 size) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "MeshNode";
+  }
   void setDebugNormals(bool enabled);
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
   void setVisualizerSettings(const DL::MeshVisualizerSettings &settings);

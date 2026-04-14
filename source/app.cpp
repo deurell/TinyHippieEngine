@@ -167,10 +167,20 @@ void DL::App::update() {
   }
   if (!scene_) return;
   const auto frameTime = glfwGetTime();
-  fixedTimeAccumulator_ += deltaTime_;
-  while (fixedTimeAccumulator_ >= fixedTimeStep_) {
-    scene_->fixedUpdate({fixedTimeStep_, frameTime});
-    fixedTimeAccumulator_ -= fixedTimeStep_;
+  lastFixedUpdateCount_ = 0;
+  if (simulationPaused_) {
+    while (requestedSimulationSteps_ > 0) {
+      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      --requestedSimulationSteps_;
+      ++lastFixedUpdateCount_;
+    }
+  } else {
+    fixedTimeAccumulator_ += deltaTime_;
+    while (fixedTimeAccumulator_ >= fixedTimeStep_) {
+      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      fixedTimeAccumulator_ -= fixedTimeStep_;
+      ++lastFixedUpdateCount_;
+    }
   }
   scene_->update({deltaTime_, frameTime});
 }
@@ -181,6 +191,7 @@ void DL::App::render() {
   scene_->render({deltaTime_, glfwGetTime()});
   if (renderDevice_ != nullptr) {
     DL::drawFrameStatsOverlay(deltaTime_, renderDevice_->getRenderStats());
+    DL::drawEngineDebugWindows(*this, deltaTime_, renderDevice_->getRenderStats());
   }
   DL::drawLogWindow();
 

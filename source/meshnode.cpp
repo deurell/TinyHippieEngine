@@ -114,12 +114,12 @@ void MeshNode::initComponents() {
   }
 
   auto visualizer = std::make_unique<DL::MeshVisualizer>(
-      "MeshVisualizer", *camera_, *this,
+      *camera_, *this,
       meshAssetCache_ != nullptr ? meshAssetCache_->load(assetPath_)
                                  : std::make_shared<DL::MeshAsset>(DL::loadMeshAsset(assetPath_)),
       codeBook_, renderDevice_, renderResourceCache_);
   meshVisualizer_ = visualizer.get();
   meshVisualizer_->setDebugNormals(debugNormals_);
   meshVisualizer_->setSettings(visualizerSettings_);
-  visualizers.emplace_back(std::move(visualizer));
+  addRenderComponent(std::move(visualizer));
 }

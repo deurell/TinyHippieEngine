@@ -21,6 +21,9 @@ public:
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   void onFramebufferSizeChanged(glm::vec2 size) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "ParticleNodeScene";
+  }
 
   static constexpr int number_of_particles = 64;
 

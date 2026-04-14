@@ -5,11 +5,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 DL::ParticleVisualizer::ParticleVisualizer(
-    std::string name, DL::Camera &camera, ParticleSystemNode &node,
-    DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
+    DL::Camera &camera, ParticleSystemNode &node, DL::IRenderDevice *renderDevice,
+    DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
+    : VisualizerBase(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       particleNode_(node), renderDevice_(renderDevice),
       resourceCache_(resourceCache) {

@@ -45,7 +45,7 @@ void SpriteNode::initComponents() {
   }
 
   auto visualizer = std::make_unique<DL::SpriteVisualizer>(
-      "SpriteVisualizer", *camera_, *this, imagePath_, codeBook_,
-      renderDevice_, renderResourceCache_);
-  visualizers.emplace_back(std::move(visualizer));
+      *camera_, *this, imagePath_, codeBook_, renderDevice_,
+      renderResourceCache_);
+  addRenderComponent(std::move(visualizer));
 }

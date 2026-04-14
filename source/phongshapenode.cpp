@@ -50,11 +50,11 @@ void PhongShapeNode::initComponents() {
     return;
   }
   auto visualizer = std::make_unique<DL::ShapeVisualizer>(
-      "ShapeVisualizer", *camera_, *this, buildMeshData(), renderDevice_,
+      *camera_, *this, buildMeshData(), renderDevice_,
       renderResourceCache_);
   visualizer_ = visualizer.get();
   visualizer_->material = material_;
-  visualizers.emplace_back(std::move(visualizer));
+  addRenderComponent(std::move(visualizer));
 }
 
 DL::GeneratedMeshData PhongShapeNode::buildMeshData() const {

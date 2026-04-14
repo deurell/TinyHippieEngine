@@ -29,8 +29,9 @@ void TextNode::initCamera() {
 
 void TextNode::initComponents() {
   auto component = std::make_unique<DL::TextVisualizer>(
-      "main", *camera_, *this, text_, "Resources/C64_Pro-STYLE.ttf",
+      *camera_, *this, text_, "Resources/C64_Pro-STYLE.ttf",
       renderDevice_, renderResourceCache_, "Shaders/starwars.vert",
       "Shaders/starwars.frag");
-  visualizers.emplace_back(std::move(component));
+  textVisualizer_ = component.get();
+  addRenderComponent(std::move(component));
 }

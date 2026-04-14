@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include <string_view>
 
 namespace DL {
 struct FrameContext {
@@ -20,6 +21,9 @@ public:
   virtual void onScreenSizeChanged(glm::vec2 size) = 0;
   virtual void onFramebufferSizeChanged(glm::vec2 size) {
     onScreenSizeChanged(size);
+  }
+  [[nodiscard]] virtual std::string_view debugTypeName() const {
+    return "IScene";
   }
 };
 } // namespace DL

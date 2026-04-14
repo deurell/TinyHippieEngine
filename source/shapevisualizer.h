@@ -16,8 +16,8 @@ struct PhongMaterial {
 
 class ShapeVisualizer : public VisualizerBase {
 public:
-  ShapeVisualizer(std::string name, Camera &camera, SceneNode &node,
-                  GeneratedMeshData meshData, IRenderDevice *renderDevice,
+  ShapeVisualizer(Camera &camera, SceneNode &node, GeneratedMeshData meshData,
+                  IRenderDevice *renderDevice,
                   RenderResourceCache *resourceCache = nullptr,
                   std::string vertexShaderPath = "Shaders/phongshape.vert",
                   std::string fragmentShaderPath = "Shaders/phongshape.frag");
@@ -25,6 +25,9 @@ public:
 
   void render(const glm::mat4 &worldTransform,
               const FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "ShapeVisualizer";
+  }
 
   PhongMaterial material;
   glm::vec3 lightDirection = glm::normalize(glm::vec3(0.4f, 1.0f, 0.25f));

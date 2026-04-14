@@ -2,13 +2,13 @@
 
 namespace DL {
 
-ShapeVisualizer::ShapeVisualizer(std::string name, Camera &camera,
-                                 SceneNode &node, GeneratedMeshData meshData,
+ShapeVisualizer::ShapeVisualizer(Camera &camera, SceneNode &node,
+                                 GeneratedMeshData meshData,
                                  IRenderDevice *renderDevice,
                                  RenderResourceCache *resourceCache,
                                  std::string vertexShaderPath,
                                  std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(name), std::move(vertexShaderPath),
+    : VisualizerBase(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {

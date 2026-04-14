@@ -20,7 +20,7 @@ void DL::GlosifyScene::init() {
   setLocalPosition({0, 0, 0});
 
   auto plane =
-      createPlane({0, 0, 0}, {16, 16, 1},
+      createPlane({0, 0, 0}, {20, 20, 1},
                   glm::angleAxis(glm::radians(0.0f), glm::vec3(0, 0, 1)));
   plane_node_ = plane.get();
   addChild(std::move(plane));

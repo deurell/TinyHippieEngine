@@ -41,8 +41,8 @@ public:
   void requestSimulationStep() { ++requestedSimulationSteps_; }
 
   static constexpr char const *windows_title = "tiny hippie engine";
-  static constexpr float screen_width = 1024;
-  static constexpr float screen_height = 768;
+  static constexpr float screen_width = 1280;
+  static constexpr float screen_height = 720;
 
 private:
   bool init();

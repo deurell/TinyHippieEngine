@@ -1,6 +1,6 @@
 #pragma once
 
-#include "audioplayer.h"
+#include "audiosystem.h"
 #include "camera.h"
 #include "iscene.h"
 #include "model.h"
@@ -13,7 +13,8 @@ class C64Scene : public DL::IScene {
 public:
   C64Scene(std::string_view glslVersion,
            basist::etc1_global_selector_codebook *codeBook,
-           DL::IRenderDevice *renderDevice);
+           DL::IRenderDevice *renderDevice,
+           DL::AudioSystem *audioSystem);
 
   C64Scene(const C64Scene &rhs) = delete;
 
@@ -27,14 +28,14 @@ public:
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
-  const char* audio_unlock = "unlock";
+  static constexpr const char *kAudioUnlock = "unlock";
   basist::etc1_global_selector_codebook *codeBook_;
   DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::AudioSystem *audioSystem_ = nullptr;
   DL::MeshHandle mesh_;
   DL::TextureHandle texture_;
   DL::PipelineHandle pipeline_;
   std::string glslVersionString_;
   glm::vec2 screenSize_{};
   float delta_ = 0;
-  std::unique_ptr<AudioPlayer> audioPlayer_;
 };

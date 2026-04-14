@@ -1,4 +1,5 @@
 #pragma once
+#include "audiosystem.h"
 #include "basisu_transcoder.h"
 #include "camera.h"
 #include "iscene.h"
@@ -39,6 +40,8 @@ public:
   bool simulationPaused() const { return simulationPaused_; }
   void setSimulationPaused(bool paused) { simulationPaused_ = paused; }
   void requestSimulationStep() { ++requestedSimulationSteps_; }
+  AudioSystem &audioSystem() { return audioSystem_; }
+  const AudioSystem &audioSystem() const { return audioSystem_; }
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
@@ -53,6 +56,7 @@ private:
   void registerScenes();
 
   GLFWwindow *window_{};
+  AudioSystem audioSystem_;
   std::unique_ptr<DL::IScene> scene_;
   SceneManager sceneManager_;
   std::unique_ptr<basist::etc1_global_selector_codebook> codebook_;

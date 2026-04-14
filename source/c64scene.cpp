@@ -7,13 +7,10 @@
 
 C64Scene::C64Scene(std::string_view glslVersion,
                    basist::etc1_global_selector_codebook *codeBook,
-                   DL::IRenderDevice *renderDevice)
+                   DL::IRenderDevice *renderDevice,
+                   DL::AudioSystem *audioSystem)
     : glslVersionString_(glslVersion), codeBook_(codeBook),
-      renderDevice_(renderDevice) {
-  audioPlayer_ = std::make_unique<AudioPlayer>();
-  audioPlayer_->load(audio_unlock, "Resources/unlock.wav");
-  audioPlayer_->play(audio_unlock);
-}
+      renderDevice_(renderDevice), audioSystem_(audioSystem) {}
 
 C64Scene::~C64Scene() {
   if (renderDevice_ != nullptr) {
@@ -32,6 +29,10 @@ C64Scene::~C64Scene() {
 void C64Scene::init() {
   if (renderDevice_ == nullptr || codeBook_ == nullptr) {
     return;
+  }
+  if (audioSystem_ != nullptr) {
+    audioSystem_->loadClip(kAudioUnlock, "Resources/unlock.wav");
+    audioSystem_->playOneShot(kAudioUnlock);
   }
   pipeline_ = renderDevice_->createPipeline("Shaders/c64.vert",
                                             "Shaders/c64.frag",

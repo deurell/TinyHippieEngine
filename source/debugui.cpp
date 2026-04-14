@@ -331,6 +331,13 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
     ImGui::Text("Meshes %u", renderStats.meshCount);
     ImGui::Text("Textures %u", renderStats.textureCount);
     ImGui::Text("Pipelines %u", renderStats.pipelineCount);
+    ImGui::Separator();
+    ImGui::Text("Audio clips %zu", app.audioSystem().loadedClipCount());
+    ImGui::Text("Audio sounds %zu", app.audioSystem().activeSoundCount());
+    float masterVolume = app.audioSystem().masterVolume();
+    if (ImGui::SliderFloat("Master volume", &masterVolume, 0.0f, 2.0f, "%.2f")) {
+      app.audioSystem().setMasterVolume(masterVolume);
+    }
   }
   ImGui::End();
 

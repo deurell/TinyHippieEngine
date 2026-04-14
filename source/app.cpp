@@ -148,6 +148,10 @@ int DL::App::run() {
   renderResourceCache_ =
       std::make_unique<DL::RenderResourceCache>(*renderDevice_);
 
+  if (!audioSystem_.init()) {
+    LogWarn("Audio system initialization failed");
+  }
+
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
   renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
@@ -183,12 +187,14 @@ int DL::App::run() {
 #endif
   glfwDestroyWindow(window_);
 #endif
+  audioSystem_.shutdown();
   glfwTerminate();
   return EXIT_SUCCESS;
 }
 
 void DL::App::update() {
   calculateDeltaTime();
+  audioSystem_.update();
   if (window_) {
     processInput(window_);
   }
@@ -318,7 +324,7 @@ void DL::App::registerScenes() {
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
-                                      renderDevice_.get());
+                                      renderDevice_.get(), &audioSystem_);
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<ParticleScene>(glslVersionString_);

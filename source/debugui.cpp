@@ -348,6 +348,10 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
                              "%.2f")) {
         app.audioSystem().setMasterVolume(masterVolume);
       }
+      const auto &spectrum = app.audioSystem().spectrumBands();
+      ImGui::PlotHistogram("Spectrum", spectrum.data(),
+                           static_cast<int>(spectrum.size()), 0, nullptr, 0.0f,
+                           1.0f, ImVec2(0.0f, 72.0f));
       ImGui::TextUnformatted("Audio groups");
       for (int i = 0; i < static_cast<int>(DL::AudioGroup::Count); ++i) {
         const auto group = static_cast<DL::AudioGroup>(i);

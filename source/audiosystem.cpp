@@ -4,9 +4,42 @@
 #include "audiosystem.h"
 #include "logger.h"
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 namespace DL {
+namespace {
+constexpr float kPi = 3.14159265358979323846f;
+
+float bandCenterFrequency(std::size_t bandIndex, std::size_t bandCount,
+                          float minFrequency, float maxFrequency) {
+  if (bandCount <= 1) {
+    return minFrequency;
+  }
+  const float t =
+      static_cast<float>(bandIndex) / static_cast<float>(bandCount - 1);
+  const float ratio = maxFrequency / minFrequency;
+  return minFrequency * std::pow(ratio, t);
+}
+
+float goertzelMagnitude(const float *samples, std::size_t sampleCount,
+                        float sampleRate, float targetFrequency) {
+  if (samples == nullptr || sampleCount == 0 || sampleRate <= 0.0f) {
+    return 0.0f;
+  }
+  const float omega = (2.0f * kPi * targetFrequency) / sampleRate;
+  const float coeff = 2.0f * std::cos(omega);
+  float sPrev = 0.0f;
+  float sPrev2 = 0.0f;
+  for (std::size_t n = 0; n < sampleCount; ++n) {
+    const float s = samples[n] + coeff * sPrev - sPrev2;
+    sPrev2 = sPrev;
+    sPrev = s;
+  }
+  const float power = sPrev2 * sPrev2 + sPrev * sPrev - coeff * sPrev * sPrev2;
+  return std::sqrt(std::max(0.0f, power)) / static_cast<float>(sampleCount);
+}
+} // namespace
 
 AudioSystem::~AudioSystem() { shutdown(); }
 
@@ -47,6 +80,7 @@ void AudioSystem::shutdown() {
     }
   }
   clips_.clear();
+  spectrumBands_.fill(0.0f);
 
   uninitGroups();
   ma_engine_uninit(&engine_);
@@ -76,6 +110,9 @@ bool AudioSystem::loadClip(const std::string &name, const std::string &fileName,
         !ensureSfxPool(existing->second, oneShotPoolSize)) {
       return false;
     }
+    if (existing->second.analysisBands.empty()) {
+      buildClipAnalysis(existing->second);
+    }
     return true;
   }
 
@@ -89,6 +126,7 @@ bool AudioSystem::loadClip(const std::string &name, const std::string &fileName,
     clips_.erase(it);
     return false;
   }
+  buildClipAnalysis(it->second);
   return true;
 }
 
@@ -130,7 +168,10 @@ void AudioSystem::stopAll() {
   }
 }
 
-void AudioSystem::update() { cleanupFinishedSounds(); }
+void AudioSystem::update() {
+  cleanupFinishedSounds();
+  updateSpectrum();
+}
 
 void AudioSystem::setMasterVolume(float volume) {
   masterVolume_ = std::max(0.0f, volume);
@@ -273,6 +314,7 @@ AudioSystem::SoundId AudioSystem::playPooledSfxOneShot(const std::string &clipNa
   active.group = AudioGroup::SFX;
   active.clipName = clipName;
   active.clipVoiceIndex = selected;
+  active.volume = std::max(0.0f, volume);
   active.startOrdinal = soundOrdinalCounter_++;
   activeSounds_[soundId] = std::move(active);
   return soundId;
@@ -326,6 +368,8 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
   active.sound = active.ownedSound.get();
   active.looping = loop;
   active.group = group;
+  active.clipName = name;
+  active.volume = std::max(0.0f, volume);
   active.startOrdinal = soundOrdinalCounter_++;
   activeSounds_[soundId] = std::move(active);
   return soundId;
@@ -414,6 +458,148 @@ bool AudioSystem::ensureSfxPool(ClipData &clip, std::size_t desiredSize) {
     clip.nextSfxPoolIndex = 0;
   }
   return true;
+}
+
+bool AudioSystem::buildClipAnalysis(ClipData &clip) {
+  clip.analysisBands.clear();
+  clip.analysisFrameCount = 0;
+  clip.analysisHopFrames = 1;
+  clip.analysisSampleRate = 0;
+
+  ma_decoder decoder{};
+  const ma_decoder_config config =
+      ma_decoder_config_init(ma_format_f32, 1, 0);
+  if (ma_decoder_init_file(clip.fileName.c_str(), &config, &decoder) !=
+      MA_SUCCESS) {
+    LogWarn("Unable to decode clip for spectrum analysis", clip.fileName);
+    return false;
+  }
+
+  clip.analysisSampleRate = decoder.outputSampleRate;
+  std::vector<float> samples;
+  samples.reserve(static_cast<std::size_t>(decoder.outputSampleRate) * 4);
+  constexpr ma_uint64 kReadFrames = 4096;
+  std::vector<float> readBuffer(static_cast<std::size_t>(kReadFrames), 0.0f);
+  for (;;) {
+    ma_uint64 framesRead = 0;
+    const ma_result result =
+        ma_decoder_read_pcm_frames(&decoder, readBuffer.data(), kReadFrames,
+                                   &framesRead);
+    if (result != MA_SUCCESS || framesRead == 0) {
+      break;
+    }
+    samples.insert(samples.end(), readBuffer.begin(),
+                   readBuffer.begin() + static_cast<std::ptrdiff_t>(framesRead));
+  }
+  ma_decoder_uninit(&decoder);
+
+  if (samples.empty() || clip.analysisSampleRate == 0) {
+    return false;
+  }
+
+  constexpr std::size_t kWindowSize = 256;
+  const std::size_t hop = std::max<std::size_t>(
+      1, static_cast<std::size_t>(clip.analysisSampleRate / 30));
+  clip.analysisHopFrames = hop;
+  clip.analysisFrameCount = (samples.size() + hop - 1) / hop;
+  clip.analysisBands.resize(clip.analysisFrameCount * kSpectrumBandCount, 0.0f);
+  std::vector<float> windowSamples(kWindowSize, 0.0f);
+
+  const float nyquist = static_cast<float>(clip.analysisSampleRate) * 0.5f;
+  const float minFrequency = 60.0f;
+  const float maxFrequency = std::max(minFrequency + 1.0f, nyquist - 40.0f);
+  float peak = 0.0f;
+
+  for (std::size_t frame = 0; frame < clip.analysisFrameCount; ++frame) {
+    const std::size_t start = frame * hop;
+    for (std::size_t n = 0; n < kWindowSize; ++n) {
+      const std::size_t index = start + n;
+      const float sample = index < samples.size() ? samples[index] : 0.0f;
+      const float window =
+          0.5f - 0.5f * std::cos((2.0f * kPi * static_cast<float>(n)) /
+                                 static_cast<float>(kWindowSize - 1));
+      windowSamples[n] = sample * window;
+    }
+
+    for (std::size_t band = 0; band < kSpectrumBandCount; ++band) {
+      const float frequency = bandCenterFrequency(
+          band, kSpectrumBandCount, minFrequency, maxFrequency);
+      const float magnitude = goertzelMagnitude(
+          windowSamples.data(), windowSamples.size(),
+          static_cast<float>(clip.analysisSampleRate), frequency);
+      const float compressed = std::log1p(magnitude * 16.0f);
+      const std::size_t flatIndex = frame * kSpectrumBandCount + band;
+      clip.analysisBands[flatIndex] = compressed;
+      peak = std::max(peak, compressed);
+    }
+  }
+
+  if (peak > 0.0f) {
+    for (float &value : clip.analysisBands) {
+      value = std::pow(std::clamp(value / peak, 0.0f, 1.0f), 0.7f);
+    }
+  }
+  return true;
+}
+
+void AudioSystem::updateSpectrum() {
+  std::array<float, kSpectrumBandCount> targetBands{};
+  targetBands.fill(0.0f);
+
+  for (const auto &[id, active] : activeSounds_) {
+    if (active.sound == nullptr || active.clipName.empty()) {
+      continue;
+    }
+
+    const auto clipIt = clips_.find(active.clipName);
+    if (clipIt == clips_.end()) {
+      continue;
+    }
+    const ClipData &clip = clipIt->second;
+    if (clip.analysisFrameCount == 0 || clip.analysisBands.empty() ||
+        clip.analysisHopFrames == 0) {
+      continue;
+    }
+
+    ma_uint64 cursorFrames = 0;
+    if (ma_sound_get_cursor_in_pcm_frames(active.sound, &cursorFrames) !=
+        MA_SUCCESS) {
+      continue;
+    }
+
+    std::size_t analysisFrame =
+        static_cast<std::size_t>(cursorFrames / clip.analysisHopFrames);
+    if (analysisFrame >= clip.analysisFrameCount) {
+      if (active.looping) {
+        analysisFrame %= clip.analysisFrameCount;
+      } else {
+        continue;
+      }
+    }
+
+    const std::size_t groupIndex = toGroupIndex(active.group);
+    if (groupIndex >= kGroupCount || groupStates_[groupIndex].muted) {
+      continue;
+    }
+
+    const float gain = active.volume * masterVolume_ * groupStates_[groupIndex].volume;
+    if (gain <= 0.0f) {
+      continue;
+    }
+
+    const std::size_t rowOffset = analysisFrame * kSpectrumBandCount;
+    for (std::size_t band = 0; band < kSpectrumBandCount; ++band) {
+      targetBands[band] += clip.analysisBands[rowOffset + band] * gain;
+    }
+  }
+
+  for (std::size_t band = 0; band < kSpectrumBandCount; ++band) {
+    const float target = std::clamp(targetBands[band], 0.0f, 2.0f);
+    const float current = spectrumBands_[band];
+    const float blend = target > current ? 0.6f : 0.18f;
+    spectrumBands_[band] = std::clamp(current + (target - current) * blend,
+                                      0.0f, 2.0f);
+  }
 }
 
 bool AudioSystem::enforceGroupVoiceLimit(AudioGroup group) {

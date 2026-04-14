@@ -22,6 +22,7 @@
 #include "meshnodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
+#include "spectrumanalyzerscene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
 #include "logger.h"
@@ -308,6 +309,11 @@ void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<PhongShapeScene>(renderDevice_.get(),
                                              renderResourceCache_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<SpectrumAnalyzerScene>(renderDevice_.get(),
+                                                   renderResourceCache_.get(),
+                                                   &audioSystem_);
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());

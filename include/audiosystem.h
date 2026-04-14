@@ -23,6 +23,7 @@ public:
   static constexpr SoundId kInvalidSoundId = 0;
   static constexpr std::size_t kGroupCount =
       static_cast<std::size_t>(AudioGroup::Count);
+  static constexpr std::size_t kSpectrumBandCount = 24;
 
   AudioSystem() = default;
   ~AudioSystem();
@@ -59,6 +60,9 @@ public:
 
   [[nodiscard]] static const char *groupLabel(AudioGroup group);
   [[nodiscard]] float masterVolume() const { return masterVolume_; }
+  [[nodiscard]] const std::array<float, kSpectrumBandCount> &spectrumBands() const {
+    return spectrumBands_;
+  }
   [[nodiscard]] std::size_t loadedClipCount() const { return clips_.size(); }
   [[nodiscard]] std::size_t activeSoundCount() const {
     return activeSounds_.size();
@@ -85,6 +89,10 @@ private:
     std::string fileName;
     std::vector<ClipVoice> sfxPool;
     std::size_t nextSfxPoolIndex = 0;
+    std::vector<float> analysisBands;
+    std::size_t analysisFrameCount = 0;
+    std::size_t analysisHopFrames = 1;
+    ma_uint32 analysisSampleRate = 0;
   };
 
   struct ActiveSound {
@@ -94,6 +102,7 @@ private:
     AudioGroup group = AudioGroup::SFX;
     std::string clipName;
     std::size_t clipVoiceIndex = kInvalidClipVoiceIndex;
+    float volume = 1.0f;
     std::uint64_t startOrdinal = 0;
   };
 
@@ -106,6 +115,8 @@ private:
   void uninitGroups();
   void applyGroupGain(AudioGroup group);
   bool ensureSfxPool(ClipData &clip, std::size_t desiredSize);
+  bool buildClipAnalysis(ClipData &clip);
+  void updateSpectrum();
   bool enforceGroupVoiceLimit(AudioGroup group);
   void releaseActiveSoundResources(ActiveSound &activeSound);
   void removeActiveSound(SoundId id);
@@ -119,6 +130,7 @@ private:
   std::uint64_t soundOrdinalCounter_ = 1;
   std::array<GroupState, kGroupCount> groupStates_{};
   std::array<std::size_t, kGroupCount> groupVoiceLimits_ = {1, 32};
+  std::array<float, kSpectrumBandCount> spectrumBands_{};
   std::map<std::string, ClipData> clips_;
   std::map<SoundId, ActiveSound> activeSounds_;
 };

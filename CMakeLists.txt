@@ -93,6 +93,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/phongshapenode.cpp
         source/phongshapescene.h
         source/phongshapescene.cpp
+        source/spectrumanalyzerscene.h
+        source/spectrumanalyzerscene.cpp
         include/particlenodescene.h
 )
 

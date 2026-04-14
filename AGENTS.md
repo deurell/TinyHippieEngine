@@ -6,6 +6,10 @@ For full context:
 - Architecture: [`ARCHITECTURE.md`](ARCHITECTURE.md)
 - LLM contribution rules: [`CONTRIBUTING_LLMS.md`](CONTRIBUTING_LLMS.md)
 
+Precedence:
+- `ARCHITECTURE.md` is authoritative for runtime and design contracts.
+- `AGENTS.md` is a concise operational summary.
+
 ## Current Ground Truth
 
 - Engine model: scene graph (`SceneNode`) + attached render components.

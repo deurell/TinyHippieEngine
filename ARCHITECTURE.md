@@ -26,6 +26,57 @@ Current scene representation:
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
 
+## Architecture Diagram
+
+```text
+Desktop/Web Frame Driver
+          |
+          v
+        App
+  (window + loop + input + scene lifecycle)
+          |
+          +-----------------------------+
+          |                             |
+          v                             v
+   fixedUpdate()                    update()/render()
+ (0..N times per frame)            (1 time per frame)
+          |                             |
+          v                             |
+      Scene/IScene ---------------------+
+          |
+          v
+      SceneNode (root)
+   (T*R*S local, parent->child world)
+          |
+    +-----+------------------------------+
+    |                                    |
+    v                                    v
+children (SceneNode)          renderComponents (VisualizerBase...)
+ hierarchy + transforms         draw using node world transform
+```
+
+```text
+Input path (authoritative):
+GLFW callbacks owned by App
+  -> ImGui_ImplGlfw_*Callback(...)
+  -> App input handlers (scene controls/game input)
+```
+
+```text
+Scene lifecycle and switching:
+
+App::registerScenes()
+    -> SceneManager (stores scene factories)
+
+App::loadCurrentScene()
+    -> SceneManager::createCurrent()
+    -> replacePreparedScene(previous, next, windowSize, framebufferSize)
+         -> prepareScene(next, windowSize, framebufferSize)
+              -> scene->init()
+              -> scene->onScreenSizeChanged(...)
+              -> scene->onFramebufferSizeChanged(...)
+```
+
 ## Update And Timing
 
 Main loop (desktop):
@@ -119,4 +170,3 @@ Avoid:
 - stringly-typed runtime routing
 - hidden callback ownership
 - abstractions justified only by hypothetical future use
-

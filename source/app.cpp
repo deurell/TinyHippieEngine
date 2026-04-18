@@ -12,20 +12,20 @@
 #endif
 #include "introscene.h"
 #include "nodeexamplescene.h"
-#include "particlescene.h"
 #include "particlenodescene.h"
+#include "particlescene.h"
 #if defined(TINY_ENGINE_ENABLE_PHYSICS)
 #include "physicssandboxscene.h"
 #endif
+#include "logger.h"
+#include "meshnodescene.h"
 #include "phongshapescene.h"
 #include "quicknodescene.h"
-#include "meshnodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
 #include "spectrumanalyzerscene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
-#include "logger.h"
 #include <iostream>
 #include <thread>
 
@@ -199,7 +199,8 @@ void DL::App::update() {
   if (window_) {
     processInput(window_);
   }
-  if (!scene_) return;
+  if (!scene_)
+    return;
   const auto frameTime = glfwGetTime();
   lastFixedUpdateCount_ = 0;
   if (simulationPaused_) {
@@ -220,11 +221,13 @@ void DL::App::update() {
 }
 
 void DL::App::render() {
-  if (!scene_) return;
+  if (!scene_)
+    return;
   DL::beginDebugUiFrame();
   scene_->render({deltaTime_, glfwGetTime()});
   if (renderDevice_ != nullptr) {
-    DL::drawEngineDebugWindows(*this, deltaTime_, renderDevice_->getRenderStats());
+    DL::drawEngineDebugWindows(*this, deltaTime_,
+                               renderDevice_->getRenderStats());
   }
   DL::drawLogWindow();
 
@@ -267,8 +270,8 @@ void DL::App::loadSimpleScene() {
 void DL::App::loadCurrentScene() {
   auto previousScene = std::move(scene_);
   scene_ = replacePreparedScene(std::move(previousScene),
-                                sceneManager_.createCurrent(),
-                                getWindowSize(), getFramebufferSize());
+                                sceneManager_.createCurrent(), getWindowSize(),
+                                getFramebufferSize());
   if (!scene_) {
     LogError("Failed to create scene");
   } else {
@@ -293,13 +296,16 @@ void DL::App::registerScenes() {
   });
 #endif
   sceneManager_.registerScene([this] {
+    return std::make_unique<SpectrumAnalyzerScene>(
+        renderDevice_.get(), renderResourceCache_.get(), &audioSystem_);
+  });
+  sceneManager_.registerScene([this] {
     return std::make_unique<QuickNodeScene>(renderDevice_.get(),
                                             renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<NodeExampleScene>(renderDevice_.get(),
-                                             codebook_.get(),
-                                             renderResourceCache_.get());
+    return std::make_unique<NodeExampleScene>(
+        renderDevice_.get(), codebook_.get(), renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
@@ -311,39 +317,30 @@ void DL::App::registerScenes() {
                                              renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<SpectrumAnalyzerScene>(renderDevice_.get(),
-                                                   renderResourceCache_.get(),
-                                                   &audioSystem_);
-  });
-  sceneManager_.registerScene([this] {
     return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<TrueTypeScene>(glslVersionString_);
-  });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<TrueTypeScene>(glslVersionString_); });
   sceneManager_.registerScene([this] {
     return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get(),
                                           renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<IntroScene>(glslVersionString_);
-  });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<IntroScene>(glslVersionString_); });
   sceneManager_.registerScene([this] {
     return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
                                       renderDevice_.get(), &audioSystem_);
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<ParticleScene>(glslVersionString_);
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<WildCopperScene>(glslVersionString_);
-  });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<ParticleScene>(glslVersionString_); });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<WildCopperScene>(glslVersionString_); });
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
 #ifdef USE_IMGUI
-  const bool imguiWantsMouse = ImGui::GetCurrentContext() != nullptr &&
-                               ImGui::GetIO().WantCaptureMouse;
+  const bool imguiWantsMouse =
+      ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
 #else
   const bool imguiWantsMouse = false;
 #endif

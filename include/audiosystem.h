@@ -89,9 +89,8 @@ private:
     std::string fileName;
     std::vector<ClipVoice> sfxPool;
     std::size_t nextSfxPoolIndex = 0;
-    std::vector<float> analysisBands;
-    std::size_t analysisFrameCount = 0;
-    std::size_t analysisHopFrames = 1;
+    std::unique_ptr<ma_decoder> analysisDecoder;
+    bool analysisDecoderInitialized = false;
     ma_uint32 analysisSampleRate = 0;
   };
 
@@ -115,13 +114,13 @@ private:
   void uninitGroups();
   void applyGroupGain(AudioGroup group);
   bool ensureSfxPool(ClipData &clip, std::size_t desiredSize);
-  bool buildClipAnalysis(ClipData &clip);
   void updateSpectrum();
   bool enforceGroupVoiceLimit(AudioGroup group);
   void releaseActiveSoundResources(ActiveSound &activeSound);
   void removeActiveSound(SoundId id);
   [[nodiscard]] static std::size_t toGroupIndex(AudioGroup group);
   void cleanupFinishedSounds();
+  static bool initLiveDecoder(ClipData &clip);
 
   ma_engine engine_{};
   bool initialized_ = false;
@@ -131,6 +130,7 @@ private:
   std::array<GroupState, kGroupCount> groupStates_{};
   std::array<std::size_t, kGroupCount> groupVoiceLimits_ = {1, 32};
   std::array<float, kSpectrumBandCount> spectrumBands_{};
+  float spectrumNormalizationPeak_ = 0.65f;
   std::map<std::string, ClipData> clips_;
   std::map<SoundId, ActiveSound> activeSounds_;
 };

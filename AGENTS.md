@@ -19,6 +19,12 @@ Precedence:
 - Input integration: app-owned GLFW callbacks explicitly forward to ImGui callbacks.
 - Fixed timestep: `1/60` in `App`.
 - Default window size: `1280x720`.
+- `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
+- Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
+- Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`. Physics state (`PhysicsBodyComponent`, `PhysicsWorld`) lives in `fixedUpdate()`.
+- Available typed node types: `PlaneNode`, `SpriteNode`, `TextNode`, `MeshNode`, `PhongShapeNode`, `ParticleSystemNode`.
+- Available visualizer types: `PlaneVisualizer`, `SpriteVisualizer`, `TextVisualizer`, `MeshVisualizer`, `ShapeVisualizer`, `ParticleVisualizer`.
+- Raw OpenGL (`gl*`, `GL_*`, `GLFW`, `glfw`) must not appear in scene/node/visualizer files — enforced by `scripts/check_architecture.sh`.
 
 ## Working Agreements
 
@@ -43,6 +49,18 @@ EMS=/path/to/emsdk ./scripts/build_web.sh
 ```
 
 `build_web.sh` accepts `EMS` as either emsdk root or direct `upstream/emscripten` path.
+
+Build flags (CMake options):
+- `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default ON) — ReactPhysics3D; disables physics sources when OFF.
+
+Tests:
+
+```bash
+scripts/run_tests.sh
+```
+
+`run_tests.sh` runs `scripts/check_architecture.sh` first (requires `rg`), then builds and runs CTest.
 
 ## Minimum Verification Before Merge
 

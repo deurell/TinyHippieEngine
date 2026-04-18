@@ -23,10 +23,15 @@ public:
 
 class TestVisualizer final : public DL::VisualizerBase {
 public:
-  TestVisualizer(std::string name, DL::Camera &camera, DL::SceneNode &node)
-      : DL::VisualizerBase(camera, std::move(name), "", "", node) {}
+  TestVisualizer(DL::Camera &camera, DL::SceneNode &node, int &renderCount)
+      : DL::VisualizerBase(camera, "", "", node), renderCount_(renderCount) {}
 
-  void render(const glm::mat4 &, const DL::FrameContext &) override {}
+  void render(const glm::mat4 &, const DL::FrameContext &) override {
+    ++renderCount_;
+  }
+
+private:
+  int &renderCount_;
 };
 
 TEST(SceneNodeTest, LocalTransformBecomesWorldTransformForRootNode) {
@@ -106,16 +111,22 @@ TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
   EXPECT_NEAR(glm::axis(worldRotation).z, glm::axis(rotation).z, 1e-5f);
 }
 
-TEST(SceneNodeTest, GetVisualizerReturnsMatchingVisualizerByName) {
+TEST(SceneNodeTest, AddRenderComponentStoresAndRendersVisualizer) {
   TestSceneNode node;
   DL::Camera camera({0.0f, 0.0f, 1.0f});
+  int renderCount = 0;
 
-  auto visualizer = std::make_unique<TestVisualizer>("main", camera, node);
+  auto visualizer = std::make_unique<TestVisualizer>(camera, node, renderCount);
   auto *visualizerPtr = visualizer.get();
-  node.visualizers.emplace_back(std::move(visualizer));
+  node.addRenderComponent(std::move(visualizer));
 
-  EXPECT_EQ(node.getVisualizer("main"), visualizerPtr);
-  EXPECT_EQ(node.getVisualizer("missing"), nullptr);
+  ASSERT_EQ(node.renderComponentCount(), 1u);
+  ASSERT_EQ(node.renderComponents().size(), 1u);
+  EXPECT_EQ(node.renderComponents().front().get(), visualizerPtr);
+
+  node.render({});
+
+  EXPECT_EQ(renderCount, 1);
 }
 
 TEST(SceneNodeTest, OnScreenSizeChangedPropagatesToChildren) {

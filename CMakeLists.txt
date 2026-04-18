@@ -15,25 +15,25 @@ option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" ON
 
 set(PLATFORM_LIBS "")
 
-if(WIN32)
-add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0 _SECURE_SCL=0)
-elseif(UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
-list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
-endif()
+if (WIN32)
+    add_compile_definitions(_ITERATOR_DEBUG_LEVEL=0 _SECURE_SCL=0)
+elseif (UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
+    list(APPEND PLATFORM_LIBS X11 Xrandr Xinerama Xi Xxf86vm Xcursor GL dl pthread)
+endif ()
 
-if(EMSCRIPTEN)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
-endif()
+if (EMSCRIPTEN)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
+endif ()
 
-if(TINY_ENGINE_ENABLE_PHYSICS)
-FetchContent_Declare(
-        reactphysics3d
-        GIT_REPOSITORY https://github.com/DanielChappuis/reactphysics3d.git
-        GIT_TAG v0.10.2
-)
-FetchContent_MakeAvailable(reactphysics3d)
-endif()
+if (TINY_ENGINE_ENABLE_PHYSICS)
+    FetchContent_Declare(
+            reactphysics3d
+            GIT_REPOSITORY https://github.com/DanielChappuis/reactphysics3d.git
+            GIT_TAG v0.10.2
+    )
+    FetchContent_MakeAvailable(reactphysics3d)
+endif ()
 
 add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
         source/animationclip.h source/animationclip.cpp
@@ -98,15 +98,15 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         include/particlenodescene.h
 )
 
-if(TINY_ENGINE_ENABLE_PHYSICS)
-target_sources(tiny_hippie_engine PRIVATE
-        source/physicsdebugrenderer.h source/physicsdebugrenderer.cpp
-        source/physicscontext.h source/physicscontext.cpp
-        source/physicsworld.h source/physicsworld.cpp
-        source/physicsbodycomponent.h source/physicsbodycomponent.cpp
-        source/physicssandboxscene.h source/physicssandboxscene.cpp
-)
-endif()
+if (TINY_ENGINE_ENABLE_PHYSICS)
+    target_sources(tiny_hippie_engine PRIVATE
+            source/physicsdebugrenderer.h source/physicsdebugrenderer.cpp
+            source/physicscontext.h source/physicscontext.cpp
+            source/physicsworld.h source/physicsworld.cpp
+            source/physicsbodycomponent.h source/physicsbodycomponent.cpp
+            source/physicssandboxscene.h source/physicssandboxscene.cpp
+    )
+endif ()
 
 target_include_directories(tiny_hippie_engine
         PRIVATE
@@ -116,40 +116,40 @@ target_include_directories(tiny_hippie_engine
 )
 
 target_compile_definitions(tiny_hippie_engine PRIVATE GLFW_INCLUDE_NONE)
-if(TINY_ENGINE_ENABLE_IMGUI)
-target_compile_definitions(tiny_hippie_engine PRIVATE USE_IMGUI)
-target_include_directories(tiny_hippie_engine PRIVATE ${CMAKE_SOURCE_DIR}/imgui)
-endif()
-if(TINY_ENGINE_ENABLE_PHYSICS)
-target_compile_definitions(tiny_hippie_engine PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
-endif()
+if (TINY_ENGINE_ENABLE_IMGUI)
+    target_compile_definitions(tiny_hippie_engine PRIVATE USE_IMGUI)
+    target_include_directories(tiny_hippie_engine PRIVATE ${CMAKE_SOURCE_DIR}/imgui)
+endif ()
+if (TINY_ENGINE_ENABLE_PHYSICS)
+    target_compile_definitions(tiny_hippie_engine PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+endif ()
 
-if(TINY_ENGINE_ENABLE_IMGUI)
-add_library(imgui STATIC
-        imgui/imconfig.h
-        imgui/imgui.cpp
-        imgui/imgui.h
-        imgui/imgui_draw.cpp
-        imgui/imgui_impl_glfw.cpp
-        imgui/imgui_impl_glfw.h
-        imgui/imgui_impl_opengl3.cpp
-        imgui/imgui_impl_opengl3.h
-        imgui/imgui_impl_opengl3_loader.h
-        imgui/imgui_internal.h
-        imgui/imgui_tables.cpp
-        imgui/imgui_widgets.cpp
-        imgui/imstb_rectpack.h
-        imgui/imstb_textedit.h
-        imgui/imstb_truetype.h
-)
+if (TINY_ENGINE_ENABLE_IMGUI)
+    add_library(imgui STATIC
+            imgui/imconfig.h
+            imgui/imgui.cpp
+            imgui/imgui.h
+            imgui/imgui_draw.cpp
+            imgui/imgui_impl_glfw.cpp
+            imgui/imgui_impl_glfw.h
+            imgui/imgui_impl_opengl3.cpp
+            imgui/imgui_impl_opengl3.h
+            imgui/imgui_impl_opengl3_loader.h
+            imgui/imgui_internal.h
+            imgui/imgui_tables.cpp
+            imgui/imgui_widgets.cpp
+            imgui/imstb_rectpack.h
+            imgui/imstb_textedit.h
+            imgui/imstb_truetype.h
+    )
 
-target_include_directories(imgui
-        PUBLIC ${CMAKE_SOURCE_DIR}/imgui
-        PRIVATE ${CMAKE_SOURCE_DIR}/include
-)
+    target_include_directories(imgui
+            PUBLIC ${CMAKE_SOURCE_DIR}/imgui
+            PRIVATE ${CMAKE_SOURCE_DIR}/include
+    )
 
-target_compile_definitions(imgui PRIVATE GLFW_INCLUDE_NONE)
-endif()
+    target_compile_definitions(imgui PRIVATE GLFW_INCLUDE_NONE)
+endif ()
 
 add_library(basisu STATIC
         transcoder/basisu_file_headers.h
@@ -163,134 +163,134 @@ add_library(basisu STATIC
 
 target_include_directories(basisu PUBLIC ${CMAKE_SOURCE_DIR}/transcoder)
 
-if(EMSCRIPTEN)
-set_target_properties(
+if (EMSCRIPTEN)
+    set_target_properties(
             tiny_hippie_engine
             PROPERTIES
             SUFFIX ".html"
-)
-endif()
+    )
+endif ()
 
 set(BUILD_STATIC_LIB ON CACHE BOOL "static" FORCE)
 
-if(NOT EMSCRIPTEN)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
-list(APPEND PLATFORM_LIBS glfw)
-set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
+if (NOT EMSCRIPTEN)
+    set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/glfw)
+    list(APPEND PLATFORM_LIBS glfw)
+    set(LIBTYPE "STATIC" CACHE STRING "libtype" FORCE)
 
-if(TINY_ENGINE_ENABLE_IMGUI)
-target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
-endif()
-endif()
+    if (TINY_ENGINE_ENABLE_IMGUI)
+        target_compile_definitions(imgui PUBLIC IMGUI_IMPL_OPENGL_LOADER_GLAD)
+    endif ()
+endif ()
 
-if(APPLE)
-set(visibility_targets tiny_hippie_engine basisu)
-if(TINY_ENGINE_ENABLE_IMGUI)
-list(APPEND visibility_targets imgui)
-endif()
-foreach(target ${visibility_targets})
-    target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
-endforeach()
-endif()
+if (APPLE)
+    set(visibility_targets tiny_hippie_engine basisu)
+    if (TINY_ENGINE_ENABLE_IMGUI)
+        list(APPEND visibility_targets imgui)
+    endif ()
+    foreach (target ${visibility_targets})
+        target_compile_options(${target} PRIVATE -fvisibility=hidden -fvisibility-inlines-hidden)
+    endforeach ()
+endif ()
 
-if(TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-target_link_libraries(tiny_hippie_engine PRIVATE reactphysics3d)
-elseif(TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
-endif()
+if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
+    target_link_libraries(tiny_hippie_engine PRIVATE reactphysics3d)
+elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
+    target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
+endif ()
 
 target_link_libraries(tiny_hippie_engine PRIVATE basisu ${PLATFORM_LIBS})
-if(TINY_ENGINE_ENABLE_IMGUI)
-target_link_libraries(tiny_hippie_engine PRIVATE imgui)
-endif()
+if (TINY_ENGINE_ENABLE_IMGUI)
+    target_link_libraries(tiny_hippie_engine PRIVATE imgui)
+endif ()
 
-foreach(asset_dir IN ITEMS Shaders Resources)
-add_custom_command(
-        TARGET tiny_hippie_engine POST_BUILD
-        COMMAND ${CMAKE_COMMAND} -E copy_directory
-                ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-                $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
-        COMMENT "Copying ${asset_dir}" VERBATIM
-)
-endforeach()
-
-if(EMSCRIPTEN)
-foreach(asset_dir IN ITEMS Shaders Resources)
+foreach (asset_dir IN ITEMS Shaders Resources)
     add_custom_command(
-            TARGET tiny_hippie_engine PRE_LINK
+            TARGET tiny_hippie_engine POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
-                    ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-                    ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
-            COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
+            ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+            $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
+            COMMENT "Copying ${asset_dir}" VERBATIM
     )
-endforeach()
-endif()
+endforeach ()
 
-if(BUILD_TESTING AND NOT EMSCRIPTEN)
+if (EMSCRIPTEN)
+    foreach (asset_dir IN ITEMS Shaders Resources)
+        add_custom_command(
+                TARGET tiny_hippie_engine PRE_LINK
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
+                COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
+        )
+    endforeach ()
+endif ()
 
-find_package(GTest CONFIG QUIET)
-if(NOT GTest_FOUND)
-    FetchContent_Declare(
-            googletest
-            URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+if (BUILD_TESTING AND NOT EMSCRIPTEN)
+
+    find_package(GTest CONFIG QUIET)
+    if (NOT GTest_FOUND)
+        FetchContent_Declare(
+                googletest
+                URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+        )
+        set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+        FetchContent_MakeAvailable(googletest)
+    endif ()
+
+    include(GoogleTest)
+
+    add_executable(tiny_hippie_engine_tests
+            tests/animationclip_test.cpp
+            tests/animationplayer_test.cpp
+            tests/camera_test.cpp
+            tests/iscene_test.cpp
+            tests/meshasset_test.cpp
+            tests/meshassetcache_test.cpp
+            tests/skinning_test.cpp
+            source/animationclip.cpp
+            source/animationplayer.cpp
+            source/meshassetcache.cpp
+            source/skinning.cpp
+            tests/scenelifecycle_test.cpp
+            tests/scenemanager_test.cpp
+            tests/scenenode_test.cpp
+            source/logger.cpp
+            source/meshasset.cpp
+            source/scenelifecycle.cpp
+            source/scenenode.cpp
     )
-    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-    FetchContent_MakeAvailable(googletest)
-endif()
 
-include(GoogleTest)
+    if (TINY_ENGINE_ENABLE_PHYSICS)
+        target_sources(tiny_hippie_engine_tests PRIVATE
+                tests/physicsworld_test.cpp
+                source/physicscontext.cpp
+                source/physicsworld.cpp
+                source/physicsbodycomponent.cpp
+        )
+    endif ()
 
-add_executable(tiny_hippie_engine_tests
-        tests/animationclip_test.cpp
-        tests/animationplayer_test.cpp
-        tests/camera_test.cpp
-        tests/iscene_test.cpp
-        tests/meshasset_test.cpp
-        tests/meshassetcache_test.cpp
-        tests/skinning_test.cpp
-        source/animationclip.cpp
-        source/animationplayer.cpp
-        source/meshassetcache.cpp
-        source/skinning.cpp
-        tests/scenelifecycle_test.cpp
-        tests/scenemanager_test.cpp
-        tests/scenenode_test.cpp
-        source/logger.cpp
-        source/meshasset.cpp
-        source/scenelifecycle.cpp
-        source/scenenode.cpp
-)
+    target_include_directories(tiny_hippie_engine_tests
+            PRIVATE
+            ${CMAKE_SOURCE_DIR}/include
+            ${CMAKE_SOURCE_DIR}/source
+    )
 
-if(TINY_ENGINE_ENABLE_PHYSICS)
-target_sources(tiny_hippie_engine_tests PRIVATE
-        tests/physicsworld_test.cpp
-        source/physicscontext.cpp
-        source/physicsworld.cpp
-        source/physicsbodycomponent.cpp
-)
-endif()
+    target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
+    if (TINY_ENGINE_ENABLE_PHYSICS)
+        target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+    endif ()
 
-target_include_directories(tiny_hippie_engine_tests
-        PRIVATE
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/source
-)
+    if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE reactphysics3d)
+    elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE ReactPhysics3D)
+    endif ()
 
-target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
-if(TINY_ENGINE_ENABLE_PHYSICS)
-target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
-endif()
+    target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
 
-if(TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-target_link_libraries(tiny_hippie_engine_tests PRIVATE reactphysics3d)
-elseif(TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-target_link_libraries(tiny_hippie_engine_tests PRIVATE ReactPhysics3D)
-endif()
-
-target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
-
-gtest_discover_tests(tiny_hippie_engine_tests)
-endif()
+    gtest_discover_tests(tiny_hippie_engine_tests)
+endif ()

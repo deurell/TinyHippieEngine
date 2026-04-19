@@ -3,43 +3,67 @@
 //
 
 #include "simplescene.h"
+#include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#endif
+#include <iostream>
 
-SimpleScene::SimpleScene(std::string_view glslVersionString)
-    : mGlslVersionString(glslVersionString) {}
+SimpleScene::SimpleScene(DL::IRenderDevice *renderDevice)
+    : renderDevice_(renderDevice) {}
+
+SimpleScene::~SimpleScene() {
+  if (renderDevice_ != nullptr) {
+    if (mesh_.valid()) {
+      renderDevice_->destroy(mesh_);
+    }
+    if (pipeline_.valid()) {
+      renderDevice_->destroy(pipeline_);
+    }
+  }
+}
 
 void SimpleScene::init() {
   mCamera = std::make_unique<DL::Camera>(glm::vec3(0, 0, 26));
   mCamera->lookAt({0, 0, 0});
-  auto shader = std::make_unique<DL::Shader>(
-      "Shaders/simple.vert", "Shaders/simple.frag", mGlslVersionString);
-
-  auto colorSetter = [](DL::Shader &shaderRef) {
-    shaderRef.setVec4f("baseColor", 0.2f, 0.7f, 1.0f, 1.0f);
-  };
-
-  mPlane =
-      std::make_unique<DL::Plane>(std::move(shader), *mCamera, colorSetter);
-  mPlane->position = {0, 0, 0};
-  mPlane->scale = {1, 1, 1};
+  if (renderDevice_ == nullptr) {
+    return;
+  }
+  pipeline_ =
+      renderDevice_->createPipeline("Shaders/simple.vert", "Shaders/simple.frag");
+  mesh_ = renderDevice_->createTexturedQuad();
 }
 
-void SimpleScene::update(float delta) {
-}
+void SimpleScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void SimpleScene::render(float delta) {
-  glDisable(GL_DEPTH_TEST);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT);
+void SimpleScene::render(const DL::FrameContext &ctx) {
+  if (renderDevice_ != nullptr) {
+    renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+                               .clearFlags = DL::ClearFlags::Color,
+                               .depthMode = DL::DepthMode::Disabled});
+  }
 
-  mPlane->render(delta);
+  if (renderDevice_ != nullptr && mesh_.valid() && pipeline_.valid()) {
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = mCamera->getViewMatrix();
+    glm::mat4 projection = mCamera->getPerspectiveTransform();
+
+    DL::DrawCommand command;
+    command.mesh = mesh_;
+    command.pipeline = pipeline_;
+    command.uniforms.push_back(
+        DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
+    command.uniforms.push_back(
+        DL::UniformValue::makeVec4("baseColor", {0.2f, 0.7f, 1.0f, 1.0f}));
+    command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
+    command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
+    command.uniforms.push_back(
+        DL::UniformValue::makeMat4("projection", projection));
+    renderDevice_->draw(command);
+  }
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("simple scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

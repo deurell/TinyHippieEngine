@@ -1,0 +1,131 @@
+#include "physicscontext.h"
+#include "physicsworld.h"
+#include <gtest/gtest.h>
+
+TEST(PhysicsWorldTest, DynamicBodyRestsOnStaticFloor) {
+  DL::PhysicsWorld world;
+  world.setGravity({0.0f, -9.81f, 0.0f});
+
+  const auto floor = world.createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({5.0f, 0.5f, 5.0f}),
+      .position = {0.0f, -1.0f, 0.0f},
+  });
+  ASSERT_TRUE(floor.valid());
+
+  const auto cube = world.createBody({
+      .type = DL::PhysicsBodyType::Dynamic,
+      .shape = DL::PhysicsShapeDesc::makeBox({0.5f, 0.5f, 0.5f}),
+      .position = {0.0f, 4.0f, 0.0f},
+  });
+  ASSERT_TRUE(cube.valid());
+
+  for (int i = 0; i < 240; ++i) {
+    world.step(1.0f / 60.0f);
+  }
+
+  const auto cubeState = world.getBodyState(cube);
+  EXPECT_GT(cubeState.position.y, -1.1f);
+  EXPECT_LT(cubeState.position.y, 0.5f);
+}
+
+TEST(PhysicsWorldTest, RaycastHitsStaticFloor) {
+  DL::PhysicsWorld world;
+  const auto floor = world.createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({5.0f, 0.5f, 5.0f}),
+      .position = {0.0f, -1.0f, 0.0f},
+      .categoryBits = 0x0001,
+  });
+  ASSERT_TRUE(floor.valid());
+
+  const auto hit = world.raycast({0.0f, 5.0f, 0.0f}, {0.0f, -5.0f, 0.0f});
+  EXPECT_TRUE(hit.hasHit);
+  EXPECT_TRUE(hit.body.valid());
+  EXPECT_NEAR(hit.point.y, -0.5f, 0.15f);
+  EXPECT_GT(hit.normal.y, 0.5f);
+}
+
+TEST(PhysicsWorldTest, CollisionMasksCanDisableFloorContact) {
+  DL::PhysicsWorld world;
+  world.setGravity({0.0f, -9.81f, 0.0f});
+
+  const auto floor = world.createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({5.0f, 0.5f, 5.0f}),
+      .position = {0.0f, -1.0f, 0.0f},
+      .categoryBits = 0x0001,
+      .maskBits = 0x0001,
+  });
+  ASSERT_TRUE(floor.valid());
+
+  const auto cube = world.createBody({
+      .type = DL::PhysicsBodyType::Dynamic,
+      .shape = DL::PhysicsShapeDesc::makeBox({0.5f, 0.5f, 0.5f}),
+      .position = {0.0f, 4.0f, 0.0f},
+      .categoryBits = 0x0002,
+      .maskBits = 0x0002,
+  });
+  ASSERT_TRUE(cube.valid());
+
+  for (int i = 0; i < 240; ++i) {
+    world.step(1.0f / 60.0f);
+  }
+
+  const auto cubeState = world.getBodyState(cube);
+  EXPECT_LT(cubeState.position.y, -1.5f);
+}
+
+TEST(PhysicsContextTest, ProxiesRaycastToPhysicsWorld) {
+  DL::PhysicsContext context;
+  context.world().createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({2.0f, 0.5f, 2.0f}),
+      .position = {0.0f, -1.0f, 0.0f},
+  });
+
+  const auto hit = context.raycast({0.0f, 3.0f, 0.0f}, {0.0f, -3.0f, 0.0f});
+  EXPECT_TRUE(hit.hasHit);
+}
+
+TEST(PhysicsWorldTest, StoresDebugRenderState) {
+  DL::PhysicsWorld world;
+  const DL::PhysicsDebugRenderSettings settings{
+      .collisionShapes = true,
+      .velocityVectors = true,
+      .contactPoints = true,
+      .contactNormals = true,
+      .colliderAabbs = true,
+      .broadphaseAabbs = true,
+      .velocityScale = 0.35f,
+  };
+
+  world.setDebugRenderSettings(settings);
+  world.setDebugRenderingEnabled(true);
+  EXPECT_TRUE(world.isDebugRenderingEnabled());
+
+  const auto applied = world.getDebugRenderSettings();
+  EXPECT_TRUE(applied.collisionShapes);
+  EXPECT_TRUE(applied.velocityVectors);
+  EXPECT_TRUE(applied.contactPoints);
+  EXPECT_TRUE(applied.contactNormals);
+  EXPECT_TRUE(applied.colliderAabbs);
+  EXPECT_TRUE(applied.broadphaseAabbs);
+  EXPECT_FLOAT_EQ(applied.velocityScale, 0.35f);
+}
+
+TEST(PhysicsWorldTest, ExposesDebugLinesWhenEnabled) {
+  DL::PhysicsWorld world;
+  world.setDebugRenderSettings({.collisionShapes = true});
+  world.setDebugRenderingEnabled(true);
+
+  const auto body = world.createBody({
+      .type = DL::PhysicsBodyType::Static,
+      .shape = DL::PhysicsShapeDesc::makeBox({0.5f, 0.5f, 0.5f}),
+      .position = {0.0f, 1.0f, 0.0f},
+  });
+  ASSERT_TRUE(body.valid());
+
+  const auto lines = world.getDebugLines();
+  EXPECT_FALSE(lines.empty());
+}

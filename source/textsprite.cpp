@@ -17,7 +17,6 @@ DL::TextSprite::TextSprite(GLuint texture, stbtt_packedchar *fontInfo,
                            std::string_view text)
     : mFontTexture(texture), mFontCharInfoPtr(fontInfo),
       mText(text), ownsTexture_(false) {
-  glBindTexture(GL_TEXTURE_2D, mFontTexture);
   init();
 }
 

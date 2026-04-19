@@ -1,7 +1,8 @@
 #include "truetypescene.h"
+#include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#endif
 #include "texture.h"
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -11,7 +12,6 @@ TrueTypeScene::TrueTypeScene(std::string_view glslVersion)
     : mGlslVersionString(glslVersion) {}
 
 void TrueTypeScene::renderScroll(float delta) {
-
   mLabelShader->use();
 
   glm::vec3 pivot = {260, 0, 0};
@@ -29,9 +29,8 @@ void TrueTypeScene::renderScroll(float delta) {
   mLabelShader->setMat4f("model", rotate);
 
   glm::mat4 view = mLabelCamera->getViewMatrix();
-  mLabelShader->setMat4f("view", view);
-
   glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
+  mLabelShader->setMat4f("view", view);
   mLabelShader->setMat4f("projection", projectionMatrix);
 
   mLabelShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
@@ -39,7 +38,6 @@ void TrueTypeScene::renderScroll(float delta) {
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mTextSprite->mFontTexture);
   mLabelShader->setInt("texture1", 0);
-
   mTextSprite->render(delta);
 }
 
@@ -65,17 +63,15 @@ void TrueTypeScene::renderStatus(float delta) {
   glm::mat4 model = glm::mat4(1.0f);
   model = glm::translate(model, glm::vec3(-14.0, 9.0, 0.0) + mStatusOffset);
   model = glm::scale(model, glm::vec3(0.03, 0.03, 1.0));
-  mStatusShader->setMat4f("model", model);
   glm::mat4 view = mLabelCamera->getViewMatrix();
-  mStatusShader->setMat4f("view", view);
   glm::mat4 projectionMatrix = mLabelCamera->getPerspectiveTransform();
+  mStatusShader->setMat4f("model", model);
+  mStatusShader->setMat4f("view", view);
   mStatusShader->setMat4f("projection", projectionMatrix);
-
   mStatusShader->setFloat("iTime", static_cast<float>(glfwGetTime()));
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, mStatusSprite->mFontTexture);
   mStatusShader->setInt("texture1", 0);
-
   mStatusSprite->render(delta);
 }
 
@@ -107,15 +103,15 @@ void TrueTypeScene::init() {
       mTextSprite->mFontTexture, mTextSprite->getFontCharInfoPtr(), statusText);
 }
 
-void TrueTypeScene::update(float /*delta*/) {}
+void TrueTypeScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void TrueTypeScene::render(float delta) {
+void TrueTypeScene::render(const DL::FrameContext &ctx) {
   if (mState == SceneState::INTRO &&
       (glfwGetTime() - mStateStartTime >= mDelayTime)) {
     mState = SceneState::RUNNING;
   }
-  mDelta = delta;
-  mScrollOffset += delta;
+  mDelta = ctx.delta_time;
+  mScrollOffset += ctx.delta_time;
   if (mScrollOffset > scroll_wrap) {
     mScrollOffset = 0;
     mState = SceneState::OUTRO;
@@ -131,14 +127,12 @@ void TrueTypeScene::render(float delta) {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
-  renderScroll(delta);
-  calculateStatus(delta);
-  renderStatus(delta);
+  renderScroll(ctx.delta_time);
+  calculateStatus(ctx.delta_time);
+  renderStatus(ctx.delta_time);
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("tiny hippie engine");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollOffset: %.1f", mScrollOffset);

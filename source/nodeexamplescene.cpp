@@ -2,33 +2,26 @@
 // Created by Mikael Deurell on 2023-08-18.
 //
 #include "nodeexamplescene.h"
-#include "GLFW/glfw3.h"
+#include "debugui.h"
 #include "glm/ext/scalar_constants.hpp"
+#ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#endif
 #include "planenode.h"
+#include "spritenode.h"
 #include "textnode.h"
 #include "textvisualizer.h"
 
-NodeExampleScene::NodeExampleScene(std::string glslVersionString)
-    : SceneNode(nullptr), glslVersionString_(std::move(glslVersionString)) {}
+NodeExampleScene::NodeExampleScene(
+    DL::IRenderDevice *renderDevice,
+    basist::etc1_global_selector_codebook *codeBook,
+    DL::RenderResourceCache *renderResourceCache)
+    : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook),
+      renderResourceCache_(renderResourceCache) {}
 
 void NodeExampleScene::init() {
   SceneNode::init();
   setLocalPosition({0, 0, 0});
-
-  auto plane =
-      createPlane({6, 4, 0}, {4, 2, 1},
-                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
-  plane1_ = plane.get();
-  addChild(std::move(plane));
-
-  auto plane2 =
-      createPlane({-6, 4, 0}, {2, 4, 1},
-                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
-  plane2_ = plane2.get();
-  addChild(std::move(plane2));
 
   std::string text = R"(
 A long time ago,
@@ -51,7 +44,8 @@ that can save her people and restore
 freedom to the galaxy...
   )";
 
-  auto textNode = std::make_unique<TextNode>(glslVersionString_, this, text);
+  auto textNode =
+      std::make_unique<TextNode>(this, text, renderDevice_, renderResourceCache_);
   textNode->init();
   textNode->setLocalPosition(INITIAL_TEXT_POSITION);
   textNode->setLocalScale({.1f, .1f, 1});
@@ -61,15 +55,40 @@ freedom to the galaxy...
 
   textNode_->getCamera().setPosition({0, -40, 40});
   textNode_->getCamera().lookAt({0, 0, 0});
+
+  auto spriteNode = std::make_unique<SpriteNode>(
+      "Resources/sup.basis", codeBook_, renderDevice_, renderResourceCache_, this);
+  spriteNode->init();
+  spriteNode->setLocalPosition({0, -7, 0});
+  spriteNode->setLocalScale({5, 3, 1});
+  spriteNode_ = spriteNode.get();
+  addChild(std::move(spriteNode));
+
+  auto plane =
+      createPlane({6, 4, 0}, {4, 2, 1},
+                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
+  plane1_ = plane.get();
+  addChild(std::move(plane));
+
+  auto plane2 =
+      createPlane({-6, 4, 0}, {2, 4, 1},
+                  glm::angleAxis(glm::radians(10.0f), glm::vec3(0, 0, 1)));
+  plane2_ = plane2.get();
+  addChild(std::move(plane2));
 }
 
-void NodeExampleScene::update(float delta) {
-  float time = glfwGetTime();
+void NodeExampleScene::update(const DL::FrameContext &ctx) {
+  float time = static_cast<float>(ctx.total_time);
   float rotation = sin(time * 5.0) * 0.6f;
   float scale_ = 1.4f + sin(time * 2.5) * 0.4f;
   if (plane2_) {
     plane2_->setLocalScale({scale_, scale_, 1});
     plane2_->setLocalRotation(glm::angleAxis(rotation, glm::vec3(0, 0, 1)));
+  }
+
+  if (spriteNode_) {
+    spriteNode_->setLocalRotation(
+        glm::angleAxis(time * 0.4f, glm::vec3(0, 1, 0)));
   }
 
   float rotation2 = cos(time * 1.5) * glm::pi<float>();
@@ -85,16 +104,14 @@ void NodeExampleScene::update(float delta) {
     wrapScrollText();
   }
 
-  SceneNode::update(delta);
+  SceneNode::update(ctx);
 }
 
-void NodeExampleScene::render(float delta) {
+void NodeExampleScene::render(const DL::FrameContext &ctx) {
   auto *textVisualizer =
-      dynamic_cast<DL::TextVisualizer *>(textNode_->getVisualizer("main"));
+      textNode_ != nullptr ? textNode_->getTextVisualizer() : nullptr;
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::Text("scrollPosition: %.1f", textNode_->getLocalPosition().y);
@@ -109,12 +126,13 @@ void NodeExampleScene::render(float delta) {
   ImGui::End();
 #endif
 
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  if (renderDevice_ != nullptr) {
+    renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+                               .clearFlags = DL::ClearFlags::ColorDepth,
+                               .depthMode = DL::DepthMode::Less});
+  }
 
-  SceneNode::render(delta);
+  SceneNode::render(ctx);
 }
 
 void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
@@ -125,7 +143,8 @@ void NodeExampleScene::onScreenSizeChanged(glm::vec2 size) {
 std::unique_ptr<PlaneNode> NodeExampleScene::createPlane(glm::vec3 position,
                                                          glm::vec3 scale,
                                                          glm::quat rotation) {
-  auto planeNode = std::make_unique<PlaneNode>(glslVersionString_);
+  auto planeNode = std::make_unique<PlaneNode>(nullptr, nullptr, renderDevice_,
+                                               renderResourceCache_);
   planeNode->planeType = PlaneNode::PlaneType::Spinner;
   planeNode->init();
   planeNode->setLocalPosition(position);

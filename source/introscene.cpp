@@ -1,4 +1,5 @@
 #include "introscene.h"
+#include "debugui.h"
 
 IntroScene::IntroScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {}
@@ -41,20 +42,18 @@ void IntroScene::init() {
   mPlane2->scale = {40, 3, 1};
 }
 
-void IntroScene::update(float delta) {}
+void IntroScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void IntroScene::render(float delta) {
+void IntroScene::render(const DL::FrameContext &ctx) {
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
-  renderLogo(delta);
-  mPlane->render(delta);
-  mPlane2->render(delta);
+  renderLogo(ctx.delta_time);
+  mPlane->render(ctx.delta_time);
+  mPlane2->render(ctx.delta_time);
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("tiny intro");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::SliderFloat("offset", &mOffset, 0, 5);

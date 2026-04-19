@@ -5,10 +5,11 @@
 #include "planenode.h"
 #include "planevisualizer.h"
 
-PlaneNode::PlaneNode(std::string_view glslVersionString,
-                     DL::SceneNode *parentNode, DL::Camera *camera)
-    : glslVersionString_(glslVersionString.data()), DL::SceneNode(parentNode),
-      camera_(camera) {}
+PlaneNode::PlaneNode(DL::SceneNode *parentNode, DL::Camera *camera,
+                     DL::IRenderDevice *renderDevice,
+                     DL::RenderResourceCache *renderResourceCache)
+    : DL::SceneNode(parentNode), camera_(camera), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache) {}
 
 void PlaneNode::init() {
   SceneNode::init();
@@ -17,14 +18,15 @@ void PlaneNode::init() {
   setLocalPosition({0, 0, 0});
 }
 
-void PlaneNode::update(float delta) {
-  SceneNode::update(delta);
+void PlaneNode::update(const DL::FrameContext &ctx) {
+  SceneNode::update(ctx);
 
-  auto* visualizer= dynamic_cast<DL::PlaneVisualizer*>(getVisualizer("PlaneVisualizer"));
-  visualizer->baseColor = color;
+  if (planeVisualizer_ != nullptr) {
+    planeVisualizer_->baseColor = color;
+  }
 }
 
-void PlaneNode::render(float delta) { SceneNode::render(delta); }
+void PlaneNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
 void PlaneNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
@@ -49,15 +51,11 @@ void PlaneNode::initComponents() {
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
 
-  std::function<void(DL::Shader &)> shaderModifier;
-  if (planeType == PlaneType::Spinner) {
-    shaderModifier = [](DL::Shader &shader) { shader.setFloat("speed", 0.25f); };
-  }
-
   auto visualizer = std::make_unique<DL::PlaneVisualizer>(
-      "PlaneVisualizer", *camera_, glslVersionString_, *this, shaderModifier,
+      *camera_, *this, renderDevice_, renderResourceCache_,
       vertexShaderPath, fragmentShaderPath);
   visualizer->baseColor = color;
-
-  visualizers.emplace_back(std::move(visualizer));
+  visualizer->spinnerEnabled = planeType == PlaneType::Spinner;
+  planeVisualizer_ = visualizer.get();
+  addRenderComponent(std::move(visualizer));
 }

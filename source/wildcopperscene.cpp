@@ -1,4 +1,5 @@
 #include "wildcopperscene.h"
+#include "debugui.h"
 #include "GLFW/glfw3.h"
 #include <cmath>
 
@@ -31,19 +32,17 @@ void WildCopperScene::init() {
   mPlane->scale = {50, 30, 1};
 }
 
-void WildCopperScene::update(float delta) {}
+void WildCopperScene::update(const DL::FrameContext & /*ctx*/) {}
 
-void WildCopperScene::render(float delta) {
+void WildCopperScene::render(const DL::FrameContext &ctx) {
   glClearColor(0.0, 0.0, 1.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_DEPTH_TEST);
 
-  renderScroller(delta);
-  mPlane->render(delta);
+  renderScroller(ctx.delta_time);
+  mPlane->render(ctx.delta_time);
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("wild_copper");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

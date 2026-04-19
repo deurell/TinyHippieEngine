@@ -1,7 +1,8 @@
 #include "particlescene.h"
+#include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#endif
 
 ParticleScene::ParticleScene(std::string_view glslVersionString)
     : mGlslVersionString(glslVersionString) {
@@ -20,7 +21,7 @@ void ParticleScene::init() {
   }
 }
 
-void ParticleScene::update(float delta) {}
+void ParticleScene::update(const DL::FrameContext & /*ctx*/) {}
 
 void ParticleScene::initParticles() {
   for (int i = 0; i < number_of_particles; ++i) {
@@ -49,21 +50,19 @@ void ParticleScene::initPlanes() {
   }
 }
 
-void ParticleScene::render(float delta) {
+void ParticleScene::render(const DL::FrameContext &ctx) {
   glDisable(GL_DEPTH_TEST);
   glClearColor(0.0, 0.0, 0.0, 1.0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  particleSystem_->updatePhysics(delta);
+  particleSystem_->updatePhysics(ctx.delta_time);
 
   for (auto &plane : mPlanes) {
-    plane->render(delta);
+    plane->render(ctx.delta_time);
   }
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("fireworks scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::End();

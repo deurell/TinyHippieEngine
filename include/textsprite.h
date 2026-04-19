@@ -1,8 +1,10 @@
 #pragma once
 
+#ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#endif
 #include "stb_truetype.h"
 #include "texture.h"
 #include <GLFW/glfw3.h>
@@ -27,8 +29,8 @@ public:
   TextSprite(GLuint texture, stbtt_packedchar *fontInfo, std::string_view text);
   ~TextSprite();
 
-  void render(float delta) const;
   stbtt_packedchar *getFontCharInfoPtr();
+  void render(float delta) const;
 
   std::string mText;
   GLuint mVAO = 0;

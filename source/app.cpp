@@ -1,20 +1,31 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
 #include "c64scene.h"
+#include "debugui.h"
 #include "demoscene.h"
 #include "glosifyscene.h"
+#include "gltfnodescene.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
+#endif
 #include "introscene.h"
 #include "nodeexamplescene.h"
+#include "particlenodescene.h"
 #include "particlescene.h"
+#if defined(TINY_ENGINE_ENABLE_PHYSICS)
+#include "physicssandboxscene.h"
+#endif
+#include "logger.h"
+#include "meshnodescene.h"
+#include "phongshapescene.h"
 #include "quicknodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
+#include "spectrumanalyzerscene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
-#include "logger.h"
 #include <iostream>
 #include <thread>
 
@@ -25,16 +36,40 @@ void renderloop_callback(void *arg) {
 }
 
 void mouseclick_callback(GLFWwindow *window, int button, int action, int mod) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mod);
+#endif
   if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onClick(button, action, mod);
   }
 }
 
+void cursorpos_callback(GLFWwindow *window, double x, double y) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_CursorPosCallback(window, x, y);
+#endif
+}
+
+void scroll_callback(GLFWwindow *window, double xoffset, double yoffset) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+#endif
+}
+
 void keyclick_callback(GLFWwindow *window, int key, int scancode, int action,
                        int mods) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+#endif
   if (auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window))) {
     app->onKey(key, scancode, action, mods);
   }
+}
+
+void char_callback(GLFWwindow *window, unsigned int c) {
+#ifdef USE_IMGUI
+  ImGui_ImplGlfw_CharCallback(window, c);
+#endif
 }
 
 void window_size_callback(GLFWwindow *window, int width, int height) {
@@ -93,7 +128,10 @@ int DL::App::run() {
 
   glfwSetWindowUserPointer(window_, this);
   glfwSetMouseButtonCallback(window_, mouseclick_callback);
+  glfwSetCursorPosCallback(window_, cursorpos_callback);
+  glfwSetScrollCallback(window_, scroll_callback);
   glfwSetKeyCallback(window_, keyclick_callback);
+  glfwSetCharCallback(window_, char_callback);
   glfwSetWindowSizeCallback(window_, window_size_callback);
   glfwSetFramebufferSizeCallback(window_, framebuffer_size_callback);
 
@@ -106,16 +144,27 @@ int DL::App::run() {
     return EXIT_FAILURE;
   }
 
+  renderDevice_ = createOpenGLRenderDevice(glslVersionString_);
+  meshAssetCache_ = std::make_unique<DL::MeshAssetCache>();
+  renderResourceCache_ =
+      std::make_unique<DL::RenderResourceCache>(*renderDevice_);
+
+  if (!audioSystem_.init()) {
+    LogWarn("Audio system initialization failed");
+  }
+
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  glViewport(0, 0, frameWidth, frameHeight);
+  renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
+                             static_cast<std::uint32_t>(frameHeight));
 
 #ifdef USE_IMGUI
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
   ImGuiIO &io = ImGui::GetIO();
-  ImGui::StyleColorsLight();
-  ImGui_ImplGlfw_InitForOpenGL(window_, true);
+  (void)io;
+  applyDebugUiStyle();
+  ImGui_ImplGlfw_InitForOpenGL(window_, false);
   ImGui_ImplOpenGL3_Init(glslVersionString_.c_str());
 #endif
 
@@ -139,29 +188,59 @@ int DL::App::run() {
 #endif
   glfwDestroyWindow(window_);
 #endif
+  audioSystem_.shutdown();
   glfwTerminate();
   return EXIT_SUCCESS;
 }
 
 void DL::App::update() {
   calculateDeltaTime();
+  audioSystem_.update();
   if (window_) {
     processInput(window_);
   }
-  scene_->update(deltaTime_);
+  if (!scene_)
+    return;
+  const auto frameTime = glfwGetTime();
+  lastFixedUpdateCount_ = 0;
+  if (simulationPaused_) {
+    while (requestedSimulationSteps_ > 0) {
+      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      --requestedSimulationSteps_;
+      ++lastFixedUpdateCount_;
+    }
+  } else {
+    fixedTimeAccumulator_ += deltaTime_;
+    while (fixedTimeAccumulator_ >= fixedTimeStep_) {
+      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      fixedTimeAccumulator_ -= fixedTimeStep_;
+      ++lastFixedUpdateCount_;
+    }
+  }
+  scene_->update({deltaTime_, frameTime});
 }
 
 void DL::App::render() {
-  scene_->render(deltaTime_);
+  if (!scene_)
+    return;
+  DL::beginDebugUiFrame();
+  scene_->render({deltaTime_, glfwGetTime()});
+  if (renderDevice_ != nullptr) {
+    DL::drawEngineDebugWindows(*this, deltaTime_,
+                               renderDevice_->getRenderStats());
+  }
+  DL::drawLogWindow();
 
 #ifdef USE_IMGUI
   ImGui::Render();
   ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  DL::endDebugUiFrame();
 #endif
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  glViewport(0, 0, frameWidth, frameHeight);
+  renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
+                             static_cast<std::uint32_t>(frameHeight));
   glfwSwapBuffers(window_);
   glfwPollEvents();
 
@@ -180,90 +259,139 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
-  bool rightPressed = glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
-  bool leftPressed = glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
-
-  if (rightPressed && !nextSceneHeld_) {
-    sceneManager_.next();
-    loadCurrentScene();
-  }
-  if (leftPressed && !prevSceneHeld_) {
-    sceneManager_.previous();
-    loadCurrentScene();
-  }
-
-  nextSceneHeld_ = rightPressed;
-  prevSceneHeld_ = leftPressed;
 }
 
 void DL::App::loadSimpleScene() {
-  scene_ = std::make_unique<SimpleScene>(glslVersionString_);
-  scene_->init();
-  scene_->onScreenSizeChanged(getWindowSize());
-  scene_->onFramebufferSizeChanged(getFramebufferSize());
+  scene_ = replacePreparedScene(
+      std::move(scene_), std::make_unique<SimpleScene>(renderDevice_.get()),
+      getWindowSize(), getFramebufferSize());
 }
 
 void DL::App::loadCurrentScene() {
-  auto newScene = sceneManager_.createCurrent(glslVersionString_);
-  if (!newScene) {
+  auto previousScene = std::move(scene_);
+  scene_ = replacePreparedScene(std::move(previousScene),
+                                sceneManager_.createCurrent(), getWindowSize(),
+                                getFramebufferSize());
+  if (!scene_) {
     LogError("Failed to create scene");
-    return;
+  } else {
+    Logger::instance().logEvent(LogLevel::Info, "scene", "scene_loaded");
   }
-  scene_ = std::move(newScene);
-  scene_->init();
-  scene_->onScreenSizeChanged(getWindowSize());
-  scene_->onFramebufferSizeChanged(getFramebufferSize());
 }
 
 void DL::App::registerScenes() {
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<QuickNodeScene>(std::string(glsl));
+  sceneManager_.registerScene([this] {
+    return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
+                                               renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<NodeExampleScene>(std::string(glsl));
+  sceneManager_.registerScene([this] {
+    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
+                                           meshAssetCache_.get(),
+                                           renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<DemoScene>(glsl, codebook_.get());
+#if defined(TINY_ENGINE_ENABLE_PHYSICS)
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhysicsSandboxScene>(renderDevice_.get(),
+                                                 renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<TrueTypeScene>(glsl);
+#endif
+  sceneManager_.registerScene([this] {
+    return std::make_unique<SpectrumAnalyzerScene>(
+        renderDevice_.get(), renderResourceCache_.get(), &audioSystem_);
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<GlosifyScene>(std::string(glsl), codebook_.get());
+  sceneManager_.registerScene([this] {
+    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
+                                            renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<IntroScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<NodeExampleScene>(
+        renderDevice_.get(), codebook_.get(), renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<C64Scene>(glsl, codebook_.get());
+  sceneManager_.registerScene([this] {
+    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
+                                           meshAssetCache_.get(),
+                                           renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<ParticleScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhongShapeScene>(renderDevice_.get(),
+                                             renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this](std::string_view glsl) {
-    return std::make_unique<WildCopperScene>(glsl);
+  sceneManager_.registerScene([this] {
+    return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
   });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<TrueTypeScene>(glslVersionString_); });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get(),
+                                          renderResourceCache_.get());
+  });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<IntroScene>(glslVersionString_); });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
+                                      renderDevice_.get(), &audioSystem_);
+  });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<ParticleScene>(glslVersionString_); });
+  sceneManager_.registerScene(
+      [this] { return std::make_unique<WildCopperScene>(glslVersionString_); });
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
+#ifdef USE_IMGUI
+  const bool imguiWantsMouse =
+      ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
+#else
+  const bool imguiWantsMouse = false;
+#endif
+
   if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+    if (imguiWantsMouse) {
+      return;
+    }
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
-    scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+    if (scene_) {
+      scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+    }
   }
 }
 
 void DL::App::onKey(int key, int scancode, int action, int mod) {
+#ifdef USE_IMGUI
+  const bool imguiWantsKeyboard = ImGui::GetCurrentContext() != nullptr &&
+                                  ImGui::GetIO().WantCaptureKeyboard;
+#else
+  const bool imguiWantsKeyboard = false;
+#endif
+
   if (action != GLFW_RELEASE) {
+    if (action == GLFW_PRESS) {
+      if (!imguiWantsKeyboard && key == GLFW_KEY_RIGHT) {
+        sceneManager_.next();
+        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_next");
+        loadCurrentScene();
+        return;
+      }
+      if (!imguiWantsKeyboard && key == GLFW_KEY_LEFT) {
+        sceneManager_.previous();
+        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_previous");
+        loadCurrentScene();
+        return;
+      }
+    }
     return;
   }
 
   if (key == GLFW_KEY_SPACE) {
+    Logger::instance().logEvent(LogLevel::Info, "scene", "load_simple_scene");
     loadSimpleScene();
     return;
   }
 
-  scene_->onKey(key);
+  if (!imguiWantsKeyboard && scene_) {
+    scene_->onKey(key);
+  }
 }
 
 void DL::App::basisInit() {
@@ -271,15 +399,23 @@ void DL::App::basisInit() {
   codebook_ = std::make_unique<basist::etc1_global_selector_codebook>(
       basist::g_global_selector_cb_size, basist::g_global_selector_cb);
   LogInfo("BasisU transcoder initialized");
+  Logger::instance().logEvent(LogLevel::Info, "assets", "basisu_initialized");
 }
 
 void DL::App::onScreenSizeChanged(int width, int height) {
-  scene_->onScreenSizeChanged({width, height});
+  if (scene_) {
+    scene_->onScreenSizeChanged({width, height});
+  }
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
-  glViewport(0, 0, width, height);
-  scene_->onFramebufferSizeChanged({width, height});
+  if (renderDevice_) {
+    renderDevice_->setViewport(static_cast<std::uint32_t>(width),
+                               static_cast<std::uint32_t>(height));
+  }
+  if (scene_) {
+    scene_->onFramebufferSizeChanged({width, height});
+  }
 }
 
 glm::vec2 DL::App::getWindowSize() const {

@@ -9,12 +9,37 @@ public:
   using DL::SceneNode::SceneNode;
 };
 
+class TrackingSceneNode final : public DL::SceneNode {
+public:
+  using DL::SceneNode::SceneNode;
+
+  void onScreenSizeChanged(glm::vec2 size) override {
+    lastScreenSize = size;
+    DL::SceneNode::onScreenSizeChanged(size);
+  }
+
+  glm::vec2 lastScreenSize{0.0f, 0.0f};
+};
+
+class TestVisualizer final : public DL::VisualizerBase {
+public:
+  TestVisualizer(DL::Camera &camera, DL::SceneNode &node, int &renderCount)
+      : DL::VisualizerBase(camera, "", "", node), renderCount_(renderCount) {}
+
+  void render(const glm::mat4 &, const DL::FrameContext &) override {
+    ++renderCount_;
+  }
+
+private:
+  int &renderCount_;
+};
+
 TEST(SceneNodeTest, LocalTransformBecomesWorldTransformForRootNode) {
   TestSceneNode node;
   node.setLocalPosition({1.0f, 2.0f, 3.0f});
   node.setLocalScale({2.0f, 3.0f, 4.0f});
 
-  node.update(0.0f);
+  node.update({});
 
   EXPECT_NEAR(node.getWorldPosition().x, 1.0f, 1e-6f);
   EXPECT_NEAR(node.getWorldPosition().y, 2.0f, 1e-6f);
@@ -33,7 +58,7 @@ TEST(SceneNodeTest, ChildWorldPositionIncludesParentTransform) {
   childPtr->setLocalPosition({0.0f, 5.0f, 0.0f});
   parent.addChild(std::move(child));
 
-  parent.update(0.0f);
+  parent.update({});
 
   EXPECT_NEAR(childPtr->getWorldPosition().x, 10.0f, 1e-6f);
   EXPECT_NEAR(childPtr->getWorldPosition().y, 5.0f, 1e-6f);
@@ -48,13 +73,29 @@ TEST(SceneNodeTest, MarkDirtyPropagatesToChildrenAfterParentChanges) {
   childPtr->setLocalPosition({1.0f, 0.0f, 0.0f});
   parent.addChild(std::move(child));
 
-  parent.update(0.0f);
+  parent.update({});
   EXPECT_NEAR(childPtr->getWorldPosition().x, 1.0f, 1e-6f);
 
   parent.setLocalPosition({2.0f, 0.0f, 0.0f});
-  parent.update(0.0f);
+  parent.update({});
 
   EXPECT_NEAR(childPtr->getWorldPosition().x, 3.0f, 1e-6f);
+}
+
+TEST(SceneNodeTest, ReparentingExistingNodeMarksWorldTransformDirty) {
+  auto child = std::make_unique<TestSceneNode>();
+  auto *childPtr = child.get();
+  childPtr->setLocalPosition({1.0f, 0.0f, 0.0f});
+  childPtr->update({});
+
+  EXPECT_NEAR(childPtr->getWorldPosition().x, 1.0f, 1e-6f);
+
+  TestSceneNode parent;
+  parent.setLocalPosition({10.0f, 0.0f, 0.0f});
+  parent.addChild(std::move(child));
+  parent.update({});
+
+  EXPECT_NEAR(childPtr->getWorldPosition().x, 11.0f, 1e-6f);
 }
 
 TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
@@ -63,11 +104,42 @@ TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
                                             glm::vec3(0.0f, 0.0f, 1.0f));
   node.setLocalRotation(rotation);
 
-  node.update(0.0f);
+  node.update({});
 
   const glm::quat worldRotation = node.getWorldRotation();
   EXPECT_NEAR(glm::angle(worldRotation), glm::angle(rotation), 1e-5f);
   EXPECT_NEAR(glm::axis(worldRotation).z, glm::axis(rotation).z, 1e-5f);
+}
+
+TEST(SceneNodeTest, AddRenderComponentStoresAndRendersVisualizer) {
+  TestSceneNode node;
+  DL::Camera camera({0.0f, 0.0f, 1.0f});
+  int renderCount = 0;
+
+  auto visualizer = std::make_unique<TestVisualizer>(camera, node, renderCount);
+  auto *visualizerPtr = visualizer.get();
+  node.addRenderComponent(std::move(visualizer));
+
+  ASSERT_EQ(node.renderComponentCount(), 1u);
+  ASSERT_EQ(node.renderComponents().size(), 1u);
+  EXPECT_EQ(node.renderComponents().front().get(), visualizerPtr);
+
+  node.render({});
+
+  EXPECT_EQ(renderCount, 1);
+}
+
+TEST(SceneNodeTest, OnScreenSizeChangedPropagatesToChildren) {
+  auto child = std::make_unique<TrackingSceneNode>();
+  auto *childPtr = child.get();
+
+  TrackingSceneNode parent;
+  parent.addChild(std::move(child));
+
+  parent.onScreenSizeChanged({1280.0f, 720.0f});
+
+  EXPECT_EQ(parent.lastScreenSize, glm::vec2(1280.0f, 720.0f));
+  EXPECT_EQ(childPtr->lastScreenSize, glm::vec2(1280.0f, 720.0f));
 }
 
 } // namespace

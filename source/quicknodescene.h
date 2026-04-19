@@ -1,5 +1,7 @@
 #pragma once
 #include "camera.h"
+#include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "scenenode.h"
 #include <memory>
 
@@ -7,18 +9,23 @@ class PlaneNode;
 
 class QuickNodeScene : public DL::SceneNode {
 public:
-  explicit QuickNodeScene(std::string_view glslVersionString);
+  explicit QuickNodeScene(DL::IRenderDevice *renderDevice = nullptr,
+                          DL::RenderResourceCache *renderResourceCache = nullptr);
   ~QuickNodeScene() override = default;
   void init() override;
-  void update(float delta) override;
-  void render(float delta) override;
+  void update(const DL::FrameContext &ctx) override;
+  void render(const DL::FrameContext &ctx) override;
   void onScreenSizeChanged(glm::vec2 size) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "QuickNodeScene";
+  }
 
 private:
-  void bounce(float delta) const;
+  void bounce(double totalTime) const;
   [[nodiscard]] std::unique_ptr<PlaneNode> createPlane(DL::Camera *camera);
 
-  std::string glslVersionString_;
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_ = nullptr;
 
   float f1 = 1.1f;

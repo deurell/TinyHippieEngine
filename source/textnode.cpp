@@ -1,10 +1,11 @@
 #include "textnode.h"
 #include "textvisualizer.h"
 
-TextNode::TextNode(std::string_view glslVersionString,
-                   DL::SceneNode *parentNode, std::string text)
-    : DL::SceneNode(parentNode), glslVersionString_(glslVersionString.data()),
-      text_(text) {}
+TextNode::TextNode(DL::SceneNode *parentNode, std::string text,
+                   DL::IRenderDevice *renderDevice,
+                   DL::RenderResourceCache *renderResourceCache)
+    : DL::SceneNode(parentNode), renderDevice_(renderDevice),
+      renderResourceCache_(renderResourceCache), text_(text) {}
 
 void TextNode::init() {
   initCamera();
@@ -12,9 +13,9 @@ void TextNode::init() {
   SceneNode::init();
 }
 
-void TextNode::update(float delta) { SceneNode::update(delta); }
+void TextNode::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
 
-void TextNode::render(float delta) { SceneNode::render(delta); }
+void TextNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
 void TextNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
@@ -28,8 +29,9 @@ void TextNode::initCamera() {
 
 void TextNode::initComponents() {
   auto component = std::make_unique<DL::TextVisualizer>(
-      "main", *camera_, glslVersionString_, *this, text_,
-      "Resources/C64_Pro-STYLE.ttf", "Shaders/starwars.vert",
+      *camera_, *this, text_, "Resources/C64_Pro-STYLE.ttf",
+      renderDevice_, renderResourceCache_, "Shaders/starwars.vert",
       "Shaders/starwars.frag");
-  visualizers.emplace_back(std::move(component));
+  textVisualizer_ = component.get();
+  addRenderComponent(std::move(component));
 }

@@ -1,11 +1,8 @@
 #pragma once
-#include "plane.h"
-#include "shader.h"
+#include "renderdevice.h"
+#include "renderresourcecache.h"
 #include "visualizerbase.h"
-#include <GLFW/glfw3.h>
-#include <functional>
 #include <glm/glm.hpp>
-#include <iostream>
 #include <string>
 
 namespace DL {
@@ -13,23 +10,27 @@ namespace DL {
 class PlaneVisualizer : public VisualizerBase {
 public:
   explicit PlaneVisualizer(
-      std::string name, DL::Camera &camera, std::string_view glslVersionString,
-      SceneNode &node,
-      const std::function<void(DL::Shader &)> &shaderModifier = nullptr,
+      DL::Camera &camera, SceneNode &node, DL::IRenderDevice *renderDevice,
+      DL::RenderResourceCache *resourceCache = nullptr,
       std::string vertexShaderPath = "Shaders/simple.vert",
       std::string fragmentShaderPath = "Shaders/simple.frag");
 
   ~PlaneVisualizer() override;
 
-  void render(const glm::mat4 &worldTransform, float delta) override;
+  void render(const glm::mat4 &worldTransform,
+              const DL::FrameContext &ctx) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "PlaneVisualizer";
+  }
   glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
+  bool spinnerEnabled = false;
+  float spinnerSpeed = 0.25f;
 
 private:
-  GLuint VAO_ = 0;
-  GLuint VBO_ = 0;
-  GLuint EBO_ = 0;
-
-  const std::function<void(DL::Shader &)> shaderModifier_ = nullptr;
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
+  MeshHandle mesh_;
+  PipelineHandle pipeline_;
 };
 
 } // namespace DL

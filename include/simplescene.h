@@ -5,25 +5,24 @@
 
 #include "camera.h"
 #include "iscene.h"
-#include "plane.h"
-#include "shader.h"
-#include <string_view>
+#include "renderdevice.h"
 
 class SimpleScene : public DL::IScene {
 public:
-  explicit SimpleScene(std::string_view glslVersionString);
-  ~SimpleScene() override = default;
+  explicit SimpleScene(DL::IRenderDevice *renderDevice);
+  ~SimpleScene() override;
 
   void init() override;
-  void update(float delta) override;
-  void render(float delta) override;
+  void update(const DL::FrameContext &ctx) override;
+  void render(const DL::FrameContext &ctx) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
 
 private:
   std::unique_ptr<DL::Camera> mCamera;
-  std::unique_ptr<DL::Plane> mPlane;
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::MeshHandle mesh_;
+  DL::PipelineHandle pipeline_;
   glm::vec2 mScreenSize{0, 0};
-  std::string mGlslVersionString;
 };

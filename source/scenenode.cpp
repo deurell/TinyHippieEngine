@@ -20,28 +20,67 @@ void SceneNode::updateTransforms(const glm::mat4 &parentWorldTransform) {
   }
 }
 
-void SceneNode::setLocalPosition(const glm::vec3 &position) {
+void SceneNode::applyLocalPosition(const glm::vec3 &position) {
   localPosition = position;
   markDirty();
 }
 
+void SceneNode::setLocalPosition(const glm::vec3 &position) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalPosition(position);
+}
+
 glm::vec3 SceneNode::getLocalPosition() const { return localPosition; }
 
-void SceneNode::setLocalRotation(const glm::quat &rotation) {
+void SceneNode::setDebugLocalPosition(const glm::vec3 &position) {
+  applyLocalPosition(position);
+}
+
+void SceneNode::applyLocalRotation(const glm::quat &rotation) {
   localRotation = rotation;
   markDirty();
 }
 
+void SceneNode::setLocalRotation(const glm::quat &rotation) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalRotation(rotation);
+}
+
 glm::quat SceneNode::getLocalRotation() const { return localRotation; }
 
-void SceneNode::setLocalScale(const glm::vec3 &scale) {
+void SceneNode::setDebugLocalRotation(const glm::quat &rotation) {
+  applyLocalRotation(rotation);
+}
+
+void SceneNode::applyLocalScale(const glm::vec3 &scale) {
   localScale = scale;
   markDirty();
 }
 
+void SceneNode::setLocalScale(const glm::vec3 &scale) {
+  if (debugTransformOverrideEnabled_) {
+    return;
+  }
+  applyLocalScale(scale);
+}
+
 glm::vec3 SceneNode::getLocalScale() const { return localScale; }
 
-void SceneNode::update(float delta) {
+void SceneNode::setDebugLocalScale(const glm::vec3 &scale) { applyLocalScale(scale); }
+
+void SceneNode::setDebugName(std::string name) { debugName_ = std::move(name); }
+
+std::string_view SceneNode::getDebugName() const { return debugName_; }
+
+void SceneNode::setDebugTransformOverrideEnabled(bool enabled) {
+  debugTransformOverrideEnabled_ = enabled;
+}
+
+void SceneNode::update(const FrameContext &ctx) {
   if (parent) {
     updateTransforms(parent->getWorldTransform());
   } else {
@@ -49,18 +88,18 @@ void SceneNode::update(float delta) {
   }
 
   for (auto &child : children) {
-    child->update(delta);
+    child->update(ctx);
   }
 }
 
-void SceneNode::render(float delta) {
+void SceneNode::render(const FrameContext &ctx) {
 
-  for (auto &visualizer : visualizers) {
-    visualizer->render(worldTransform, delta);
+  for (auto &component : renderComponents_) {
+    component->render(worldTransform, ctx);
   }
 
   for (auto &child : children) {
-    child->render(delta);
+    child->render(ctx);
   }
 }
 
@@ -71,7 +110,20 @@ glm::vec3 SceneNode::getWorldPosition() {
 }
 
 glm::quat SceneNode::getWorldRotation() {
-  return glm::quat_cast(getWorldTransform());
+  glm::mat4 rotationMatrix = getWorldTransform();
+  const glm::vec3 scale = getWorldScale();
+
+  if (scale.x > 0.0f) {
+    rotationMatrix[0] /= scale.x;
+  }
+  if (scale.y > 0.0f) {
+    rotationMatrix[1] /= scale.y;
+  }
+  if (scale.z > 0.0f) {
+    rotationMatrix[2] /= scale.z;
+  }
+
+  return glm::normalize(glm::quat_cast(rotationMatrix));
 }
 
 glm::vec3 SceneNode::getWorldScale() {
@@ -108,11 +160,14 @@ void SceneNode::onScreenSizeChanged(glm::vec2 size) {
 }
 
 void SceneNode::addChild(std::unique_ptr<SceneNode> child) {
-  child->parent = this;
+  child->setParent(this);
   children.push_back(std::move(child));
 }
 
-void SceneNode::setParent(SceneNode *parentNode) { parent = parentNode; }
+void SceneNode::setParent(SceneNode *parentNode) {
+  parent = parentNode;
+  markDirty();
+}
 
 void SceneNode::markDirty() {
   dirty = true;
@@ -121,13 +176,8 @@ void SceneNode::markDirty() {
   }
 }
 
-VisualizerBase *SceneNode::getVisualizer(std::string_view name) {
-  const auto iterator = std::find_if(visualizers.begin(), visualizers.end(),
-                                     [&name](const auto &visualizer) {
-                                       return visualizer->getName() == name;
-                                     });
-
-  return iterator != visualizers.end() ? iterator->get() : nullptr;
+void SceneNode::addRenderComponent(std::unique_ptr<VisualizerBase> component) {
+  renderComponents_.push_back(std::move(component));
 }
 
 } // namespace DL

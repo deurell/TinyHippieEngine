@@ -99,6 +99,10 @@ public:
     glUniform1f(glGetUniformLocation(mId, name.c_str()), value);
   }
 
+  void setVec2f(const std::string &name, glm::vec2 value) {
+    glUniform2f(glGetUniformLocation(mId, name.c_str()), value.x, value.y);
+  }
+
   void setVec3f(const std::string &name, float x, float y, float z) {
     glUniform3f(glGetUniformLocation(mId, name.c_str()), x, y, z);
   }
@@ -120,6 +124,13 @@ public:
   void setMat4f(const std::string &name, glm::mat4 &m) {
     glUniformMatrix4fv(glGetUniformLocation(mId, name.c_str()), 1, GL_FALSE,
                        glm::value_ptr(m));
+  }
+
+  void setMat4Array(const std::string &name, const glm::mat4 *matrices,
+                    std::size_t count) {
+    glUniformMatrix4fv(glGetUniformLocation(mId, name.c_str()),
+                       static_cast<GLsizei>(count), GL_FALSE,
+                       glm::value_ptr(matrices[0]));
   }
 
   unsigned int mId;

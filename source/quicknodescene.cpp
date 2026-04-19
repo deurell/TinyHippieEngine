@@ -1,15 +1,16 @@
 #include "quicknodescene.h"
-#include "GLFW/glfw3.h"
+#include "debugui.h"
+#ifdef USE_IMGUI
 #include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h"
+#endif
 #include "planenode.h"
 #include <algorithm>
 #include <memory>
 #include <ranges>
 
-QuickNodeScene::QuickNodeScene(std::string_view glslVersionString)
-    : glslVersionString_(glslVersionString) {}
+QuickNodeScene::QuickNodeScene(DL::IRenderDevice *renderDevice,
+                               DL::RenderResourceCache *renderResourceCache)
+    : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache) {}
 
 void QuickNodeScene::init() {
   SceneNode::init();
@@ -19,23 +20,22 @@ void QuickNodeScene::init() {
   }
 }
 
-void QuickNodeScene::update(float delta) {
-  SceneNode::update(delta);
-  bounce(delta);
+void QuickNodeScene::update(const DL::FrameContext &ctx) {
+  SceneNode::update(ctx);
+  bounce(ctx.total_time);
 }
 
-void QuickNodeScene::render(float delta) {
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  glClearColor(0.0, 0.0, 0.0, 1.0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void QuickNodeScene::render(const DL::FrameContext &ctx) {
+  if (renderDevice_ != nullptr) {
+    renderDevice_->beginFrame({.clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+                               .clearFlags = DL::ClearFlags::ColorDepth,
+                               .depthMode = DL::DepthMode::Less});
+  }
 
-  SceneNode::render(delta);
+  SceneNode::render(ctx);
 
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_NewFrame();
-  ImGui_ImplGlfw_NewFrame();
-  ImGui::NewFrame();
+  DL::beginDebugUiFrame();
   ImGui::Begin("Quick Node Scene");
   ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
   ImGui::SliderFloat("f1", &f1, 0.0f, 2.0f);
@@ -51,13 +51,14 @@ void QuickNodeScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
 }
 
-void QuickNodeScene::bounce(float delta) const {
+void QuickNodeScene::bounce(double totalTime) const {
   float offset = glm::radians(0.0f);
+  auto time = static_cast<float>(totalTime);
   for (auto &child : children) {
     auto *node = dynamic_cast<PlaneNode *>(child.get());
-    float x = 7.5f * sinf(f1 * glfwGetTime() + offset);
-    float y = 8.9f * sinf(f2 * -glfwGetTime() + offset);
-    float z = fAmp * sinf(f3 * glfwGetTime() + offset);
+    float x = 7.5f * sinf(f1 * time + offset);
+    float y = 8.9f * sinf(f2 * -time + offset);
+    float z = fAmp * sinf(f3 * time + offset);
     node->setLocalPosition({x, y, z});
     float col = (z + fAmp) / (2.0f * fAmp);
     node->color = {col, col, 1.0, 1.0f};
@@ -67,7 +68,8 @@ void QuickNodeScene::bounce(float delta) const {
 
 std::unique_ptr<PlaneNode> QuickNodeScene::createPlane(DL::Camera *camera) {
   auto planeNode =
-      std::make_unique<PlaneNode>(glslVersionString_, this, camera);
+      std::make_unique<PlaneNode>(this, camera, renderDevice_,
+                                  renderResourceCache_);
   planeNode->init();
   return planeNode;
 }

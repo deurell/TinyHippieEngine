@@ -5,6 +5,7 @@
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
+#include <random>
 #include <memory>
 #include <vector>
 
@@ -27,6 +28,8 @@ public:
   }
 
 private:
+  void triggerBattleSfx();
+
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   DL::AudioSystem *audioSystem_ = nullptr;
@@ -34,5 +37,7 @@ private:
   std::vector<PhongShapeNode *> bars_;
   std::vector<float> barXPositions_;
   DL::AudioSystem::SoundId musicLoopId_ = DL::AudioSystem::kInvalidSoundId;
+  std::mt19937 rng_{std::random_device{}()};
+  std::size_t sfxTriggerCount_ = 0;
   static constexpr const char *kSpectrumTrackName = "spectrum_track";
 };

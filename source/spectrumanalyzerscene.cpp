@@ -8,12 +8,18 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <random>
 #include <string>
 
 namespace {
 glm::vec3 lerpColor(const glm::vec3 &a, const glm::vec3 &b, float t) {
   return a + (b - a) * t;
 }
+
+constexpr std::array<const char *, 2> kLaserClipNames = {"spectrum_lazer_1",
+                                                          "spectrum_lazer_2"};
+constexpr std::array<const char *, 3> kExplosionClipNames = {
+    "spectrum_explosion_1", "spectrum_explosion_2", "spectrum_explosion_3"};
 } // namespace
 
 SpectrumAnalyzerScene::SpectrumAnalyzerScene(
@@ -71,7 +77,14 @@ void SpectrumAnalyzerScene::init() {
 
   if (audioSystem_ != nullptr) {
     audioSystem_->loadClip(kSpectrumTrackName, "Resources/gods.mp3", 0);
-    audioSystem_->loadClip("spectrum_hit", "Resources/unlock.wav", 8);
+    audioSystem_->loadClip(kLaserClipNames[0], "Resources/lazer1.mp3", 8);
+    audioSystem_->loadClip(kLaserClipNames[1], "Resources/lazer2.mp3", 8);
+    audioSystem_->loadClip(kExplosionClipNames[0], "Resources/explosion1.mp3",
+                           4);
+    audioSystem_->loadClip(kExplosionClipNames[1], "Resources/explosion2.mp3",
+                           4);
+    audioSystem_->loadClip(kExplosionClipNames[2], "Resources/explosion3.mp3",
+                           4);
     musicLoopId_ =
         audioSystem_->playLoop(kSpectrumTrackName, DL::AudioGroup::Music, 0.75f);
   }
@@ -107,7 +120,7 @@ void SpectrumAnalyzerScene::render(const DL::FrameContext &ctx) {
   DL::beginDebugUiFrame();
   if (ImGui::Begin("Spectrum Scene")) {
     ImGui::Text("Music: Resources/gods.mp3");
-    ImGui::Text("Click or press Enter to trigger SFX.");
+    ImGui::Text("Click or press Enter to trigger lasers and explosions.");
   }
   ImGui::End();
 #endif
@@ -115,10 +128,33 @@ void SpectrumAnalyzerScene::render(const DL::FrameContext &ctx) {
   SceneNode::render(ctx);
 }
 
-void SpectrumAnalyzerScene::onClick(double /*x*/, double /*y*/) {
-  if (audioSystem_ != nullptr) {
-    audioSystem_->playOneShot("spectrum_hit", DL::AudioGroup::SFX, 1.0f);
+void SpectrumAnalyzerScene::triggerBattleSfx() {
+  if (audioSystem_ == nullptr) {
+    return;
   }
+
+  ++sfxTriggerCount_;
+
+  std::uniform_int_distribution<std::size_t> laserIndexDistribution(
+      0, kLaserClipNames.size() - 1);
+  const char *laserClip = kLaserClipNames[laserIndexDistribution(rng_)];
+  audioSystem_->playOneShot(laserClip, DL::AudioGroup::SFX, 0.95f);
+
+  const bool shouldPlayExplosion =
+      (sfxTriggerCount_ % 3) == 0 || (sfxTriggerCount_ % 5) == 0;
+  if (!shouldPlayExplosion) {
+    return;
+  }
+
+  std::uniform_int_distribution<std::size_t> explosionIndexDistribution(
+      0, kExplosionClipNames.size() - 1);
+  const char *explosionClip =
+      kExplosionClipNames[explosionIndexDistribution(rng_)];
+  audioSystem_->playOneShot(explosionClip, DL::AudioGroup::SFX, 0.65f);
+}
+
+void SpectrumAnalyzerScene::onClick(double /*x*/, double /*y*/) {
+  triggerBattleSfx();
 }
 
 void SpectrumAnalyzerScene::onKey(int key) {
@@ -126,7 +162,7 @@ void SpectrumAnalyzerScene::onKey(int key) {
     return;
   }
   if (key == GLFW_KEY_ENTER || key == GLFW_KEY_KP_ENTER) {
-    audioSystem_->playOneShot("spectrum_hit", DL::AudioGroup::SFX, 1.0f);
+    triggerBattleSfx();
   }
 }
 

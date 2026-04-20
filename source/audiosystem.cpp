@@ -502,6 +502,9 @@ void AudioSystem::updateSpectrum() {
     if (active.sound == nullptr || active.clipName.empty()) {
       continue;
     }
+    if (active.group != AudioGroup::Music) {
+      continue;
+    }
 
     const auto clipIt = clips_.find(active.clipName);
     if (clipIt == clips_.end()) {

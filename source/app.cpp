@@ -23,6 +23,7 @@
 #include "quicknodescene.h"
 #include "scenemanager.h"
 #include "simplescene.h"
+#include "skeletalanimationblendscene.h"
 #include "spectrumanalyzerscene.h"
 #include "truetypescene.h"
 #include "wildcopperscene.h"
@@ -280,6 +281,11 @@ void DL::App::loadCurrentScene() {
 }
 
 void DL::App::registerScenes() {
+  sceneManager_.registerScene([this] {
+    return std::make_unique<SkeletalAnimationBlendScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get());
+  });
   sceneManager_.registerScene([this] {
     return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
                                                renderResourceCache_.get());

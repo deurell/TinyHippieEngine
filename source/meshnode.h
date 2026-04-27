@@ -42,8 +42,12 @@ public:
   [[nodiscard]] float animationPlaybackSpeed() const;
   void setAnimationClipIndex(std::size_t index);
   [[nodiscard]] std::size_t animationClipIndex() const;
+  [[nodiscard]] std::string_view animationClipName(std::size_t index) const;
   [[nodiscard]] std::size_t animationClipCount() const;
   [[nodiscard]] bool hasAnimations() const;
+  void setAnimationBlend(std::size_t baseClipIndex, std::size_t blendClipIndex,
+                         float weight);
+  [[nodiscard]] float animationBlendWeight() const;
 
 private:
   void initCamera();

@@ -91,12 +91,28 @@ std::size_t MeshNode::animationClipIndex() const {
   return meshVisualizer_ != nullptr ? meshVisualizer_->animationClipIndex() : 0u;
 }
 
+std::string_view MeshNode::animationClipName(std::size_t index) const {
+  return meshVisualizer_ != nullptr ? meshVisualizer_->animationClipName(index)
+                                    : std::string_view{};
+}
+
 std::size_t MeshNode::animationClipCount() const {
   return meshVisualizer_ != nullptr ? meshVisualizer_->animationClipCount() : 0u;
 }
 
 bool MeshNode::hasAnimations() const {
   return meshVisualizer_ != nullptr && meshVisualizer_->hasAnimations();
+}
+
+void MeshNode::setAnimationBlend(std::size_t baseClipIndex,
+                                 std::size_t blendClipIndex, float weight) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationBlend(baseClipIndex, blendClipIndex, weight);
+  }
+}
+
+float MeshNode::animationBlendWeight() const {
+  return meshVisualizer_ != nullptr ? meshVisualizer_->animationBlendWeight() : 0.0f;
 }
 
 void MeshNode::initCamera() {

@@ -8,6 +8,7 @@
 #include "renderresourcecache.h"
 #include "skinning.h"
 #include "visualizerbase.h"
+#include <string_view>
 #include <vector>
 
 namespace DL {
@@ -59,6 +60,7 @@ public:
   [[nodiscard]] std::size_t animationClipIndex() const {
     return animationPlayer_.clipIndex();
   }
+  [[nodiscard]] std::string_view animationClipName(std::size_t index) const;
   [[nodiscard]] bool hasAnimations() const {
     return asset_ != nullptr && !asset_->animations.empty();
   }
@@ -66,6 +68,9 @@ public:
     return asset_ != nullptr ? asset_->animations.size() : 0u;
   }
   [[nodiscard]] float animationTime() const { return animationPlayer_.time(); }
+  void setAnimationBlend(std::size_t baseClipIndex, std::size_t blendClipIndex,
+                         float weight);
+  [[nodiscard]] float animationBlendWeight() const { return animationBlendWeight_; }
 
 private:
   struct GpuSubmesh {
@@ -77,11 +82,13 @@ private:
     float shininess = 16.0f;
     bool hasTexture = false;
     bool sharedTexture = false;
+    int sourceNodeIndex = -1;
     int skinIndex = -1;
   };
 
-  TextureHandle createFallbackTexture();
-  TextureHandle loadTexture(const MeshAssetSubmesh &submesh);
+  TextureHandle createFallbackTexture(bool &sharedTexture);
+  TextureHandle loadTexture(const MeshAssetSubmesh &submesh, bool &sharedTexture);
+  AnimationPose currentAnimationPose() const;
 
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *resourceCache_ = nullptr;
@@ -92,6 +99,8 @@ private:
   bool debugNormals_ = false;
   MeshVisualizerSettings settings_;
   AnimationPlayer animationPlayer_;
+  AnimationPlayer blendAnimationPlayer_;
+  float animationBlendWeight_ = 0.0f;
 };
 
 } // namespace DL

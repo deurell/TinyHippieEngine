@@ -54,6 +54,18 @@ std::string resolveUri(std::string_view directory, const char *uri) {
   return std::string(directory) + '/' + std::string(uriView);
 }
 
+void copyEmbeddedImage(const cgltf_image &image, MeshAssetSubmesh &submesh) {
+  if (image.buffer_view == nullptr || image.buffer_view->buffer == nullptr ||
+      image.buffer_view->buffer->data == nullptr || image.buffer_view->size == 0) {
+    return;
+  }
+
+  const auto *bufferData =
+      static_cast<const std::uint8_t *>(image.buffer_view->buffer->data);
+  const auto *imageData = bufferData + image.buffer_view->offset;
+  submesh.encodedTextureData.assign(imageData, imageData + image.buffer_view->size);
+}
+
 AnimationInterpolation toAnimationInterpolation(
     cgltf_interpolation_type interpolation) {
   switch (interpolation) {
@@ -279,8 +291,10 @@ void populatePrimitive(const cgltf_data &data, const cgltf_node &node,
         image = baseColorTexture.texture->image;
       }
 
-      if (image != nullptr) {
+      if (image != nullptr && image->uri != nullptr) {
         submesh.texturePath = resolveUri(assetDirectory, image->uri);
+      } else if (image != nullptr) {
+        copyEmbeddedImage(*image, submesh);
       }
     }
   }

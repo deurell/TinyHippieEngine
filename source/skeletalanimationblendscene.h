@@ -36,22 +36,30 @@ private:
     Run,
   };
 
+  struct FlockBehavior;
+
   struct FlockAgent {
     MeshNode *node = nullptr;
     glm::vec3 position{0.0f};
     glm::vec3 preCorrectionPosition{0.0f};
     glm::vec3 plannedMoveDelta{0.0f};
-    glm::vec3 desiredMoveDirection{0.0f, 0.0f, 1.0f};
     glm::vec3 facingDirection{0.0f, 0.0f, 1.0f};
     AiState desiredState = AiState::Idle;
+    float stateHoldRemaining = 0.0f;
+    float collisionPauseRemaining = 0.0f;
+    float fleeRemaining = 0.0f;
+    float regroupRemaining = 0.0f;
     float animationBlend = 0.0f;
+    bool wasTouchingLeader = false;
+    bool wasTouchingFollower = false;
   };
 
   [[nodiscard]] std::size_t findClipIndex(std::string_view name,
                                           std::size_t fallback) const;
   std::unique_ptr<MeshNode> createCharacterNode(std::string assetPath,
                                                 std::string debugName,
-                                                const glm::vec3 &position);
+                                                const glm::vec3 &position,
+                                                const glm::vec3 &scale);
   void initCamera();
   void initLeadCharacter();
   void initFollowers();
@@ -59,10 +67,6 @@ private:
   void updateLeadAnimationBlend(float deltaTime);
   void advanceAi(float deltaTime);
   void advanceFlock(float deltaTime);
-  void moveFollowerToSlot(FlockAgent &agent, std::size_t index, float deltaTime);
-  void updateFollowerPresentation(FlockAgent &agent, float deltaTime);
-  void resolveFlockOverlaps();
-  [[nodiscard]] glm::vec3 flockSlotPosition(std::size_t index) const;
   void chooseNextMoveState();
   [[nodiscard]] glm::vec3 separationFromCharacterBounds(
       const glm::vec3 &position, const glm::vec3 &otherPosition) const;

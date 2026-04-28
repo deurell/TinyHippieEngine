@@ -69,6 +69,10 @@ glm::vec3 cameraForward(float yaw, float pitch) {
                 std::cos(yaw) * cosPitch));
 }
 
+float smoothingAlpha(float responsiveness, float deltaTime) {
+  return 1.0f - std::exp(-responsiveness * std::max(0.0f, deltaTime));
+}
+
 } // namespace
 
 struct SkeletalAnimationBlendScene::FlockBehavior {
@@ -576,10 +580,17 @@ void SkeletalAnimationBlendScene::FlockBehavior::updateFollowerPresentation(
     const glm::vec3 flatFinalMove{finalMoveDelta.x, 0.0f, finalMoveDelta.z};
     const glm::vec3 flatPlannedMove{agent.plannedMoveDelta.x, 0.0f,
                                     agent.plannedMoveDelta.z};
-    const glm::vec3 facingDelta =
+    const glm::vec3 desiredFacing =
         glm::length(flatFinalMove) > kFollowerFacingDeadzone ? flatFinalMove
                                                              : flatPlannedMove;
-    agent.facingDirection = safeNormalize(facingDelta);
+    const glm::vec3 desiredDirection = safeNormalize(desiredFacing);
+    const float turnAlpha =
+        smoothingAlpha(scene.followerTurnResponsiveness_, deltaTime);
+    agent.facingDirection = safeNormalize(
+        glm::mix(agent.facingDirection, desiredDirection, turnAlpha));
+  }
+
+  if (glm::length(agent.facingDirection) > 0.0001f) {
     const float yaw = std::atan2(agent.facingDirection.x,
                                  agent.facingDirection.z);
     agent.node->setLocalRotation(

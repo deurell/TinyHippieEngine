@@ -107,6 +107,7 @@ private:
   float locomotionBlendWeight_ = 0.0f;
   float targetLocomotionBlendWeight_ = 0.0f;
   float blendRate_ = 3.0f;
+  float followerTurnResponsiveness_ = 8.0f;
   glm::vec3 characterPosition_{-2.6f, 0.0f, -1.4f};
   glm::vec3 leaderForward_{1.0f, 0.0f, 0.0f};
   glm::vec3 aiTargets_[4] = {{2.6f, 0.0f, -1.0f},

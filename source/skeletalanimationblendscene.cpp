@@ -19,6 +19,9 @@ constexpr float kFollowerHalfWidth = 0.62f;
 constexpr float kFollowerHalfDepth = 0.48f;
 constexpr float kHeroWalkSpeed = 1.05f;
 constexpr float kHeroRunSpeed = 2.1f;
+constexpr float kCameraMoveSpeed = 4.2f;
+constexpr float kCameraMouseSensitivity = 0.0035f;
+constexpr float kCameraMaxPitch = 1.2f;
 constexpr float kFollowerIdlePlaybackSpeed = 0.55f;
 constexpr float kFollowerWalkPlaybackPerSpeed = 0.005f;
 constexpr float kFollowerRunPlaybackPerSpeed = 0.01f;
@@ -40,6 +43,10 @@ constexpr float kFollowerLongCollisionPauseSeconds = 0.48f;
 constexpr glm::vec3 kCharacterScale{0.2f, 0.2f, 0.2f};
 constexpr glm::vec3 kHeroScale{0.5f, 0.5f, 0.5f};
 constexpr glm::vec3 kInitialFollowerFacing{0.0f, 0.0f, -1.0f};
+constexpr DL::Key kCameraForwardKey = DL::Key::W;
+constexpr DL::Key kCameraBackwardKey = DL::Key::S;
+constexpr DL::Key kCameraLeftKey = DL::Key::A;
+constexpr DL::Key kCameraRightKey = DL::Key::D;
 constexpr int kMoveClipSearchIterations = 6;
 
 glm::vec3 safeNormalize(const glm::vec3 &value) {
@@ -53,6 +60,13 @@ glm::vec3 limitLength(const glm::vec3 &value, float maxLength) {
     return value;
   }
   return value * (maxLength / length);
+}
+
+glm::vec3 cameraForward(float yaw, float pitch) {
+  const float cosPitch = std::cos(pitch);
+  return glm::normalize(
+      glm::vec3(std::sin(yaw) * cosPitch, std::sin(pitch),
+                std::cos(yaw) * cosPitch));
 }
 
 } // namespace
@@ -136,6 +150,9 @@ void SkeletalAnimationBlendScene::initCamera() {
   camera_ = std::make_unique<DL::Camera>(glm::vec3(4.8f, 4.3f, 5.6f));
   camera_->mFov = 34.0f;
   camera_->lookAt(cameraTarget_);
+  const glm::vec3 toTarget = glm::normalize(cameraTarget_ - camera_->getPosition());
+  cameraYaw_ = std::atan2(toTarget.x, toTarget.z);
+  cameraPitch_ = std::asin(std::clamp(toTarget.y, -1.0f, 1.0f));
 }
 
 void SkeletalAnimationBlendScene::initLeadCharacter() {
@@ -179,6 +196,7 @@ void SkeletalAnimationBlendScene::initFollowers() {
 
 void SkeletalAnimationBlendScene::update(const DL::FrameContext &ctx) {
   if (meshNode_ != nullptr) {
+    updateCameraController(ctx);
     if (aiEnabled_) {
       advanceAi(static_cast<float>(ctx.delta_time));
     }
@@ -269,6 +287,38 @@ void SkeletalAnimationBlendScene::resolveAnimationClips() {
   walkClipIndex_ = findClipIndex("walk", idleClipIndex_);
   sprintClipIndex_ = findClipIndex("sprint", walkClipIndex_);
   locomotionClipIndex_ = walkClipIndex_;
+}
+
+void SkeletalAnimationBlendScene::updateCameraController(
+    const DL::FrameContext &ctx) {
+  if (camera_ == nullptr) {
+    return;
+  }
+
+  if (ctx.input.isMouseButtonDown(DL::MouseButton::Right)) {
+    cameraYaw_ -= ctx.input.mouseDelta.x * kCameraMouseSensitivity;
+    cameraPitch_ =
+        std::clamp(cameraPitch_ - ctx.input.mouseDelta.y * kCameraMouseSensitivity,
+                   -kCameraMaxPitch, kCameraMaxPitch);
+  }
+
+  const glm::vec3 forward = cameraForward(cameraYaw_, cameraPitch_);
+  camera_->lookAt(camera_->getPosition() + forward);
+
+  const float movementStep =
+      kCameraMoveSpeed * static_cast<float>(ctx.delta_time);
+  if (ctx.input.isKeyDown(kCameraForwardKey)) {
+    camera_->translate(0.0f, 0.0f, -movementStep);
+  }
+  if (ctx.input.isKeyDown(kCameraBackwardKey)) {
+    camera_->translate(0.0f, 0.0f, movementStep);
+  }
+  if (ctx.input.isKeyDown(kCameraRightKey)) {
+    camera_->translate(movementStep, 0.0f, 0.0f);
+  }
+  if (ctx.input.isKeyDown(kCameraLeftKey)) {
+    camera_->translate(-movementStep, 0.0f, 0.0f);
+  }
 }
 
 void SkeletalAnimationBlendScene::updateLeadAnimationBlend(float deltaTime) {

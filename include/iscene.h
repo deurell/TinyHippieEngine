@@ -1,11 +1,42 @@
 #pragma once
+#include <array>
 #include <glm/glm.hpp>
 #include <string_view>
 
 namespace DL {
+enum class Key {
+  W,
+  A,
+  S,
+  D,
+  Count,
+};
+
+enum class MouseButton {
+  Left,
+  Right,
+  Middle,
+  Count,
+};
+
+struct InputState {
+  std::array<bool, static_cast<std::size_t>(Key::Count)> keysDown{};
+  std::array<bool, static_cast<std::size_t>(MouseButton::Count)> mouseButtonsDown{};
+  glm::vec2 mouseDelta{0.0f};
+
+  [[nodiscard]] bool isKeyDown(Key key) const {
+    return keysDown[static_cast<std::size_t>(key)];
+  }
+
+  [[nodiscard]] bool isMouseButtonDown(MouseButton button) const {
+    return mouseButtonsDown[static_cast<std::size_t>(button)];
+  }
+};
+
 struct FrameContext {
   float delta_time = 0.0f;
   double total_time = 0.0;
+  InputState input;
 };
 
 class IScene {

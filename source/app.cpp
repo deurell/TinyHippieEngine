@@ -206,26 +206,26 @@ void DL::App::update() {
   lastFixedUpdateCount_ = 0;
   if (simulationPaused_) {
     while (requestedSimulationSteps_ > 0) {
-      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_});
       --requestedSimulationSteps_;
       ++lastFixedUpdateCount_;
     }
   } else {
     fixedTimeAccumulator_ += deltaTime_;
     while (fixedTimeAccumulator_ >= fixedTimeStep_) {
-      scene_->fixedUpdate({fixedTimeStep_, frameTime});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_});
       fixedTimeAccumulator_ -= fixedTimeStep_;
       ++lastFixedUpdateCount_;
     }
   }
-  scene_->update({deltaTime_, frameTime});
+  scene_->update({deltaTime_, frameTime, inputState_});
 }
 
 void DL::App::render() {
   if (!scene_)
     return;
   DL::beginDebugUiFrame();
-  scene_->render({deltaTime_, glfwGetTime()});
+  scene_->render({deltaTime_, glfwGetTime(), inputState_});
   if (renderDevice_ != nullptr) {
     DL::drawEngineDebugWindows(*this, deltaTime_,
                                renderDevice_->getRenderStats());
@@ -260,6 +260,31 @@ void DL::App::processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+
+  inputState_.keysDown[static_cast<std::size_t>(Key::W)] =
+      glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+  inputState_.keysDown[static_cast<std::size_t>(Key::A)] =
+      glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+  inputState_.keysDown[static_cast<std::size_t>(Key::S)] =
+      glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+  inputState_.keysDown[static_cast<std::size_t>(Key::D)] =
+      glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+  inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Left)] =
+      glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
+  inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Right)] =
+      glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
+  inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Middle)] =
+      glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
+
+  double mouseX = 0.0;
+  double mouseY = 0.0;
+  glfwGetCursorPos(window, &mouseX, &mouseY);
+  const glm::vec2 mousePosition{static_cast<float>(mouseX),
+                                static_cast<float>(mouseY)};
+  inputState_.mouseDelta =
+      hasLastMousePosition_ ? mousePosition - lastMousePosition_ : glm::vec2(0.0f);
+  lastMousePosition_ = mousePosition;
+  hasLastMousePosition_ = true;
 }
 
 void DL::App::loadSimpleScene() {

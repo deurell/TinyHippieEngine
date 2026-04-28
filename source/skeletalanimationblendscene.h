@@ -64,6 +64,7 @@ private:
   void initLeadCharacter();
   void initFollowers();
   void resolveAnimationClips();
+  void updateCameraController(const DL::FrameContext &ctx);
   void updateLeadAnimationBlend(float deltaTime);
   void advanceAi(float deltaTime);
   void advanceFlock(float deltaTime);
@@ -83,6 +84,8 @@ private:
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> camera_;
   glm::vec3 cameraTarget_{0.0f, 0.38f, 0.0f};
+  float cameraYaw_ = 0.0f;
+  float cameraPitch_ = 0.0f;
   MeshNode *meshNode_ = nullptr;
   std::vector<FlockAgent> chasers_;
   bool debugNormals_ = false;

@@ -75,6 +75,9 @@ private:
   bool simulationPaused_ = false;
   bool nextSceneHeld_ = false;
   bool prevSceneHeld_ = false;
+  InputState inputState_;
+  glm::vec2 lastMousePosition_{0.0f};
+  bool hasLastMousePosition_ = false;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;
 };

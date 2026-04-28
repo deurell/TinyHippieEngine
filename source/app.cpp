@@ -9,7 +9,7 @@
 #endif
 #include "logger.h"
 #include "scenemanager.h"
-#include "skeletalanimationblendscene.h"
+#include "game/scenes/skeletalanimationblendscene.h"
 #include <iostream>
 #include <thread>
 

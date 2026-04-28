@@ -13,8 +13,8 @@ paths=(
   source/meshvisualizer.h
   source/openglrenderdevice.cpp
   source/scenenode.cpp
-  source/skeletalanimationblendscene.cpp
-  source/skeletalanimationblendscene.h
+  source/game/scenes/skeletalanimationblendscene.cpp
+  source/game/scenes/skeletalanimationblendscene.h
 )
 
 scene_paths=()

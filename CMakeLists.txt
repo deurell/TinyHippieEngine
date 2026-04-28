@@ -50,8 +50,8 @@ add_executable(tiny_hippie_engine
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
-        source/skeletalanimationblendscene.h
-        source/skeletalanimationblendscene.cpp
+        source/game/scenes/skeletalanimationblendscene.h
+        source/game/scenes/skeletalanimationblendscene.cpp
         source/shader.h
         source/stb_image.h source/stb_image.cpp
         source/stb_truetype.h source/stb_truetype.cpp

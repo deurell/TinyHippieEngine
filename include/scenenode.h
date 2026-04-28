@@ -26,6 +26,7 @@ public:
   // IScene methods
   void init() override;
   void update(const FrameContext &ctx) override;
+  void fixedUpdate(const FrameContext &ctx) override;
   void render(const FrameContext &ctx) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;

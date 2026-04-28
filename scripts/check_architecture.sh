@@ -4,36 +4,24 @@ set -euo pipefail
 paths=(
   include/renderdevice.h
   include/scenenode.h
-  include/simplescene.h
   include/visualizerbase.h
+  source/app.cpp
   source/debugui.h
-  source/glosifyscene.cpp
-  source/glosifyscene.h
-  source/nodeexamplescene.cpp
-  source/nodeexamplescene.h
+  source/meshnode.cpp
+  source/meshnode.h
+  source/meshvisualizer.cpp
+  source/meshvisualizer.h
   source/openglrenderdevice.cpp
-  source/planevisualizer.cpp
-  source/planevisualizer.h
-  source/planenode.cpp
-  source/planenode.h
-  source/quicknodescene.cpp
-  source/quicknodescene.h
   source/scenenode.cpp
-  source/simplescene.cpp
-  source/spritenode.cpp
-  source/spritenode.h
-  source/spritevisualizer.cpp
-  source/spritevisualizer.h
-  source/textnode.cpp
-  source/textnode.h
-  source/textvisualizer.cpp
-  source/textvisualizer.h
+  source/skeletalanimationblendscene.cpp
+  source/skeletalanimationblendscene.h
 )
 
 scene_paths=()
 for path in "${paths[@]}"; do
   if [[ "${path}" != "source/openglrenderdevice.cpp" &&
-        "${path}" != "source/debugui.h" ]]; then
+        "${path}" != "source/debugui.h" &&
+        "${path}" != "source/app.cpp" ]]; then
     scene_paths+=("${path}")
   fi
 done

@@ -21,9 +21,11 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`. Physics state (`PhysicsBodyComponent`, `PhysicsWorld`) lives in `fixedUpdate()`.
-- Available typed node types: `PlaneNode`, `SpriteNode`, `TextNode`, `MeshNode`, `PhongShapeNode`, `ParticleSystemNode`.
-- Available visualizer types: `PlaneVisualizer`, `SpriteVisualizer`, `TextVisualizer`, `MeshVisualizer`, `ShapeVisualizer`, `ParticleVisualizer`.
+- Starter app registers only `SkeletalAnimationBlendScene`.
+- Starter runtime resources are `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`, `Resources/Textures/texture-q.png`, and `Shaders/meshnode.*`.
+- Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`, default OFF); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`.
+- Available typed node type in the starter is `MeshNode`.
+- Available visualizer type in the starter is `MeshVisualizer`.
 - Raw OpenGL (`gl*`, `GL_*`, `GLFW`, `glfw`) must not appear in scene/node/visualizer files — enforced by `scripts/check_architecture.sh`.
 
 ## Working Agreements
@@ -52,7 +54,7 @@ EMS=/path/to/emsdk ./scripts/build_web.sh
 
 Build flags (CMake options):
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.
-- `TINY_ENGINE_ENABLE_PHYSICS` (default ON) — ReactPhysics3D; disables physics sources when OFF.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) — ReactPhysics3D wrapper sources; keep OFF unless the project needs physics.
 
 Tests:
 

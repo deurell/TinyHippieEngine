@@ -43,16 +43,22 @@ TEST(SkinningTest, EvaluatesWorldTransformsWhenParentAppearsAfterChild) {
   EXPECT_FLOAT_EQ(worldTransforms[1][3].x, 3.0f);
 }
 
-TEST(SkinningTest, ComputesBrainStemSkinMatrices) {
-  const auto asset = DL::loadGltfMeshAsset("../Resources/BrainStem.glb");
-  ASSERT_EQ(asset.skins.size(), 1u);
-  ASSERT_EQ(asset.animations.size(), 1u);
+TEST(SkinningTest, ComputesSkinMatricesForSyntheticSkin) {
+  DL::MeshAsset asset;
+  asset.nodes.resize(2);
+  asset.nodes[0].parentIndex = -1;
+  asset.nodes[1].parentIndex = 0;
+  asset.nodes[1].baseTranslation = {0.0f, 1.0f, 0.0f};
+  asset.skins.push_back({.jointNodeIndices = {0, 1},
+                         .inverseBindMatrices = {glm::mat4(1.0f),
+                                                 glm::mat4(1.0f)}});
 
   auto pose = DL::makeAnimationPose(asset.nodes.size());
-  DL::evaluateAnimationClip(asset.animations[0], 0.5f, pose);
+  pose.nodes[1].hasTranslation = true;
+  pose.nodes[1].translation = {0.0f, 2.0f, 0.0f};
   const auto skinMatrices = DL::computeSkinMatrices(asset, 0, pose);
 
-  ASSERT_EQ(skinMatrices.size(), 18u);
+  ASSERT_EQ(skinMatrices.size(), 2u);
   bool foundNonIdentity = false;
   for (const auto &matrix : skinMatrices) {
     for (int column = 0; column < 4; ++column) {

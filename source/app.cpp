@@ -1,32 +1,15 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
-#include "c64scene.h"
 #include "debugui.h"
-#include "demoscene.h"
-#include "glosifyscene.h"
-#include "gltfnodescene.h"
+#include "glad/glad.h"
 #ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
-#include "introscene.h"
-#include "nodeexamplescene.h"
-#include "particlenodescene.h"
-#include "particlescene.h"
-#if defined(TINY_ENGINE_ENABLE_PHYSICS)
-#include "physicssandboxscene.h"
-#endif
 #include "logger.h"
-#include "meshnodescene.h"
-#include "phongshapescene.h"
-#include "quicknodescene.h"
 #include "scenemanager.h"
-#include "simplescene.h"
 #include "skeletalanimationblendscene.h"
-#include "spectrumanalyzerscene.h"
-#include "truetypescene.h"
-#include "wildcopperscene.h"
 #include <iostream>
 #include <thread>
 
@@ -287,12 +270,6 @@ void DL::App::processInput(GLFWwindow *window) {
   hasLastMousePosition_ = true;
 }
 
-void DL::App::loadSimpleScene() {
-  scene_ = replacePreparedScene(
-      std::move(scene_), std::make_unique<SimpleScene>(renderDevice_.get()),
-      getWindowSize(), getFramebufferSize());
-}
-
 void DL::App::loadCurrentScene() {
   auto previousScene = std::move(scene_);
   scene_ = replacePreparedScene(std::move(previousScene),
@@ -311,61 +288,6 @@ void DL::App::registerScenes() {
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
-                                               renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
-                                           meshAssetCache_.get(),
-                                           renderResourceCache_.get());
-  });
-#if defined(TINY_ENGINE_ENABLE_PHYSICS)
-  sceneManager_.registerScene([this] {
-    return std::make_unique<PhysicsSandboxScene>(renderDevice_.get(),
-                                                 renderResourceCache_.get());
-  });
-#endif
-  sceneManager_.registerScene([this] {
-    return std::make_unique<SpectrumAnalyzerScene>(
-        renderDevice_.get(), renderResourceCache_.get(), &audioSystem_);
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
-                                            renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<NodeExampleScene>(
-        renderDevice_.get(), codebook_.get(), renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
-                                           meshAssetCache_.get(),
-                                           renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<PhongShapeScene>(renderDevice_.get(),
-                                             renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<TrueTypeScene>(glslVersionString_); });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get(),
-                                          renderResourceCache_.get());
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<IntroScene>(glslVersionString_); });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
-                                      renderDevice_.get(), &audioSystem_);
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<ParticleScene>(glslVersionString_); });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<WildCopperScene>(glslVersionString_); });
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
@@ -411,12 +333,6 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
         return;
       }
     }
-    return;
-  }
-
-  if (key == GLFW_KEY_SPACE) {
-    Logger::instance().logEvent(LogLevel::Info, "scene", "load_simple_scene");
-    loadSimpleScene();
     return;
   }
 

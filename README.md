@@ -1,47 +1,79 @@
 # Tiny Hippie Engine
 
-A tiny cross-platform demo engine for experimenting with GL/ImGui scenes on macOS/Linux/Windows and WebAssembly. It bundles BasisU texture decoding, mini audio playback, and a scene manager for demo-style effects.
+A small C++20 OpenGL/WebGL2 starter engine for code-driven games and visual
+experiments. The repository is trimmed to one starter scene,
+`SkeletalAnimationBlendScene`, with a glTF character setup, animation blending,
+simple flock behavior, debug UI, audio plumbing, and the reusable engine pieces
+needed to grow a new project.
 
 ## Features
-- Native builds for macOS/Linux/Windows plus WebGL2 via Emscripten.
-- BasisU transcoding for compact texture assets (`Resources/*.basis`).
-- A grab bag of demo scenes (Intro, NodeExample, DemoScene, ParticleScene, etc.) you can switch between at runtime (`←/→`).
+
+- Native desktop builds for macOS/Linux/Windows.
+- WebGL2 build path via Emscripten.
+- Scene graph based runtime with `SceneNode` transforms and render components.
+- glTF/GLB mesh loading with animation clips, animation playback, and skinning helpers.
+- Mesh rendering through `IRenderDevice` and the OpenGL backend.
+- ImGui debug UI, runtime logs, scene tree, and inspector.
+- Minimal starter resources: two character GLBs, their `Resources/Textures/`
+  textures, and one mesh shader pair.
+- Optional audio system and optional physics wrapper.
 
 ## Requirements
-- CMake ≥ 3.15, Ninja/Make, a C++20 compiler (Clang/GCC/MSVC).
-- For Web builds you’ll need the Emscripten SDK; set `EMS` to either your emsdk root or the direct `upstream/emscripten` directory.
+
+- CMake 3.15 or newer.
+- A C++20 compiler.
+- Ninja or Make.
+- Emscripten SDK for web builds.
 
 ## Building
 
 ### Native Desktop
+
 ```bash
-scripts/build_desktop.sh                # default RelWithDebInfo into build/
-CONFIG=Debug scripts/build_desktop.sh   # change build type
+scripts/build_desktop.sh
+CONFIG=Debug scripts/build_desktop.sh
 ```
 
-### WebAssembly (WebGL2)
+### Tests
+
 ```bash
-export EMS="$HOME/emsdk"   # or "$HOME/emsdk/upstream/emscripten"
-scripts/build_web.sh                    # emits web/tiny_hippie_engine.html
+scripts/run_tests.sh
 ```
-Serve `web/` via `python -m http.server` and open the HTML to run in a browser.
+
+Physics is off by default. To include the optional ReactPhysics3D wrapper in
+tests, run:
+
+```bash
+TINY_ENGINE_ENABLE_PHYSICS=ON scripts/run_tests.sh
+```
+
+### WebAssembly
+
+```bash
+export EMS="$HOME/emsdk"
+scripts/build_web.sh
+```
+
+`EMS` may point to the emsdk root or directly to `upstream/emscripten`.
 
 ## Running
+
 ```bash
 ./build/tiny_hippie_engine
 ```
 
 Controls:
-- `←/→` cycle scenes.
-- `SPACE` loads the simple shader scene.
-- `ESC` quits.
 
-Many scenes expose ImGui panels for tweaking parameters.
+- `WASD`: move the camera.
+- Hold right mouse button and move the mouse: rotate the camera heading.
+- `ESC`: quit.
 
-## Structure
-- `include/`, `source/` – Engine headers/implementations.
-- `Shaders/`, `Resources/` – GLSL and assets copied next to the binary.
-- `scripts/` – Build helpers for desktop/web targets.
-- `imgui/`, `glfw/`, `transcoder/` – third-party code.
+## Project Layout
 
-Enjoy tinkering! <3
+- `source/`, `include/`: engine and starter scene code.
+- `Resources/`: starter character assets, with external GLB textures under
+  `Resources/Textures/`.
+- `Shaders/`: starter mesh shaders.
+- `tests/`: focused runtime, animation, scene, and asset tests.
+- `scripts/`: desktop, web, architecture, and test helpers.
+- `imgui/`, `glfw/`, `transcoder/`: third-party code.

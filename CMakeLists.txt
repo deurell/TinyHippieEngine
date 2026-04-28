@@ -11,7 +11,7 @@ include(CTest)
 include(FetchContent)
 
 option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
-option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" ON)
+option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" OFF)
 
 set(PLATFORM_LIBS "")
 
@@ -35,78 +35,43 @@ if (TINY_ENGINE_ENABLE_PHYSICS)
     FetchContent_MakeAvailable(reactphysics3d)
 endif ()
 
-add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
+add_executable(tiny_hippie_engine
+        source/glad.c
+        source/main.cpp
+        source/app.cpp
+        source/logger.cpp
+        source/camera.h
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
+        source/meshasset.h source/meshasset.cpp
         source/meshassetcache.h source/meshassetcache.cpp
+        source/meshnode.h source/meshnode.cpp
+        source/meshvisualizer.h source/meshvisualizer.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
-        include/renderdevice.h source/openglrenderdevice.cpp include/scenelifecycle.h source/scenelifecycle.cpp
-        source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
-        source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp include/app.h include/iscene.h include/demoscene.h include/c64scene.h include/truetypescene.h include/textsprite.h
-        include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
-        source/wildcopperscene.cpp include/miniaudio.h source/audiosystem.cpp include/audiosystem.h source/simplescene.cpp include/simplescene.h
-        include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
-        include/scenenode.h
-        source/scenenode.cpp
-        include/visualizerbase.h
-        source/planenode.cpp
-        source/planenode.h
-        source/nodeexamplescene.h
-        source/nodeexamplescene.cpp
-        source/textnode.cpp
-        source/textnode.h
-        source/textvisualizer.h
-        source/textvisualizer.cpp
-        source/planevisualizer.h
-        source/planevisualizer.cpp
-        source/glosifyscene.cpp
-        source/glosifyscene.h
-        source/spritenode.cpp
-        source/spritenode.h
-        source/spritevisualizer.cpp
-        source/spritevisualizer.h
-        source/quicknodescene.cpp
-        source/quicknodescene.h
-        source/particlesystemnode.cpp
-        source/particlesystemnode.h
-        source/particlevisualizer.cpp
-        source/particlevisualizer.h
-        source/particlenodescene.cpp
-        source/model.cpp
-        source/gltfnodescene.h
-        source/gltfnodescene.cpp
         source/skeletalanimationblendscene.h
         source/skeletalanimationblendscene.cpp
-        source/meshasset.h
-        source/meshasset.cpp
-        source/meshvisualizer.h
-        source/meshvisualizer.cpp
-        source/meshnode.h
-        source/meshnode.cpp
-        source/meshnodescene.h
-        source/meshnodescene.cpp
-        source/shapegeometry.h
-        source/shapegeometry.cpp
-        source/shapevisualizer.h
-        source/shapevisualizer.cpp
-        source/phongshapenode.h
-        source/phongshapenode.cpp
-        source/phongshapescene.h
-        source/phongshapescene.cpp
-        source/spectrumanalyzerscene.h
-        source/spectrumanalyzerscene.cpp
-        include/particlenodescene.h
+        source/shader.h
+        source/stb_image.h source/stb_image.cpp
+        source/stb_truetype.h source/stb_truetype.cpp
+        source/texture.h
+        include/app.h
+        include/audiosystem.h source/audiosystem.cpp
+        include/iscene.h
+        include/miniaudio.h
+        include/renderdevice.h source/openglrenderdevice.cpp
+        include/scenelifecycle.h source/scenelifecycle.cpp
+        include/scenemanager.h
+        include/scenenode.h source/scenenode.cpp
+        include/visualizerbase.h
 )
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
     target_sources(tiny_hippie_engine PRIVATE
-            source/physicsdebugrenderer.h source/physicsdebugrenderer.cpp
             source/physicscontext.h source/physicscontext.cpp
             source/physicsworld.h source/physicsworld.cpp
             source/physicsbodycomponent.h source/physicsbodycomponent.cpp
-            source/physicssandboxscene.h source/physicssandboxscene.cpp
     )
 endif ()
 

@@ -1,15 +1,12 @@
 #pragma once
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
-#include "camera.h"
 #include "iscene.h"
 #include "meshassetcache.h"
 #include "renderresourcecache.h"
 #include "scenelifecycle.h"
 #include "scenemanager.h"
-#include "model.h"
 #include "renderdevice.h"
-#include "shader.h"
 #include <GLFW/glfw3.h>
 #include <memory>
 
@@ -51,7 +48,6 @@ private:
   bool init();
   void basisInit();
   void calculateDeltaTime();
-  void loadSimpleScene();
   void loadCurrentScene();
   void registerScenes();
 
@@ -73,8 +69,6 @@ private:
   int lastFixedUpdateCount_ = 0;
   int requestedSimulationSteps_ = 0;
   bool simulationPaused_ = false;
-  bool nextSceneHeld_ = false;
-  bool prevSceneHeld_ = false;
   InputState inputState_;
   glm::vec2 lastMousePosition_{0.0f};
   bool hasLastMousePosition_ = false;

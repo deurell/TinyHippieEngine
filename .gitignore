@@ -1,4 +1,5 @@
 build/
+build-nophysics/
 deps/
 web/
 cmake-build-debug/

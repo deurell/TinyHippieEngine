@@ -172,7 +172,7 @@ void SkeletalAnimationBlendScene::initFollowers() {
     const glm::vec3 spawnPosition{-4.8f + col * 0.85f, 0.0f,
                                   2.55f + row * 0.8f};
     auto chaserNode =
-        createCharacterNode("Resources/character-r.glb", "chaser",
+        createCharacterNode("Resources/character-q.glb", "chaser",
                             spawnPosition, kCharacterScale);
     chaserNode->setAnimationPlaybackSpeed(0.0f);
     chaserNode->setAnimationBlend(idleClipIndex_, walkClipIndex_, 0.0f);

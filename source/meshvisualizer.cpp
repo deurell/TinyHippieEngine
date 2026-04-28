@@ -295,23 +295,6 @@ TextureHandle createTextureFromPixels(IRenderDevice &renderDevice,
                                      .generateMipmaps = true});
 }
 
-std::string siblingTexturePath(std::string_view path) {
-  const auto directorySlash = path.find_last_of('/');
-  if (directorySlash == std::string_view::npos) {
-    return {};
-  }
-
-  const std::string_view directory = path.substr(0, directorySlash);
-  const auto parentSlash = directory.find_last_of('/');
-  if (parentSlash == std::string_view::npos) {
-    return {};
-  }
-
-  const std::string_view parentDirectory = directory.substr(0, parentSlash);
-  const std::string_view filename = path.substr(directorySlash + 1);
-  return std::string(parentDirectory) + '/' + std::string(filename);
-}
-
 TextureHandle loadTextureFile(IRenderDevice &renderDevice, std::string_view path) {
   int width = 0;
   int height = 0;
@@ -376,14 +359,6 @@ TextureHandle MeshVisualizer::loadTexture(const MeshAssetSubmesh &submesh,
     auto texture = loadTextureFile(*renderDevice_, submesh.texturePath);
     if (texture.valid()) {
       return texture;
-    }
-
-    const std::string siblingPath = siblingTexturePath(submesh.texturePath);
-    if (!siblingPath.empty()) {
-      texture = loadTextureFile(*renderDevice_, siblingPath);
-      if (texture.valid()) {
-        return texture;
-      }
     }
   }
   return createFallbackTexture(sharedTexture);

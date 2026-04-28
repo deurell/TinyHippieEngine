@@ -21,6 +21,12 @@ Core pieces:
 - Render components (`VisualizerBase` descendants): attached to `SceneNode` and rendered from node world transforms.
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
 
+Starter content:
+- The app registers one project scene: `SkeletalAnimationBlendScene`.
+- Runtime resources are intentionally minimal: `character-l.glb`, `character-q.glb`,
+  their PNG textures in `Resources/Textures/`, and `Shaders/meshnode.*`.
+- `MeshNode` + `MeshVisualizer` are the active node/render component pair.
+
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
@@ -66,7 +72,7 @@ GLFW callbacks owned by App
 Scene lifecycle and switching:
 
 App::registerScenes()
-    -> SceneManager (stores scene factories)
+    -> SceneManager (stores the starter scene factory)
 
 App::loadCurrentScene()
     -> SceneManager::createCurrent()
@@ -92,7 +98,7 @@ Fixed-step invariant:
 - `update()` runs once per render frame and is variable-rate.
 
 Rules:
-- Gameplay/simulation/physics state belongs in `fixedUpdate()`.
+- Gameplay/simulation state belongs in `fixedUpdate()`.
 - Presentation, smoothing, and UI belong in `update()`/`render()`.
 - Do not make simulation correctness depend on render FPS.
 
@@ -140,6 +146,11 @@ Principle:
 
 Desktop:
 - Use `scripts/build_desktop.sh`.
+
+Build flags:
+- `TINY_ENGINE_ENABLE_IMGUI` (default ON) enables debug UI.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) builds the optional
+  ReactPhysics3D wrapper sources.
 
 Web:
 - Use `scripts/build_web.sh`.

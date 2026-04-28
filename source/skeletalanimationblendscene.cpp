@@ -23,10 +23,10 @@ constexpr float kCameraMaxPitch = 1.2f;
 constexpr glm::vec3 kCharacterScale{0.2f, 0.2f, 0.2f};
 constexpr glm::vec3 kHeroScale{0.5f, 0.5f, 0.5f};
 constexpr glm::vec3 kInitialFollowerFacing{0.0f, 0.0f, -1.0f};
-constexpr DL::Key kCameraForwardKey = DL::Key::W;
-constexpr DL::Key kCameraBackwardKey = DL::Key::S;
-constexpr DL::Key kCameraLeftKey = DL::Key::A;
-constexpr DL::Key kCameraRightKey = DL::Key::D;
+constexpr DL::Action kCameraForwardAction = DL::Action::MoveForward;
+constexpr DL::Action kCameraBackwardAction = DL::Action::MoveBackward;
+constexpr DL::Action kCameraLeftAction = DL::Action::MoveLeft;
+constexpr DL::Action kCameraRightAction = DL::Action::MoveRight;
 constexpr int kMoveClipSearchIterations = 6;
 
 glm::vec3 safeNormalize(const glm::vec3 &value) {
@@ -373,16 +373,16 @@ void SkeletalAnimationBlendScene::updateCameraController(
 
   const float movementStep =
       kCameraMoveSpeed * static_cast<float>(ctx.delta_time);
-  if (ctx.input.isKeyDown(kCameraForwardKey)) {
+  if (ctx.input.isActionDown(kCameraForwardAction)) {
     camera_->translate(0.0f, 0.0f, -movementStep);
   }
-  if (ctx.input.isKeyDown(kCameraBackwardKey)) {
+  if (ctx.input.isActionDown(kCameraBackwardAction)) {
     camera_->translate(0.0f, 0.0f, movementStep);
   }
-  if (ctx.input.isKeyDown(kCameraRightKey)) {
+  if (ctx.input.isActionDown(kCameraRightAction)) {
     camera_->translate(movementStep, 0.0f, 0.0f);
   }
-  if (ctx.input.isKeyDown(kCameraLeftKey)) {
+  if (ctx.input.isActionDown(kCameraLeftAction)) {
     camera_->translate(-movementStep, 0.0f, 0.0f);
   }
 }

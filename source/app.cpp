@@ -71,6 +71,7 @@ bool DL::App::init() {
     LogError("GLFW initialization failed");
     return false;
   }
+  initActionMap();
   basisInit();
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
@@ -84,6 +85,13 @@ bool DL::App::init() {
     return false;
   }
   return true;
+}
+
+void DL::App::initActionMap() {
+  actionMap_.bind(Action::MoveForward, Key::W);
+  actionMap_.bind(Action::MoveBackward, Key::S);
+  actionMap_.bind(Action::MoveLeft, Key::A);
+  actionMap_.bind(Action::MoveRight, Key::D);
 }
 
 int DL::App::run() {
@@ -268,6 +276,7 @@ void DL::App::processInput(GLFWwindow *window) {
       hasLastMousePosition_ ? mousePosition - lastMousePosition_ : glm::vec2(0.0f);
   lastMousePosition_ = mousePosition;
   hasLastMousePosition_ = true;
+  actionMap_.apply(inputState_, inputState_);
 }
 
 void DL::App::loadCurrentScene() {

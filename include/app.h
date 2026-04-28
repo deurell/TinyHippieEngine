@@ -48,6 +48,7 @@ private:
   bool init();
   void basisInit();
   void calculateDeltaTime();
+  void initActionMap();
   void loadCurrentScene();
   void registerScenes();
 
@@ -69,6 +70,7 @@ private:
   int lastFixedUpdateCount_ = 0;
   int requestedSimulationSteps_ = 0;
   bool simulationPaused_ = false;
+  ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 lastMousePosition_{0.0f};
   bool hasLastMousePosition_ = false;

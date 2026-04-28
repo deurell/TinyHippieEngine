@@ -12,7 +12,7 @@
 
 namespace {
 
-constexpr int kChaserCount = 5;
+constexpr int kChaserCount = 10;
 constexpr float kCharacterHalfWidth = 0.46f;
 constexpr float kCharacterHalfDepth = 0.34f;
 constexpr float kFollowerHalfWidth = 0.62f;
@@ -179,7 +179,7 @@ void SkeletalAnimationBlendScene::initCamera() {
 
 void SkeletalAnimationBlendScene::initLeadCharacter() {
   auto meshNode =
-      createCharacterNode("Resources/character-l.glb", "character-l",
+      createCharacterNode("Resources/character-l.glb", "hero",
                           characterPosition_, kHeroScale);
   meshNode_ = meshNode.get();
   addChild(std::move(meshNode));
@@ -193,9 +193,11 @@ void SkeletalAnimationBlendScene::initFollowers() {
     const float col = static_cast<float>(i % 5);
     const glm::vec3 spawnPosition{-4.8f + col * 0.85f, 0.0f,
                                   2.55f + row * 0.8f};
+
     auto chaserNode =
-        createCharacterNode("Resources/character-q.glb", "chaser",
-                            spawnPosition, kCharacterScale);
+        createCharacterNode("Resources/character-q.glb",
+                            "chaser " + std::to_string(i), spawnPosition,
+                            kCharacterScale);
     chaserNode->applyAnimationBlend(
         animations_.locomotionBlend(AiState::Walk, 0.0f, 0.0f));
 

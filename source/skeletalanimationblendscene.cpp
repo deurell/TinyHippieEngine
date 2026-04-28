@@ -61,12 +61,17 @@ struct SkeletalAnimationBlendScene::FlockBehavior {
   static void advance(SkeletalAnimationBlendScene &scene, float deltaTime);
 
 private:
-  static void moveFollowerToSlot(SkeletalAnimationBlendScene &scene,
+  static void beginFrame(SkeletalAnimationBlendScene &scene);
+  static void planFollowerMotion(SkeletalAnimationBlendScene &scene,
                                  FlockAgent &agent, std::size_t index,
                                  float deltaTime);
   [[nodiscard]] static bool moveFollowerAwayFromLeader(
       SkeletalAnimationBlendScene &scene, FlockAgent &agent, std::size_t index,
       float deltaTime);
+  [[nodiscard]] static bool holdFollowerIdle(FlockAgent &agent, float deltaTime);
+  static void chaseFollowerSlot(SkeletalAnimationBlendScene &scene,
+                                FlockAgent &agent, std::size_t index,
+                                float deltaTime);
   static void updateFollowerPresentation(SkeletalAnimationBlendScene &scene,
                                          FlockAgent &agent, float deltaTime);
   static void triggerFollowerCollisionPause(FlockAgent &agent, float seconds);
@@ -83,7 +88,7 @@ private:
   [[nodiscard]] static glm::vec3 moveWithoutEnteringLeader(
       const SkeletalAnimationBlendScene &scene, const glm::vec3 &position,
       const glm::vec3 &moveDelta);
-  static bool applyFollowerSeparation(FlockAgent &first, FlockAgent &second,
+  static void applyFollowerSeparation(FlockAgent &first, FlockAgent &second,
                                       const glm::vec3 &push);
 };
 
@@ -157,6 +162,7 @@ void SkeletalAnimationBlendScene::initFollowers() {
 
     chasers_.push_back({.node = chaserNode.get(),
                         .position = spawnPosition,
+                        .frameStartPosition = spawnPosition,
                         .preCorrectionPosition = spawnPosition,
                         .plannedMoveDelta = glm::vec3(0.0f),
                         .facingDirection = kInitialFollowerFacing,
@@ -166,8 +172,7 @@ void SkeletalAnimationBlendScene::initFollowers() {
                         .fleeRemaining = 0.0f,
                         .regroupRemaining = 0.0f,
                         .animationBlend = 0.0f,
-                        .wasTouchingLeader = false,
-                        .wasTouchingFollower = false});
+                        .wasTouchingLeader = false});
     addChild(std::move(chaserNode));
   }
 }
@@ -332,8 +337,10 @@ void SkeletalAnimationBlendScene::FlockBehavior::advance(
     return;
   }
 
+  beginFrame(scene);
+
   for (std::size_t i = 0; i < scene.chasers_.size(); ++i) {
-    moveFollowerToSlot(scene, scene.chasers_[i], i, deltaTime);
+    planFollowerMotion(scene, scene.chasers_[i], i, deltaTime);
   }
 
   for (auto &agent : scene.chasers_) {
@@ -345,7 +352,14 @@ void SkeletalAnimationBlendScene::FlockBehavior::advance(
   }
 }
 
-void SkeletalAnimationBlendScene::FlockBehavior::moveFollowerToSlot(
+void SkeletalAnimationBlendScene::FlockBehavior::beginFrame(
+    SkeletalAnimationBlendScene &scene) {
+  for (auto &agent : scene.chasers_) {
+    agent.frameStartPosition = agent.position;
+  }
+}
+
+void SkeletalAnimationBlendScene::FlockBehavior::planFollowerMotion(
     SkeletalAnimationBlendScene &scene, SkeletalAnimationBlendScene::FlockAgent &agent,
     std::size_t index, float deltaTime) {
   if (agent.node == nullptr) {
@@ -361,24 +375,42 @@ void SkeletalAnimationBlendScene::FlockBehavior::moveFollowerToSlot(
     return;
   }
 
+  if (holdFollowerIdle(agent, deltaTime)) {
+    return;
+  }
+
+  chaseFollowerSlot(scene, agent, index, deltaTime);
+}
+
+bool SkeletalAnimationBlendScene::FlockBehavior::holdFollowerIdle(
+    SkeletalAnimationBlendScene::FlockAgent &agent, float deltaTime) {
+  bool shouldHold = false;
   if (agent.regroupRemaining > 0.0f) {
     agent.regroupRemaining =
         std::max(0.0f, agent.regroupRemaining - deltaTime);
-    agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
-    agent.plannedMoveDelta = glm::vec3(0.0f);
-    agent.node->setLocalPosition(agent.position);
-    return;
+    shouldHold = true;
   }
-
   if (agent.collisionPauseRemaining > 0.0f) {
     agent.collisionPauseRemaining =
         std::max(0.0f, agent.collisionPauseRemaining - deltaTime);
-    agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
-    agent.plannedMoveDelta = glm::vec3(0.0f);
-    agent.node->setLocalPosition(agent.position);
-    return;
+    shouldHold = true;
   }
 
+  if (!shouldHold) {
+    return false;
+  }
+
+  agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
+  agent.plannedMoveDelta = glm::vec3(0.0f);
+  if (agent.node != nullptr) {
+    agent.node->setLocalPosition(agent.position);
+  }
+  return true;
+}
+
+void SkeletalAnimationBlendScene::FlockBehavior::chaseFollowerSlot(
+    SkeletalAnimationBlendScene &scene, SkeletalAnimationBlendScene::FlockAgent &agent,
+    std::size_t index, float deltaTime) {
   agent.plannedMoveDelta = glm::vec3(0.0f);
   const glm::vec3 toSlot = flockSlotPosition(scene, index) - agent.position;
   const float slotDistance = glm::length(toSlot);
@@ -459,12 +491,18 @@ void SkeletalAnimationBlendScene::FlockBehavior::updateFollowerPresentation(
     return;
   }
 
-  const float locomotionSpeed =
+  const glm::vec3 actualMoveDelta = agent.position - agent.frameStartPosition;
+  const float actualSpeed =
+      deltaTime > 0.0f
+          ? glm::length(glm::vec3(actualMoveDelta.x, 0.0f, actualMoveDelta.z)) /
+                deltaTime
+          : 0.0f;
+  const float plannedSpeed =
       deltaTime > 0.0f ? glm::length(glm::vec3(agent.plannedMoveDelta.x, 0.0f,
                                                agent.plannedMoveDelta.z)) /
                              deltaTime
                        : 0.0f;
-  const bool moving = locomotionSpeed > 0.03f;
+  const bool moving = plannedSpeed > 0.03f && actualSpeed > 0.05f;
   const bool running = moving &&
       agent.desiredState == SkeletalAnimationBlendScene::AiState::Run;
 
@@ -497,7 +535,7 @@ void SkeletalAnimationBlendScene::FlockBehavior::updateFollowerPresentation(
   const float playbackScale =
       running ? kFollowerRunPlaybackPerSpeed : kFollowerWalkPlaybackPerSpeed;
   const float playbackSpeed =
-      moving ? std::clamp(locomotionSpeed * playbackScale, 0.0f, 0.055f)
+      moving ? std::clamp(actualSpeed * playbackScale, 0.0f, 0.055f)
              : kFollowerIdlePlaybackSpeed;
   agent.node->setAnimationPlaybackSpeed(playbackSpeed);
   agent.node->setAnimationBlend(scene.idleClipIndex_,
@@ -593,16 +631,16 @@ glm::vec3 SkeletalAnimationBlendScene::FlockBehavior::moveWithoutEnteringLeader(
   return moveDelta * low;
 }
 
-bool SkeletalAnimationBlendScene::FlockBehavior::applyFollowerSeparation(
+void SkeletalAnimationBlendScene::FlockBehavior::applyFollowerSeparation(
     FlockAgent &first, FlockAgent &second, const glm::vec3 &push) {
   if (glm::length(push) <= 0.0f) {
-    return false;
+    return;
   }
 
   const bool firstSettled = isStaticIdle(first);
   const bool secondSettled = isStaticIdle(second);
   if (firstSettled && secondSettled) {
-    return false;
+    return;
   }
 
   if (firstSettled) {
@@ -613,7 +651,6 @@ bool SkeletalAnimationBlendScene::FlockBehavior::applyFollowerSeparation(
     first.position += push * 0.5f;
     second.position -= push * 0.5f;
   }
-  return true;
 }
 
 float SkeletalAnimationBlendScene::FlockBehavior::collisionPauseSeconds(
@@ -637,7 +674,6 @@ glm::vec3 SkeletalAnimationBlendScene::FlockBehavior::flockSlotPosition(
 void SkeletalAnimationBlendScene::FlockBehavior::resolveFlockOverlaps(
     SkeletalAnimationBlendScene &scene) {
   std::vector<bool> touchingLeader(scene.chasers_.size(), false);
-  std::vector<bool> touchingFollower(scene.chasers_.size(), false);
 
   for (auto &agent : scene.chasers_) {
     const glm::vec3 push =
@@ -660,16 +696,12 @@ void SkeletalAnimationBlendScene::FlockBehavior::resolveFlockOverlaps(
                                      scene.chasers_[j].position, kFollowerHalfWidth,
                                      kFollowerHalfDepth) *
           kFollowerSeparationStrength;
-      if (applyFollowerSeparation(scene.chasers_[i], scene.chasers_[j], push)) {
-        touchingFollower[i] = true;
-        touchingFollower[j] = true;
-      }
+      applyFollowerSeparation(scene.chasers_[i], scene.chasers_[j], push);
     }
   }
 
   for (std::size_t i = 0; i < scene.chasers_.size(); ++i) {
     scene.chasers_[i].wasTouchingLeader = touchingLeader[i];
-    scene.chasers_[i].wasTouchingFollower = touchingFollower[i];
   }
 }
 

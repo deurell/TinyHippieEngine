@@ -41,6 +41,7 @@ private:
   struct FlockAgent {
     MeshNode *node = nullptr;
     glm::vec3 position{0.0f};
+    glm::vec3 frameStartPosition{0.0f};
     glm::vec3 preCorrectionPosition{0.0f};
     glm::vec3 plannedMoveDelta{0.0f};
     glm::vec3 facingDirection{0.0f, 0.0f, 1.0f};
@@ -51,7 +52,6 @@ private:
     float regroupRemaining = 0.0f;
     float animationBlend = 0.0f;
     bool wasTouchingLeader = false;
-    bool wasTouchingFollower = false;
   };
 
   [[nodiscard]] std::size_t findClipIndex(std::string_view name,

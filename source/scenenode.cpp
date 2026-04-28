@@ -92,6 +92,12 @@ void SceneNode::update(const FrameContext &ctx) {
   }
 }
 
+void SceneNode::fixedUpdate(const FrameContext &ctx) {
+  for (auto &child : children) {
+    child->fixedUpdate(ctx);
+  }
+}
+
 void SceneNode::render(const FrameContext &ctx) {
 
   for (auto &component : renderComponents_) {

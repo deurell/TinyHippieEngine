@@ -23,6 +23,7 @@ public:
 
   void init() override;
   void update(const DL::FrameContext &ctx) override;
+  void fixedUpdate(const DL::FrameContext &ctx) override;
   void render(const DL::FrameContext &ctx) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   [[nodiscard]] std::string_view debugTypeName() const override {

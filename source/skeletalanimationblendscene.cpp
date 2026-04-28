@@ -266,14 +266,20 @@ void SkeletalAnimationBlendScene::initFollowers() {
 void SkeletalAnimationBlendScene::update(const DL::FrameContext &ctx) {
   if (meshNode_ != nullptr) {
     updateCameraController(ctx);
-    if (aiEnabled_) {
-      advanceAi(static_cast<float>(ctx.delta_time));
-    }
-    advanceFlock(static_cast<float>(ctx.delta_time));
     updateLeadAnimationBlend(static_cast<float>(ctx.delta_time));
   }
 
   SceneNode::update(ctx);
+}
+
+void SkeletalAnimationBlendScene::fixedUpdate(const DL::FrameContext &ctx) {
+  if (meshNode_ != nullptr) {
+    if (aiEnabled_) {
+      advanceAi(static_cast<float>(ctx.delta_time));
+    }
+    advanceFlock(static_cast<float>(ctx.delta_time));
+  }
+  SceneNode::fixedUpdate(ctx);
 }
 
 void SkeletalAnimationBlendScene::render(const DL::FrameContext &ctx) {

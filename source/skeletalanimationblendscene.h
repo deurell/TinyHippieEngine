@@ -36,7 +36,7 @@ private:
     Run,
   };
 
-  struct FlockBehavior;
+  struct FlockController;
 
   struct CharacterAnimations {
     std::size_t idleClipIndex = 0;

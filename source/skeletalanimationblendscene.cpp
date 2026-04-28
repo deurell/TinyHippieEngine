@@ -17,29 +17,9 @@ constexpr float kCharacterHalfWidth = 0.46f;
 constexpr float kCharacterHalfDepth = 0.34f;
 constexpr float kFollowerHalfWidth = 0.62f;
 constexpr float kFollowerHalfDepth = 0.48f;
-constexpr float kHeroWalkSpeed = 1.05f;
-constexpr float kHeroRunSpeed = 2.1f;
 constexpr float kCameraMoveSpeed = 4.2f;
 constexpr float kCameraMouseSensitivity = 0.0035f;
 constexpr float kCameraMaxPitch = 1.2f;
-constexpr float kFollowerIdlePlaybackSpeed = 0.55f;
-constexpr float kFollowerWalkPlaybackPerSpeed = 0.005f;
-constexpr float kFollowerRunPlaybackPerSpeed = 0.01f;
-constexpr float kFollowerWalkEnterDistance = 0.18f;
-constexpr float kFollowerWalkExitDistance = 0.10f;
-constexpr float kFollowerRunEnterDistance = 1.75f;
-constexpr float kFollowerRunExitDistance = 1.35f;
-constexpr float kFollowerStateHoldSeconds = 0.16f;
-constexpr float kFollowerArriveDistance = 0.10f;
-constexpr float kFollowerFacingDeadzone = 0.01f;
-constexpr float kFollowerFleeTriggerDistance = 1.15f;
-constexpr float kFollowerFleeSeconds = 0.44f;
-constexpr float kFollowerFleeSpeed = 2.65f;
-constexpr float kFollowerRegroupSeconds = 2.2f;
-constexpr float kFollowerSeparationStrength = 0.35f;
-constexpr float kLeaderSeparationMaxStep = 0.035f;
-constexpr float kFollowerCollisionPauseSeconds = 0.22f;
-constexpr float kFollowerLongCollisionPauseSeconds = 0.48f;
 constexpr glm::vec3 kCharacterScale{0.2f, 0.2f, 0.2f};
 constexpr glm::vec3 kHeroScale{0.5f, 0.5f, 0.5f};
 constexpr glm::vec3 kInitialFollowerFacing{0.0f, 0.0f, -1.0f};
@@ -76,6 +56,37 @@ float smoothingAlpha(float responsiveness, float deltaTime) {
 } // namespace
 
 struct SkeletalAnimationBlendScene::FlockController {
+  struct HeroTuning {
+    float walkSpeed = 1.05f;
+    float runSpeed = 2.1f;
+    float blendRate = 3.0f;
+    float idlePlaybackSpeed = 0.55f;
+    float walkPlaybackSpeed = 0.24f;
+    float runPlaybackSpeed = 0.36f;
+  };
+
+  struct FollowerTuning {
+    float idlePlaybackSpeed = 0.55f;
+    float walkPlaybackPerSpeed = 0.005f;
+    float runPlaybackPerSpeed = 0.01f;
+    float walkEnterDistance = 0.18f;
+    float walkExitDistance = 0.10f;
+    float runEnterDistance = 1.75f;
+    float runExitDistance = 1.35f;
+    float stateHoldSeconds = 0.16f;
+    float arriveDistance = 0.10f;
+    float facingDeadzone = 0.01f;
+    float fleeTriggerDistance = 1.15f;
+    float fleeSeconds = 0.44f;
+    float fleeSpeed = 2.65f;
+    float regroupSeconds = 2.2f;
+    float separationStrength = 0.35f;
+    float leaderSeparationMaxStep = 0.035f;
+    float collisionPauseSeconds = 0.22f;
+    float longCollisionPauseSeconds = 0.48f;
+    float turnResponsiveness = 8.0f;
+  };
+
   static void advanceHero(SkeletalAnimationBlendScene &scene, float deltaTime);
   static void advanceFollowers(SkeletalAnimationBlendScene &scene,
                                float deltaTime);
@@ -84,6 +95,9 @@ struct SkeletalAnimationBlendScene::FlockController {
       const SkeletalAnimationBlendScene &scene);
   [[nodiscard]] static float currentMoveSpeed(
       const SkeletalAnimationBlendScene &scene);
+  [[nodiscard]] static const HeroTuning &heroTuning();
+  [[nodiscard]] static const FollowerTuning &followerTuning();
+  [[nodiscard]] static const glm::vec3 *routeTargets();
 
 private:
   static void beginFollowerFrame(SkeletalAnimationBlendScene &scene);
@@ -139,6 +153,26 @@ DL::AnimationBlendState SkeletalAnimationBlendScene::CharacterAnimations::locomo
           .playbackSpeed = playbackSpeed,
           .playing = playing,
           .looping = looping};
+}
+
+const SkeletalAnimationBlendScene::FlockController::HeroTuning &
+SkeletalAnimationBlendScene::FlockController::heroTuning() {
+  static const HeroTuning tuning;
+  return tuning;
+}
+
+const SkeletalAnimationBlendScene::FlockController::FollowerTuning &
+SkeletalAnimationBlendScene::FlockController::followerTuning() {
+  static const FollowerTuning tuning;
+  return tuning;
+}
+
+const glm::vec3 *SkeletalAnimationBlendScene::FlockController::routeTargets() {
+  static const glm::vec3 targets[4] = {{2.6f, 0.0f, -1.0f},
+                                       {1.45f, 0.0f, 1.65f},
+                                       {-2.25f, 0.0f, 1.2f},
+                                       {-2.6f, 0.0f, -1.4f}};
+  return targets;
 }
 
 SkeletalAnimationBlendScene::SkeletalAnimationBlendScene(
@@ -351,9 +385,10 @@ void SkeletalAnimationBlendScene::updateLeadAnimationBlend(float deltaTime) {
   if (meshNode_ == nullptr || !meshNode_->hasAnimations()) {
     return;
   }
+  const auto &hero = FlockController::heroTuning();
 
   targetLocomotionBlendWeight_ = aiState_ == AiState::Idle ? 0.0f : 1.0f;
-  const float maxStep = blendRate_ * deltaTime;
+  const float maxStep = hero.blendRate * deltaTime;
   if (locomotionBlendWeight_ < targetLocomotionBlendWeight_) {
     locomotionBlendWeight_ =
         std::min(locomotionBlendWeight_ + maxStep, targetLocomotionBlendWeight_);
@@ -362,8 +397,11 @@ void SkeletalAnimationBlendScene::updateLeadAnimationBlend(float deltaTime) {
         std::max(locomotionBlendWeight_ - maxStep, targetLocomotionBlendWeight_);
   }
 
-  const float playbackSpeed =
-      aiState_ == AiState::Run ? 0.36f : aiState_ == AiState::Walk ? 0.24f : 0.55f;
+  const float playbackSpeed = aiState_ == AiState::Run
+                                  ? hero.runPlaybackSpeed
+                                  : aiState_ == AiState::Walk
+                                        ? hero.walkPlaybackSpeed
+                                        : hero.idlePlaybackSpeed;
   const AiState locomotionState =
       aiState_ == AiState::Run ? AiState::Run : AiState::Walk;
   meshNode_->applyAnimationBlend(animations_.locomotionBlend(
@@ -450,12 +488,13 @@ void SkeletalAnimationBlendScene::FlockController::chooseNextMoveState(
 
 glm::vec3 SkeletalAnimationBlendScene::FlockController::currentTarget(
     const SkeletalAnimationBlendScene &scene) {
-  return scene.aiTargets_[scene.aiTargetIndex_ % 4u];
+  return routeTargets()[scene.aiTargetIndex_ % 4u];
 }
 
 float SkeletalAnimationBlendScene::FlockController::currentMoveSpeed(
     const SkeletalAnimationBlendScene &scene) {
-  return scene.aiState_ == AiState::Run ? kHeroRunSpeed : kHeroWalkSpeed;
+  const auto &hero = heroTuning();
+  return scene.aiState_ == AiState::Run ? hero.runSpeed : hero.walkSpeed;
 }
 
 void SkeletalAnimationBlendScene::FlockController::beginFollowerFrame(
@@ -517,10 +556,12 @@ bool SkeletalAnimationBlendScene::FlockController::holdFollowerIdle(
 void SkeletalAnimationBlendScene::FlockController::chaseFollowerSlot(
     SkeletalAnimationBlendScene &scene, SkeletalAnimationBlendScene::FlockAgent &agent,
     std::size_t index, float deltaTime) {
+  const auto &hero = heroTuning();
+  const auto &followers = followerTuning();
   agent.plannedMoveDelta = glm::vec3(0.0f);
   const glm::vec3 toSlot = flockSlotPosition(scene, index) - agent.position;
   const float slotDistance = glm::length(toSlot);
-  if (slotDistance <= kFollowerArriveDistance) {
+  if (slotDistance <= followers.arriveDistance) {
     agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
     agent.stateHoldRemaining = 0.0f;
     return;
@@ -529,8 +570,8 @@ void SkeletalAnimationBlendScene::FlockController::chaseFollowerSlot(
   agent.desiredState = chooseFollowerState(agent, slotDistance);
   const float moveSpeed =
       agent.desiredState == SkeletalAnimationBlendScene::AiState::Run
-          ? kHeroRunSpeed
-          : kHeroWalkSpeed;
+          ? hero.runSpeed
+          : hero.walkSpeed;
   const glm::vec3 direction = toSlot / slotDistance;
   const float step = std::min(slotDistance, moveSpeed * deltaTime);
   agent.plannedMoveDelta =
@@ -545,16 +586,17 @@ void SkeletalAnimationBlendScene::FlockController::chaseFollowerSlot(
 bool SkeletalAnimationBlendScene::FlockController::moveFollowerAwayFromLeader(
     SkeletalAnimationBlendScene &scene, SkeletalAnimationBlendScene::FlockAgent &agent,
     std::size_t index, float deltaTime) {
+  const auto &followers = followerTuning();
   const glm::vec3 fromLeader = agent.position - scene.characterPosition_;
   const glm::vec3 flatFromLeader{fromLeader.x, 0.0f, fromLeader.z};
   const float leaderDistance = glm::length(flatFromLeader);
-  if (leaderDistance < kFollowerFleeTriggerDistance) {
-    agent.fleeRemaining = kFollowerFleeSeconds;
+  if (leaderDistance < followers.fleeTriggerDistance) {
+    agent.fleeRemaining = followers.fleeSeconds;
   } else if (agent.fleeRemaining > 0.0f) {
     const float previousFleeRemaining = agent.fleeRemaining;
     agent.fleeRemaining = std::max(0.0f, agent.fleeRemaining - deltaTime);
     if (previousFleeRemaining > 0.0f && agent.fleeRemaining <= 0.0f) {
-      agent.regroupRemaining = kFollowerRegroupSeconds;
+      agent.regroupRemaining = followers.regroupSeconds;
     }
   }
 
@@ -574,7 +616,7 @@ bool SkeletalAnimationBlendScene::FlockController::moveFollowerAwayFromLeader(
 
   agent.desiredState = SkeletalAnimationBlendScene::AiState::Run;
   agent.collisionPauseRemaining = 0.0f;
-  agent.plannedMoveDelta = fleeDirection * kFollowerFleeSpeed * deltaTime;
+  agent.plannedMoveDelta = fleeDirection * followers.fleeSpeed * deltaTime;
   agent.position += agent.plannedMoveDelta;
   return true;
 }
@@ -585,14 +627,16 @@ void SkeletalAnimationBlendScene::FlockController::updateFollowerPresentation(
   if (agent.node == nullptr) {
     return;
   }
+  const auto &hero = heroTuning();
+  const auto &followers = followerTuning();
 
   if (agent.collisionPauseRemaining > 0.0f) {
     agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
     agent.animationBlend =
-        std::max(0.0f, agent.animationBlend - scene.blendRate_ * deltaTime);
+        std::max(0.0f, agent.animationBlend - hero.blendRate * deltaTime);
     agent.node->applyAnimationBlend(scene.animations_.locomotionBlend(
         SkeletalAnimationBlendScene::AiState::Walk, agent.animationBlend,
-        kFollowerIdlePlaybackSpeed));
+        followers.idlePlaybackSpeed));
     agent.node->setLocalPosition(agent.position);
     return;
   }
@@ -619,11 +663,10 @@ void SkeletalAnimationBlendScene::FlockController::updateFollowerPresentation(
     const glm::vec3 flatPlannedMove{agent.plannedMoveDelta.x, 0.0f,
                                     agent.plannedMoveDelta.z};
     const glm::vec3 desiredFacing =
-        glm::length(flatFinalMove) > kFollowerFacingDeadzone ? flatFinalMove
-                                                             : flatPlannedMove;
+        glm::length(flatFinalMove) > followers.facingDeadzone ? flatFinalMove
+                                                              : flatPlannedMove;
     const glm::vec3 desiredDirection = safeNormalize(desiredFacing);
-    const float turnAlpha =
-        smoothingAlpha(scene.followerTurnResponsiveness_, deltaTime);
+    const float turnAlpha = smoothingAlpha(followers.turnResponsiveness, deltaTime);
     agent.facingDirection = safeNormalize(
         glm::mix(agent.facingDirection, desiredDirection, turnAlpha));
   }
@@ -636,7 +679,7 @@ void SkeletalAnimationBlendScene::FlockController::updateFollowerPresentation(
   }
 
   const float targetBlend = moving ? 1.0f : 0.0f;
-  const float blendStep = scene.blendRate_ * deltaTime;
+  const float blendStep = hero.blendRate * deltaTime;
   if (agent.animationBlend < targetBlend) {
     agent.animationBlend =
         std::min(agent.animationBlend + blendStep, targetBlend);
@@ -646,10 +689,10 @@ void SkeletalAnimationBlendScene::FlockController::updateFollowerPresentation(
   }
 
   const float playbackScale =
-      running ? kFollowerRunPlaybackPerSpeed : kFollowerWalkPlaybackPerSpeed;
+      running ? followers.runPlaybackPerSpeed : followers.walkPlaybackPerSpeed;
   const float playbackSpeed =
       moving ? std::clamp(actualSpeed * playbackScale, 0.0f, 0.055f)
-             : kFollowerIdlePlaybackSpeed;
+             : followers.idlePlaybackSpeed;
   const auto animationState = running ? SkeletalAnimationBlendScene::AiState::Run
                                       : SkeletalAnimationBlendScene::AiState::Walk;
   agent.node->applyAnimationBlend(scene.animations_.locomotionBlend(
@@ -671,28 +714,29 @@ SkeletalAnimationBlendScene::FlockController::chooseFollowerState(
   if (agent.stateHoldRemaining > 0.0f) {
     return agent.desiredState;
   }
+  const auto &followers = followerTuning();
 
   const auto previousState = agent.desiredState;
   auto nextState = previousState;
 
   switch (previousState) {
   case SkeletalAnimationBlendScene::AiState::Idle:
-    if (slotDistance > kFollowerRunEnterDistance) {
+    if (slotDistance > followers.runEnterDistance) {
       nextState = SkeletalAnimationBlendScene::AiState::Run;
-    } else if (slotDistance > kFollowerWalkEnterDistance) {
+    } else if (slotDistance > followers.walkEnterDistance) {
       nextState = SkeletalAnimationBlendScene::AiState::Walk;
     }
     break;
   case SkeletalAnimationBlendScene::AiState::Walk:
-    if (slotDistance > kFollowerRunEnterDistance) {
+    if (slotDistance > followers.runEnterDistance) {
       nextState = SkeletalAnimationBlendScene::AiState::Run;
-    } else if (slotDistance <= kFollowerWalkExitDistance) {
+    } else if (slotDistance <= followers.walkExitDistance) {
       nextState = SkeletalAnimationBlendScene::AiState::Idle;
     }
     break;
   case SkeletalAnimationBlendScene::AiState::Run:
-    if (slotDistance <= kFollowerRunExitDistance) {
-      nextState = slotDistance > kFollowerWalkEnterDistance
+    if (slotDistance <= followers.runExitDistance) {
+      nextState = slotDistance > followers.walkEnterDistance
                       ? SkeletalAnimationBlendScene::AiState::Walk
                       : SkeletalAnimationBlendScene::AiState::Idle;
     }
@@ -700,7 +744,7 @@ SkeletalAnimationBlendScene::FlockController::chooseFollowerState(
   }
 
   if (nextState != previousState) {
-    agent.stateHoldRemaining = kFollowerStateHoldSeconds;
+    agent.stateHoldRemaining = followers.stateHoldSeconds;
   }
 
   return nextState;
@@ -767,9 +811,10 @@ void SkeletalAnimationBlendScene::FlockController::applyFollowerSeparation(
 
 float SkeletalAnimationBlendScene::FlockController::collisionPauseSeconds(
     const SkeletalAnimationBlendScene &scene, std::size_t index) {
+  const auto &followers = followerTuning();
   return (index + scene.aiTargetIndex_) % 4u == 0u
-             ? kFollowerLongCollisionPauseSeconds
-             : kFollowerCollisionPauseSeconds;
+             ? followers.longCollisionPauseSeconds
+             : followers.collisionPauseSeconds;
 }
 
 glm::vec3 SkeletalAnimationBlendScene::FlockController::flockSlotPosition(
@@ -785,13 +830,14 @@ glm::vec3 SkeletalAnimationBlendScene::FlockController::flockSlotPosition(
 
 void SkeletalAnimationBlendScene::FlockController::resolveFlockOverlaps(
     SkeletalAnimationBlendScene &scene) {
+  const auto &followers = followerTuning();
   std::vector<bool> touchingLeader(scene.chasers_.size(), false);
 
   for (auto &agent : scene.chasers_) {
     const glm::vec3 push =
         scene.separationFromCharacterBounds(agent.position, scene.characterPosition_);
     if (glm::length(push) > 0.0f && !isStaticIdle(agent)) {
-      agent.position += limitLength(push, kLeaderSeparationMaxStep);
+      agent.position += limitLength(push, followers.leaderSeparationMaxStep);
       const std::size_t agentIndex =
           static_cast<std::size_t>(&agent - scene.chasers_.data());
       touchingLeader[agentIndex] = true;
@@ -807,7 +853,7 @@ void SkeletalAnimationBlendScene::FlockController::resolveFlockOverlaps(
           scene.separationFromBounds(scene.chasers_[i].position,
                                      scene.chasers_[j].position, kFollowerHalfWidth,
                                      kFollowerHalfDepth) *
-          kFollowerSeparationStrength;
+          followers.separationStrength;
       applyFollowerSeparation(scene.chasers_[i], scene.chasers_[j], push);
     }
   }

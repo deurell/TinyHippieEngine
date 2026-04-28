@@ -77,6 +77,8 @@ add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp s
         source/model.cpp
         source/gltfnodescene.h
         source/gltfnodescene.cpp
+        source/skeletalanimationblendscene.h
+        source/skeletalanimationblendscene.cpp
         source/meshasset.h
         source/meshasset.cpp
         source/meshvisualizer.h

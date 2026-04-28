@@ -43,6 +43,7 @@ struct MeshAssetSubmesh {
   float shininess = 16.0f;
   int sourceNodeIndex = -1;
   int skinIndex = -1;
+  std::vector<std::uint8_t> encodedTextureData;
 };
 
 struct MeshAsset {

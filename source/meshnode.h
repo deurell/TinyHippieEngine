@@ -40,13 +40,18 @@ public:
   [[nodiscard]] bool isAnimationLooping() const;
   void setAnimationPlaybackSpeed(float speed);
   [[nodiscard]] float animationPlaybackSpeed() const;
+  [[nodiscard]] std::size_t findAnimationClipIndex(std::string_view name,
+                                                   std::size_t fallback = 0u) const;
   void setAnimationClipIndex(std::size_t index);
   [[nodiscard]] std::size_t animationClipIndex() const;
   [[nodiscard]] std::string_view animationClipName(std::size_t index) const;
   [[nodiscard]] std::size_t animationClipCount() const;
   [[nodiscard]] bool hasAnimations() const;
+  void applyAnimationBlend(const DL::AnimationBlendState &state);
   void setAnimationBlend(std::size_t baseClipIndex, std::size_t blendClipIndex,
                          float weight);
+  void setAnimationBlendByName(std::string_view baseClipName,
+                               std::string_view blendClipName, float weight);
   [[nodiscard]] float animationBlendWeight() const;
 
 private:

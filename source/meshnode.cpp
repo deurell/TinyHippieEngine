@@ -81,6 +81,13 @@ float MeshNode::animationPlaybackSpeed() const {
                                     : 1.0f;
 }
 
+std::size_t MeshNode::findAnimationClipIndex(std::string_view name,
+                                             std::size_t fallback) const {
+  return meshVisualizer_ != nullptr
+             ? meshVisualizer_->findAnimationClipIndex(name, fallback)
+             : 0u;
+}
+
 void MeshNode::setAnimationClipIndex(std::size_t index) {
   if (meshVisualizer_ != nullptr) {
     meshVisualizer_->setAnimationClipIndex(index);
@@ -104,10 +111,24 @@ bool MeshNode::hasAnimations() const {
   return meshVisualizer_ != nullptr && meshVisualizer_->hasAnimations();
 }
 
+void MeshNode::applyAnimationBlend(const DL::AnimationBlendState &state) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->applyAnimationBlend(state);
+  }
+}
+
 void MeshNode::setAnimationBlend(std::size_t baseClipIndex,
                                  std::size_t blendClipIndex, float weight) {
   if (meshVisualizer_ != nullptr) {
     meshVisualizer_->setAnimationBlend(baseClipIndex, blendClipIndex, weight);
+  }
+}
+
+void MeshNode::setAnimationBlendByName(std::string_view baseClipName,
+                                       std::string_view blendClipName,
+                                       float weight) {
+  if (meshVisualizer_ != nullptr) {
+    meshVisualizer_->setAnimationBlendByName(baseClipName, blendClipName, weight);
   }
 }
 

@@ -91,11 +91,31 @@ void MeshVisualizer::updateAnimation(float deltaTime) {
   }
 }
 
+std::size_t MeshVisualizer::findAnimationClipIndex(std::string_view name,
+                                                   std::size_t fallback) const {
+  if (asset_ == nullptr || asset_->animations.empty()) {
+    return 0u;
+  }
+  for (std::size_t index = 0; index < asset_->animations.size(); ++index) {
+    if (asset_->animations[index].name == name) {
+      return index;
+    }
+  }
+  return fallback < asset_->animations.size() ? fallback : 0u;
+}
+
 std::string_view MeshVisualizer::animationClipName(std::size_t index) const {
   if (asset_ == nullptr || index >= asset_->animations.size()) {
     return {};
   }
   return asset_->animations[index].name;
+}
+
+void MeshVisualizer::applyAnimationBlend(const AnimationBlendState &state) {
+  animationPlayer_.setPlaying(state.playing);
+  animationPlayer_.setLooping(state.looping);
+  animationPlayer_.setPlaybackSpeed(state.playbackSpeed);
+  setAnimationBlend(state.baseClipIndex, state.blendClipIndex, state.weight);
 }
 
 void MeshVisualizer::setAnimationBlend(std::size_t baseClipIndex,
@@ -108,6 +128,13 @@ void MeshVisualizer::setAnimationBlend(std::size_t baseClipIndex,
   if (blendAnimationPlayer_.clipIndex() != blendClipIndex) {
     blendAnimationPlayer_.setClipIndex(blendClipIndex, false);
   }
+}
+
+void MeshVisualizer::setAnimationBlendByName(std::string_view baseClipName,
+                                             std::string_view blendClipName,
+                                             float weight) {
+  setAnimationBlend(findAnimationClipIndex(baseClipName),
+                    findAnimationClipIndex(blendClipName), weight);
 }
 
 AnimationPose MeshVisualizer::currentAnimationPose() const {

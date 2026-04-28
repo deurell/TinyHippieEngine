@@ -12,7 +12,7 @@
 
 namespace {
 
-constexpr int kChaserCount = 15;
+constexpr int kChaserCount = 5;
 constexpr float kCharacterHalfWidth = 0.46f;
 constexpr float kCharacterHalfDepth = 0.34f;
 constexpr float kFollowerHalfWidth = 0.62f;
@@ -106,6 +106,30 @@ private:
                                       const glm::vec3 &push);
 };
 
+void SkeletalAnimationBlendScene::CharacterAnimations::resolve(
+    const MeshNode &node) {
+  idleClipIndex = node.findAnimationClipIndex("idle", 0u);
+  walkClipIndex = node.findAnimationClipIndex("walk", idleClipIndex);
+  runClipIndex = node.findAnimationClipIndex("sprint", walkClipIndex);
+}
+
+std::size_t SkeletalAnimationBlendScene::CharacterAnimations::locomotionClipFor(
+    SkeletalAnimationBlendScene::AiState state) const {
+  return state == SkeletalAnimationBlendScene::AiState::Run ? runClipIndex
+                                                            : walkClipIndex;
+}
+
+DL::AnimationBlendState SkeletalAnimationBlendScene::CharacterAnimations::locomotionBlend(
+    SkeletalAnimationBlendScene::AiState state, float blendWeight,
+    float playbackSpeed, bool playing, bool looping) const {
+  return {.baseClipIndex = idleClipIndex,
+          .blendClipIndex = locomotionClipFor(state),
+          .weight = blendWeight,
+          .playbackSpeed = playbackSpeed,
+          .playing = playing,
+          .looping = looping};
+}
+
 SkeletalAnimationBlendScene::SkeletalAnimationBlendScene(
     DL::IRenderDevice *renderDevice,
     basist::etc1_global_selector_codebook *codeBook,
@@ -141,8 +165,6 @@ std::unique_ptr<MeshNode> SkeletalAnimationBlendScene::createCharacterNode(
   node->setVisualizerSettings(visualizerSettings_);
   node->setLocalPosition(position);
   node->setLocalScale(scale);
-  node->setAnimationPlaying(true);
-  node->setAnimationLooping(true);
   return node;
 }
 
@@ -174,8 +196,8 @@ void SkeletalAnimationBlendScene::initFollowers() {
     auto chaserNode =
         createCharacterNode("Resources/character-q.glb", "chaser",
                             spawnPosition, kCharacterScale);
-    chaserNode->setAnimationPlaybackSpeed(0.0f);
-    chaserNode->setAnimationBlend(idleClipIndex_, walkClipIndex_, 0.0f);
+    chaserNode->applyAnimationBlend(
+        animations_.locomotionBlend(AiState::Walk, 0.0f, 0.0f));
 
     chasers_.push_back({.node = chaserNode.get(),
                         .position = spawnPosition,
@@ -229,21 +251,25 @@ void SkeletalAnimationBlendScene::render(const DL::FrameContext &ctx) {
     ImGui::SameLine();
     if (ImGui::Button("Walk")) {
       aiState_ = AiState::Walk;
-      locomotionClipIndex_ = walkClipIndex_;
     }
     ImGui::SameLine();
     if (ImGui::Button("Run")) {
       aiState_ = AiState::Run;
-      locomotionClipIndex_ = sprintClipIndex_;
     }
   }
   if (meshNode_ != nullptr && meshNode_->hasAnimations()) {
     ImGui::Text("Idle clip: %s",
-                std::string(meshNode_->animationClipName(idleClipIndex_)).c_str());
+                std::string(meshNode_->animationClipName(
+                                animations_.idleClipIndex))
+                    .c_str());
     ImGui::Text("Walk clip: %s",
-                std::string(meshNode_->animationClipName(walkClipIndex_)).c_str());
+                std::string(meshNode_->animationClipName(
+                                animations_.walkClipIndex))
+                    .c_str());
     ImGui::Text("Run clip: %s",
-                std::string(meshNode_->animationClipName(sprintClipIndex_)).c_str());
+                std::string(meshNode_->animationClipName(
+                                animations_.runClipIndex))
+                    .c_str());
   }
   if (ImGui::Checkbox("Debug normals", &debugNormals_) && meshNode_ != nullptr) {
     meshNode_->setDebugNormals(debugNormals_);
@@ -269,24 +295,11 @@ void SkeletalAnimationBlendScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
 }
 
-std::size_t SkeletalAnimationBlendScene::findClipIndex(std::string_view name,
-                                                       std::size_t fallback) const {
-  if (meshNode_ == nullptr) {
-    return fallback;
-  }
-  for (std::size_t index = 0; index < meshNode_->animationClipCount(); ++index) {
-    if (meshNode_->animationClipName(index) == name) {
-      return index;
-    }
-  }
-  return fallback < meshNode_->animationClipCount() ? fallback : 0u;
-}
-
 void SkeletalAnimationBlendScene::resolveAnimationClips() {
-  idleClipIndex_ = findClipIndex("idle", 0u);
-  walkClipIndex_ = findClipIndex("walk", idleClipIndex_);
-  sprintClipIndex_ = findClipIndex("sprint", walkClipIndex_);
-  locomotionClipIndex_ = walkClipIndex_;
+  if (meshNode_ == nullptr) {
+    return;
+  }
+  animations_.resolve(*meshNode_);
 }
 
 void SkeletalAnimationBlendScene::updateCameraController(
@@ -336,13 +349,12 @@ void SkeletalAnimationBlendScene::updateLeadAnimationBlend(float deltaTime) {
         std::max(locomotionBlendWeight_ - maxStep, targetLocomotionBlendWeight_);
   }
 
-  meshNode_->setAnimationPlaying(true);
-  meshNode_->setAnimationLooping(true);
   const float playbackSpeed =
       aiState_ == AiState::Run ? 0.36f : aiState_ == AiState::Walk ? 0.24f : 0.55f;
-  meshNode_->setAnimationPlaybackSpeed(playbackSpeed);
-  meshNode_->setAnimationBlend(idleClipIndex_, locomotionClipIndex_,
-                               locomotionBlendWeight_);
+  const AiState locomotionState =
+      aiState_ == AiState::Run ? AiState::Run : AiState::Walk;
+  meshNode_->applyAnimationBlend(animations_.locomotionBlend(
+      locomotionState, locomotionBlendWeight_, playbackSpeed));
 }
 
 void SkeletalAnimationBlendScene::advanceAi(float deltaTime) {
@@ -534,9 +546,9 @@ void SkeletalAnimationBlendScene::FlockBehavior::updateFollowerPresentation(
     agent.desiredState = SkeletalAnimationBlendScene::AiState::Idle;
     agent.animationBlend =
         std::max(0.0f, agent.animationBlend - scene.blendRate_ * deltaTime);
-    agent.node->setAnimationPlaybackSpeed(kFollowerIdlePlaybackSpeed);
-    agent.node->setAnimationBlend(scene.idleClipIndex_, scene.walkClipIndex_,
-                                  agent.animationBlend);
+    agent.node->applyAnimationBlend(scene.animations_.locomotionBlend(
+        SkeletalAnimationBlendScene::AiState::Walk, agent.animationBlend,
+        kFollowerIdlePlaybackSpeed));
     agent.node->setLocalPosition(agent.position);
     return;
   }
@@ -587,11 +599,10 @@ void SkeletalAnimationBlendScene::FlockBehavior::updateFollowerPresentation(
   const float playbackSpeed =
       moving ? std::clamp(actualSpeed * playbackScale, 0.0f, 0.055f)
              : kFollowerIdlePlaybackSpeed;
-  agent.node->setAnimationPlaybackSpeed(playbackSpeed);
-  agent.node->setAnimationBlend(scene.idleClipIndex_,
-                                running ? scene.sprintClipIndex_
-                                        : scene.walkClipIndex_,
-                                agent.animationBlend);
+  const auto animationState = running ? SkeletalAnimationBlendScene::AiState::Run
+                                      : SkeletalAnimationBlendScene::AiState::Walk;
+  agent.node->applyAnimationBlend(scene.animations_.locomotionBlend(
+      animationState, agent.animationBlend, playbackSpeed));
   agent.node->setLocalPosition(agent.position);
 }
 
@@ -758,7 +769,6 @@ void SkeletalAnimationBlendScene::FlockBehavior::resolveFlockOverlaps(
 void SkeletalAnimationBlendScene::chooseNextMoveState() {
   const bool runLeg = aiTargetIndex_ == 1u || aiTargetIndex_ == 3u;
   aiState_ = runLeg ? AiState::Run : AiState::Walk;
-  locomotionClipIndex_ = runLeg ? sprintClipIndex_ : walkClipIndex_;
 }
 
 glm::vec3 SkeletalAnimationBlendScene::separationFromCharacterBounds(

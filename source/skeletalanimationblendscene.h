@@ -38,6 +38,18 @@ private:
 
   struct FlockBehavior;
 
+  struct CharacterAnimations {
+    std::size_t idleClipIndex = 0;
+    std::size_t walkClipIndex = 0;
+    std::size_t runClipIndex = 0;
+
+    void resolve(const MeshNode &node);
+    [[nodiscard]] std::size_t locomotionClipFor(AiState state) const;
+    [[nodiscard]] DL::AnimationBlendState locomotionBlend(
+        AiState state, float blendWeight, float playbackSpeed,
+        bool playing = true, bool looping = true) const;
+  };
+
   struct FlockAgent {
     MeshNode *node = nullptr;
     glm::vec3 position{0.0f};
@@ -54,8 +66,6 @@ private:
     bool wasTouchingLeader = false;
   };
 
-  [[nodiscard]] std::size_t findClipIndex(std::string_view name,
-                                          std::size_t fallback) const;
   std::unique_ptr<MeshNode> createCharacterNode(std::string assetPath,
                                                 std::string debugName,
                                                 const glm::vec3 &position,
@@ -93,10 +103,7 @@ private:
   AiState aiState_ = AiState::Idle;
   float aiStateTimeRemaining_ = 1.2f;
   std::size_t aiTargetIndex_ = 0;
-  std::size_t idleClipIndex_ = 0;
-  std::size_t walkClipIndex_ = 0;
-  std::size_t sprintClipIndex_ = 0;
-  std::size_t locomotionClipIndex_ = 0;
+  CharacterAnimations animations_;
   float locomotionBlendWeight_ = 0.0f;
   float targetLocomotionBlendWeight_ = 0.0f;
   float blendRate_ = 3.0f;

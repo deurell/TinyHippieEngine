@@ -21,6 +21,15 @@ struct MeshVisualizerSettings {
   float shininess = 24.0f;
 };
 
+struct AnimationBlendState {
+  std::size_t baseClipIndex = 0;
+  std::size_t blendClipIndex = 0;
+  float weight = 0.0f;
+  float playbackSpeed = 1.0f;
+  bool playing = true;
+  bool looping = true;
+};
+
 class MeshVisualizer : public VisualizerBase {
 public:
   MeshVisualizer(DL::Camera &camera, SceneNode &node,
@@ -56,6 +65,8 @@ public:
   [[nodiscard]] float animationPlaybackSpeed() const {
     return animationPlayer_.playbackSpeed();
   }
+  [[nodiscard]] std::size_t findAnimationClipIndex(std::string_view name,
+                                                   std::size_t fallback = 0u) const;
   void setAnimationClipIndex(std::size_t index) { animationPlayer_.setClipIndex(index); }
   [[nodiscard]] std::size_t animationClipIndex() const {
     return animationPlayer_.clipIndex();
@@ -68,8 +79,11 @@ public:
     return asset_ != nullptr ? asset_->animations.size() : 0u;
   }
   [[nodiscard]] float animationTime() const { return animationPlayer_.time(); }
+  void applyAnimationBlend(const AnimationBlendState &state);
   void setAnimationBlend(std::size_t baseClipIndex, std::size_t blendClipIndex,
                          float weight);
+  void setAnimationBlendByName(std::string_view baseClipName,
+                               std::string_view blendClipName, float weight);
   [[nodiscard]] float animationBlendWeight() const { return animationBlendWeight_; }
 
 private:

@@ -18,7 +18,7 @@ namespace DL {
 class App {
 public:
   App() = default;
-  ~App() = default;
+  ~App();
 
   int run();
   void update();
@@ -46,6 +46,7 @@ public:
 
 private:
   bool init();
+  void shutdown();
   void basisInit();
   void calculateDeltaTime();
   void initActionMap();

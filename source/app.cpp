@@ -66,6 +66,8 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   app->onFramebufferSizeChanged(width, height);
 }
 
+DL::App::~App() { shutdown(); }
+
 bool DL::App::init() {
   if (!glfwInit()) {
     LogError("GLFW initialization failed");
@@ -96,6 +98,7 @@ void DL::App::initActionMap() {
 
 int DL::App::run() {
   if (!init()) {
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -114,7 +117,7 @@ int DL::App::run() {
                              nullptr, nullptr);
   if (window_ == nullptr) {
     std::cerr << "window create failed" << std::endl;
-    glfwTerminate();
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -133,6 +136,7 @@ int DL::App::run() {
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     LogError("GLAD initialization failed");
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -172,17 +176,33 @@ int DL::App::run() {
     update();
     render();
   }
+#endif
+  shutdown();
+  return EXIT_SUCCESS;
+}
+
+void DL::App::shutdown() {
   scene_.reset();
+  renderResourceCache_.reset();
+  meshAssetCache_.reset();
+  renderDevice_.reset();
+  codebook_.reset();
+
+  if (window_ != nullptr) {
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+    if (ImGui::GetCurrentContext() != nullptr) {
+      ImGui_ImplOpenGL3_Shutdown();
+      ImGui_ImplGlfw_Shutdown();
+      ImGui::DestroyContext();
+    }
 #endif
-  glfwDestroyWindow(window_);
-#endif
+    glfwSetWindowUserPointer(window_, nullptr);
+    glfwDestroyWindow(window_);
+    window_ = nullptr;
+  }
+
   audioSystem_.shutdown();
   glfwTerminate();
-  return EXIT_SUCCESS;
 }
 
 void DL::App::update() {

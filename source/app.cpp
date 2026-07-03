@@ -503,6 +503,7 @@ void DL::App::configureDefaultPostProcessStack() {
   chromaticEffect.fragmentShaderPath = "Shaders/chromatic_aberration.frag";
   chromaticEffect.uniforms.push_back(
       UniformValue::makeFloat("chromaticAberrationStrength", 0.0235f));
+  chromaticEffect.enabled = false;
   postProcessStack_.effects.push_back(std::move(chromaticEffect));
 
   PostProcessEffect crtEffect;
@@ -513,7 +514,7 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtVignetteStrength", 0.18f));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtCurvature", 1.08f));
+      UniformValue::makeFloat("crtCurvature", 1.00f));
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtWobbleStrength", 0.0f));
   crtEffect.uniforms.push_back(

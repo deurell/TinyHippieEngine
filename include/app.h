@@ -77,7 +77,7 @@ private:
   };
 
   struct PostProcessStack {
-    bool enabled = false;
+    bool enabled = true;
     std::vector<PostProcessEffect> effects;
   };
 

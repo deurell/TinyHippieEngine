@@ -21,8 +21,10 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers only `SkeletalAnimationBlendScene`.
-- Starter runtime resources are `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`, `Resources/Textures/texture-q.png`, and `Shaders/meshnode.*`.
+- Starter app registers `SkeletalAnimationBlendScene`; physics-enabled builds also
+  register `PhysicsTestScene`.
+- Starter runtime resources are `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`, `Resources/Textures/texture-q.png`, `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
+- Rendering uses engine-owned passes: `Opaque`, `Overlay`, then a fullscreen `PostProcess` stack.
 - Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`, default OFF); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`.
 - Available typed node type in the starter is `MeshNode`.
 - Available visualizer type in the starter is `MeshVisualizer`.
@@ -54,7 +56,7 @@ EMS=/path/to/emsdk ./scripts/build_web.sh
 
 Build flags (CMake options):
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.
-- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) — ReactPhysics3D wrapper sources; keep OFF unless the project needs physics.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) — Box3D wrapper sources; keep OFF unless the project needs physics.
 
 Tests:
 

@@ -22,15 +22,27 @@ Core pieces:
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
 
 Starter content:
-- The app registers one project scene: `SkeletalAnimationBlendScene`.
+- The app registers one project scene by default: `SkeletalAnimationBlendScene`.
+  Physics-enabled builds also register `PhysicsTestScene`.
 - Runtime resources are intentionally minimal: `character-l.glb`, `character-q.glb`,
-  their PNG textures in `Resources/Textures/`, and `Shaders/meshnode.*`.
+  their PNG textures in `Resources/Textures/`, `Shaders/meshnode.*`,
+  `Shaders/colored_line.*`, `Shaders/postprocess.vert`,
+  `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
 - `MeshNode` + `MeshVisualizer` are the active node/render component pair.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
+
+Current render pass model:
+- The app owns pass order.
+- Scene-node render components are evaluated in `Opaque` then `Overlay`.
+- The starter runtime renders scene content into an offscreen color+depth target,
+  then executes a fullscreen `PostProcess` effect stack before debug UI.
+- Postprocess effects are stack entries defined by shader paths + uniforms, and
+  run through ping-pong render targets so effects are composable without
+  hard-coding each effect into the frame loop.
 
 ## Architecture Diagram
 
@@ -149,8 +161,8 @@ Desktop:
 
 Build flags:
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) enables debug UI.
-- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) builds the optional
-  ReactPhysics3D wrapper sources.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) builds the optional Box3D wrapper
+  sources.
 
 Web:
 - Use `scripts/build_web.sh`.

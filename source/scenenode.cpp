@@ -99,13 +99,17 @@ void SceneNode::fixedUpdate(const FrameContext &ctx) {
 }
 
 void SceneNode::render(const FrameContext &ctx) {
+  renderPass(ctx, RenderPassId::Opaque);
+  renderPass(ctx, RenderPassId::Overlay);
+}
 
+void SceneNode::renderPass(const FrameContext &ctx, RenderPassId pass) {
   for (auto &component : renderComponents_) {
-    component->render(worldTransform, ctx);
+    component->render(worldTransform, ctx, pass);
   }
 
   for (auto &child : children) {
-    child->render(ctx);
+    child->renderPass(ctx, pass);
   }
 }
 

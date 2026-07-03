@@ -32,6 +32,7 @@ struct InputState {
   std::array<bool, static_cast<std::size_t>(Key::Count)> keysDown{};
   std::array<bool, static_cast<std::size_t>(Action::Count)> actionsDown{};
   std::array<bool, static_cast<std::size_t>(MouseButton::Count)> mouseButtonsDown{};
+  glm::vec2 mousePosition{0.0f};
   glm::vec2 mouseDelta{0.0f};
 
   [[nodiscard]] bool isKeyDown(Key key) const {
@@ -79,6 +80,8 @@ struct FrameContext {
   float delta_time = 0.0f;
   double total_time = 0.0;
   InputState input;
+  glm::vec2 windowSize{0.0f};
+  glm::vec2 framebufferSize{0.0f};
 };
 
 class IScene {

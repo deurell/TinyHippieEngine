@@ -42,7 +42,8 @@ public:
   ~MeshVisualizer() override;
 
   void render(const glm::mat4 &worldTransform,
-              const DL::FrameContext &ctx) override;
+              const DL::FrameContext &ctx,
+              DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "MeshVisualizer";
   }

@@ -340,6 +340,58 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
       ImGui::Text("Pipelines %u", renderStats.pipelineCount);
     }
 
+    if (ImGui::CollapsingHeader("Post Process", sectionFlags)) {
+      bool postProcessEnabled = app.postProcessEnabled();
+      if (ImGui::Checkbox("Enabled", &postProcessEnabled)) {
+        app.setPostProcessEnabled(postProcessEnabled);
+      }
+
+      bool chromaticEnabled = app.chromaticEnabled();
+      if (ImGui::Checkbox("Chromatic aberration", &chromaticEnabled)) {
+        app.setChromaticEnabled(chromaticEnabled);
+      }
+      float chromaticStrength = app.chromaticStrength();
+      if (ImGui::SliderFloat("Chromatic strength", &chromaticStrength, 0.0f,
+                             0.08f, "%.3f")) {
+        app.setChromaticStrength(chromaticStrength);
+      }
+
+      bool crtEnabled = app.crtEnabled();
+      if (ImGui::Checkbox("CRT scanlines", &crtEnabled)) {
+        app.setCrtEnabled(crtEnabled);
+      }
+      float crtScanlineStrength = app.crtScanlineStrength();
+      if (ImGui::SliderFloat("Scanline strength", &crtScanlineStrength, 0.0f,
+                             0.6f, "%.3f")) {
+        app.setCrtScanlineStrength(crtScanlineStrength);
+      }
+      float crtVignetteStrength = app.crtVignetteStrength();
+      if (ImGui::SliderFloat("CRT vignette", &crtVignetteStrength, 0.0f, 0.6f,
+                             "%.3f")) {
+        app.setCrtVignetteStrength(crtVignetteStrength);
+      }
+      float crtCurvature = app.crtCurvature();
+      if (ImGui::SliderFloat("CRT curvature", &crtCurvature, 1.0f, 1.2f,
+                             "%.3f")) {
+        app.setCrtCurvature(crtCurvature);
+      }
+      float crtWobble = app.crtWobble();
+      if (ImGui::SliderFloat("CRT wobble", &crtWobble, 0.0f, 0.004f,
+                             "%.4f")) {
+        app.setCrtWobble(crtWobble);
+      }
+      float crtGrilleStrength = app.crtGrilleStrength();
+      if (ImGui::SliderFloat("CRT grille", &crtGrilleStrength, 0.0f, 0.4f,
+                             "%.3f")) {
+        app.setCrtGrilleStrength(crtGrilleStrength);
+      }
+      float crtBrightness = app.crtBrightness();
+      if (ImGui::SliderFloat("CRT brightness", &crtBrightness, 0.5f, 3.0f,
+                             "%.2f")) {
+        app.setCrtBrightness(crtBrightness);
+      }
+    }
+
     if (ImGui::CollapsingHeader("Audio", sectionFlags)) {
       ImGui::Text("Audio clips %zu", app.audioSystem().loadedClipCount());
       ImGui::Text("Audio sounds %zu", app.audioSystem().activeSoundCount());

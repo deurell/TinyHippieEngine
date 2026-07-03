@@ -39,6 +39,23 @@ struct GLTextureResource {
   }
 };
 
+struct GLRenderTarget {
+  GLuint fbo = 0;
+  GLuint depthRenderbuffer = 0;
+  TextureHandle colorTexture;
+  std::uint32_t width = 0;
+  std::uint32_t height = 0;
+
+  ~GLRenderTarget() {
+    if (fbo != 0) {
+      glDeleteFramebuffers(1, &fbo);
+    }
+    if (depthRenderbuffer != 0) {
+      glDeleteRenderbuffers(1, &depthRenderbuffer);
+    }
+  }
+};
+
 struct GLTextureFormat {
   GLint internalFormat = GL_RGBA8;
   GLenum uploadFormat = GL_RGBA;
@@ -60,6 +77,8 @@ class OpenGLRenderDevice final : public IRenderDevice {
 public:
   explicit OpenGLRenderDevice(std::string glslVersion)
       : glslVersion_(std::move(glslVersion)) {}
+
+  ~OpenGLRenderDevice() override = default;
 
   MeshHandle createTexturedQuad() override {
     static constexpr float vertices[] = {
@@ -238,31 +257,62 @@ public:
       return {};
     }
 
-    auto texture = std::make_unique<GLTextureResource>();
-    glGenTextures(1, &texture->id);
-    if (texture->id == 0) {
+    auto texture = makeTextureResource(desc.width, desc.height, desc.format,
+                                       desc.pixels, desc.generateMipmaps);
+    if (texture == nullptr) {
+      return {};
+    }
+    return storeResource<TextureHandle>(std::move(texture), textures_);
+  }
+
+  RenderTargetHandle createRenderTarget(std::uint32_t width,
+                                        std::uint32_t height) override {
+    if (width == 0 || height == 0) {
       return {};
     }
 
-    glBindTexture(GL_TEXTURE_2D, texture->id);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    desc.generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    auto colorTexture =
+        makeTextureResource(width, height, TextureFormat::RGBA8, nullptr, false);
+    if (colorTexture == nullptr) {
+      return {};
+    }
+    const auto colorTextureHandle =
+        storeResource<TextureHandle>(std::move(colorTexture), textures_);
 
-    const auto glFormat = toGLTextureFormat(desc.format);
-    glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internalFormat,
-                 static_cast<GLsizei>(desc.width),
-                 static_cast<GLsizei>(desc.height), 0, glFormat.uploadFormat,
-                 GL_UNSIGNED_BYTE, desc.pixels);
-    if (desc.generateMipmaps) {
-      glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
-      glGenerateMipmap(GL_TEXTURE_2D);
+    auto renderTarget = std::make_unique<GLRenderTarget>();
+    renderTarget->colorTexture = colorTextureHandle;
+    renderTarget->width = width;
+    renderTarget->height = height;
+
+    glGenFramebuffers(1, &renderTarget->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, renderTarget->fbo);
+
+    const auto textureIt = textures_.find(colorTextureHandle.value);
+    if (textureIt == textures_.end()) {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      textures_.erase(colorTextureHandle.value);
+      return {};
+    }
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                           GL_TEXTURE_2D, textureIt->second->id, 0);
+
+    glGenRenderbuffers(1, &renderTarget->depthRenderbuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, renderTarget->depthRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          static_cast<GLsizei>(width),
+                          static_cast<GLsizei>(height));
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, renderTarget->depthRenderbuffer);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      textures_.erase(colorTextureHandle.value);
+      return {};
     }
 
-    return storeResource<TextureHandle>(std::move(texture), textures_);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    return storeResource<RenderTargetHandle>(std::move(renderTarget),
+                                             renderTargets_);
   }
 
   PipelineHandle createPipeline(std::string_view vertex_path,
@@ -284,24 +334,86 @@ public:
   void destroy(MeshHandle handle) override { meshes_.erase(handle.value); }
   void destroy(TextureHandle handle) override { textures_.erase(handle.value); }
   void destroy(PipelineHandle handle) override { pipelines_.erase(handle.value); }
+  void destroy(RenderTargetHandle handle) override {
+    const auto it = renderTargets_.find(handle.value);
+    if (it == renderTargets_.end()) {
+      return;
+    }
+    if (it->second->colorTexture.valid()) {
+      textures_.erase(it->second->colorTexture.value);
+    }
+    renderTargets_.erase(it);
+  }
 
   void setViewport(std::uint32_t width, std::uint32_t height) override {
     glViewport(0, 0, static_cast<GLsizei>(width), static_cast<GLsizei>(height));
   }
 
+  void resizeRenderTarget(RenderTargetHandle handle, std::uint32_t width,
+                          std::uint32_t height) override {
+    auto renderTargetIt = renderTargets_.find(handle.value);
+    if (renderTargetIt == renderTargets_.end() || width == 0 || height == 0) {
+      return;
+    }
+
+    auto &renderTarget = *renderTargetIt->second;
+    auto textureIt = textures_.find(renderTarget.colorTexture.value);
+    if (textureIt == textures_.end()) {
+      return;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, textureIt->second->id);
+    const auto glFormat = toGLTextureFormat(TextureFormat::RGBA8);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internalFormat,
+                 static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0,
+                 glFormat.uploadFormat, GL_UNSIGNED_BYTE, nullptr);
+
+    glBindRenderbuffer(GL_RENDERBUFFER, renderTarget.depthRenderbuffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
+                          static_cast<GLsizei>(width),
+                          static_cast<GLsizei>(height));
+
+    renderTarget.width = width;
+    renderTarget.height = height;
+  }
+
+  [[nodiscard]] TextureHandle
+  getRenderTargetColorTexture(RenderTargetHandle handle) const override {
+    const auto it = renderTargets_.find(handle.value);
+    return it != renderTargets_.end() ? it->second->colorTexture : TextureHandle{};
+  }
+
   void beginFrame(const FramePassDesc &desc) override {
-    frameStats_.drawCalls = 0;
-    frameStats_.triangles = 0;
-    frameStats_.meshCount = static_cast<std::uint32_t>(meshes_.size());
-    frameStats_.textureCount = static_cast<std::uint32_t>(textures_.size());
-    frameStats_.pipelineCount =
-        static_cast<std::uint32_t>(pipelines_.size());
+    if (!frameInProgress_) {
+      frameStats_.drawCalls = 0;
+      frameStats_.triangles = 0;
+      frameStats_.meshCount = static_cast<std::uint32_t>(meshes_.size());
+      frameStats_.textureCount = static_cast<std::uint32_t>(textures_.size());
+      frameStats_.pipelineCount =
+          static_cast<std::uint32_t>(pipelines_.size());
+      frameInProgress_ = true;
+    }
+    currentPass_ = desc.passId;
+
+    if (desc.target.valid()) {
+      const auto renderTargetIt = renderTargets_.find(desc.target.value);
+      if (renderTargetIt != renderTargets_.end()) {
+        const auto &renderTarget = *renderTargetIt->second;
+        glBindFramebuffer(GL_FRAMEBUFFER, renderTarget.fbo);
+        glViewport(0, 0, static_cast<GLsizei>(renderTarget.width),
+                   static_cast<GLsizei>(renderTarget.height));
+      }
+    } else {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
 
     if (desc.depthMode == DepthMode::Less) {
       glEnable(GL_DEPTH_TEST);
       glDepthFunc(GL_LESS);
+      currentDepthTestEnabled_ = true;
     } else {
       glDisable(GL_DEPTH_TEST);
+      currentDepthTestEnabled_ = false;
     }
 
     GLbitfield clearMask = 0;
@@ -318,13 +430,19 @@ public:
     }
   }
 
-  void endFrame() override {}
+  void endFrame() override {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    frameInProgress_ = false;
+  }
 
   [[nodiscard]] RenderStats getRenderStats() const override {
     return frameStats_;
   }
 
   void draw(const DrawCommand &command) override {
+    if (command.pass != currentPass_) {
+      return;
+    }
     auto mesh_it = meshes_.find(command.mesh.value);
     auto pipeline_it = pipelines_.find(command.pipeline.value);
     if (mesh_it == meshes_.end() || pipeline_it == pipelines_.end()) {
@@ -338,6 +456,10 @@ public:
         static_cast<std::uint32_t>(mesh.index_count >= 3 ? mesh.index_count / 3
                                                          : 0);
     pipeline.use();
+
+    if (!command.depthTest) {
+      glDisable(GL_DEPTH_TEST);
+    }
 
     if (command.blendMode == BlendMode::Opaque) {
       glDisable(GL_BLEND);
@@ -394,12 +516,46 @@ public:
     }
     glBindVertexArray(0);
 
+    if (!command.depthTest && currentDepthTestEnabled_) {
+      glEnable(GL_DEPTH_TEST);
+    }
+
     if (command.blendMode != BlendMode::Opaque) {
       glDisable(GL_BLEND);
     }
   }
 
 private:
+  std::unique_ptr<GLTextureResource>
+  makeTextureResource(std::uint32_t width, std::uint32_t height,
+                      TextureFormat format, const std::uint8_t *pixels,
+                      bool generateMipmaps) {
+    auto texture = std::make_unique<GLTextureResource>();
+    glGenTextures(1, &texture->id);
+    if (texture->id == 0) {
+      return nullptr;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, texture->id);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+
+    const auto glFormat = toGLTextureFormat(format);
+    glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internalFormat,
+                 static_cast<GLsizei>(width), static_cast<GLsizei>(height), 0,
+                 glFormat.uploadFormat, GL_UNSIGNED_BYTE, pixels);
+    if (generateMipmaps && pixels != nullptr) {
+      glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+      glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    return texture;
+  }
+
   template <typename Handle, typename T>
   Handle storeResource(
       std::unique_ptr<T> resource,
@@ -414,7 +570,12 @@ private:
   std::unordered_map<std::size_t, std::unique_ptr<GLMesh>> meshes_;
   std::unordered_map<std::size_t, std::unique_ptr<GLTextureResource>> textures_;
   std::unordered_map<std::size_t, std::unique_ptr<Shader>> pipelines_;
+  std::unordered_map<std::size_t, std::unique_ptr<GLRenderTarget>>
+      renderTargets_;
   RenderStats frameStats_;
+  RenderPassId currentPass_ = RenderPassId::Opaque;
+  bool currentDepthTestEnabled_ = false;
+  bool frameInProgress_ = false;
 };
 
 } // namespace

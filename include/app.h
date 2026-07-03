@@ -7,8 +7,10 @@
 #include "scenelifecycle.h"
 #include "scenemanager.h"
 #include "renderdevice.h"
+#include <array>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <vector>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -39,12 +41,46 @@ public:
   void requestSimulationStep() { ++requestedSimulationSteps_; }
   AudioSystem &audioSystem() { return audioSystem_; }
   const AudioSystem &audioSystem() const { return audioSystem_; }
+  bool postProcessEnabled() const;
+  void setPostProcessEnabled(bool enabled);
+  bool chromaticEnabled() const;
+  void setChromaticEnabled(bool enabled);
+  float chromaticStrength() const;
+  void setChromaticStrength(float strength);
+  bool crtEnabled() const;
+  void setCrtEnabled(bool enabled);
+  float crtScanlineStrength() const;
+  void setCrtScanlineStrength(float strength);
+  float crtVignetteStrength() const;
+  void setCrtVignetteStrength(float strength);
+  float crtCurvature() const;
+  void setCrtCurvature(float strength);
+  float crtWobble() const;
+  void setCrtWobble(float strength);
+  float crtGrilleStrength() const;
+  void setCrtGrilleStrength(float strength);
+  float crtBrightness() const;
+  void setCrtBrightness(float strength);
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
   static constexpr float screen_height = 720;
 
 private:
+  struct PostProcessEffect {
+    std::string name;
+    bool enabled = true;
+    std::string vertexShaderPath = "Shaders/postprocess.vert";
+    std::string fragmentShaderPath;
+    PipelineHandle pipeline;
+    std::vector<UniformValue> uniforms;
+  };
+
+  struct PostProcessStack {
+    bool enabled = false;
+    std::vector<PostProcessEffect> effects;
+  };
+
   bool init();
   void shutdown();
   void basisInit();
@@ -52,6 +88,22 @@ private:
   void initActionMap();
   void loadCurrentScene();
   void registerScenes();
+  void configureDefaultPostProcessStack();
+  void ensurePostProcessResources(std::uint32_t framebufferWidth,
+                                  std::uint32_t framebufferHeight);
+  void renderScenePass(const FrameContext &ctx,
+                       std::uint32_t framebufferWidth,
+                       std::uint32_t framebufferHeight);
+  void renderPostProcessPass(const FrameContext &ctx,
+                             std::uint32_t framebufferWidth,
+                             std::uint32_t framebufferHeight);
+  bool hasEnabledPostProcessEffects() const;
+  PostProcessEffect *findPostProcessEffect(std::string_view name);
+  const PostProcessEffect *findPostProcessEffect(std::string_view name) const;
+  UniformValue *findEffectUniform(PostProcessEffect &effect,
+                                  std::string_view name);
+  const UniformValue *findEffectUniform(const PostProcessEffect &effect,
+                                        std::string_view name) const;
 
   GLFWwindow *window_{};
   AudioSystem audioSystem_;
@@ -61,6 +113,11 @@ private:
   std::unique_ptr<DL::IRenderDevice> renderDevice_;
   std::unique_ptr<DL::MeshAssetCache> meshAssetCache_;
   std::unique_ptr<DL::RenderResourceCache> renderResourceCache_;
+  RenderTargetHandle sceneRenderTarget_;
+  MeshHandle postProcessQuad_;
+  std::array<RenderTargetHandle, 2> postProcessTargets_{};
+  glm::uvec2 postProcessTargetSize_{0u, 0u};
+  PostProcessStack postProcessStack_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
   float startFrameTime_ = 0.0f;
@@ -74,6 +131,7 @@ private:
   ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 lastMousePosition_{0.0f};
+
   bool hasLastMousePosition_ = false;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;

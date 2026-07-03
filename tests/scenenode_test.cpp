@@ -26,12 +26,17 @@ public:
   TestVisualizer(DL::Camera &camera, DL::SceneNode &node, int &renderCount)
       : DL::VisualizerBase(camera, "", "", node), renderCount_(renderCount) {}
 
-  void render(const glm::mat4 &, const DL::FrameContext &) override {
-    ++renderCount_;
+  void render(const glm::mat4 &, const DL::FrameContext &,
+              DL::RenderPassId) override {
+    if (!rendered_) {
+      ++renderCount_;
+      rendered_ = true;
+    }
   }
 
 private:
   int &renderCount_;
+  bool rendered_ = false;
 };
 
 TEST(SceneNodeTest, LocalTransformBecomesWorldTransformForRootNode) {

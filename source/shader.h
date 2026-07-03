@@ -48,6 +48,8 @@ public:
     int success;
     char infoLog[512];
 
+    bool shaderOk = true;
+
     vertex = glCreateShader(GL_VERTEX_SHADER);
     glShaderSource(vertex, 1, &vCode, nullptr);
     glCompileShader(vertex);
@@ -55,6 +57,7 @@ public:
     if (!success) {
       glGetShaderInfoLog(vertex, 512, nullptr, infoLog);
       std::cout << "failed to compile vertex shader: " << infoLog;
+      shaderOk = false;
     }
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fCode, nullptr);
@@ -63,16 +66,21 @@ public:
     if (!success) {
       glGetShaderInfoLog(fragment, 512, nullptr, infoLog);
       std::cout << "failed to compile fragment shader: " << infoLog;
+      shaderOk = false;
     }
 
-    mId = glCreateProgram();
-    glAttachShader(mId, vertex);
-    glAttachShader(mId, fragment);
-    glLinkProgram(mId);
-    glGetProgramiv(mId, GL_LINK_STATUS, &success);
-    if (!success) {
-      glGetProgramInfoLog(mId, 512, nullptr, infoLog);
-      std::cout << "failed to link the shader program: " << infoLog;
+    if (shaderOk) {
+      mId = glCreateProgram();
+      glAttachShader(mId, vertex);
+      glAttachShader(mId, fragment);
+      glLinkProgram(mId);
+      glGetProgramiv(mId, GL_LINK_STATUS, &success);
+      if (!success) {
+        glGetProgramInfoLog(mId, 512, nullptr, infoLog);
+        std::cout << "failed to link the shader program: " << infoLog;
+        glDeleteProgram(mId);
+        mId = 0;
+      }
     }
 
     glDeleteShader(vertex);

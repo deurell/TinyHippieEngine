@@ -7,11 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
+if (APPLE)
+    enable_language(OBJC)
+endif ()
+
 include(CTest)
 include(FetchContent)
 
 option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
-option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" OFF)
+option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with Box3D" ON)
 
 set(PLATFORM_LIBS "")
 
@@ -27,12 +31,16 @@ if (EMSCRIPTEN)
 endif ()
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
+    set(BOX3D_SAMPLES OFF CACHE BOOL "" FORCE)
+    set(BOX3D_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+    set(BOX3D_BENCHMARKS OFF CACHE BOOL "" FORCE)
+    set(BOX3D_DOCS OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
-            reactphysics3d
-            GIT_REPOSITORY https://github.com/DanielChappuis/reactphysics3d.git
-            GIT_TAG v0.10.2
+            box3d
+            GIT_REPOSITORY https://github.com/erincatto/box3d.git
+            GIT_TAG v0.1.0
     )
-    FetchContent_MakeAvailable(reactphysics3d)
+    FetchContent_MakeAvailable(box3d)
 endif ()
 
 add_executable(tiny_hippie_engine
@@ -47,6 +55,20 @@ add_executable(tiny_hippie_engine
         source/meshassetcache.h source/meshassetcache.cpp
         source/meshnode.h source/meshnode.cpp
         source/meshvisualizer.h source/meshvisualizer.cpp
+        source/model.h source/model.cpp
+        source/particle.cpp
+        source/particlesystem.cpp
+        source/particlesystemnode.h source/particlesystemnode.cpp
+        source/particlevisualizer.h source/particlevisualizer.cpp
+        source/planenode.h source/planenode.cpp
+        source/planevisualizer.h source/planevisualizer.cpp
+        source/phongshapenode.h source/phongshapenode.cpp
+        source/shapegeometry.h source/shapegeometry.cpp
+        source/shapevisualizer.h source/shapevisualizer.cpp
+        source/spritenode.h source/spritenode.cpp
+        source/spritevisualizer.h source/spritevisualizer.cpp
+        source/textnode.h source/textnode.cpp
+        source/textvisualizer.h source/textvisualizer.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
@@ -60,10 +82,14 @@ add_executable(tiny_hippie_engine
         include/audiosystem.h source/audiosystem.cpp
         include/iscene.h
         include/miniaudio.h
+        include/particle.h
+        include/particlesystem.h
+        include/plane.h source/plane.cpp
         include/renderdevice.h source/openglrenderdevice.cpp
         include/scenelifecycle.h source/scenelifecycle.cpp
         include/scenemanager.h
         include/scenenode.h source/scenenode.cpp
+        include/textsprite.h source/textsprite.cpp
         include/visualizerbase.h
 )
 
@@ -72,6 +98,10 @@ if (TINY_ENGINE_ENABLE_PHYSICS)
             source/physicscontext.h source/physicscontext.cpp
             source/physicsworld.h source/physicsworld.cpp
             source/physicsbodycomponent.h source/physicsbodycomponent.cpp
+            source/physicsdebugvisualizer.h source/physicsdebugvisualizer.cpp
+            source/physicsmeshvisualizer.h source/physicsmeshvisualizer.cpp
+            source/game/scenes/physicstestscene.h
+            source/game/scenes/physicstestscene.cpp
     )
 endif ()
 
@@ -163,10 +193,10 @@ if (APPLE)
     endforeach ()
 endif ()
 
-if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-    target_link_libraries(tiny_hippie_engine PRIVATE reactphysics3d)
-elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-    target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
+if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
+    target_link_libraries(tiny_hippie_engine PRIVATE box3d::box3d)
+elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
+    target_link_libraries(tiny_hippie_engine PRIVATE box3d)
 endif ()
 
 target_link_libraries(tiny_hippie_engine PRIVATE basisu ${PLATFORM_LIBS})
@@ -251,10 +281,10 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
         target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
     endif ()
 
-    if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE reactphysics3d)
-    elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE ReactPhysics3D)
+    if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d::box3d)
+    elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d)
     endif ()
 
     target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)

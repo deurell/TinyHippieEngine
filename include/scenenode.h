@@ -87,6 +87,7 @@ protected:
   std::vector<std::unique_ptr<VisualizerBase>> renderComponents_;
 
 private:
+  void renderPass(const FrameContext &ctx, RenderPassId pass);
   void applyLocalPosition(const glm::vec3 &position);
   void applyLocalRotation(const glm::quat &rotation);
   void applyLocalScale(const glm::vec3 &scale);

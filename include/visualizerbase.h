@@ -5,6 +5,7 @@
 #pragma once
 #include "camera.h"
 #include "iscene.h"
+#include "renderpass.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -26,7 +27,8 @@ public:
         fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
   virtual void render(const glm::mat4 &worldTransform,
-                      const DL::FrameContext &ctx) = 0;
+                      const DL::FrameContext &ctx,
+                      DL::RenderPassId pass) = 0;
   virtual ~VisualizerBase() = default;
 
   [[nodiscard]] virtual std::string_view debugTypeName() const {

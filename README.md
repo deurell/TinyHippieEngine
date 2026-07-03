@@ -40,8 +40,7 @@ CONFIG=Debug scripts/build_desktop.sh
 scripts/run_tests.sh
 ```
 
-Physics is off by default. To include the optional ReactPhysics3D wrapper in
-tests, run:
+Physics is off by default. To include the optional Box3D wrapper in tests, run:
 
 ```bash
 TINY_ENGINE_ENABLE_PHYSICS=ON scripts/run_tests.sh

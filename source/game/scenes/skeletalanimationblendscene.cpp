@@ -283,12 +283,6 @@ void SkeletalAnimationBlendScene::fixedUpdate(const DL::FrameContext &ctx) {
 }
 
 void SkeletalAnimationBlendScene::render(const DL::FrameContext &ctx) {
-  if (renderDevice_ != nullptr) {
-    renderDevice_->beginFrame({.clearColor = {0.78f, 0.84f, 0.80f, 1.0f},
-                               .clearFlags = DL::ClearFlags::ColorDepth,
-                               .depthMode = DL::DepthMode::Less});
-  }
-
 #ifdef USE_IMGUI
   DL::beginDebugUiFrame();
   ImGui::Begin("Skeletal Animation Blend");

@@ -200,7 +200,11 @@ AnimationPose MeshVisualizer::currentAnimationPose() const {
 }
 
 void MeshVisualizer::render(const glm::mat4 &worldTransform,
-                            const DL::FrameContext &ctx) {
+                            const DL::FrameContext &ctx,
+                            DL::RenderPassId pass) {
+  if (pass != DL::RenderPassId::Opaque) {
+    return;
+  }
   if (renderDevice_ == nullptr || !pipeline_.valid() || asset_ == nullptr) {
     return;
   }
@@ -249,6 +253,7 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     command.mesh = submesh.mesh;
     command.pipeline = pipeline_;
     command.texture = submesh.texture;
+    command.pass = pass;
     command.uniforms.push_back(
         DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
     command.uniforms.push_back(DL::UniformValue::makeMat4("model", submeshModel));

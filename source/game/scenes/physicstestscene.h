@@ -60,6 +60,7 @@ private:
   DL::SceneNode *hitMarkerNode_ = nullptr;
   glm::vec3 cameraTarget_{0.0f, 0.6f, 0.0f};
   glm::vec2 windowSize_{0.0f};
+  glm::vec2 framebufferSize_{0.0f};
   PickState pick_;
   float cameraYaw_ = 0.0f;
   float cameraPitch_ = 0.0f;

@@ -38,6 +38,17 @@ TEST(CameraTest, TranslateMovesPositionInLocalSpaceWithIdentityOrientation) {
   EXPECT_FLOAT_EQ(camera.getPosition().z, 4.0f);
 }
 
+TEST(CameraTest, TranslateMovesPositionAlongCameraAxisAfterLookAt) {
+  DL::Camera camera({0.0f, 0.0f, 0.0f});
+  camera.lookAt({1.0f, 0.0f, 0.0f});
+
+  camera.translate({0.0f, 0.0f, -2.0f});
+
+  EXPECT_NEAR(camera.getPosition().x, 2.0f, 1e-5f);
+  EXPECT_NEAR(camera.getPosition().y, 0.0f, 1e-5f);
+  EXPECT_NEAR(camera.getPosition().z, 0.0f, 1e-5f);
+}
+
 TEST(CameraTest, OrthoTransformUsesProvidedBounds) {
   const glm::mat4 projection = DL::Camera::getOrtoTransform(-2.0f, 6.0f, -3.0f, 5.0f);
 

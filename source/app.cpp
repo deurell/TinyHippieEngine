@@ -7,14 +7,33 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
+#include "game/scenes/skeletalanimationblendscene.h"
 #include "logger.h"
 #include "scenemanager.h"
-#include "game/scenes/skeletalanimationblendscene.h"
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
 #include "game/scenes/physicstestscene.h"
 #endif
+#include <cmath>
 #include <iostream>
 #include <thread>
+
+namespace {
+constexpr char kCrtEffectName[] = "CRT";
+constexpr char kCrtCurvatureUniform[] = "crtCurvature";
+constexpr float kCrtCurveScale = 0.92f;
+constexpr float kCrtCurveOffset = 0.04f;
+
+glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
+  // Keep in sync with Shaders/crt.frag curve().
+  uv = (uv - glm::vec2(0.5f)) * 2.0f;
+  uv *= curvature;
+  uv.x *= 1.0f + std::pow(std::abs(uv.y) / 5.0f, 2.0f);
+  uv.y *= 1.0f + std::pow(std::abs(uv.x) / 4.0f, 2.0f);
+  uv = uv * 0.5f + glm::vec2(0.5f);
+  uv = uv * kCrtCurveScale + glm::vec2(kCrtCurveOffset);
+  return uv;
+}
+} // namespace
 
 void renderloop_callback(void *arg) {
   auto app = static_cast<DL::App *>(arg);
@@ -91,8 +110,9 @@ void DL::App::setChromaticEnabled(bool enabled) {
 float DL::App::chromaticStrength() const {
   const auto *effect = findPostProcessEffect("Chromatic Aberration");
   const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "chromaticAberrationStrength")
-                        : nullptr;
+      effect != nullptr
+          ? findEffectUniform(*effect, "chromaticAberrationStrength")
+          : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -118,9 +138,9 @@ void DL::App::setCrtEnabled(bool enabled) {
 
 float DL::App::crtScanlineStrength() const {
   const auto *effect = findPostProcessEffect("CRT");
-  const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "crtScanlineStrength")
-                        : nullptr;
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtScanlineStrength")
+                            : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -134,9 +154,9 @@ void DL::App::setCrtScanlineStrength(float strength) {
 
 float DL::App::crtVignetteStrength() const {
   const auto *effect = findPostProcessEffect("CRT");
-  const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "crtVignetteStrength")
-                        : nullptr;
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtVignetteStrength")
+                            : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -165,9 +185,9 @@ void DL::App::setCrtCurvature(float strength) {
 
 float DL::App::crtWobble() const {
   const auto *effect = findPostProcessEffect("CRT");
-  const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "crtWobbleStrength")
-                        : nullptr;
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtWobbleStrength")
+                            : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -181,9 +201,9 @@ void DL::App::setCrtWobble(float strength) {
 
 float DL::App::crtGrilleStrength() const {
   const auto *effect = findPostProcessEffect("CRT");
-  const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "crtGrilleStrength")
-                        : nullptr;
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtGrilleStrength")
+                            : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -198,8 +218,7 @@ void DL::App::setCrtGrilleStrength(float strength) {
 float DL::App::crtBrightness() const {
   const auto *effect = findPostProcessEffect("CRT");
   const auto *uniform =
-      effect != nullptr ? findEffectUniform(*effect, "crtBrightness")
-                        : nullptr;
+      effect != nullptr ? findEffectUniform(*effect, "crtBrightness") : nullptr;
   return uniform != nullptr ? uniform->float_value : 0.0f;
 }
 
@@ -375,21 +394,22 @@ void DL::App::update() {
   lastFixedUpdateCount_ = 0;
   if (simulationPaused_) {
     while (requestedSimulationSteps_ > 0) {
-      scene_->fixedUpdate(
-          {fixedTimeStep_, frameTime, inputState_, windowSize, framebufferSize});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_, windowSize,
+                           framebufferSize});
       --requestedSimulationSteps_;
       ++lastFixedUpdateCount_;
     }
   } else {
     fixedTimeAccumulator_ += deltaTime_;
     while (fixedTimeAccumulator_ >= fixedTimeStep_) {
-      scene_->fixedUpdate(
-          {fixedTimeStep_, frameTime, inputState_, windowSize, framebufferSize});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_, windowSize,
+                           framebufferSize});
       fixedTimeAccumulator_ -= fixedTimeStep_;
       ++lastFixedUpdateCount_;
     }
   }
-  scene_->update({deltaTime_, frameTime, inputState_, windowSize, framebufferSize});
+  scene_->update(
+      {deltaTime_, frameTime, inputState_, windowSize, framebufferSize});
 }
 
 void DL::App::render() {
@@ -398,10 +418,12 @@ void DL::App::render() {
   int frameWidth = 0;
   int frameHeight = 0;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
-  const FrameContext frameCtx{deltaTime_, glfwGetTime(), inputState_,
-                              getWindowSize(),
-                              {static_cast<float>(frameWidth),
-                               static_cast<float>(frameHeight)}};
+  const FrameContext frameCtx{
+      deltaTime_,
+      glfwGetTime(),
+      inputState_,
+      getWindowSize(),
+      {static_cast<float>(frameWidth), static_cast<float>(frameHeight)}};
   ensurePostProcessResources(static_cast<std::uint32_t>(frameWidth),
                              static_cast<std::uint32_t>(frameHeight));
 
@@ -411,7 +433,8 @@ void DL::App::render() {
   renderPostProcessPass(frameCtx, static_cast<std::uint32_t>(frameWidth),
                         static_cast<std::uint32_t>(frameHeight));
   renderDevice_->endFrame();
-  DL::drawEngineDebugWindows(*this, deltaTime_, renderDevice_->getRenderStats());
+  DL::drawEngineDebugWindows(*this, deltaTime_,
+                             renderDevice_->getRenderStats());
   DL::drawLogWindow();
 
 #ifdef USE_IMGUI
@@ -441,6 +464,13 @@ void DL::App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
 
+#ifdef USE_IMGUI
+  const bool imguiWantsMouse =
+      ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
+#else
+  const bool imguiWantsMouse = false;
+#endif
+
   inputState_.keysDown[static_cast<std::size_t>(Key::W)] =
       glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
   inputState_.keysDown[static_cast<std::size_t>(Key::A)] =
@@ -450,10 +480,13 @@ void DL::App::processInput(GLFWwindow *window) {
   inputState_.keysDown[static_cast<std::size_t>(Key::D)] =
       glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Left)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Right)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Middle)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
 
   double mouseX = 0.0;
@@ -462,11 +495,34 @@ void DL::App::processInput(GLFWwindow *window) {
   const glm::vec2 mousePosition{static_cast<float>(mouseX),
                                 static_cast<float>(mouseY)};
   inputState_.mousePosition = mousePosition;
-  inputState_.mouseDelta =
-      hasLastMousePosition_ ? mousePosition - lastMousePosition_ : glm::vec2(0.0f);
+  inputState_.sceneMousePosition =
+      mapMousePositionToScene(mousePosition, getWindowSize());
+  inputState_.mouseDelta = hasLastMousePosition_
+                               ? mousePosition - lastMousePosition_
+                               : glm::vec2(0.0f);
   lastMousePosition_ = mousePosition;
   hasLastMousePosition_ = true;
   actionMap_.apply(inputState_, inputState_);
+}
+
+glm::vec2 DL::App::mapMousePositionToScene(glm::vec2 mousePosition,
+                                           glm::vec2 windowSize) const {
+  if (!postProcessStack_.enabled || windowSize.x <= 0.0f ||
+      windowSize.y <= 0.0f) {
+    return mousePosition;
+  }
+
+  const auto *crtEffect = findPostProcessEffect(kCrtEffectName);
+  if (crtEffect == nullptr || !crtEffect->enabled) {
+    return mousePosition;
+  }
+
+  const auto *curvatureUniform =
+      findEffectUniform(*crtEffect, kCrtCurvatureUniform);
+  const float curvature =
+      curvatureUniform != nullptr ? curvatureUniform->float_value : 1.0f;
+
+  return applyCrtCurve(mousePosition / windowSize, curvature) * windowSize;
 }
 
 void DL::App::loadCurrentScene() {
@@ -483,8 +539,9 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<PhysicsTestScene>(renderDevice_.get()); });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<PhysicsTestScene>(renderDevice_.get());
+  });
 #endif
   sceneManager_.registerScene([this] {
     return std::make_unique<SkeletalAnimationBlendScene>(
@@ -510,17 +567,15 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.name = "CRT";
   crtEffect.fragmentShaderPath = "Shaders/crt.frag";
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtScanlineStrength", 0.30f));
+      UniformValue::makeFloat("crtScanlineStrength", 0.555f));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtVignetteStrength", 0.18f));
+      UniformValue::makeFloat("crtVignetteStrength", 0.035f));
+  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtCurvature", 1.00f));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtCurvature", 1.00f));
+      UniformValue::makeFloat("crtWobbleStrength", 0.0007f));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtWobbleStrength", 0.0f));
-  crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtGrilleStrength", 0.18f));
-  crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtBrightness", 2.15f));
+      UniformValue::makeFloat("crtGrilleStrength", 0.292f));
+  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtBrightness", 1.68f));
   postProcessStack_.effects.push_back(std::move(crtEffect));
 }
 
@@ -553,10 +608,12 @@ void DL::App::ensurePostProcessResources(std::uint32_t framebufferWidth,
 
   for (auto &target : postProcessTargets_) {
     if (!target.valid()) {
-      target = renderDevice_->createRenderTarget(framebufferWidth, framebufferHeight);
+      target = renderDevice_->createRenderTarget(framebufferWidth,
+                                                 framebufferHeight);
     } else if (postProcessTargetSize_.x != framebufferWidth ||
                postProcessTargetSize_.y != framebufferHeight) {
-      renderDevice_->resizeRenderTarget(target, framebufferWidth, framebufferHeight);
+      renderDevice_->resizeRenderTarget(target, framebufferWidth,
+                                        framebufferHeight);
     }
   }
 
@@ -622,8 +679,8 @@ DL::App::findEffectUniform(const PostProcessEffect &effect,
 void DL::App::renderScenePass(const FrameContext &ctx,
                               std::uint32_t framebufferWidth,
                               std::uint32_t framebufferHeight) {
-  const bool usePostProcess = hasEnabledPostProcessEffects() &&
-                              sceneRenderTarget_.valid();
+  const bool usePostProcess =
+      hasEnabledPostProcessEffects() && sceneRenderTarget_.valid();
   FramePassDesc passDesc{
       .passId = RenderPassId::Opaque,
       .target = usePostProcess ? sceneRenderTarget_ : RenderTargetHandle{},
@@ -668,13 +725,13 @@ void DL::App::renderPostProcessPass(const FrameContext &ctx,
     if (isLastEffect) {
       renderDevice_->setViewport(framebufferWidth, framebufferHeight);
     }
-    renderDevice_->beginFrame({.passId = RenderPassId::PostProcess,
-                               .target = isLastEffect
-                                             ? RenderTargetHandle{}
-                                             : postProcessTargets_[scratchIndex],
-                               .clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
-                               .clearFlags = ClearFlags::Color,
-                               .depthMode = DepthMode::Disabled});
+    renderDevice_->beginFrame(
+        {.passId = RenderPassId::PostProcess,
+         .target = isLastEffect ? RenderTargetHandle{}
+                                : postProcessTargets_[scratchIndex],
+         .clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+         .clearFlags = ClearFlags::Color,
+         .depthMode = DepthMode::Disabled});
 
     DrawCommand command;
     command.mesh = postProcessQuad_;
@@ -682,9 +739,8 @@ void DL::App::renderPostProcessPass(const FrameContext &ctx,
     command.texture = inputTexture;
     command.pass = RenderPassId::PostProcess;
     command.uniforms = effect.uniforms;
-    command.uniforms.push_back(
-        UniformValue::makeVec2("screenSize",
-                               glm::vec2(framebufferWidth, framebufferHeight)));
+    command.uniforms.push_back(UniformValue::makeVec2(
+        "screenSize", glm::vec2(framebufferWidth, framebufferHeight)));
     command.uniforms.push_back(
         UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
     renderDevice_->draw(command);
@@ -712,7 +768,10 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
     if (scene_) {
-      scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+      const glm::vec2 sceneMousePosition =
+          mapMousePositionToScene({static_cast<float>(x), static_cast<float>(y)},
+                                  getWindowSize());
+      scene_->onClick(sceneMousePosition.x, sceneMousePosition.y);
     }
   }
 }

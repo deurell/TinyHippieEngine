@@ -104,6 +104,8 @@ private:
                                   std::string_view name);
   const UniformValue *findEffectUniform(const PostProcessEffect &effect,
                                         std::string_view name) const;
+  glm::vec2 mapMousePositionToScene(glm::vec2 mousePosition,
+                                    glm::vec2 windowSize) const;
 
   GLFWwindow *window_{};
   AudioSystem audioSystem_;

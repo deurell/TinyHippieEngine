@@ -32,7 +32,10 @@ struct InputState {
   std::array<bool, static_cast<std::size_t>(Key::Count)> keysDown{};
   std::array<bool, static_cast<std::size_t>(Action::Count)> actionsDown{};
   std::array<bool, static_cast<std::size_t>(MouseButton::Count)> mouseButtonsDown{};
+  // Raw GLFW window-space mouse coordinates.
   glm::vec2 mousePosition{0.0f};
+  // Mouse coordinates mapped into the rendered scene after screen-space effects.
+  glm::vec2 sceneMousePosition{0.0f};
   glm::vec2 mouseDelta{0.0f};
 
   [[nodiscard]] bool isKeyDown(Key key) const {

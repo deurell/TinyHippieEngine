@@ -205,7 +205,7 @@ void PhysicsTestScene::update(const DL::FrameContext &ctx) {
   const bool isLeftMouseDown =
       ctx.input.isMouseButtonDown(DL::MouseButton::Left);
   if (isLeftMouseDown && !wasLeftMouseDown_) {
-    pickPhysicsBody(ctx.input.mousePosition);
+    pickPhysicsBody(ctx.input.sceneMousePosition);
   }
   wasLeftMouseDown_ = isLeftMouseDown;
   SceneNode::update(ctx);
@@ -294,20 +294,30 @@ void PhysicsTestScene::spawnDynamicBody() {
 }
 
 void PhysicsTestScene::pickPhysicsBody(glm::vec2 screenPoint) {
-  const glm::vec2 screenSize =
+  const glm::vec2 windowSize =
       windowSize_.x > 0.0f && windowSize_.y > 0.0f ? windowSize_
                                                     : camera_.mScreenSize;
-  if (screenSize.x <= 0.0f || screenSize.y <= 0.0f) {
+  const glm::vec2 framebufferSize =
+      framebufferSize_.x > 0.0f && framebufferSize_.y > 0.0f
+          ? framebufferSize_
+          : camera_.mScreenSize;
+  if (windowSize.x <= 0.0f || windowSize.y <= 0.0f ||
+      framebufferSize.x <= 0.0f || framebufferSize.y <= 0.0f) {
     return;
   }
 
-  const glm::vec4 viewport{0.0f, 0.0f, screenSize.x, screenSize.y};
+  const glm::vec2 framebufferPoint{
+      screenPoint.x * framebufferSize.x / windowSize.x,
+      screenPoint.y * framebufferSize.y / windowSize.y};
+  const glm::vec4 viewport{0.0f, 0.0f, framebufferSize.x, framebufferSize.y};
   const glm::vec3 nearPoint =
-      glm::unProject({screenPoint.x, screenSize.y - screenPoint.y, 0.0f},
+      glm::unProject({framebufferPoint.x,
+                      framebufferSize.y - framebufferPoint.y, 0.0f},
                      camera_.getViewMatrix(), camera_.getPerspectiveTransform(),
                      viewport);
   const glm::vec3 farPoint =
-      glm::unProject({screenPoint.x, screenSize.y - screenPoint.y, 1.0f},
+      glm::unProject({framebufferPoint.x,
+                      framebufferSize.y - framebufferPoint.y, 1.0f},
                      camera_.getViewMatrix(), camera_.getPerspectiveTransform(),
                      viewport);
 
@@ -359,30 +369,25 @@ void PhysicsTestScene::updateCameraController(const DL::FrameContext &ctx) {
   }
 
   const glm::vec3 forward = cameraForward(cameraYaw_, cameraPitch_);
-  const glm::vec3 flatForward =
-      glm::normalize(glm::vec3(forward.x, 0.0f, forward.z));
-  const glm::vec3 right =
-      glm::normalize(glm::cross(flatForward, glm::vec3(0.0f, 1.0f, 0.0f)));
+  camera_.lookAt(camera_.getPosition() + forward);
 
-  glm::vec3 move{0.0f};
+  glm::vec3 movement{0.0f};
   if (ctx.input.isActionDown(DL::Action::MoveForward)) {
-    move += flatForward;
+    movement.z -= 1.0f;
   }
   if (ctx.input.isActionDown(DL::Action::MoveBackward)) {
-    move -= flatForward;
+    movement.z += 1.0f;
   }
   if (ctx.input.isActionDown(DL::Action::MoveRight)) {
-    move += right;
+    movement.x += 1.0f;
   }
   if (ctx.input.isActionDown(DL::Action::MoveLeft)) {
-    move -= right;
+    movement.x -= 1.0f;
   }
-  if (glm::length(move) > 0.001f) {
-    camera_.setPosition(camera_.getPosition() +
-                        glm::normalize(move) * kCameraMoveSpeed *
-                            static_cast<float>(ctx.delta_time));
+  if (glm::length(movement) > 0.001f) {
+    camera_.translate(glm::normalize(movement) * kCameraMoveSpeed *
+                      static_cast<float>(ctx.delta_time));
   }
-  camera_.lookAt(camera_.getPosition() + forward);
 }
 
 void PhysicsTestScene::render(const DL::FrameContext &ctx) {
@@ -442,10 +447,10 @@ void PhysicsTestScene::render(const DL::FrameContext &ctx) {
 
 void PhysicsTestScene::onScreenSizeChanged(glm::vec2 size) {
   windowSize_ = size;
-  camera_.mScreenSize = size;
   SceneNode::onScreenSizeChanged(size);
 }
 
 void PhysicsTestScene::onFramebufferSizeChanged(glm::vec2 size) {
-  (void)size;
+  framebufferSize_ = size;
+  camera_.mScreenSize = size;
 }

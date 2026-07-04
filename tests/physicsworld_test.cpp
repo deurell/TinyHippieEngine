@@ -1,6 +1,10 @@
+#include "physicsbodycomponent.h"
 #include "physicscontext.h"
 #include "physicsworld.h"
+#include "scenenode.h"
 #include <gtest/gtest.h>
+#include <memory>
+#include <type_traits>
 
 TEST(PhysicsWorldTest, DynamicBodyRestsOnStaticFloor) {
   DL::PhysicsWorld world;
@@ -88,15 +92,16 @@ TEST(PhysicsContextTest, ProxiesRaycastToPhysicsWorld) {
   EXPECT_TRUE(hit.hasHit);
 }
 
+TEST(PhysicsContextTest, IsNotMovableBecauseComponentsKeepContextPointers) {
+  EXPECT_FALSE(std::is_move_constructible_v<DL::PhysicsContext>);
+  EXPECT_FALSE(std::is_move_assignable_v<DL::PhysicsContext>);
+}
+
 TEST(PhysicsWorldTest, StoresDebugRenderState) {
   DL::PhysicsWorld world;
   const DL::PhysicsDebugRenderSettings settings{
       .collisionShapes = true,
       .velocityVectors = true,
-      .contactPoints = true,
-      .contactNormals = true,
-      .colliderAabbs = true,
-      .broadphaseAabbs = true,
       .velocityScale = 0.35f,
   };
 
@@ -107,10 +112,6 @@ TEST(PhysicsWorldTest, StoresDebugRenderState) {
   const auto applied = world.getDebugRenderSettings();
   EXPECT_TRUE(applied.collisionShapes);
   EXPECT_TRUE(applied.velocityVectors);
-  EXPECT_TRUE(applied.contactPoints);
-  EXPECT_TRUE(applied.contactNormals);
-  EXPECT_TRUE(applied.colliderAabbs);
-  EXPECT_TRUE(applied.broadphaseAabbs);
   EXPECT_FLOAT_EQ(applied.velocityScale, 0.35f);
 }
 
@@ -128,4 +129,48 @@ TEST(PhysicsWorldTest, ExposesDebugLinesWhenEnabled) {
 
   const auto lines = world.getDebugLines();
   EXPECT_FALSE(lines.empty());
+}
+
+TEST(PhysicsWorldTest, RejectsInvalidShapeDimensions) {
+  DL::PhysicsWorld world;
+
+  EXPECT_FALSE(world
+                   .createBody({
+                       .shape = DL::PhysicsShapeDesc::makeBox({0.0f, 0.5f, 0.5f}),
+                   })
+                   .valid());
+  EXPECT_FALSE(world
+                   .createBody({
+                       .shape = DL::PhysicsShapeDesc::makeSphere(0.0f),
+                   })
+                   .valid());
+  EXPECT_FALSE(world
+                   .createBody({
+                       .shape = DL::PhysicsShapeDesc::makeCapsule(0.5f, 0.0f),
+                   })
+                   .valid());
+}
+
+TEST(PhysicsBodyComponentTest,
+     DynamicBodySyncsWorldStateIntoParentLocalTransform) {
+  DL::PhysicsContext context;
+  DL::SceneNode parent;
+  parent.setLocalPosition({10.0f, 0.0f, 0.0f});
+
+  auto child = std::make_unique<DL::SceneNode>(&parent);
+  auto *childPtr = child.get();
+  parent.addChild(std::move(child));
+  parent.update({});
+
+  DL::PhysicsBodyComponent body(
+      context, *childPtr,
+      {.type = DL::PhysicsBodyType::Dynamic,
+       .shape = DL::PhysicsShapeDesc::makeBox({0.5f, 0.5f, 0.5f}),
+       .position = {12.0f, 3.0f, 0.0f}});
+
+  body.syncAfterStep();
+
+  EXPECT_NEAR(childPtr->getLocalPosition().x, 2.0f, 1e-5f);
+  EXPECT_NEAR(childPtr->getLocalPosition().y, 3.0f, 1e-5f);
+  EXPECT_NEAR(childPtr->getLocalPosition().z, 0.0f, 1e-5f);
 }

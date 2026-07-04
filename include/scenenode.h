@@ -55,6 +55,7 @@ public:
   void setDebugName(std::string name);
   std::string_view getDebugName() const;
   bool hasParent() const { return parent != nullptr; }
+  SceneNode *parentNode() const { return parent; }
   void setDebugTransformOverrideEnabled(bool enabled);
   bool isDebugTransformOverrideEnabled() const {
     return debugTransformOverrideEnabled_;

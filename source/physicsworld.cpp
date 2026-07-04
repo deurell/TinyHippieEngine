@@ -168,10 +168,24 @@ b3BodyType toB3BodyType(PhysicsBodyType type) {
   return b3_staticBody;
 }
 
+bool isValidShapeDesc(const PhysicsShapeDesc &shape) {
+  switch (shape.type) {
+  case PhysicsShapeType::Box:
+    return shape.halfExtents.x > 0.0f && shape.halfExtents.y > 0.0f &&
+           shape.halfExtents.z > 0.0f;
+  case PhysicsShapeType::Sphere:
+    return shape.radius > 0.0f;
+  case PhysicsShapeType::Capsule:
+    return shape.radius > 0.0f && shape.height > 0.0f;
+  }
+  return false;
+}
+
 } // namespace
 
 struct PhysicsWorld::Impl {
   struct BodyEntry {
+    std::size_t engineId = 0;
     b3BodyId body = b3_nullBodyId;
     b3ShapeId shape = b3_nullShapeId;
     PhysicsShapeDesc shapeDesc;
@@ -179,7 +193,7 @@ struct PhysicsWorld::Impl {
   };
 
   b3WorldId world = b3_nullWorldId;
-  std::unordered_map<std::size_t, BodyEntry> bodies;
+  std::unordered_map<std::size_t, std::unique_ptr<BodyEntry>> bodies;
   std::size_t nextBodyId = 1;
   PhysicsDebugRenderSettings debugSettings;
   bool debugRenderingEnabled = false;
@@ -241,6 +255,9 @@ PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
   if (impl_ == nullptr || B3_IS_NULL(impl_->world)) {
     return {};
   }
+  if (!isValidShapeDesc(desc.shape)) {
+    return {};
+  }
 
   b3BodyDef bodyDef = b3DefaultBodyDef();
   bodyDef.type = toB3BodyType(desc.type);
@@ -296,10 +313,14 @@ PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
   }
 
   const std::size_t id = impl_->nextBodyId++;
-  impl_->bodies.emplace(id, Impl::BodyEntry{.body = body,
-                                            .shape = shape,
-                                            .shapeDesc = desc.shape,
-                                            .shapeType = desc.shape.type});
+  auto entry = std::make_unique<Impl::BodyEntry>(
+      Impl::BodyEntry{.engineId = id,
+                      .body = body,
+                      .shape = shape,
+                      .shapeDesc = desc.shape,
+                      .shapeType = desc.shape.type});
+  b3Body_SetUserData(body, entry.get());
+  impl_->bodies.emplace(id, std::move(entry));
   return PhysicsBodyHandle{id};
 }
 
@@ -313,8 +334,8 @@ void PhysicsWorld::destroyBody(PhysicsBodyHandle handle) {
     return;
   }
 
-  if (b3Body_IsValid(it->second.body)) {
-    b3DestroyBody(it->second.body);
+  if (b3Body_IsValid(it->second->body)) {
+    b3DestroyBody(it->second->body);
   }
   impl_->bodies.erase(it);
 }
@@ -333,11 +354,11 @@ void PhysicsWorld::setBodyTransform(PhysicsBodyHandle handle,
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second.body)) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return;
   }
 
-  b3Body_SetTransform(it->second.body, toB3Vec3(position), toB3Quat(rotation));
+  b3Body_SetTransform(it->second->body, toB3Vec3(position), toB3Quat(rotation));
 }
 
 void PhysicsWorld::setLinearVelocity(PhysicsBodyHandle handle,
@@ -347,11 +368,11 @@ void PhysicsWorld::setLinearVelocity(PhysicsBodyHandle handle,
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second.body)) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return;
   }
 
-  b3Body_SetLinearVelocity(it->second.body, toB3Vec3(velocity));
+  b3Body_SetLinearVelocity(it->second->body, toB3Vec3(velocity));
 }
 
 PhysicsBodyState PhysicsWorld::getBodyState(PhysicsBodyHandle handle) const {
@@ -360,14 +381,14 @@ PhysicsBodyState PhysicsWorld::getBodyState(PhysicsBodyHandle handle) const {
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second.body)) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return {};
   }
 
   return PhysicsBodyState{
-      .position = toGlm(b3Body_GetPosition(it->second.body)),
-      .rotation = toGlm(b3Body_GetRotation(it->second.body)),
-      .linearVelocity = toGlm(b3Body_GetLinearVelocity(it->second.body)),
+      .position = toGlm(b3Body_GetPosition(it->second->body)),
+      .rotation = toGlm(b3Body_GetRotation(it->second->body)),
+      .linearVelocity = toGlm(b3Body_GetLinearVelocity(it->second->body)),
   };
 }
 
@@ -395,11 +416,9 @@ PhysicsRaycastHit PhysicsWorld::raycast(const glm::vec3 &start,
   hit.fraction = result.fraction;
 
   const b3BodyId body = b3Shape_GetBody(result.shapeId);
-  for (const auto &[id, entry] : impl_->bodies) {
-    if (B3_ID_EQUALS(entry.body, body)) {
-      hit.body = PhysicsBodyHandle{id};
-      break;
-    }
+  const auto *entry = static_cast<const Impl::BodyEntry *>(b3Body_GetUserData(body));
+  if (entry != nullptr) {
+    hit.body = PhysicsBodyHandle{entry->engineId};
   }
   return hit;
 }
@@ -444,33 +463,34 @@ std::vector<PhysicsDebugLine> PhysicsWorld::getDebugLines() const {
   const glm::vec4 shapeColor = debugColorToGlm(0x00ff00);
   const glm::vec4 velocityColor = debugColorToGlm(0xffff00);
   for (const auto &[_, entry] : impl_->bodies) {
-    if (!b3Body_IsValid(entry.body)) {
+    if (!b3Body_IsValid(entry->body)) {
       continue;
     }
 
-    const glm::vec3 position = toGlm(b3Body_GetPosition(entry.body));
-    const glm::quat rotation = glm::normalize(toGlm(b3Body_GetRotation(entry.body)));
+    const glm::vec3 position = toGlm(b3Body_GetPosition(entry->body));
+    const glm::quat rotation =
+        glm::normalize(toGlm(b3Body_GetRotation(entry->body)));
 
     if (impl_->debugSettings.collisionShapes) {
-      switch (entry.shapeType) {
+      switch (entry->shapeType) {
       case PhysicsShapeType::Box:
-        appendBoxLines(lines, position, rotation, entry.shapeDesc.halfExtents,
+        appendBoxLines(lines, position, rotation, entry->shapeDesc.halfExtents,
                        shapeColor);
         break;
       case PhysicsShapeType::Sphere:
-        appendSphereLines(lines, position, rotation, entry.shapeDesc.radius,
+        appendSphereLines(lines, position, rotation, entry->shapeDesc.radius,
                           shapeColor);
         break;
       case PhysicsShapeType::Capsule:
-        appendCapsuleLines(lines, position, rotation, entry.shapeDesc.radius,
-                           entry.shapeDesc.height, shapeColor);
+        appendCapsuleLines(lines, position, rotation, entry->shapeDesc.radius,
+                           entry->shapeDesc.height, shapeColor);
         break;
       }
     }
 
     if (impl_->debugSettings.velocityVectors &&
-        b3Body_GetType(entry.body) == b3_dynamicBody) {
-      const glm::vec3 velocity = toGlm(b3Body_GetLinearVelocity(entry.body));
+        b3Body_GetType(entry->body) == b3_dynamicBody) {
+      const glm::vec3 velocity = toGlm(b3Body_GetLinearVelocity(entry->body));
       const float velocityLength = glm::length(velocity);
       if (velocityLength > 0.0001f) {
         lines.push_back(makeDebugLine(

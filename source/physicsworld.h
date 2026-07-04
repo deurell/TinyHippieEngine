@@ -72,10 +72,6 @@ struct PhysicsDebugLine {
 struct PhysicsDebugRenderSettings {
   bool collisionShapes = true;
   bool velocityVectors = false;
-  bool contactPoints = false;
-  bool contactNormals = false;
-  bool colliderAabbs = false;
-  bool broadphaseAabbs = false;
   float velocityScale = 0.2f;
 };
 

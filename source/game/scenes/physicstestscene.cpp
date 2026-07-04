@@ -53,6 +53,11 @@ void PhysicsTestScene::initCamera() {
 
 DL::PhysicsBodyHandle PhysicsTestScene::addBody(DL::PhysicsBodyDesc desc,
                                                 const glm::vec4 &color) {
+  if (desc.type == DL::PhysicsBodyType::Dynamic) {
+    desc.enableSleep = false;
+    desc.startAwake = true;
+  }
+
   const auto handle = physicsContext_.world().createBody(desc);
   if (!handle.valid()) {
     return {};
@@ -356,6 +361,7 @@ void PhysicsTestScene::resetDynamicBodies() {
         body.handle, body.spawnPosition + glm::vec3(offset, 0.25f, 0.0f),
         body.spawnRotation);
     physicsContext_.world().setLinearVelocity(body.handle, {0.0f, 0.0f, 0.0f});
+    physicsContext_.world().setAwake(body.handle, true);
   }
   syncVisualBodies();
 }

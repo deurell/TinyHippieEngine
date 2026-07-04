@@ -266,6 +266,9 @@ PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
   bodyDef.linearVelocity = toB3Vec3(desc.linearVelocity);
   bodyDef.linearDamping = desc.linearDamping;
   bodyDef.angularDamping = desc.angularDamping;
+  bodyDef.gravityScale = desc.gravityScale;
+  bodyDef.enableSleep = desc.enableSleep;
+  bodyDef.isAwake = desc.startAwake;
 
   b3BodyId body = b3CreateBody(impl_->world, &bodyDef);
   if (!b3Body_IsValid(body)) {
@@ -373,6 +376,19 @@ void PhysicsWorld::setLinearVelocity(PhysicsBodyHandle handle,
   }
 
   b3Body_SetLinearVelocity(it->second->body, toB3Vec3(velocity));
+}
+
+void PhysicsWorld::setAwake(PhysicsBodyHandle handle, bool awake) {
+  if (impl_ == nullptr || !handle.valid()) {
+    return;
+  }
+
+  const auto it = impl_->bodies.find(handle.value);
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
+    return;
+  }
+
+  b3Body_SetAwake(it->second->body, awake);
 }
 
 PhysicsBodyState PhysicsWorld::getBodyState(PhysicsBodyHandle handle) const {

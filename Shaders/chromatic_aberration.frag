@@ -1,3 +1,8 @@
+#ifdef GL_ES
+precision highp float;
+precision highp int;
+#endif
+
 in vec2 TexCoord;
 
 uniform sampler2D texture0;

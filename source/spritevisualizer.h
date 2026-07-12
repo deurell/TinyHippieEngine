@@ -27,6 +27,16 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "SpriteVisualizer";
   }
+  void setAtlasSourceRectPixels(const glm::vec4 &rect) {
+    atlasSourceRectPixels_ = rect;
+  }
+  [[nodiscard]] const glm::vec4 &atlasSourceRectPixels() const {
+    return atlasSourceRectPixels_;
+  }
+  void setAtlasFlip(bool flipX, bool flipY, bool flipDiagonal = false) {
+    atlasFlip_ = {flipX ? 1.0f : 0.0f, flipY ? 1.0f : 0.0f,
+                  flipDiagonal ? 1.0f : 0.0f};
+  }
 
 private:
   bool loadTexture();
@@ -39,6 +49,9 @@ private:
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   DL::RenderResourceCache *resourceCache_ = nullptr;
   bool sharedTexture_ = false;
+  glm::vec2 textureSize_{1.0f, 1.0f};
+  glm::vec4 atlasSourceRectPixels_{0.0f, 0.0f, -1.0f, -1.0f};
+  glm::vec3 atlasFlip_{0.0f, 0.0f, 0.0f};
 };
 
 } // namespace DL

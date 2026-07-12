@@ -1,6 +1,8 @@
 #include "renderresourcecache.h"
 
+#include "stb_image.h"
 #include <fstream>
+#include <iostream>
 
 namespace DL {
 
@@ -13,6 +15,11 @@ RenderResourceCache::~RenderResourceCache() {
   for (const auto &[_, texture] : basisTextures_) {
     if (texture.valid()) {
       renderDevice_.destroy(texture);
+    }
+  }
+  for (const auto &[_, texture] : imageTextures_) {
+    if (texture.texture.valid()) {
+      renderDevice_.destroy(texture.texture);
     }
   }
   for (const auto &[_, fontAtlas] : fontAtlases_) {
@@ -52,6 +59,47 @@ TextureHandle RenderResourceCache::acquireBasisTexture(
   const auto handle = renderDevice_.createBasisTexture(path, codebook);
   basisTextures_.emplace(key, handle);
   return handle;
+}
+
+const ImageTextureResource *
+RenderResourceCache::acquireImageTexture(std::string_view path) {
+  const std::string key(path);
+  const auto it = imageTextures_.find(key);
+  if (it != imageTextures_.end()) {
+    return &it->second;
+  }
+
+  stbi_set_flip_vertically_on_load(false);
+  int width = 0;
+  int height = 0;
+  int channels = 0;
+  unsigned char *pixels = stbi_load(key.c_str(), &width, &height, &channels, 4);
+  if (pixels == nullptr || width <= 0 || height <= 0) {
+    std::cerr << "Failed to load image texture: " << key << "\n";
+    if (pixels != nullptr) {
+      stbi_image_free(pixels);
+    }
+    return nullptr;
+  }
+
+  ImageTextureResource resource;
+  resource.texture = renderDevice_.createTexture(
+      {.pixels = pixels,
+       .width = static_cast<std::uint32_t>(width),
+       .height = static_cast<std::uint32_t>(height),
+       .format = TextureFormat::RGBA8,
+       .filter = TextureFilter::Nearest,
+       .generateMipmaps = false});
+  resource.size = {static_cast<float>(width), static_cast<float>(height)};
+  stbi_image_free(pixels);
+
+  if (!resource.texture.valid()) {
+    std::cerr << "Failed to create image texture: " << key << "\n";
+    return nullptr;
+  }
+
+  auto [insertedIt, inserted] = imageTextures_.emplace(key, resource);
+  return inserted ? &insertedIt->second : nullptr;
 }
 
 TextureHandle RenderResourceCache::acquireWhiteTexture() {

@@ -259,8 +259,9 @@ public:
       return {};
     }
 
-    auto texture = makeTextureResource(desc.width, desc.height, desc.format,
-                                       desc.pixels, desc.generateMipmaps);
+    auto texture =
+        makeTextureResource(desc.width, desc.height, desc.format, desc.pixels,
+                            desc.generateMipmaps, desc.filter);
     if (texture == nullptr) {
       return {};
     }
@@ -274,7 +275,8 @@ public:
     }
 
     auto colorTexture =
-        makeTextureResource(width, height, TextureFormat::RGBA8, nullptr, false);
+        makeTextureResource(width, height, TextureFormat::RGBA8, nullptr, false,
+                            TextureFilter::Linear);
     if (colorTexture == nullptr) {
       return {};
     }
@@ -559,7 +561,7 @@ private:
   std::unique_ptr<GLTextureResource>
   makeTextureResource(std::uint32_t width, std::uint32_t height,
                       TextureFormat format, const std::uint8_t *pixels,
-                      bool generateMipmaps) {
+                      bool generateMipmaps, TextureFilter filter) {
     auto texture = std::make_unique<GLTextureResource>();
     glGenTextures(1, &texture->id);
     if (texture->id == 0) {
@@ -570,9 +572,14 @@ private:
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    const GLint magFilter =
+        filter == TextureFilter::Nearest ? GL_NEAREST : GL_LINEAR;
+    const GLint minFilter =
+        filter == TextureFilter::Nearest
+            ? (generateMipmaps ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST)
+            : (generateMipmaps ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
 
     const auto glFormat = toGLTextureFormat(format);
     glTexImage2D(GL_TEXTURE_2D, 0, glFormat.internalFormat,

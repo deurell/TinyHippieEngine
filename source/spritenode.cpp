@@ -34,6 +34,20 @@ void SpriteNode::onScreenSizeChanged(glm::vec2 size) {
   }
 }
 
+void SpriteNode::setAtlasSourceRectPixels(const glm::vec4 &rect) {
+  atlasSourceRectPixels_ = rect;
+  if (spriteVisualizer_ != nullptr) {
+    spriteVisualizer_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
+  }
+}
+
+void SpriteNode::setAtlasFlip(bool flipX, bool flipY, bool flipDiagonal) {
+  atlasFlip_ = {flipX, flipY, flipDiagonal};
+  if (spriteVisualizer_ != nullptr) {
+    spriteVisualizer_->setAtlasFlip(flipX, flipY, flipDiagonal);
+  }
+}
+
 void SpriteNode::initCamera() {
   if (camera_ != nullptr) {
     return;
@@ -51,6 +65,9 @@ void SpriteNode::initComponents() {
   auto visualizer = std::make_unique<DL::SpriteVisualizer>(
       *camera_, *this, imagePath_, codeBook_, renderDevice_,
       renderResourceCache_);
+  spriteVisualizer_ = visualizer.get();
+  spriteVisualizer_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
+  spriteVisualizer_->setAtlasFlip(atlasFlip_.x, atlasFlip_.y, atlasFlip_.z);
   addRenderComponent(std::move(visualizer));
 }
 

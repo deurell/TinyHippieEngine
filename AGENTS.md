@@ -21,22 +21,27 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers the Kenney GLB `TextStarterScene` first, then the
-  generic sample `TextStarterScene`, then `SkeletalAnimationBlendScene`;
-  physics-enabled builds also register `PhysicsTestScene`.
+- Starter app registers the Tiny Dungeon atlas `TextStarterScene` first, then
+  the Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
+  then `SkeletalAnimationBlendScene`; physics-enabled builds also register
+  `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
-  `SpriteNode`, `TextNode`, `PlaneNode`, `PhongShapeNode`, and
-  `ParticleSystemNode`.
+  `SpriteNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
+  `ParticleSystemNode`; `SpriteNode` supports atlas `sourceRect`, `flipX`,
+  `flipY`, and `flipDiagonal`.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`,
   `Resources/Textures/texture-q.png`,
   `Resources/Textures/generated/retro-crystal-terminal.png`,
+  `Resources/Kenney/TinyDungeon/`,
   `Resources/Kenney/PlatformerKit/`,
   `Shaders/meshnode.*`,
   `Shaders/colored_line.*`, `Shaders/status.*`, `Shaders/image.*`,
+  `Shaders/tilemap.*`,
   `Shaders/particle.vert`, `Shaders/particlefx.frag`,
   `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and
   `Shaders/crt.frag`.
@@ -69,6 +74,12 @@ EMS=/path/to/emsdk ./scripts/build_web.sh
 ```
 
 `build_web.sh` accepts `EMS` as either emsdk root or direct `upstream/emscripten` path.
+
+Tiled map conversion:
+
+```bash
+scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-packed
+```
 
 Build flags (CMake options):
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.

@@ -7,6 +7,7 @@
 #include "planenode.h"
 #include "spritenode.h"
 #include "textnode.h"
+#include "tilemapnode.h"
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
@@ -317,6 +318,19 @@ float floatOr(const JsonValue::Object &object, std::string_view key,
   throw std::runtime_error(std::string(key) + " must be a number");
 }
 
+std::uint32_t uint32Or(const JsonValue::Object &object, std::string_view key,
+                       std::uint32_t fallback) {
+  const JsonValue *value = find(object, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+  const auto *number = std::get_if<double>(&value->value);
+  if (number == nullptr || *number < 0.0) {
+    throw std::runtime_error(std::string(key) + " must be a non-negative number");
+  }
+  return static_cast<std::uint32_t>(*number);
+}
+
 glm::vec3 vec3Or(const JsonValue::Object &object, std::string_view key,
                  glm::vec3 fallback) {
   const JsonValue *value = find(object, key);
@@ -418,6 +432,68 @@ PhongMaterial parseMaterial(const JsonValue::Object &object,
   return material;
 }
 
+TileMapConfig parseTileMap(const JsonValue::Object &object) {
+  static constexpr std::uint32_t kFlippedHorizontallyFlag = 0x80000000u;
+  static constexpr std::uint32_t kFlippedVerticallyFlag = 0x40000000u;
+  static constexpr std::uint32_t kFlippedDiagonallyFlag = 0x20000000u;
+  static constexpr std::uint32_t kTileFlagMask =
+      kFlippedHorizontallyFlag | kFlippedVerticallyFlag |
+      kFlippedDiagonallyFlag;
+
+  TileMapConfig config;
+  config.imagePath = stringOr(object, "image", config.imagePath);
+  config.mapWidth = uint32Or(object, "mapWidth", config.mapWidth);
+  config.mapHeight = uint32Or(object, "mapHeight", config.mapHeight);
+  config.tileWidth = uint32Or(object, "tileWidth", config.tileWidth);
+  config.tileHeight = uint32Or(object, "tileHeight", config.tileHeight);
+  config.columns = uint32Or(object, "columns", config.columns);
+  config.tileWorldSize =
+      floatOr(object, "tileWorldSize", config.tileWorldSize);
+
+  const auto *layers = find(object, "layers");
+  if (layers == nullptr) {
+    return config;
+  }
+
+  for (const auto &layerValue : asArray(*layers, "layers")) {
+    const auto &layerObject = asObject(layerValue, "tilemap layer");
+    TileMapLayer layer;
+    layer.name = stringOr(layerObject, "name", layer.name);
+    layer.z = floatOr(layerObject, "z", layer.z);
+    const auto *dataValue = find(layerObject, "data");
+    if (dataValue == nullptr) {
+      config.layers.push_back(std::move(layer));
+      continue;
+    }
+
+    const auto &data = asArray(*dataValue, "tilemap layer data");
+    for (std::size_t index = 0; index < data.size(); ++index) {
+      const auto *number = std::get_if<double>(&data[index].value);
+      if (number == nullptr || *number < 0.0) {
+        throw std::runtime_error("tilemap layer data must contain non-negative numbers");
+      }
+      const auto rawGid = static_cast<std::uint32_t>(*number);
+      if (rawGid == 0u) {
+        continue;
+      }
+      const std::uint32_t gid = rawGid & ~kTileFlagMask;
+      if (gid == 0u || config.mapWidth == 0u) {
+        continue;
+      }
+      layer.tiles.push_back(
+          {.tileIndex = gid - 1u,
+           .x = static_cast<std::uint32_t>(index % config.mapWidth),
+           .y = static_cast<std::uint32_t>(index / config.mapWidth),
+           .flipX = (rawGid & kFlippedHorizontallyFlag) != 0u,
+           .flipY = (rawGid & kFlippedVerticallyFlag) != 0u,
+           .flipDiagonal = (rawGid & kFlippedDiagonallyFlag) != 0u});
+    }
+    config.layers.push_back(std::move(layer));
+  }
+
+  return config;
+}
+
 SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   const auto &object = asObject(value, "node");
 
@@ -426,6 +502,8 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   description.type = stringOr(object, "type", description.type);
   description.mesh = stringOr(object, "mesh", description.mesh);
   description.image = stringOr(object, "image", description.image);
+  description.sourceRect =
+      vec4Or(object, "sourceRect", description.sourceRect);
   description.text = stringOr(object, "text", description.text);
   description.textAlignment =
       stringOr(object, "alignment", description.textAlignment);
@@ -440,6 +518,10 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   description.shape = stringOr(object, "shape", description.shape);
   description.particle = stringOr(object, "particle", description.particle);
   description.billboard = boolOr(object, "billboard", description.billboard);
+  description.flipX = boolOr(object, "flipX", description.flipX);
+  description.flipY = boolOr(object, "flipY", description.flipY);
+  description.flipDiagonal =
+      boolOr(object, "flipDiagonal", description.flipDiagonal);
   description.active = boolOr(object, "active", description.active);
   description.fov = floatOr(object, "fov", description.fov);
   if (const auto *lookAt = find(object, "lookAt")) {
@@ -469,6 +551,10 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
 
   if (const auto *animation = find(object, "animation")) {
     description.animation = parseAnimation(asObject(*animation, "animation"));
+  }
+
+  if (const auto *tileMap = find(object, "tileMap")) {
+    description.tileMap = parseTileMap(asObject(*tileMap, "tileMap"));
   }
 
   if (const auto *children = find(object, "children")) {
@@ -617,6 +703,9 @@ std::unique_ptr<SceneNode> buildSpriteNode(
       description.image, context.codeBook, context.renderDevice,
       context.renderResourceCache, parent, context.camera);
   node->setBillboardEnabled(description.billboard);
+  node->setAtlasSourceRectPixels(description.sourceRect);
+  node->setAtlasFlip(description.flipX, description.flipY,
+                     description.flipDiagonal);
   return node;
 }
 
@@ -635,6 +724,14 @@ std::unique_ptr<SceneNode> buildTextNode(const SceneNodeDescription &description
   node->setShadowColor(description.shadowColor);
   node->setShadowOffset(description.shadowOffset);
   return node;
+}
+
+std::unique_ptr<SceneNode> buildTileMapNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  return std::make_unique<TileMapNode>(
+      description.tileMap, context.renderDevice, context.renderResourceCache,
+      parent, context.camera);
 }
 
 std::unique_ptr<SceneNode> buildPlaneNode(
@@ -694,6 +791,7 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   factory.registerNodeType("MeshNode", buildMeshNode);
   factory.registerNodeType("SpriteNode", buildSpriteNode);
   factory.registerNodeType("TextNode", buildTextNode);
+  factory.registerNodeType("TileMapNode", buildTileMapNode);
   factory.registerNodeType("PlaneNode", buildPlaneNode);
   factory.registerNodeType("PhongShapeNode", buildPhongShapeNode);
   factory.registerNodeType("ParticleSystemNode", buildParticleSystemNode);

@@ -67,6 +67,9 @@ constexpr char kSceneSource[] = R"json(
           "name": "sprite_child",
           "type": "SpriteNode",
           "image": "Resources/Textures/texture-l.png",
+          "sourceRect": [16.0, 32.0, 16.0, 16.0],
+          "flipX": true,
+          "flipDiagonal": true,
           "billboard": true
         },
         {
@@ -138,6 +141,20 @@ constexpr char kPlaneSceneSource[] = R"json(
 }
 )json";
 
+const DL::SceneNodeDescription *
+findDescriptionByName(const DL::SceneNodeDescription &node,
+                      std::string_view name) {
+  if (node.name == name) {
+    return &node;
+  }
+  for (const auto &child : node.children) {
+    if (const auto *found = findDescriptionByName(child, name)) {
+      return found;
+    }
+  }
+  return nullptr;
+}
+
 } // namespace
 
 TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
@@ -178,6 +195,10 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.children[3].material.diffuse, glm::vec3(0.4f, 0.5f, 0.6f));
   EXPECT_FLOAT_EQ(root.children[3].material.shininess, 48.0f);
   EXPECT_EQ(root.children[4].image, "Resources/Textures/texture-l.png");
+  EXPECT_EQ(root.children[4].sourceRect, glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
+  EXPECT_TRUE(root.children[4].flipX);
+  EXPECT_FALSE(root.children[4].flipY);
+  EXPECT_TRUE(root.children[4].flipDiagonal);
   EXPECT_TRUE(root.children[4].billboard);
   EXPECT_EQ(root.children[5].text, "hello");
   EXPECT_EQ(root.children[5].textAlignment, "Center");
@@ -231,6 +252,7 @@ TEST(SceneDescriptionTest, DefaultFactoryRegistersEngineNodeTypes) {
   EXPECT_TRUE(factory.hasNodeType("MeshNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteNode"));
   EXPECT_TRUE(factory.hasNodeType("TextNode"));
+  EXPECT_TRUE(factory.hasNodeType("TileMapNode"));
   EXPECT_TRUE(factory.hasNodeType("PlaneNode"));
   EXPECT_TRUE(factory.hasNodeType("PhongShapeNode"));
   EXPECT_TRUE(factory.hasNodeType("ParticleSystemNode"));
@@ -322,6 +344,42 @@ TEST(SceneDescriptionTest, LoadsKenneyPlatformerSceneFile) {
       });
   ASSERT_NE(platformRoot, scene.nodes.end());
   EXPECT_GE(platformRoot->children.size(), 4u);
+}
+
+TEST(SceneDescriptionTest, LoadsTinyDungeonAtlasSceneFile) {
+  std::filesystem::path path =
+      "../Resources/Scenes/tiny_dungeon_atlas.scene.json";
+  if (!std::filesystem::exists(path)) {
+    path = "Resources/Scenes/tiny_dungeon_atlas.scene.json";
+  }
+
+  const DL::SceneDescription scene = DL::loadSceneDescription(path);
+
+  EXPECT_EQ(scene.name, "kenney_tiny_dungeon_atlas_sample");
+  ASSERT_EQ(scene.nodes.size(), 3u);
+  EXPECT_EQ(scene.nodes[0].name, "main_camera");
+  EXPECT_EQ(scene.nodes[0].type, "CameraNode");
+  EXPECT_TRUE(scene.nodes[0].active);
+
+  const auto *hero = findDescriptionByName(scene.nodes[1], "hero");
+  ASSERT_NE(hero, nullptr);
+  EXPECT_EQ(hero->type, "SceneNode");
+
+  const DL::SceneNodeDescription &tileMap = scene.nodes[2];
+  EXPECT_EQ(tileMap.name, "tiny_dungeon_map");
+  EXPECT_EQ(tileMap.type, "TileMapNode");
+  EXPECT_EQ(tileMap.tileMap.imagePath,
+            "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
+  EXPECT_EQ(tileMap.tileMap.mapWidth, 32u);
+  EXPECT_EQ(tileMap.tileMap.mapHeight, 20u);
+  EXPECT_EQ(tileMap.tileMap.tileWidth, 16u);
+  EXPECT_EQ(tileMap.tileMap.tileHeight, 16u);
+  ASSERT_EQ(tileMap.tileMap.layers.size(), 3u);
+  EXPECT_GE(tileMap.tileMap.layers[0].tiles.size(), 600u);
+  EXPECT_TRUE(std::ranges::any_of(tileMap.tileMap.layers[0].tiles,
+                                  [](const DL::TileMapTile &tile) {
+                                    return tile.flipDiagonal;
+                                  }));
 }
 
 TEST(SceneDescriptionTest, RejectsUnknownNodeTypes) {

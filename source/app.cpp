@@ -543,6 +543,12 @@ void DL::App::registerScenes() {
     return std::make_unique<TextStarterScene>(
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get(),
+        "Resources/Scenes/tiny_dungeon_atlas.scene.json");
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<TextStarterScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get(),
         "Resources/Scenes/kenney_platformer.scene.json");
   });
   sceneManager_.registerScene([this] {

@@ -1,6 +1,7 @@
 #include "textstarterscene.h"
 
 #include "logger.h"
+#include "meshnode.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/geometric.hpp>
@@ -52,7 +53,7 @@ void TextStarterScene::init() {
 }
 
 void TextStarterScene::fixedUpdate(const DL::FrameContext &ctx) {
-  if (hero_ != nullptr) {
+  if (dynamic_cast<MeshNode *>(hero_) != nullptr) {
     heroYawRadians_ += ctx.delta_time * 0.45f;
     hero_->setLocalRotation(glm::quat(glm::vec3(0.0f, heroYawRadians_, 0.0f)));
   }

@@ -1,10 +1,10 @@
 # Tiny Hippie Engine
 
 A small C++20 OpenGL/WebGL2 starter engine for code-driven games and visual
-experiments. The default starter scene is a `TextStarterScene` loading a small
-Kenney Platformer Kit GLB sample. A second `TextStarterScene` loads the generic
-node sample scene. `SkeletalAnimationBlendScene` remains available as a richer
-glTF animation and flocking example.
+experiments. The default starter scene is a `TextStarterScene` loading a Kenney
+Tiny Dungeon atlas sample. Additional scenes include a Kenney Platformer Kit GLB
+sample, the generic node sample scene, and `SkeletalAnimationBlendScene` as a
+richer glTF animation and flocking example.
 
 ## Features
 
@@ -12,11 +12,12 @@ glTF animation and flocking example.
 - WebGL2 build path via Emscripten.
 - Scene graph based runtime with `SceneNode` transforms and render components.
 - Text-authored scene composition for LLM/coder-friendly node setup.
+- Atlas-backed `TileMapNode` support for compact 2D tile-map scenes.
 - glTF/GLB mesh loading with animation clips, animation playback, and skinning helpers.
 - Mesh rendering through `IRenderDevice` and the OpenGL backend.
 - ImGui debug UI, runtime logs, scene tree, and inspector.
-- Minimal starter resources: JSON scene descriptions, GLB meshes, texture
-  assets, and shader pairs.
+- Minimal starter resources: JSON scene descriptions, atlas sprites, GLB meshes,
+  texture assets, and shader pairs.
 - Optional audio system and optional physics wrapper.
 
 ## Requirements
@@ -56,6 +57,14 @@ scripts/build_web.sh
 
 `EMS` may point to the emsdk root or directly to `upstream/emscripten`.
 
+### Tiled Maps
+
+Tiled `.tmx` maps can be converted into JSON `TileMapNode` scenes:
+
+```bash
+scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-packed
+```
+
 ## Running
 
 ```bash
@@ -71,9 +80,9 @@ Controls:
 ## Project Layout
 
 - `source/`, `include/`: engine and starter scene code.
-- `Resources/`: starter character assets, with external GLB textures under
-  `Resources/Textures/` and text scene descriptions plus schema notes under
-  `Resources/Scenes/`.
+- `Resources/`: starter character and Kenney sample assets, with external GLB
+  textures under `Resources/Textures/` and text scene descriptions plus schema
+  notes under `Resources/Scenes/`.
 - `Shaders/`: starter mesh shaders.
 - `tests/`: focused runtime, animation, scene, and asset tests.
 - `scripts/`: desktop, web, architecture, and test helpers.

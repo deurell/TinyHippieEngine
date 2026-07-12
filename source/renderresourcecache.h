@@ -17,6 +17,11 @@ struct FontAtlasResource {
   float fontSize = 0.0f;
 };
 
+struct ImageTextureResource {
+  TextureHandle texture;
+  glm::vec2 size{1.0f, 1.0f};
+};
+
 class RenderResourceCache {
 public:
   explicit RenderResourceCache(IRenderDevice &renderDevice)
@@ -28,6 +33,7 @@ public:
   TextureHandle acquireBasisTexture(
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook);
+  const ImageTextureResource *acquireImageTexture(std::string_view path);
   TextureHandle acquireWhiteTexture();
   MeshHandle acquireTexturedQuad();
   const FontAtlasResource *acquireFontAtlas(std::string_view path,
@@ -43,6 +49,7 @@ private:
   IRenderDevice &renderDevice_;
   std::unordered_map<std::string, PipelineHandle> pipelines_;
   std::unordered_map<std::string, TextureHandle> basisTextures_;
+  std::unordered_map<std::string, ImageTextureResource> imageTextures_;
   std::unordered_map<std::string, FontAtlasResource> fontAtlases_;
   TextureHandle whiteTexture_;
   MeshHandle texturedQuad_;

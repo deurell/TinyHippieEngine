@@ -39,13 +39,18 @@ dimensions.
 - `SceneNode`: hierarchy/transform only.
 - `CameraNode`: uses `active`, `fov`, and optional `lookAt`.
 - `MeshNode`: uses `mesh`, optional `animation`, optional `visualizer`.
-- `SpriteNode`: uses `image`; optional `billboard` makes it face the scene
-  camera each frame.
+- `SpriteNode`: uses `image`; optional `sourceRect` selects an atlas region in
+  source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
+  `flipDiagonal` mirror/swap the selected region for Tiled-style atlas
+  transforms; optional `billboard` makes it face the scene camera each frame.
 - `TextNode`: uses `text`; optional `alignment` (`Left`, `Center`, `Right`),
   optional `anchor` (`TopLeft`, `TopCenter`, `TopRight`, `CenterLeft`,
   `Center`, `CenterRight`, `BottomLeft`, `BottomCenter`, `BottomRight`), and
   optional `fontSize`, `textColor`, `shadowColor`, `shadowOffset`, and
   `billboard` makes it face the scene camera each frame.
+- `TileMapNode`: uses `tileMap` to render an atlas-backed orthogonal tile map
+  as one static mesh. Layer `data` values use Tiled global tile IDs, including
+  horizontal, vertical, and diagonal flip flags.
 - `PlaneNode`: uses `plane` (`Simple` or `Spinner`) and optional `color`.
 - `PhongShapeNode`: uses `shape` (`Cube`, `Sphere`, or `Cylinder`) and optional
   `material`.
@@ -88,6 +93,51 @@ render through it.
   }
 }
 ```
+
+## SpriteNode Atlas Region
+
+`SpriteNode` renders one quad. Use it for individual sprites, props, markers,
+and occasional atlas regions. Use `TileMapNode` for dense tile maps.
+
+```json
+{
+  "type": "SpriteNode",
+  "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+  "sourceRect": [32.0, 48.0, 16.0, 16.0],
+  "flipX": false,
+  "flipY": false,
+  "flipDiagonal": false
+}
+```
+
+`sourceRect` uses top-left image coordinates in pixels. Omit it to render the
+full image.
+
+## TileMapNode
+
+```json
+{
+  "type": "TileMapNode",
+  "tileMap": {
+    "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+    "mapWidth": 32,
+    "mapHeight": 20,
+    "tileWidth": 16,
+    "tileHeight": 16,
+    "columns": 12,
+    "tileWorldSize": 0.34,
+    "layers": [
+      {
+        "name": "Dungeon",
+        "z": 0.0,
+        "data": [1, 2, 0, 0]
+      }
+    ]
+  }
+}
+```
+
+`data` is row-major and may include Tiled flip bits. `0` means no tile.
 
 ## PhongShapeNode Material
 

@@ -70,6 +70,8 @@ add_executable(tiny_hippie_engine
         source/spritevisualizer.h source/spritevisualizer.cpp
         source/textnode.h source/textnode.cpp
         source/textvisualizer.h source/textvisualizer.cpp
+        source/tilemapnode.h source/tilemapnode.cpp
+        source/tilemapvisualizer.h source/tilemapvisualizer.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
@@ -285,6 +287,8 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/stb_truetype.cpp
             source/textnode.cpp
             source/textvisualizer.cpp
+            source/tilemapnode.cpp
+            source/tilemapvisualizer.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)

@@ -26,19 +26,22 @@ Core pieces:
   nodes through `SceneNodeFactory`.
 
 Starter content:
-- The app registers the Kenney GLB `TextStarterScene` first, then the generic
-  sample `TextStarterScene`, then `SkeletalAnimationBlendScene`.
-  Physics-enabled builds also register `PhysicsTestScene`.
+- The app registers the Tiny Dungeon atlas `TextStarterScene` first, then the
+  Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
+  then `SkeletalAnimationBlendScene`. Physics-enabled builds also register
+  `PhysicsTestScene`.
 - Runtime resources are intentionally minimal:
   `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`, `character-l.glb`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-q.glb`, their PNG textures in `Resources/Textures/`,
   `Resources/Textures/generated/retro-crystal-terminal.png`,
+  `Resources/Kenney/TinyDungeon/`,
   `Resources/Kenney/PlatformerKit/`,
   `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/status.*`,
-  `Shaders/image.*`, `Shaders/particle.vert`, `Shaders/particlefx.frag`,
-  `Shaders/postprocess.vert`,
+  `Shaders/image.*`, `Shaders/tilemap.*`, `Shaders/particle.vert`,
+  `Shaders/particlefx.frag`, `Shaders/postprocess.vert`,
   `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
 - `MeshNode` + `MeshVisualizer` are the active node/render component pair.
 
@@ -51,8 +54,14 @@ Current scene representation:
   settings, and animation defaults. C++ scenes bind to named/typed nodes for
   behavior.
 - The default scene node factory supports `SceneNode`, `CameraNode`, `MeshNode`,
-  `SpriteNode`, `TextNode`, `PlaneNode`, `PhongShapeNode`, and
+  `SpriteNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
   `ParticleSystemNode`.
+- `SpriteNode` supports full-image sprites and atlas regions through
+  `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
+- `TileMapNode` supports compact atlas-backed orthogonal maps with Tiled-style
+  global tile IDs and flip flags.
+- `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into
+  JSON-authored `TileMapNode` scenes; runtime scene loading stays JSON-only.
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
 
 Current render pass model:

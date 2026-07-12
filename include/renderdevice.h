@@ -86,11 +86,17 @@ enum class TextureFormat {
   RGBA8,
 };
 
+enum class TextureFilter {
+  Linear,
+  Nearest,
+};
+
 struct TextureDesc {
   const std::uint8_t *pixels = nullptr;
   std::uint32_t width = 0;
   std::uint32_t height = 0;
   TextureFormat format = TextureFormat::RGBA8;
+  TextureFilter filter = TextureFilter::Linear;
   bool generateMipmaps = true;
 };
 

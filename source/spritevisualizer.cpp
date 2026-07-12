@@ -68,11 +68,19 @@ void DL::SpriteVisualizer::render(const glm::mat4 &worldTransform,
   command.texture = texture_;
   command.pass = pass;
   command.blendMode = BlendMode::Alpha;
+  command.depthTest = false;
   command.sortMode = DrawSortMode::BackToFront;
   const glm::vec3 spritePosition = extractPosition(worldTransform);
   command.sortDepth = cameraDistanceSortDepth(spritePosition);
   command.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
+  command.uniforms.push_back(
+      DL::UniformValue::makeVec2("atlasSize", textureSize_));
+  command.uniforms.push_back(
+      DL::UniformValue::makeVec4("atlasSourceRectPixels",
+                                 atlasSourceRectPixels_));
+  command.uniforms.push_back(
+      DL::UniformValue::makeVec3("atlasFlip", atlasFlip_));
   command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
   command.uniforms.push_back(
       DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
@@ -94,6 +102,16 @@ bool DL::SpriteVisualizer::loadTexture() {
                    : renderDevice_->createBasisTexture(texturePath_, *codeBook_);
     sharedTexture_ = resourceCache_ != nullptr;
   } else {
+    if (resourceCache_ != nullptr) {
+      if (const auto *resource = resourceCache_->acquireImageTexture(texturePath_)) {
+        texture_ = resource->texture;
+        textureSize_ = resource->size;
+        sharedTexture_ = true;
+        return true;
+      }
+      return false;
+    }
+
     stbi_set_flip_vertically_on_load(false);
     int width = 0;
     int height = 0;
@@ -113,7 +131,9 @@ bool DL::SpriteVisualizer::loadTexture() {
          .width = static_cast<std::uint32_t>(width),
          .height = static_cast<std::uint32_t>(height),
          .format = TextureFormat::RGBA8,
-         .generateMipmaps = true});
+         .filter = TextureFilter::Nearest,
+         .generateMipmaps = false});
+    textureSize_ = {static_cast<float>(width), static_cast<float>(height)};
     stbi_image_free(pixels);
     sharedTexture_ = false;
   }

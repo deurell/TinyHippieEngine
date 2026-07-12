@@ -6,7 +6,8 @@ If behavior in code diverges from this file, update this file in the same change
 ## Scope
 
 Tiny Hippie Engine is a code-first, cross-platform rendering/simulation engine.
-It is intentionally not editor-first and not DSL-first.
+It supports text-authored composition for LLM/coder cooperation, but runtime
+behavior remains typed C++.
 
 Primary targets:
 - Desktop OpenGL via GLFW/GLAD
@@ -20,19 +21,26 @@ Core pieces:
 - `SceneNode`: scene-graph base class with local/world transforms + hierarchy.
 - Render components (`VisualizerBase` descendants): attached to `SceneNode` and rendered from node world transforms.
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
+- `SceneDescription`: JSON-authored scene composition that builds normal runtime
+  nodes, currently `SceneNode` and `MeshNode`.
 
 Starter content:
-- The app registers one project scene by default: `SkeletalAnimationBlendScene`.
+- The app registers `TextStarterScene` first, then `SkeletalAnimationBlendScene`.
   Physics-enabled builds also register `PhysicsTestScene`.
-- Runtime resources are intentionally minimal: `character-l.glb`, `character-q.glb`,
-  their PNG textures in `Resources/Textures/`, `Shaders/meshnode.*`,
-  `Shaders/colored_line.*`, `Shaders/postprocess.vert`,
-  `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
+- Runtime resources are intentionally minimal:
+  `Resources/Scenes/simple_starter.scene.json`, `character-l.glb`,
+  `character-q.glb`, their PNG textures in `Resources/Textures/`,
+  `Shaders/meshnode.*`, `Shaders/colored_line.*`,
+  `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and
+  `Shaders/crt.frag`.
 - `MeshNode` + `MeshVisualizer` are the active node/render component pair.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
+- Text scene files may describe composition, transforms, mesh paths, visualizer
+  settings, and animation defaults. C++ scenes bind to named/typed nodes for
+  behavior.
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
 
 Current render pass model:
@@ -175,6 +183,8 @@ Web:
 
 What this repo intentionally is:
 - Scene graph with explicit code-driven scenes and components.
+- Text-authored scene composition that stays diffable and easy for humans/LLMs
+  to edit.
 - Small, inspectable abstractions.
 
 What this repo intentionally is not:

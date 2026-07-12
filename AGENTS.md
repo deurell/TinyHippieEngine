@@ -21,9 +21,15 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers `SkeletalAnimationBlendScene`; physics-enabled builds also
-  register `PhysicsTestScene`.
-- Starter runtime resources are `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`, `Resources/Textures/texture-q.png`, `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
+- Starter app registers `TextStarterScene` first, then `SkeletalAnimationBlendScene`;
+  physics-enabled builds also register `PhysicsTestScene`.
+- Starter scene composition can be authored in text via `SceneDescription`
+  JSON files, currently validating `SceneNode` and `MeshNode` creation.
+- Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
+  `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`,
+  `Resources/Textures/texture-q.png`, `Shaders/meshnode.*`,
+  `Shaders/colored_line.*`, `Shaders/postprocess.vert`,
+  `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
 - Rendering uses engine-owned passes: `Opaque`, `Overlay`, then a fullscreen `PostProcess` stack.
 - Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`, default OFF); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`.
 - Available typed node type in the starter is `MeshNode`.

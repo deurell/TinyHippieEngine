@@ -1,21 +1,22 @@
 # Tiny Hippie Engine
 
 A small C++20 OpenGL/WebGL2 starter engine for code-driven games and visual
-experiments. The repository is trimmed to one starter scene,
-`SkeletalAnimationBlendScene`, with a glTF character setup, animation blending,
-simple flock behavior, debug UI, audio plumbing, and the reusable engine pieces
-needed to grow a new project.
+experiments. The default starter scene is `TextStarterScene`, which loads a
+small JSON scene description and then binds normal C++ behavior to named runtime
+nodes. `SkeletalAnimationBlendScene` remains available as a richer glTF
+animation and flocking example.
 
 ## Features
 
 - Native desktop builds for macOS/Linux/Windows.
 - WebGL2 build path via Emscripten.
 - Scene graph based runtime with `SceneNode` transforms and render components.
+- Text-authored scene composition for LLM/coder-friendly node setup.
 - glTF/GLB mesh loading with animation clips, animation playback, and skinning helpers.
 - Mesh rendering through `IRenderDevice` and the OpenGL backend.
 - ImGui debug UI, runtime logs, scene tree, and inspector.
-- Minimal starter resources: two character GLBs, their `Resources/Textures/`
-  textures, and one mesh shader pair.
+- Minimal starter resources: one JSON scene, two character GLBs, their
+  `Resources/Textures/` textures, and one mesh shader pair.
 - Optional audio system and optional physics wrapper.
 
 ## Requirements
@@ -71,7 +72,7 @@ Controls:
 
 - `source/`, `include/`: engine and starter scene code.
 - `Resources/`: starter character assets, with external GLB textures under
-  `Resources/Textures/`.
+  `Resources/Textures/` and text scene descriptions under `Resources/Scenes/`.
 - `Shaders/`: starter mesh shaders.
 - `tests/`: focused runtime, animation, scene, and asset tests.
 - `scripts/`: desktop, web, architecture, and test helpers.

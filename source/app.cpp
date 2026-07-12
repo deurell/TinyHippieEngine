@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #endif
 #include "game/scenes/skeletalanimationblendscene.h"
+#include "game/scenes/textstarterscene.h"
 #include "logger.h"
 #include "scenemanager.h"
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
@@ -538,6 +539,11 @@ void DL::App::loadCurrentScene() {
 }
 
 void DL::App::registerScenes() {
+  sceneManager_.registerScene([this] {
+    return std::make_unique<TextStarterScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get());
+  });
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
   sceneManager_.registerScene([this] {
     return std::make_unique<PhysicsTestScene>(renderDevice_.get());

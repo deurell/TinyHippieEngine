@@ -15,7 +15,7 @@ include(CTest)
 include(FetchContent)
 
 option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
-option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with Box3D" ON)
+option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with Box3D" OFF)
 
 set(PLATFORM_LIBS "")
 
@@ -70,8 +70,11 @@ add_executable(tiny_hippie_engine
         source/textnode.h source/textnode.cpp
         source/textvisualizer.h source/textvisualizer.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
+        source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
+        source/game/scenes/textstarterscene.h
+        source/game/scenes/textstarterscene.cpp
         source/game/scenes/skeletalanimationblendscene.h
         source/game/scenes/skeletalanimationblendscene.cpp
         source/shader.h
@@ -255,10 +258,17 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenelifecycle_test.cpp
             tests/scenemanager_test.cpp
             tests/scenenode_test.cpp
+            tests/scenedescription_test.cpp
             source/logger.cpp
             source/meshasset.cpp
+            source/meshnode.cpp
+            source/meshvisualizer.cpp
+            source/renderresourcecache.cpp
+            source/scenedescription.cpp
             source/scenelifecycle.cpp
             source/scenenode.cpp
+            source/stb_image.cpp
+            source/stb_truetype.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)
@@ -274,6 +284,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             PRIVATE
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/source
+            ${CMAKE_SOURCE_DIR}/transcoder
     )
 
     target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)

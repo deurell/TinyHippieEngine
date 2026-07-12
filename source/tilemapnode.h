@@ -6,7 +6,6 @@
 #include "scenenode.h"
 #include "tilemapvisualizer.h"
 #include <string>
-#include <vector>
 
 class TileMapNode : public DL::SceneNode {
 public:
@@ -32,5 +31,4 @@ private:
   DL::Camera *camera_ = nullptr;
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
-  glm::vec2 screenSize_{0.0f, 0.0f};
 };

@@ -120,6 +120,7 @@ full image.
   "type": "TileMapNode",
   "tileMap": {
     "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+    "firstGid": 1,
     "mapWidth": 32,
     "mapHeight": 20,
     "tileWidth": 16,
@@ -138,6 +139,7 @@ full image.
 ```
 
 `data` is row-major and may include Tiled flip bits. `0` means no tile.
+`firstGid` is the first Tiled global tile ID for the tileset used by the map.
 
 ## PhongShapeNode Material
 

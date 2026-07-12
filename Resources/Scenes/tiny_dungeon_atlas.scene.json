@@ -35,6 +35,7 @@
       "type": "TileMapNode",
       "tileMap": {
         "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+        "firstGid": 1,
         "mapWidth": 32,
         "mapHeight": 20,
         "tileWidth": 16,

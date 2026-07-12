@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import os
 import re
 import sys
 import xml.etree.ElementTree as ET
@@ -130,6 +129,7 @@ def build_scene(args: argparse.Namespace) -> dict:
             "type": "TileMapNode",
             "tileMap": {
                 "image": repo_relative(tileset["image"], repo_root),
+                "firstGid": tileset["firstgid"],
                 "mapWidth": map_width,
                 "mapHeight": map_height,
                 "tileWidth": tileset["tileWidth"],

@@ -442,6 +442,10 @@ TileMapConfig parseTileMap(const JsonValue::Object &object) {
 
   TileMapConfig config;
   config.imagePath = stringOr(object, "image", config.imagePath);
+  config.firstGid = uint32Or(object, "firstGid", config.firstGid);
+  if (config.firstGid == 0u) {
+    throw std::runtime_error("tilemap firstGid must be greater than zero");
+  }
   config.mapWidth = uint32Or(object, "mapWidth", config.mapWidth);
   config.mapHeight = uint32Or(object, "mapHeight", config.mapHeight);
   config.tileWidth = uint32Or(object, "tileWidth", config.tileWidth);
@@ -480,8 +484,11 @@ TileMapConfig parseTileMap(const JsonValue::Object &object) {
       if (gid == 0u || config.mapWidth == 0u) {
         continue;
       }
+      if (gid < config.firstGid) {
+        throw std::runtime_error("tilemap gid is below firstGid");
+      }
       layer.tiles.push_back(
-          {.tileIndex = gid - 1u,
+          {.tileIndex = gid - config.firstGid,
            .x = static_cast<std::uint32_t>(index % config.mapWidth),
            .y = static_cast<std::uint32_t>(index / config.mapWidth),
            .flipX = (rawGid & kFlippedHorizontallyFlag) != 0u,

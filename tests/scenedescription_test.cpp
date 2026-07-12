@@ -370,6 +370,7 @@ TEST(SceneDescriptionTest, LoadsTinyDungeonAtlasSceneFile) {
   EXPECT_EQ(tileMap.type, "TileMapNode");
   EXPECT_EQ(tileMap.tileMap.imagePath,
             "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
+  EXPECT_EQ(tileMap.tileMap.firstGid, 1u);
   EXPECT_EQ(tileMap.tileMap.mapWidth, 32u);
   EXPECT_EQ(tileMap.tileMap.mapHeight, 20u);
   EXPECT_EQ(tileMap.tileMap.tileWidth, 16u);

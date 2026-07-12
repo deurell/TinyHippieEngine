@@ -26,6 +26,7 @@ struct TileMapLayer {
 
 struct TileMapConfig {
   std::string imagePath;
+  std::uint32_t firstGid = 1;
   std::uint32_t mapWidth = 0;
   std::uint32_t mapHeight = 0;
   std::uint32_t tileWidth = 16;
@@ -62,6 +63,7 @@ private:
   TextureHandle texture_;
   PipelineHandle pipeline_;
   bool sharedTexture_ = false;
+  glm::vec2 atlasSize_{1.0f, 1.0f};
 };
 
 } // namespace DL

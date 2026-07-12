@@ -68,6 +68,7 @@ TileMapVisualizer::TileMapVisualizer(
     if (const auto *resource =
             resourceCache_->acquireImageTexture(config_.imagePath)) {
       texture_ = resource->texture;
+      atlasSize_ = resource->size;
       sharedTexture_ = true;
     }
   } else {
@@ -85,6 +86,7 @@ TileMapVisualizer::TileMapVisualizer(
            .format = TextureFormat::RGBA8,
            .filter = TextureFilter::Nearest,
            .generateMipmaps = false});
+      atlasSize_ = {static_cast<float>(width), static_cast<float>(height)};
     }
     stbi_image_free(pixels);
   }
@@ -115,23 +117,12 @@ TileMapVisualizer::~TileMapVisualizer() {
 void TileMapVisualizer::buildMesh() {
   if (renderDevice_ == nullptr || config_.columns == 0 ||
       config_.mapWidth == 0 || config_.mapHeight == 0 ||
-      config_.tileWidth == 0 || config_.tileHeight == 0) {
+      config_.tileWidth == 0 || config_.tileHeight == 0 ||
+      atlasSize_.x <= 0.0f || atlasSize_.y <= 0.0f) {
     return;
   }
 
-  const std::uint32_t atlasRows =
-      config_.layers.empty() ? 1u : 1u + [&] {
-        std::uint32_t maxIndex = 0;
-        for (const auto &layer : config_.layers) {
-          for (const auto &tile : layer.tiles) {
-            maxIndex = std::max(maxIndex, tile.tileIndex);
-          }
-        }
-        return maxIndex / config_.columns;
-      }();
-  const glm::vec2 atlasSize{
-      static_cast<float>(config_.columns * config_.tileWidth),
-      static_cast<float>(atlasRows * config_.tileHeight)};
+  const glm::vec2 atlasSize = atlasSize_;
 
   std::vector<glm::vec3> positions;
   std::vector<glm::vec3> normals;

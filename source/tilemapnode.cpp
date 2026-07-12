@@ -21,7 +21,6 @@ void TileMapNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); 
 
 void TileMapNode::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
-  screenSize_ = size;
   if (camera_ != nullptr) {
     camera_->mScreenSize = size;
   }

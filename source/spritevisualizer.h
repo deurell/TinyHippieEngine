@@ -38,6 +38,7 @@ private:
   std::string texturePath_;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   DL::RenderResourceCache *resourceCache_ = nullptr;
+  bool sharedTexture_ = false;
 };
 
 } // namespace DL

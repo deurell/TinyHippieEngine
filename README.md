@@ -72,7 +72,8 @@ Controls:
 
 - `source/`, `include/`: engine and starter scene code.
 - `Resources/`: starter character assets, with external GLB textures under
-  `Resources/Textures/` and text scene descriptions under `Resources/Scenes/`.
+  `Resources/Textures/` and text scene descriptions plus schema notes under
+  `Resources/Scenes/`.
 - `Shaders/`: starter mesh shaders.
 - `tests/`: focused runtime, animation, scene, and asset tests.
 - `scripts/`: desktop, web, architecture, and test helpers.

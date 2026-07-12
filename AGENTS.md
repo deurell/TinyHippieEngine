@@ -24,12 +24,17 @@ Precedence:
 - Starter app registers `TextStarterScene` first, then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
-  JSON files, currently validating `SceneNode` and `MeshNode` creation.
+  JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
+  `SpriteNode`, `TextNode`, `PlaneNode`, `PhongShapeNode`, and
+  `ParticleSystemNode`.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`,
   `Resources/Textures/texture-q.png`, `Shaders/meshnode.*`,
-  `Shaders/colored_line.*`, `Shaders/postprocess.vert`,
-  `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
+  `Shaders/colored_line.*`, `Shaders/status.*`, `Shaders/image.*`,
+  `Shaders/particle.vert`, `Shaders/particlefx.frag`,
+  `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and
+  `Shaders/crt.frag`.
 - Rendering uses engine-owned passes: `Opaque`, `Overlay`, then a fullscreen `PostProcess` stack.
 - Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`, default OFF); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`.
 - Available typed node type in the starter is `MeshNode`.

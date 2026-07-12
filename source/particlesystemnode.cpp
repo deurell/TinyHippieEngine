@@ -12,7 +12,7 @@ glm::vec3 randomDirection(std::mt19937 &twister) {
 
   glm::vec3 direction(0.0f);
   do {
-    direction = {dist(twister), dist(twister), dist(twister) * 0.35f};
+    direction = {dist(twister), dist(twister), dist(twister)};
   } while (glm::length2(direction) < 0.0001f);
 
   return glm::normalize(direction);
@@ -21,7 +21,6 @@ glm::vec3 randomDirection(std::mt19937 &twister) {
 glm::vec3 randomBurstDirection(std::mt19937 &twister,
                                const ParticleSystemNode::Config &config) {
   auto direction = randomDirection(twister);
-  direction.z *= config.emission.spread;
   direction += glm::normalize(config.emission.direction) *
                config.emission.upwardBias;
   if (glm::length2(direction) < 0.0001f) {
@@ -151,12 +150,12 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
   config.emission.mode = EmissionMode::Continuous;
   config.emission.pattern = EmissionPattern::Random;
   config.emission.spokes = 8;
-  config.emission.spread = 0.08f;
-  config.emission.spawnRadius = 0.18f;
+  config.emission.spread = 0.55f;
+  config.emission.spawnRadius = 0.28f;
   config.emission.angleJitter = glm::radians(1.0f);
   config.emission.upwardBias = 0.0f;
   config.emission.direction = {0.0f, 1.0f, 0.0f};
-  config.emission.coneAngle = glm::radians(12.0f);
+  config.emission.coneAngle = glm::radians(18.0f);
 
   config.motion.gravity = {0.0f, -19.0f, 0.0f};
   config.motion.drag = 0.04f;
@@ -179,7 +178,7 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
   config.render.coreRadius = 0.14f;
   config.render.haloRadius = 0.42f;
   config.render.outerRadius = 0.9f;
-  config.render.sparkle = 0.0f;
+  config.render.sparkle = 0.35f;
   config.render.stretchByVelocity = 0.145f;
   config.render.maxStretch = 4.8f;
   config.render.hotColor = {0.82f, 0.94f, 1.0f, 1.0f};
@@ -192,7 +191,8 @@ void ParticleSystemNode::init() {
 
   auto visualizer = std::make_unique<DL::ParticleVisualizer>(
       *camera_, *this, renderDevice_,
-      renderResourceCache_);
+      renderResourceCache_, "Shaders/particle.vert",
+      "Shaders/particlefx.frag");
   addRenderComponent(std::move(visualizer));
 
   particles_.reserve(static_cast<std::size_t>(config_.emission.maxParticles));

@@ -25,10 +25,13 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "SpriteNode";
   }
+  void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
+  [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
 
 private:
   void initCamera();
   void initComponents();
+  void updateBillboardRotation();
 
   std::string imagePath_;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
@@ -37,4 +40,5 @@ private:
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
+  bool billboardEnabled_ = false;
 };

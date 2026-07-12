@@ -13,7 +13,7 @@ public:
   ParticleVisualizer(DL::Camera &camera, ParticleSystemNode &node,
                      DL::IRenderDevice *renderDevice,
                      DL::RenderResourceCache *resourceCache = nullptr,
-                     std::string vertexShaderPath = "Shaders/particlefx.vert",
+                     std::string vertexShaderPath = "Shaders/particle.vert",
                      std::string fragmentShaderPath = "Shaders/particlefx.frag");
 
   ~ParticleVisualizer() override;
@@ -25,10 +25,15 @@ public:
     return "ParticleVisualizer";
   }
 
+  static glm::mat4 buildBillboardModel(const glm::vec3 &worldPosition,
+                                       const glm::vec3 &scale,
+                                       const DL::Camera &camera);
+
 private:
   ParticleSystemNode &particleNode_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *resourceCache_ = nullptr;
+  bool billboardEnabled_ = true;
   MeshHandle mesh_;
   PipelineHandle pipeline_;
 };

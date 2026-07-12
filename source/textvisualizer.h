@@ -15,7 +15,18 @@
 
 namespace DL {
 
-enum class TextAlignment { LEFT, CENTER };
+enum class TextAlignment { LEFT, CENTER, RIGHT };
+enum class TextAnchor {
+  TOP_LEFT,
+  TOP_CENTER,
+  TOP_RIGHT,
+  CENTER_LEFT,
+  CENTER,
+  CENTER_RIGHT,
+  BOTTOM_LEFT,
+  BOTTOM_CENTER,
+  BOTTOM_RIGHT
+};
 
 struct TextGlyphInfo {
   glm::vec3 positions[4];
@@ -38,7 +49,8 @@ public:
                           DL::IRenderDevice *renderDevice,
                           DL::RenderResourceCache *resourceCache,
                           std::string vertexShaderPath,
-                          std::string fragmentShaderPath);
+                          std::string fragmentShaderPath,
+                          float pixelHeight = 48.0f);
 
   ~TextVisualizer() override;
   void render(const glm::mat4 &worldTransform,
@@ -49,7 +61,11 @@ public:
   }
   void setText(std::string text);
   void setAlignment(TextAlignment alignment);
+  void setAnchor(TextAnchor anchor);
   void setLayoutWidth(float width);
+  void setTextColor(glm::vec4 color) { textColor_ = color; }
+  void setShadowColor(glm::vec4 color) { shadowColor_ = color; }
+  void setShadowOffset(glm::vec2 offset) { shadowOffset_ = offset; }
 
   float rotAngle1_ = 0.04f;
   float rotAngle2_ = 0.5f;
@@ -69,12 +85,16 @@ private:
   TextureHandle fontTexture_;
   PipelineHandle pipeline_;
   TextAlignment alignment_ = TextAlignment::CENTER;
+  TextAnchor anchor_ = TextAnchor::CENTER;
   float layoutWidth_ = 0.0f;
   const float kerning_ = 2.0f;
 
-  const float desiredPixelHeight_ = 18.0f;
+  float desiredPixelHeight_ = 48.0f;
   float fontScale_ = 1.0f;
   float fontSize_ = 0.0f;
+  glm::vec4 textColor_{1.0f, 1.0f, 1.0f, 1.0f};
+  glm::vec4 shadowColor_{0.0f, 0.0f, 0.0f, 0.58f};
+  glm::vec2 shadowOffset_{1.5f, -1.5f};
 
   const uint32_t fontAtlasWidth_ = 1024;
   const uint32_t FontAtlasHeight_ = 1024;

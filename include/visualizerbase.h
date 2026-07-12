@@ -61,6 +61,11 @@ protected:
     return glm::vec3(matrix[3]);
   }
 
+  float cameraDistanceSortDepth(const glm::vec3 &worldPosition) const {
+    const glm::vec3 toCamera = camera_.getPosition() - worldPosition;
+    return glm::dot(toCamera, toCamera);
+  }
+
   DL::Camera &camera_;
   std::string vertexShaderPath_;
   std::string fragmentShaderPath_;

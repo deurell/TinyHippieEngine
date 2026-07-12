@@ -49,6 +49,7 @@ add_executable(tiny_hippie_engine
         source/app.cpp
         source/logger.cpp
         source/camera.h
+        source/cameranode.h source/cameranode.cpp
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
         source/meshasset.h source/meshasset.cpp
@@ -207,15 +208,16 @@ if (TINY_ENGINE_ENABLE_IMGUI)
     target_link_libraries(tiny_hippie_engine PRIVATE imgui)
 endif ()
 
-foreach (asset_dir IN ITEMS Shaders Resources)
-    add_custom_command(
-            TARGET tiny_hippie_engine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-            $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
-            COMMENT "Copying ${asset_dir}" VERBATIM
-    )
-endforeach ()
+add_custom_target(tiny_hippie_engine_assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
+        ${CMAKE_CURRENT_BINARY_DIR}/Shaders
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Resources
+        ${CMAKE_CURRENT_BINARY_DIR}/Resources
+        COMMENT "Copying runtime assets" VERBATIM
+)
+add_dependencies(tiny_hippie_engine tiny_hippie_engine_assets)
 
 if (EMSCRIPTEN)
     foreach (asset_dir IN ITEMS Shaders Resources)
@@ -246,6 +248,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
     add_executable(tiny_hippie_engine_tests
             tests/animationclip_test.cpp
             tests/animationplayer_test.cpp
+            tests/cameranode_test.cpp
             tests/camera_test.cpp
             tests/iscene_test.cpp
             tests/meshasset_test.cpp
@@ -258,17 +261,30 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenelifecycle_test.cpp
             tests/scenemanager_test.cpp
             tests/scenenode_test.cpp
+            tests/particlesystemnode_test.cpp
             tests/scenedescription_test.cpp
             source/logger.cpp
+            source/cameranode.cpp
             source/meshasset.cpp
             source/meshnode.cpp
             source/meshvisualizer.cpp
+            source/particlevisualizer.cpp
+            source/particlesystemnode.cpp
+            source/planenode.cpp
+            source/planevisualizer.cpp
+            source/phongshapenode.cpp
             source/renderresourcecache.cpp
             source/scenedescription.cpp
             source/scenelifecycle.cpp
             source/scenenode.cpp
+            source/shapegeometry.cpp
+            source/shapevisualizer.cpp
+            source/spritenode.cpp
+            source/spritevisualizer.cpp
             source/stb_image.cpp
             source/stb_truetype.cpp
+            source/textnode.cpp
+            source/textvisualizer.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)

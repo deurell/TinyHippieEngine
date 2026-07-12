@@ -1,6 +1,7 @@
 #include "spritenode.h"
 
 #include "spritevisualizer.h"
+#include <glm/gtc/quaternion.hpp>
 #include <utility>
 
 SpriteNode::SpriteNode(std::string imagePath,
@@ -18,7 +19,10 @@ void SpriteNode::init() {
   initComponents();
 }
 
-void SpriteNode::update(const DL::FrameContext &ctx) { SceneNode::update(ctx); }
+void SpriteNode::update(const DL::FrameContext &ctx) {
+  updateBillboardRotation();
+  SceneNode::update(ctx);
+}
 
 void SpriteNode::render(const DL::FrameContext &ctx) { SceneNode::render(ctx); }
 
@@ -48,4 +52,12 @@ void SpriteNode::initComponents() {
       *camera_, *this, imagePath_, codeBook_, renderDevice_,
       renderResourceCache_);
   addRenderComponent(std::move(visualizer));
+}
+
+void SpriteNode::updateBillboardRotation() {
+  if (!billboardEnabled_ || camera_ == nullptr) {
+    return;
+  }
+
+  setLocalRotation(glm::inverse(camera_->mOrientation));
 }

@@ -1,6 +1,8 @@
 #include "textvisualizer.h"
+#include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 
@@ -10,10 +12,11 @@ DL::TextVisualizer::TextVisualizer(DL::Camera &camera, SceneNode &node,
                                    DL::IRenderDevice *renderDevice,
                                    DL::RenderResourceCache *resourceCache,
                                    const std::string vertexShaderPath,
-                                   const std::string fragmentShaderPath)
+                                   const std::string fragmentShaderPath,
+                                   float pixelHeight)
     : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
       text_(text), renderDevice_(renderDevice), resourceCache_(resourceCache),
-      fontPath_(fontPath) {
+      desiredPixelHeight_(pixelHeight), fontPath_(fontPath) {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -73,24 +76,37 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
 
   glm::mat4 viewMatrix = camera_.getViewMatrix();
   glm::mat4 perspectiveTransform = camera_.getPerspectiveTransform();
+  const glm::vec3 textPosition = extractPosition(worldTransform);
+  const float sortDepth = cameraDistanceSortDepth(textPosition);
 
-  DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.texture = fontTexture_;
-  command.pass = pass;
-  command.uniforms.push_back(
-      UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
-      UniformValue::makeMat4("view", viewMatrix));
-  command.uniforms.push_back(
-      UniformValue::makeMat4("projection", perspectiveTransform));
-  command.uniforms.push_back(
-      UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(UniformValue::makeFloat("rotAngle1", rotAngle1_));
-  command.uniforms.push_back(UniformValue::makeFloat("rotAngle2", rotAngle2_));
-  command.uniforms.push_back(UniformValue::makeFloat("c1", color1_));
-  command.uniforms.push_back(UniformValue::makeFloat("c2", color2_));
+  auto makeCommand = [&](const glm::mat4 &drawModel, glm::vec4 color) {
+    DrawCommand command;
+    command.mesh = mesh_;
+    command.pipeline = pipeline_;
+    command.texture = fontTexture_;
+    command.pass = pass;
+    command.blendMode = BlendMode::Alpha;
+    command.depthTest = false;
+    command.sortMode = DrawSortMode::BackToFront;
+    command.sortDepth = sortDepth;
+    command.uniforms.push_back(UniformValue::makeMat4("model", drawModel));
+    command.uniforms.push_back(UniformValue::makeMat4("view", viewMatrix));
+    command.uniforms.push_back(
+        UniformValue::makeMat4("projection", perspectiveTransform));
+    command.uniforms.push_back(UniformValue::makeVec4("textColor", color));
+    return command;
+  };
+
+  if (shadowColor_.a > 0.0f &&
+      (shadowOffset_.x != 0.0f || shadowOffset_.y != 0.0f)) {
+    const glm::mat4 shadowModel =
+        model * glm::translate(glm::mat4(1.0f),
+                               glm::vec3(shadowOffset_.x, shadowOffset_.y,
+                                         0.0f));
+    renderDevice_->draw(makeCommand(shadowModel, shadowColor_));
+  }
+
+  DrawCommand command = makeCommand(model, textColor_);
   renderDevice_->draw(command);
 }
 
@@ -104,6 +120,14 @@ void DL::TextVisualizer::setAlignment(TextAlignment alignment) {
     return;
   }
   alignment_ = alignment;
+  initGraphics();
+}
+
+void DL::TextVisualizer::setAnchor(TextAnchor anchor) {
+  if (anchor_ == anchor) {
+    return;
+  }
+  anchor_ = anchor;
   initGraphics();
 }
 
@@ -240,23 +264,33 @@ void DL::TextVisualizer::initGraphics() {
 
   const float viewportWidth = layoutWidth_;
 
-  // Calculate the width of a space character
   float spaceWidth = (makeGlyphInfo('A', 0.0f, 0.0f).positions[2].x -
                       makeGlyphInfo('A', 0.0f, 0.0f).positions[0].x);
   spaceWidth /= 2;
   for (const auto &line : lines) {
-    if (alignment_ == TextAlignment::CENTER) {
-      float totalLineWidth = 0.0f;
-      for (char c : line) {
+    float totalLineWidth = 0.0f;
+    for (char c : line) {
+      if (c == ' ') {
+        totalLineWidth += spaceWidth + kerning_;
+      } else {
         TextGlyphInfo glyphInfo = makeGlyphInfo(c, 0.0f, 0.0f);
         totalLineWidth +=
-            (glyphInfo.positions[2].x - glyphInfo.positions[0].x) +
-            kerning_; // Include kerning in the width
+            (glyphInfo.positions[2].x - glyphInfo.positions[0].x) + kerning_;
       }
-      totalLineWidth -= kerning_; // Remove the last kerning
+    }
+    if (!line.empty()) {
+      totalLineWidth -= kerning_;
+    }
+
+    if (alignment_ == TextAlignment::CENTER) {
       offset.x = viewportWidth > 0.0f
                      ? (viewportWidth - totalLineWidth) * 0.5f
                      : totalLineWidth * -0.5f;
+    } else if (alignment_ == TextAlignment::RIGHT) {
+      offset.x =
+          viewportWidth > 0.0f ? viewportWidth - totalLineWidth : -totalLineWidth;
+    } else {
+      offset.x = 0.0f;
     }
 
     for (char c : line) {
@@ -281,12 +315,61 @@ void DL::TextVisualizer::initGraphics() {
       } else {
         offset.x += (glyphInfo.positions[2].x - glyphInfo.positions[0].x);
       }
-      offset.x += 2.0; // Kerning
+      offset.x += kerning_;
     }
 
     offset.y +=
         fontSize_ + kerning_; // Use the calculated font size for line height
     offset.x = 0.0f;          // Reset the X offset for the next line
+  }
+
+  if (!vertices.empty()) {
+    glm::vec2 minBounds(std::numeric_limits<float>::max());
+    glm::vec2 maxBounds(std::numeric_limits<float>::lowest());
+    for (const auto &vertex : vertices) {
+      minBounds.x = std::min(minBounds.x, vertex.x);
+      minBounds.y = std::min(minBounds.y, vertex.y);
+      maxBounds.x = std::max(maxBounds.x, vertex.x);
+      maxBounds.y = std::max(maxBounds.y, vertex.y);
+    }
+
+    const float centerX = (minBounds.x + maxBounds.x) * 0.5f;
+    const float centerY = (minBounds.y + maxBounds.y) * 0.5f;
+    glm::vec2 anchorOffset{centerX, centerY};
+    switch (anchor_) {
+    case TextAnchor::TOP_LEFT:
+      anchorOffset = {minBounds.x, maxBounds.y};
+      break;
+    case TextAnchor::TOP_CENTER:
+      anchorOffset = {centerX, maxBounds.y};
+      break;
+    case TextAnchor::TOP_RIGHT:
+      anchorOffset = {maxBounds.x, maxBounds.y};
+      break;
+    case TextAnchor::CENTER_LEFT:
+      anchorOffset = {minBounds.x, centerY};
+      break;
+    case TextAnchor::CENTER:
+      anchorOffset = {centerX, centerY};
+      break;
+    case TextAnchor::CENTER_RIGHT:
+      anchorOffset = {maxBounds.x, centerY};
+      break;
+    case TextAnchor::BOTTOM_LEFT:
+      anchorOffset = {minBounds.x, minBounds.y};
+      break;
+    case TextAnchor::BOTTOM_CENTER:
+      anchorOffset = {centerX, minBounds.y};
+      break;
+    case TextAnchor::BOTTOM_RIGHT:
+      anchorOffset = {maxBounds.x, minBounds.y};
+      break;
+    }
+
+    for (auto &vertex : vertices) {
+      vertex.x -= anchorOffset.x;
+      vertex.y -= anchorOffset.y;
+    }
   }
 
   if (renderDevice_ != nullptr) {

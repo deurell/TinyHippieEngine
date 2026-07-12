@@ -103,6 +103,8 @@ public:
   void startEmitting();
   void stopEmitting();
   void setEmitterPosition(const glm::vec3 &position);
+  void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
+  [[nodiscard]] bool isBillboardEnabled() const { return billboardEnabled_; }
 
   const std::vector<ParticleState> &getParticles() const { return particles_; }
   const Config &getConfig() const { return config_; }
@@ -120,5 +122,6 @@ private:
   glm::vec3 emitterPosition_{0.0f, 0.0f, 0.0f};
   float spawnAccumulator_ = 0.0f;
   bool emitting_ = false;
+  bool billboardEnabled_ = true;
   std::vector<ParticleState> particles_;
 };

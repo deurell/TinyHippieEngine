@@ -2,6 +2,7 @@
 
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
+#include "cameranode.h"
 #include "meshassetcache.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
@@ -31,16 +32,22 @@ public:
   }
 
 private:
-  void initCamera();
+  void createFallbackCameraNode();
   void loadTextScene();
   void bindRuntimeNodes();
+  void updateCameraController(const DL::FrameContext &ctx);
+  void syncCameraControllerAngles();
+  [[nodiscard]] DL::Camera *activeCamera();
+  [[nodiscard]] const DL::Camera *activeCamera() const;
 
   DL::IRenderDevice *renderDevice_ = nullptr;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
   DL::MeshAssetCache *meshAssetCache_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::filesystem::path scenePath_;
-  std::unique_ptr<DL::Camera> camera_;
+  DL::CameraNode *activeCameraNode_ = nullptr;
   DL::SceneNode *hero_ = nullptr;
   float heroYawRadians_ = 0.0f;
+  float cameraYaw_ = 0.0f;
+  float cameraPitch_ = 0.0f;
 };

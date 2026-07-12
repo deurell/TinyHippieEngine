@@ -7,7 +7,11 @@
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
+#include "shapevisualizer.h"
 #include <filesystem>
+#include <functional>
+#include <string_view>
+#include <unordered_map>
 #include <memory>
 #include <optional>
 #include <string>
@@ -29,6 +33,23 @@ struct SceneNodeDescription {
   glm::vec3 rotationEulerDegrees{0.0f};
   glm::vec3 scale{1.0f};
   std::string mesh;
+  std::string image;
+  std::string text = "text";
+  std::string plane = "Simple";
+  std::string shape = "Cube";
+  std::string particle = "SoftGlowBurst";
+  std::string textAlignment = "Center";
+  std::string textAnchor = "Center";
+  float fontSize = 48.0f;
+  glm::vec4 textColor{1.0f, 1.0f, 1.0f, 1.0f};
+  glm::vec4 shadowColor{0.0f, 0.0f, 0.0f, 0.58f};
+  glm::vec2 shadowOffset{1.5f, -1.5f};
+  bool billboard = false;
+  bool active = false;
+  float fov = 45.0f;
+  std::optional<glm::vec3> lookAt;
+  glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
+  PhongMaterial material;
   MeshVisualizerSettings visualizerSettings;
   std::optional<SceneAnimationDescription> animation;
   std::vector<SceneNodeDescription> children;
@@ -46,6 +67,23 @@ struct SceneBuilderContext {
   RenderResourceCache *renderResourceCache = nullptr;
   Camera *camera = nullptr;
 };
+
+class SceneNodeFactory {
+public:
+  using Builder = std::function<std::unique_ptr<SceneNode>(
+      const SceneNodeDescription &, SceneBuilderContext, SceneNode *)>;
+
+  void registerNodeType(std::string type, Builder builder);
+  std::unique_ptr<SceneNode> build(const SceneNodeDescription &description,
+                                   SceneBuilderContext context,
+                                   SceneNode *parent = nullptr) const;
+  [[nodiscard]] bool hasNodeType(std::string_view type) const;
+
+private:
+  std::unordered_map<std::string, Builder> builders_;
+};
+
+SceneNodeFactory createDefaultSceneNodeFactory();
 
 SceneDescription loadSceneDescription(const std::filesystem::path &path);
 SceneDescription parseSceneDescription(std::string_view source,

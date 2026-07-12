@@ -13,7 +13,8 @@ public:
   explicit TextNode(DL::SceneNode *parentNode = nullptr,
                     std::string text = "text",
                     DL::IRenderDevice *renderDevice = nullptr,
-                    DL::RenderResourceCache *renderResourceCache = nullptr);
+                    DL::RenderResourceCache *renderResourceCache = nullptr,
+                    DL::Camera *camera = nullptr);
 
   ~TextNode() override = default;
 
@@ -26,15 +27,32 @@ public:
   }
   DL::Camera &getCamera() { return *camera_; }
   DL::TextVisualizer *getTextVisualizer() const { return textVisualizer_; }
+  void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
+  [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
+  void setTextAlignment(DL::TextAlignment alignment);
+  void setTextAnchor(DL::TextAnchor anchor);
+  void setFontPixelHeight(float pixelHeight) { fontPixelHeight_ = pixelHeight; }
+  void setTextColor(glm::vec4 color);
+  void setShadowColor(glm::vec4 color);
+  void setShadowOffset(glm::vec2 offset);
 
 private:
   void initCamera();
   void initComponents();
+  void updateBillboardRotation();
 
-  std::unique_ptr<DL::Camera> camera_;
+  std::unique_ptr<DL::Camera> localCamera_;
+  DL::Camera *camera_ = nullptr;
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
   std::string text_;
   DL::TextVisualizer *textVisualizer_ = nullptr;
+  bool billboardEnabled_ = false;
+  DL::TextAlignment alignment_ = DL::TextAlignment::CENTER;
+  DL::TextAnchor anchor_ = DL::TextAnchor::CENTER;
+  float fontPixelHeight_ = 48.0f;
+  glm::vec4 textColor_{1.0f, 1.0f, 1.0f, 1.0f};
+  glm::vec4 shadowColor_{0.0f, 0.0f, 0.0f, 0.58f};
+  glm::vec2 shadowOffset_{1.5f, -1.5f};
 };

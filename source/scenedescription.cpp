@@ -1,6 +1,12 @@
 #include "scenedescription.h"
 
+#include "cameranode.h"
 #include "meshnode.h"
+#include "particlesystemnode.h"
+#include "phongshapenode.h"
+#include "planenode.h"
+#include "spritenode.h"
+#include "textnode.h"
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
@@ -334,6 +340,52 @@ glm::vec3 vec3Or(const JsonValue::Object &object, std::string_view key,
   return result;
 }
 
+glm::vec2 vec2Or(const JsonValue::Object &object, std::string_view key,
+                 glm::vec2 fallback) {
+  const JsonValue *value = find(object, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+
+  const auto &array = asArray(*value, key);
+  if (array.size() != 2) {
+    throw std::runtime_error(std::string(key) + " must have 2 numbers");
+  }
+
+  glm::vec2 result{0.0f};
+  for (std::size_t i = 0; i < 2; ++i) {
+    const auto *number = std::get_if<double>(&array[i].value);
+    if (number == nullptr) {
+      throw std::runtime_error(std::string(key) + " must have 2 numbers");
+    }
+    result[static_cast<int>(i)] = static_cast<float>(*number);
+  }
+  return result;
+}
+
+glm::vec4 vec4Or(const JsonValue::Object &object, std::string_view key,
+                 glm::vec4 fallback) {
+  const JsonValue *value = find(object, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+
+  const auto &array = asArray(*value, key);
+  if (array.size() != 4) {
+    throw std::runtime_error(std::string(key) + " must have 4 numbers");
+  }
+
+  glm::vec4 result{0.0f};
+  for (std::size_t i = 0; i < 4; ++i) {
+    const auto *number = std::get_if<double>(&array[i].value);
+    if (number == nullptr) {
+      throw std::runtime_error(std::string(key) + " must have 4 numbers");
+    }
+    result[static_cast<int>(i)] = static_cast<float>(*number);
+  }
+  return result;
+}
+
 SceneAnimationDescription parseAnimation(const JsonValue::Object &object) {
   SceneAnimationDescription description;
   description.clip = stringOr(object, "clip", description.clip);
@@ -357,6 +409,15 @@ MeshVisualizerSettings parseVisualizerSettings(const JsonValue::Object &object,
   return settings;
 }
 
+PhongMaterial parseMaterial(const JsonValue::Object &object,
+                            PhongMaterial material) {
+  material.diffuse = vec3Or(object, "diffuse", material.diffuse);
+  material.ambient = vec3Or(object, "ambient", material.ambient);
+  material.specular = vec3Or(object, "specular", material.specular);
+  material.shininess = floatOr(object, "shininess", material.shininess);
+  return material;
+}
+
 SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   const auto &object = asObject(value, "node");
 
@@ -364,6 +425,28 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   description.name = stringOr(object, "name", description.name);
   description.type = stringOr(object, "type", description.type);
   description.mesh = stringOr(object, "mesh", description.mesh);
+  description.image = stringOr(object, "image", description.image);
+  description.text = stringOr(object, "text", description.text);
+  description.textAlignment =
+      stringOr(object, "alignment", description.textAlignment);
+  description.textAnchor = stringOr(object, "anchor", description.textAnchor);
+  description.fontSize = floatOr(object, "fontSize", description.fontSize);
+  description.textColor = vec4Or(object, "textColor", description.textColor);
+  description.shadowColor =
+      vec4Or(object, "shadowColor", description.shadowColor);
+  description.shadowOffset =
+      vec2Or(object, "shadowOffset", description.shadowOffset);
+  description.plane = stringOr(object, "plane", description.plane);
+  description.shape = stringOr(object, "shape", description.shape);
+  description.particle = stringOr(object, "particle", description.particle);
+  description.billboard = boolOr(object, "billboard", description.billboard);
+  description.active = boolOr(object, "active", description.active);
+  description.fov = floatOr(object, "fov", description.fov);
+  if (const auto *lookAt = find(object, "lookAt")) {
+    const JsonValue::Object wrapper{{"lookAt", *lookAt}};
+    description.lookAt = vec3Or(wrapper, "lookAt", glm::vec3(0.0f));
+  }
+  description.color = vec4Or(object, "color", description.color);
 
   if (const auto *transform = find(object, "transform")) {
     const auto &transformObject = asObject(*transform, "transform");
@@ -377,6 +460,11 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   if (const auto *visualizer = find(object, "visualizer")) {
     description.visualizerSettings = parseVisualizerSettings(
         asObject(*visualizer, "visualizer"), description.visualizerSettings);
+  }
+
+  if (const auto *material = find(object, "material")) {
+    description.material =
+        parseMaterial(asObject(*material, "material"), description.material);
   }
 
   if (const auto *animation = find(object, "animation")) {
@@ -409,7 +497,208 @@ void applyAnimation(MeshNode &node,
   }
 }
 
+PlaneNode::PlaneType parsePlaneType(std::string_view value) {
+  if (value == "Simple") {
+    return PlaneNode::PlaneType::Simple;
+  }
+  if (value == "Spinner") {
+    return PlaneNode::PlaneType::Spinner;
+  }
+  throw std::runtime_error("unknown PlaneNode plane value: " +
+                           std::string(value));
+}
+
+ShapeType parseShapeType(std::string_view value) {
+  if (value == "Cube") {
+    return ShapeType::Cube;
+  }
+  if (value == "Sphere") {
+    return ShapeType::Sphere;
+  }
+  if (value == "Cylinder") {
+    return ShapeType::Cylinder;
+  }
+  throw std::runtime_error("unknown PhongShapeNode shape value: " +
+                           std::string(value));
+}
+
+ParticleSystemNode::Config parseParticleConfig(std::string_view value) {
+  if (value == "SoftGlowBurst") {
+    return ParticleSystemNode::Config::softGlowBurst();
+  }
+  if (value == "WaterFountain") {
+    return ParticleSystemNode::Config::waterFountain();
+  }
+  if (value == "Default") {
+    return ParticleSystemNode::Config{};
+  }
+  throw std::runtime_error("unknown ParticleSystemNode particle value: " +
+                           std::string(value));
+}
+
+TextAlignment parseTextAlignment(std::string_view value) {
+  if (value == "Left") {
+    return TextAlignment::LEFT;
+  }
+  if (value == "Center") {
+    return TextAlignment::CENTER;
+  }
+  if (value == "Right") {
+    return TextAlignment::RIGHT;
+  }
+  throw std::runtime_error("unknown TextNode alignment value: " +
+                           std::string(value));
+}
+
+TextAnchor parseTextAnchor(std::string_view value) {
+  if (value == "TopLeft") {
+    return TextAnchor::TOP_LEFT;
+  }
+  if (value == "TopCenter") {
+    return TextAnchor::TOP_CENTER;
+  }
+  if (value == "TopRight") {
+    return TextAnchor::TOP_RIGHT;
+  }
+  if (value == "CenterLeft") {
+    return TextAnchor::CENTER_LEFT;
+  }
+  if (value == "Center") {
+    return TextAnchor::CENTER;
+  }
+  if (value == "CenterRight") {
+    return TextAnchor::CENTER_RIGHT;
+  }
+  if (value == "BottomLeft") {
+    return TextAnchor::BOTTOM_LEFT;
+  }
+  if (value == "BottomCenter") {
+    return TextAnchor::BOTTOM_CENTER;
+  }
+  if (value == "BottomRight") {
+    return TextAnchor::BOTTOM_RIGHT;
+  }
+  throw std::runtime_error("unknown TextNode anchor value: " +
+                           std::string(value));
+}
+
+std::unique_ptr<SceneNode> buildPlainNode(
+    const SceneNodeDescription &, SceneBuilderContext, SceneNode *parent) {
+  return std::make_unique<SceneNode>(parent);
+}
+
+std::unique_ptr<SceneNode> buildCameraNode(
+    const SceneNodeDescription &description, SceneBuilderContext,
+    SceneNode *parent) {
+  auto node = std::make_unique<CameraNode>(parent);
+  node->setActive(description.active);
+  node->setFov(description.fov);
+  if (description.lookAt.has_value()) {
+    node->setLookAtTarget(*description.lookAt);
+  }
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildMeshNode(const SceneNodeDescription &description,
+                                         SceneBuilderContext context,
+                                         SceneNode *parent) {
+  auto node = std::make_unique<MeshNode>(
+      description.mesh, context.codeBook, context.renderDevice,
+      context.meshAssetCache, context.renderResourceCache, parent,
+      context.camera);
+  node->setVisualizerSettings(description.visualizerSettings);
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildSpriteNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  auto node = std::make_unique<SpriteNode>(
+      description.image, context.codeBook, context.renderDevice,
+      context.renderResourceCache, parent, context.camera);
+  node->setBillboardEnabled(description.billboard);
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildTextNode(const SceneNodeDescription &description,
+                                         SceneBuilderContext context,
+                                         SceneNode *parent) {
+  auto node = std::make_unique<TextNode>(parent, description.text,
+                                         context.renderDevice,
+                                         context.renderResourceCache,
+                                         context.camera);
+  node->setBillboardEnabled(description.billboard);
+  node->setTextAlignment(parseTextAlignment(description.textAlignment));
+  node->setTextAnchor(parseTextAnchor(description.textAnchor));
+  node->setFontPixelHeight(description.fontSize);
+  node->setTextColor(description.textColor);
+  node->setShadowColor(description.shadowColor);
+  node->setShadowOffset(description.shadowOffset);
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildPlaneNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  auto node = std::make_unique<PlaneNode>(
+      parent, context.camera, context.renderDevice, context.renderResourceCache);
+  node->planeType = parsePlaneType(description.plane);
+  node->color = description.color;
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildPhongShapeNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  auto node = std::make_unique<PhongShapeNode>(
+      parseShapeType(description.shape), context.renderDevice,
+      context.renderResourceCache, parent, context.camera);
+  node->setMaterial(description.material);
+  return node;
+}
+
+std::unique_ptr<SceneNode> buildParticleSystemNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  auto node = std::make_unique<ParticleSystemNode>(
+      context.renderDevice, context.camera, context.renderResourceCache,
+      parseParticleConfig(description.particle), parent);
+  node->setBillboardEnabled(description.billboard);
+  return node;
+}
+
 } // namespace
+
+void SceneNodeFactory::registerNodeType(std::string type, Builder builder) {
+  builders_[std::move(type)] = std::move(builder);
+}
+
+std::unique_ptr<SceneNode>
+SceneNodeFactory::build(const SceneNodeDescription &description,
+                        SceneBuilderContext context, SceneNode *parent) const {
+  const auto it = builders_.find(description.type);
+  if (it == builders_.end()) {
+    throw std::runtime_error("unknown scene node type: " + description.type);
+  }
+  return it->second(description, context, parent);
+}
+
+bool SceneNodeFactory::hasNodeType(std::string_view type) const {
+  return builders_.contains(std::string(type));
+}
+
+SceneNodeFactory createDefaultSceneNodeFactory() {
+  SceneNodeFactory factory;
+  factory.registerNodeType("SceneNode", buildPlainNode);
+  factory.registerNodeType("CameraNode", buildCameraNode);
+  factory.registerNodeType("MeshNode", buildMeshNode);
+  factory.registerNodeType("SpriteNode", buildSpriteNode);
+  factory.registerNodeType("TextNode", buildTextNode);
+  factory.registerNodeType("PlaneNode", buildPlaneNode);
+  factory.registerNodeType("PhongShapeNode", buildPhongShapeNode);
+  factory.registerNodeType("ParticleSystemNode", buildParticleSystemNode);
+  return factory;
+}
 
 SceneDescription parseSceneDescription(std::string_view source,
                                         std::string_view sourceName) {
@@ -443,24 +732,11 @@ SceneDescription loadSceneDescription(const std::filesystem::path &path) {
 std::unique_ptr<SceneNode> buildSceneNode(const SceneNodeDescription &description,
                                           SceneBuilderContext context,
                                           SceneNode *parent) {
-  std::unique_ptr<SceneNode> node;
-  if (description.type == "SceneNode") {
-    node = std::make_unique<SceneNode>(parent);
-  } else if (description.type == "MeshNode") {
-    node = std::make_unique<MeshNode>(
-        description.mesh, context.codeBook, context.renderDevice,
-        context.meshAssetCache, context.renderResourceCache, parent,
-        context.camera);
-  } else {
-    throw std::runtime_error("unknown scene node type: " + description.type);
-  }
+  const SceneNodeFactory factory = createDefaultSceneNodeFactory();
+  std::unique_ptr<SceneNode> node = factory.build(description, context, parent);
 
   node->setDebugName(description.name);
   applyTransform(*node, description);
-
-  if (auto *meshNode = dynamic_cast<MeshNode *>(node.get())) {
-    meshNode->setVisualizerSettings(description.visualizerSettings);
-  }
 
   node->init();
 

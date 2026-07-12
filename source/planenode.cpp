@@ -15,7 +15,6 @@ void PlaneNode::init() {
   SceneNode::init();
   initCamera();
   initComponents();
-  setLocalPosition({0, 0, 0});
 }
 
 void PlaneNode::update(const DL::FrameContext &ctx) {

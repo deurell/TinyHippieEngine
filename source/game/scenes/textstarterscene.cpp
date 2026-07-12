@@ -158,8 +158,6 @@ void TextStarterScene::bindRuntimeNodes() {
   hierarchyPlanetOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_planet_orbit");
   hierarchyMoonOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_moon_orbit");
   hierarchyMoon_ = DL::findSceneNodeByName(*this, "hierarchy_moon");
-  sunLight_ =
-      dynamic_cast<LightNode *>(DL::findSceneNodeByName(*this, "sun_light"));
 }
 
 void TextStarterScene::updateCameraController(const DL::FrameContext &ctx) {

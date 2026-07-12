@@ -3,7 +3,7 @@
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
 #include "cameranode.h"
-#include "lightnode.h"
+#include "lighting.h"
 #include "meshassetcache.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
@@ -53,7 +53,6 @@ private:
   DL::SceneNode *hierarchyPlanetOrbit_ = nullptr;
   DL::SceneNode *hierarchyMoonOrbit_ = nullptr;
   DL::SceneNode *hierarchyMoon_ = nullptr;
-  LightNode *sunLight_ = nullptr;
   float heroYawRadians_ = 0.0f;
   float planetOrbitRadians_ = 0.0f;
   float moonOrbitRadians_ = 0.0f;

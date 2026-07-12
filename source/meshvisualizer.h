@@ -52,11 +52,17 @@ public:
   void setSettings(const MeshVisualizerSettings &settings) { settings_ = settings; }
   [[nodiscard]] const MeshVisualizerSettings &settings() const { return settings_; }
   void updateAnimation(float deltaTime);
-  void setAnimationPlaying(bool playing) { animationPlayer_.setPlaying(playing); }
+  void setAnimationPlaying(bool playing) {
+    animationPlayer_.setPlaying(playing);
+    blendAnimationPlayer_.setPlaying(playing);
+  }
   [[nodiscard]] bool isAnimationPlaying() const {
     return animationPlayer_.isPlaying();
   }
-  void setAnimationLooping(bool looping) { animationPlayer_.setLooping(looping); }
+  void setAnimationLooping(bool looping) {
+    animationPlayer_.setLooping(looping);
+    blendAnimationPlayer_.setLooping(looping);
+  }
   [[nodiscard]] bool isAnimationLooping() const {
     return animationPlayer_.isLooping();
   }

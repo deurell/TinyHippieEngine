@@ -114,9 +114,9 @@ std::string_view MeshVisualizer::animationClipName(std::size_t index) const {
 }
 
 void MeshVisualizer::applyAnimationBlend(const AnimationBlendState &state) {
-  animationPlayer_.setPlaying(state.playing);
-  animationPlayer_.setLooping(state.looping);
-  animationPlayer_.setPlaybackSpeed(state.playbackSpeed);
+  setAnimationPlaying(state.playing);
+  setAnimationLooping(state.looping);
+  setAnimationPlaybackSpeed(state.playbackSpeed);
   setAnimationBlend(state.baseClipIndex, state.blendClipIndex, state.weight);
 }
 

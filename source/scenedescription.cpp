@@ -1,6 +1,7 @@
 #include "scenedescription.h"
 
 #include "cameranode.h"
+#include "lightnode.h"
 #include "meshnode.h"
 #include "particlesystemnode.h"
 #include "phongshapenode.h"
@@ -411,6 +412,21 @@ SceneAnimationDescription parseAnimation(const JsonValue::Object &object) {
   return description;
 }
 
+SceneLightDescription parseLight(const JsonValue::Object &object) {
+  SceneLightDescription description;
+  description.kind = stringOr(object, "kind", description.kind);
+  description.color = vec3Or(object, "color", description.color);
+  description.intensity = floatOr(object, "intensity", description.intensity);
+  description.ambientStrength =
+      floatOr(object, "ambientStrength", description.ambientStrength);
+  description.active = boolOr(object, "active", description.active);
+  if (const auto *direction = find(object, "direction")) {
+    const JsonValue::Object wrapper{{"direction", *direction}};
+    description.direction = vec3Or(wrapper, "direction", glm::vec3(0.0f));
+  }
+  return description;
+}
+
 MeshVisualizerSettings parseVisualizerSettings(const JsonValue::Object &object,
                                                 MeshVisualizerSettings settings) {
   settings.lightDirection =
@@ -589,6 +605,10 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
     description.animation = parseAnimation(asObject(*animation, "animation"));
   }
 
+  if (const auto *light = find(object, "light")) {
+    description.light = parseLight(asObject(*light, "light"));
+  }
+
   if (const auto *tileMap = find(object, "tileMap")) {
     description.tileMap = parseTileMap(asObject(*tileMap, "tileMap"));
   }
@@ -726,6 +746,29 @@ std::unique_ptr<SceneNode> buildCameraNode(
   return node;
 }
 
+LightNode::Kind parseLightKind(std::string_view value) {
+  if (value == "Directional") {
+    return LightNode::Kind::Directional;
+  }
+  throw std::runtime_error("unknown LightNode kind value: " +
+                           std::string(value));
+}
+
+std::unique_ptr<SceneNode> buildLightNode(
+    const SceneNodeDescription &description, SceneBuilderContext,
+    SceneNode *parent) {
+  auto node = std::make_unique<LightNode>(parent);
+  node->setKind(parseLightKind(description.light.kind));
+  node->setActive(description.light.active);
+  node->setColor(description.light.color);
+  node->setIntensity(description.light.intensity);
+  node->setAmbientStrength(description.light.ambientStrength);
+  if (description.light.direction.has_value()) {
+    node->setDirection(*description.light.direction);
+  }
+  return node;
+}
+
 std::unique_ptr<SceneNode> buildMeshNode(const SceneNodeDescription &description,
                                          SceneBuilderContext context,
                                          SceneNode *parent) {
@@ -837,6 +880,7 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   SceneNodeFactory factory;
   factory.registerNodeType("SceneNode", buildPlainNode);
   factory.registerNodeType("CameraNode", buildCameraNode);
+  factory.registerNodeType("LightNode", buildLightNode);
   factory.registerNodeType("MeshNode", buildMeshNode);
   factory.registerNodeType("SpriteNode", buildSpriteNode);
   factory.registerNodeType("SpriteBatchNode", buildSpriteBatchNode);

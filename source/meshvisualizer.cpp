@@ -265,12 +265,22 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
         DL::UniformValue::makeMat4("projection", camera_.getPerspectiveTransform()));
     command.uniforms.push_back(
         DL::UniformValue::makeVec3("viewPos", camera_.getPosition()));
+    const bool useSceneLight =
+        ctx.lighting != nullptr && ctx.lighting->directionalEnabled;
+    const glm::vec3 lightDirection =
+        useSceneLight ? ctx.lighting->direction : settings_.lightDirection;
+    const glm::vec3 lightColor =
+        useSceneLight ? ctx.lighting->color * ctx.lighting->intensity
+                      : settings_.lightColor;
+    const float ambientStrength =
+        useSceneLight ? ctx.lighting->ambientStrength
+                      : settings_.ambientStrength;
     command.uniforms.push_back(DL::UniformValue::makeVec3(
-        "lightDirection", glm::normalize(settings_.lightDirection)));
+        "lightDirection", glm::normalize(lightDirection)));
     command.uniforms.push_back(DL::UniformValue::makeVec3(
-        "lightColor", settings_.lightColor));
+        "lightColor", lightColor));
     command.uniforms.push_back(
-        DL::UniformValue::makeFloat("ambientStrength", settings_.ambientStrength));
+        DL::UniformValue::makeFloat("ambientStrength", ambientStrength));
     command.uniforms.push_back(
         DL::UniformValue::makeFloat(
             "specularStrength",

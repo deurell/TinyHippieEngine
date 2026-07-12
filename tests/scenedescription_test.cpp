@@ -28,6 +28,17 @@ constexpr char kSceneSource[] = R"json(
           "lookAt": [0.0, 0.5, 0.0]
         },
         {
+          "name": "light_child",
+          "type": "LightNode",
+          "light": {
+            "kind": "Directional",
+            "direction": [0.2, 1.0, 0.3],
+            "color": [1.0, 0.9, 0.7],
+            "intensity": 1.4,
+            "ambientStrength": 0.35
+          }
+        },
+        {
           "name": "mesh_child",
           "type": "MeshNode",
           "mesh": "Resources/character-l.glb",
@@ -190,7 +201,7 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.type, "SceneNode");
   EXPECT_EQ(root.position, glm::vec3(1.0f, 2.0f, 3.0f));
   EXPECT_EQ(root.scale, glm::vec3(2.0f, 2.0f, 2.0f));
-  ASSERT_EQ(root.children.size(), 8u);
+  ASSERT_EQ(root.children.size(), 9u);
 
   EXPECT_EQ(root.children[0].type, "CameraNode");
   EXPECT_TRUE(root.children[0].active);
@@ -198,7 +209,15 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   ASSERT_TRUE(root.children[0].lookAt.has_value());
   EXPECT_EQ(*root.children[0].lookAt, glm::vec3(0.0f, 0.5f, 0.0f));
 
-  const DL::SceneNodeDescription &child = root.children[1];
+  EXPECT_EQ(root.children[1].type, "LightNode");
+  EXPECT_EQ(root.children[1].light.kind, "Directional");
+  ASSERT_TRUE(root.children[1].light.direction.has_value());
+  EXPECT_EQ(*root.children[1].light.direction, glm::vec3(0.2f, 1.0f, 0.3f));
+  EXPECT_EQ(root.children[1].light.color, glm::vec3(1.0f, 0.9f, 0.7f));
+  EXPECT_FLOAT_EQ(root.children[1].light.intensity, 1.4f);
+  EXPECT_FLOAT_EQ(root.children[1].light.ambientStrength, 0.35f);
+
+  const DL::SceneNodeDescription &child = root.children[2];
   EXPECT_EQ(child.name, "mesh_child");
   EXPECT_EQ(child.type, "MeshNode");
   EXPECT_EQ(child.mesh, "Resources/character-l.glb");
@@ -209,43 +228,43 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_FLOAT_EQ(child.visualizerSettings.ambientStrength, 0.6f);
   EXPECT_FLOAT_EQ(child.visualizerSettings.specularStrength, 0.1f);
 
-  EXPECT_EQ(root.children[2].type, "PlaneNode");
-  EXPECT_EQ(root.children[2].plane, "Spinner");
-  EXPECT_EQ(root.children[2].color, glm::vec4(0.1f, 0.2f, 0.3f, 0.4f));
-  EXPECT_EQ(root.children[3].type, "PhongShapeNode");
-  EXPECT_EQ(root.children[3].shape, "Cylinder");
-  EXPECT_EQ(root.children[3].material.diffuse, glm::vec3(0.4f, 0.5f, 0.6f));
-  EXPECT_FLOAT_EQ(root.children[3].material.shininess, 48.0f);
-  EXPECT_EQ(root.children[4].image, "Resources/Textures/texture-l.png");
-  EXPECT_EQ(root.children[4].sourceRect, glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
-  EXPECT_TRUE(root.children[4].flipX);
-  EXPECT_FALSE(root.children[4].flipY);
-  EXPECT_TRUE(root.children[4].flipDiagonal);
-  EXPECT_TRUE(root.children[4].billboard);
-  EXPECT_EQ(root.children[5].type, "SpriteBatchNode");
-  EXPECT_EQ(root.children[5].spriteBatch.imagePath,
+  EXPECT_EQ(root.children[3].type, "PlaneNode");
+  EXPECT_EQ(root.children[3].plane, "Spinner");
+  EXPECT_EQ(root.children[3].color, glm::vec4(0.1f, 0.2f, 0.3f, 0.4f));
+  EXPECT_EQ(root.children[4].type, "PhongShapeNode");
+  EXPECT_EQ(root.children[4].shape, "Cylinder");
+  EXPECT_EQ(root.children[4].material.diffuse, glm::vec3(0.4f, 0.5f, 0.6f));
+  EXPECT_FLOAT_EQ(root.children[4].material.shininess, 48.0f);
+  EXPECT_EQ(root.children[5].image, "Resources/Textures/texture-l.png");
+  EXPECT_EQ(root.children[5].sourceRect, glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
+  EXPECT_TRUE(root.children[5].flipX);
+  EXPECT_FALSE(root.children[5].flipY);
+  EXPECT_TRUE(root.children[5].flipDiagonal);
+  EXPECT_TRUE(root.children[5].billboard);
+  EXPECT_EQ(root.children[6].type, "SpriteBatchNode");
+  EXPECT_EQ(root.children[6].spriteBatch.imagePath,
             "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
-  ASSERT_EQ(root.children[5].spriteBatch.sprites.size(), 2u);
-  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].position,
+  ASSERT_EQ(root.children[6].spriteBatch.sprites.size(), 2u);
+  EXPECT_EQ(root.children[6].spriteBatch.sprites[0].position,
             glm::vec3(1.0f, 2.0f, 0.1f));
-  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].size,
+  EXPECT_EQ(root.children[6].spriteBatch.sprites[0].size,
             glm::vec2(0.5f, 0.75f));
-  EXPECT_FLOAT_EQ(root.children[5].spriteBatch.sprites[0].rotationDegrees,
+  EXPECT_FLOAT_EQ(root.children[6].spriteBatch.sprites[0].rotationDegrees,
                   15.0f);
-  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].sourceRectPixels,
+  EXPECT_EQ(root.children[6].spriteBatch.sprites[0].sourceRectPixels,
             glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
-  EXPECT_TRUE(root.children[5].spriteBatch.sprites[0].flipY);
-  EXPECT_TRUE(root.children[5].spriteBatch.sprites[1].flipDiagonal);
-  EXPECT_EQ(root.children[6].text, "hello");
-  EXPECT_EQ(root.children[6].textAlignment, "Center");
-  EXPECT_EQ(root.children[6].textAnchor, "BottomCenter");
-  EXPECT_FLOAT_EQ(root.children[6].fontSize, 56.0f);
-  EXPECT_EQ(root.children[6].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
-  EXPECT_EQ(root.children[6].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
-  EXPECT_EQ(root.children[6].shadowOffset, glm::vec2(2.0f, -2.0f));
-  EXPECT_TRUE(root.children[6].billboard);
-  EXPECT_EQ(root.children[7].particle, "WaterFountain");
+  EXPECT_TRUE(root.children[6].spriteBatch.sprites[0].flipY);
+  EXPECT_TRUE(root.children[6].spriteBatch.sprites[1].flipDiagonal);
+  EXPECT_EQ(root.children[7].text, "hello");
+  EXPECT_EQ(root.children[7].textAlignment, "Center");
+  EXPECT_EQ(root.children[7].textAnchor, "BottomCenter");
+  EXPECT_FLOAT_EQ(root.children[7].fontSize, 56.0f);
+  EXPECT_EQ(root.children[7].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
+  EXPECT_EQ(root.children[7].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+  EXPECT_EQ(root.children[7].shadowOffset, glm::vec2(2.0f, -2.0f));
   EXPECT_TRUE(root.children[7].billboard);
+  EXPECT_EQ(root.children[8].particle, "WaterFountain");
+  EXPECT_TRUE(root.children[8].billboard);
 }
 
 TEST(SceneDescriptionTest, BuildsRuntimeNodeTree) {
@@ -285,6 +304,7 @@ TEST(SceneDescriptionTest, DefaultFactoryRegistersEngineNodeTypes) {
 
   EXPECT_TRUE(factory.hasNodeType("SceneNode"));
   EXPECT_TRUE(factory.hasNodeType("CameraNode"));
+  EXPECT_TRUE(factory.hasNodeType("LightNode"));
   EXPECT_TRUE(factory.hasNodeType("MeshNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteBatchNode"));
@@ -313,6 +333,15 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
                                           node.active;
                                  }),
             scene.nodes.end());
+  const auto sunLight =
+      std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
+        return node.name == "sun_light" && node.type == "LightNode" &&
+               node.light.kind == "Directional";
+      });
+  ASSERT_NE(sunLight, scene.nodes.end());
+  EXPECT_EQ(sunLight->position, glm::vec3(0.62f, 1.22f, -2.05f));
+  EXPECT_NE(findDescriptionByName(*sunLight, "sun_light_marker"), nullptr);
+  EXPECT_NE(findDescriptionByName(*sunLight, "light_sample_label"), nullptr);
   EXPECT_NE(std::ranges::find_if(scene.nodes,
                                  [](const DL::SceneNodeDescription &node) {
                                    return node.name == "hero" &&

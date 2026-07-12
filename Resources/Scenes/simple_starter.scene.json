@@ -12,6 +12,53 @@
       }
     },
     {
+      "name": "sun_light",
+      "type": "LightNode",
+      "light": {
+        "kind": "Directional",
+        "direction": [0.35, 1.0, 0.25],
+        "color": [1.0, 0.94, 0.82],
+        "intensity": 1.12,
+        "ambientStrength": 0.46
+      },
+      "transform": {
+        "position": [0.62, 1.22, -2.05]
+      },
+      "children": [
+        {
+          "name": "sun_light_marker",
+          "type": "PhongShapeNode",
+          "shape": "Sphere",
+          "material": {
+            "diffuse": [1.0, 0.82, 0.28],
+            "ambient": [0.5, 0.28, 0.05],
+            "specular": [0.9, 0.7, 0.35],
+            "shininess": 36.0
+          },
+          "transform": {
+            "position": [0.0, 0.0, 0.0],
+            "scale": [0.14, 0.14, 0.14]
+          }
+        },
+        {
+          "name": "light_sample_label",
+          "type": "TextNode",
+          "text": "LightNode",
+          "alignment": "Center",
+          "anchor": "BottomCenter",
+          "fontSize": 42.0,
+          "textColor": [1.0, 0.94, 0.72, 1.0],
+          "shadowColor": [0.0, 0.0, 0.0, 0.7],
+          "shadowOffset": [1.4, -1.4],
+          "billboard": true,
+          "transform": {
+            "position": [0.0, 0.28, 0.0],
+            "scale": [0.0032, 0.0032, 0.0032]
+          }
+        }
+      ]
+    },
+    {
       "name": "sample_floor",
       "type": "PlaneNode",
       "plane": "Simple",
@@ -340,7 +387,7 @@
     {
       "name": "shape_sample_label",
       "type": "TextNode",
-      "text": "PhongShapeNode",
+      "text": "PhongShapeNode + Light",
       "alignment": "Center",
       "anchor": "BottomCenter",
       "fontSize": 50.0,

@@ -52,6 +52,7 @@ add_executable(tiny_hippie_engine
         source/cameranode.h source/cameranode.cpp
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
+        source/lightnode.h source/lightnode.cpp
         source/meshasset.h source/meshasset.cpp
         source/meshassetcache.h source/meshassetcache.cpp
         source/meshnode.h source/meshnode.cpp
@@ -269,6 +270,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenedescription_test.cpp
             source/logger.cpp
             source/cameranode.cpp
+            source/lightnode.cpp
             source/meshasset.cpp
             source/meshnode.cpp
             source/meshvisualizer.cpp

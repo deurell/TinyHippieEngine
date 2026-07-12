@@ -77,7 +77,16 @@ void TextStarterScene::fixedUpdate(const DL::FrameContext &ctx) {
 
 void TextStarterScene::update(const DL::FrameContext &ctx) {
   updateCameraController(ctx);
-  SceneNode::update(ctx);
+  lightingState_ = {};
+  DL::FrameContext lightingCtx = ctx;
+  lightingCtx.lighting = &lightingState_;
+  SceneNode::update(lightingCtx);
+}
+
+void TextStarterScene::render(const DL::FrameContext &ctx) {
+  DL::FrameContext lightingCtx = ctx;
+  lightingCtx.lighting = &lightingState_;
+  SceneNode::render(lightingCtx);
 }
 
 void TextStarterScene::onScreenSizeChanged(glm::vec2 size) {
@@ -149,6 +158,8 @@ void TextStarterScene::bindRuntimeNodes() {
   hierarchyPlanetOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_planet_orbit");
   hierarchyMoonOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_moon_orbit");
   hierarchyMoon_ = DL::findSceneNodeByName(*this, "hierarchy_moon");
+  sunLight_ =
+      dynamic_cast<LightNode *>(DL::findSceneNodeByName(*this, "sun_light"));
 }
 
 void TextStarterScene::updateCameraController(const DL::FrameContext &ctx) {

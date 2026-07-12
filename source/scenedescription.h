@@ -28,6 +28,15 @@ struct SceneAnimationDescription {
   float playbackSpeed = 1.0f;
 };
 
+struct SceneLightDescription {
+  std::string kind = "Directional";
+  glm::vec3 color{1.0f, 0.96f, 0.9f};
+  float intensity = 1.0f;
+  float ambientStrength = 0.42f;
+  bool active = true;
+  std::optional<glm::vec3> direction;
+};
+
 struct SceneNodeDescription {
   std::string name = "node";
   std::string type = "SceneNode";
@@ -55,6 +64,7 @@ struct SceneNodeDescription {
   float fov = 45.0f;
   std::optional<glm::vec3> lookAt;
   glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
+  SceneLightDescription light;
   PhongMaterial material;
   MeshVisualizerSettings visualizerSettings;
   SpriteBatchConfig spriteBatch;

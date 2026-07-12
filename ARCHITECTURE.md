@@ -53,9 +53,11 @@ Current scene representation:
 - Text scene files may describe composition, transforms, mesh paths, visualizer
   settings, and animation defaults. C++ scenes bind to named/typed nodes for
   behavior.
-- The default scene node factory supports `SceneNode`, `CameraNode`, `MeshNode`,
-  `SpriteNode`, `SpriteBatchNode`, `TextNode`, `TileMapNode`, `PlaneNode`,
-  `PhongShapeNode`, and `ParticleSystemNode`.
+- The default scene node factory supports `SceneNode`, `CameraNode`,
+  `LightNode`, `MeshNode`, `SpriteNode`, `SpriteBatchNode`, `TextNode`,
+  `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and `ParticleSystemNode`.
+- `LightNode` provides one scene directional light for forward-lit renderers
+  (`MeshNode` and `PhongShapeNode`). Unlit renderers ignore it.
 - `SpriteNode` supports full-image sprites and atlas regions through
   `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
 - `SpriteBatchNode` supports many static atlas-backed sprite quads from one

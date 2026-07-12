@@ -38,6 +38,8 @@ dimensions.
 
 - `SceneNode`: hierarchy/transform only.
 - `CameraNode`: uses `active`, `fov`, and optional `lookAt`.
+- `LightNode`: uses `light` to provide one scene directional light for lit
+  renderers (`MeshNode` and `PhongShapeNode`).
 - `MeshNode`: uses `mesh`, optional `animation`, optional `visualizer`.
 - `SpriteNode`: uses `image`; optional `sourceRect` selects an atlas region in
   source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
@@ -73,6 +75,28 @@ dimensions.
 
 The active root camera is built first by `TextStarterScene` so other nodes can
 render through it.
+
+## LightNode
+
+```json
+{
+  "type": "LightNode",
+  "light": {
+    "kind": "Directional",
+    "direction": [0.35, 1.0, 0.25],
+    "color": [1.0, 0.94, 0.82],
+    "intensity": 1.0,
+    "ambientStrength": 0.42,
+    "active": true
+  }
+}
+```
+
+`LightNode` currently supports one simple forward directional light. It affects
+lit renderers only: `MeshNode` and `PhongShapeNode`. Sprites, sprite batches,
+tile maps, text, particles, overlays, and postprocess are unlit.
+
+Omit `direction` to derive the light direction from the node rotation.
 
 ## MeshNode
 

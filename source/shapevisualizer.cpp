@@ -60,14 +60,23 @@ void ShapeVisualizer::render(const glm::mat4 &worldTransform,
       UniformValue::makeMat4("projection", camera_.getPerspectiveTransform()));
   command.uniforms.push_back(
       UniformValue::makeVec3("viewPos", camera_.getPosition()));
+  const bool useSceneLight =
+      ctx.lighting != nullptr && ctx.lighting->directionalEnabled;
+  const glm::vec3 sceneLightDirection =
+      useSceneLight ? ctx.lighting->direction : lightDirection;
+  const glm::vec3 sceneLightColor =
+      useSceneLight ? ctx.lighting->color * ctx.lighting->intensity
+                    : lightColor;
+  const float ambientScale =
+      useSceneLight ? ctx.lighting->ambientStrength / 0.42f : 1.0f;
   command.uniforms.push_back(
-      UniformValue::makeVec3("lightDirection", glm::normalize(lightDirection)));
+      UniformValue::makeVec3("lightDirection", glm::normalize(sceneLightDirection)));
   command.uniforms.push_back(
-      UniformValue::makeVec3("lightColor", lightColor));
+      UniformValue::makeVec3("lightColor", sceneLightColor));
   command.uniforms.push_back(
       UniformValue::makeVec3("materialDiffuse", material.diffuse));
   command.uniforms.push_back(
-      UniformValue::makeVec3("materialAmbient", material.ambient));
+      UniformValue::makeVec3("materialAmbient", material.ambient * ambientScale));
   command.uniforms.push_back(
       UniformValue::makeVec3("materialSpecular", material.specular));
   command.uniforms.push_back(

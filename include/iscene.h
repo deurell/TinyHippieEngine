@@ -1,4 +1,5 @@
 #pragma once
+#include "lighting.h"
 #include <array>
 #include <glm/glm.hpp>
 #include <string>
@@ -85,6 +86,7 @@ struct FrameContext {
   InputState input;
   glm::vec2 windowSize{0.0f};
   glm::vec2 framebufferSize{0.0f};
+  LightingState *lighting = nullptr;
 };
 
 class IScene {

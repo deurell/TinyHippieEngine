@@ -542,6 +542,12 @@ void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<TextStarterScene>(
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get(),
+        "Resources/Scenes/kenney_platformer.scene.json");
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<TextStarterScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get());
   });
 #ifdef TINY_ENGINE_ENABLE_PHYSICS

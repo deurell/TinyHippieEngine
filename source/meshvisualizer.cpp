@@ -23,6 +23,8 @@ MeshVisualizer::MeshVisualizer(
   if (renderDevice_ == nullptr || asset_ == nullptr) {
     return;
   }
+  animationPlayer_.setPlaying(false);
+  blendAnimationPlayer_.setPlaying(false);
 
   pipeline_ = resourceCache_ != nullptr
                   ? resourceCache_->acquirePipeline(vertexShaderPath_,

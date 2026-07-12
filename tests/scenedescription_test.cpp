@@ -265,6 +265,63 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
                                    return node.type == "ParticleSystemNode";
                                  }),
             scene.nodes.end());
+  EXPECT_NE(std::ranges::find_if(scene.nodes,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name == "sprite_badge" &&
+                                          node.type == "SpriteNode" &&
+                                          node.billboard &&
+                                          node.image ==
+                                              "Resources/Textures/generated/"
+                                              "retro-crystal-terminal.png";
+                                 }),
+            scene.nodes.end());
+  const auto hierarchySample =
+      std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
+        return node.name == "hierarchy_parent" && node.type == "SceneNode";
+      });
+  ASSERT_NE(hierarchySample, scene.nodes.end());
+  EXPECT_EQ(hierarchySample->children.size(), 3u);
+  EXPECT_NE(std::ranges::find_if(hierarchySample->children,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name == "hierarchy_left_child" &&
+                                          node.type == "PhongShapeNode";
+                                 }),
+            hierarchySample->children.end());
+}
+
+TEST(SceneDescriptionTest, LoadsKenneyPlatformerSceneFile) {
+  std::filesystem::path path =
+      "../Resources/Scenes/kenney_platformer.scene.json";
+  if (!std::filesystem::exists(path)) {
+    path = "Resources/Scenes/kenney_platformer.scene.json";
+  }
+
+  const DL::SceneDescription scene = DL::loadSceneDescription(path);
+
+  EXPECT_EQ(scene.name, "kenney_platformer_glb_spike");
+  ASSERT_GE(scene.nodes.size(), 8u);
+  EXPECT_NE(std::ranges::find_if(scene.nodes,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name == "main_camera" &&
+                                          node.type == "CameraNode" &&
+                                          node.active;
+                                 }),
+            scene.nodes.end());
+  EXPECT_NE(std::ranges::find_if(scene.nodes,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name == "hero" &&
+                                          node.type == "MeshNode" &&
+                                          node.mesh ==
+                                              "Resources/Kenney/PlatformerKit/"
+                                              "Models/character-oopi.glb";
+                                 }),
+            scene.nodes.end());
+  const auto platformRoot =
+      std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
+        return node.name == "platform_root" && node.type == "SceneNode";
+      });
+  ASSERT_NE(platformRoot, scene.nodes.end());
+  EXPECT_GE(platformRoot->children.size(), 4u);
 }
 
 TEST(SceneDescriptionTest, RejectsUnknownNodeTypes) {

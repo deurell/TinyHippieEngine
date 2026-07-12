@@ -26,12 +26,16 @@ Core pieces:
   nodes through `SceneNodeFactory`.
 
 Starter content:
-- The app registers `TextStarterScene` first, then `SkeletalAnimationBlendScene`.
+- The app registers the Kenney GLB `TextStarterScene` first, then the generic
+  sample `TextStarterScene`, then `SkeletalAnimationBlendScene`.
   Physics-enabled builds also register `PhysicsTestScene`.
 - Runtime resources are intentionally minimal:
-  `Resources/Scenes/simple_starter.scene.json`, `character-l.glb`,
+  `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/kenney_platformer.scene.json`, `character-l.glb`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-q.glb`, their PNG textures in `Resources/Textures/`,
+  `Resources/Textures/generated/retro-crystal-terminal.png`,
+  `Resources/Kenney/PlatformerKit/`,
   `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/status.*`,
   `Shaders/image.*`, `Shaders/particle.vert`, `Shaders/particlefx.frag`,
   `Shaders/postprocess.vert`,

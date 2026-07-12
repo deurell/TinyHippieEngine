@@ -26,6 +26,32 @@ TEST(MeshAssetTest, DispatchesGltfThroughGenericMeshLoader) {
   EXPECT_FALSE(asset.submeshes[0].indices.empty());
 }
 
+TEST(MeshAssetTest, LoadsKenneyPlatformerGlbAsset) {
+  const auto asset = DL::loadMeshAsset(
+      "../Resources/Kenney/PlatformerKit/Models/block-grass-large.glb");
+
+  ASSERT_FALSE(asset.submeshes.empty());
+  EXPECT_FALSE(asset.nodes.empty());
+  EXPECT_FALSE(asset.submeshes[0].positions.empty());
+  EXPECT_FALSE(asset.submeshes[0].indices.empty());
+  ASSERT_FALSE(asset.submeshes[0].texturePath.empty());
+  EXPECT_TRUE(asset.submeshes[0].texturePath.ends_with(
+      "Resources/Kenney/PlatformerKit/Models/Textures/colormap.png"));
+  EXPECT_TRUE(std::filesystem::exists(asset.submeshes[0].texturePath));
+}
+
+TEST(MeshAssetTest, LoadsKenneyPlatformerCharacterGlbAsset) {
+  const auto asset = DL::loadMeshAsset(
+      "../Resources/Kenney/PlatformerKit/Models/character-oopi.glb");
+
+  ASSERT_FALSE(asset.submeshes.empty());
+  EXPECT_FALSE(asset.nodes.empty());
+  EXPECT_FALSE(asset.submeshes[0].positions.empty());
+  EXPECT_FALSE(asset.submeshes[0].indices.empty());
+  ASSERT_FALSE(asset.submeshes[0].texturePath.empty());
+  EXPECT_TRUE(std::filesystem::exists(asset.submeshes[0].texturePath));
+}
+
 TEST(MeshAssetTest, LoadsStarterCharacterAnimationData) {
   const auto asset = DL::loadGltfMeshAsset("../Resources/character-l.glb");
 

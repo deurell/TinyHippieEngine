@@ -94,7 +94,7 @@ bool DL::SpriteVisualizer::loadTexture() {
                    : renderDevice_->createBasisTexture(texturePath_, *codeBook_);
     sharedTexture_ = resourceCache_ != nullptr;
   } else {
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     int width = 0;
     int height = 0;
     int channels = 0;

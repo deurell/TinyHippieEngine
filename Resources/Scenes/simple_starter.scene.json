@@ -6,9 +6,9 @@
       "type": "CameraNode",
       "active": true,
       "fov": 48.0,
-      "lookAt": [0.0, 0.75, -0.25],
+      "lookAt": [0.0, 0.75, -0.1],
       "transform": {
-        "position": [0.0, 2.9, 9.4]
+        "position": [0.0, 3.05, 9.8]
       }
     },
     {
@@ -19,7 +19,7 @@
       "transform": {
         "position": [0.0, -0.05, 0.0],
         "rotationEuler": [-90.0, 0.0, 0.0],
-        "scale": [8.0, 5.4, 1.0]
+        "scale": [8.0, 5.7, 1.0]
       }
     },
     {
@@ -61,9 +61,20 @@
       "plane": "Simple",
       "color": [0.18, 0.24, 0.18, 1.0],
       "transform": {
-        "position": [-3.0, 0.006, 2.05],
+        "position": [-5.1, 0.006, 2.15],
         "rotationEuler": [-90.0, 0.0, 0.0],
-        "scale": [1.25, 0.9, 1.0]
+        "scale": [1.15, 0.85, 1.0]
+      }
+    },
+    {
+      "name": "hierarchy_sample_pad",
+      "type": "PlaneNode",
+      "plane": "Simple",
+      "color": [0.23, 0.20, 0.12, 1.0],
+      "transform": {
+        "position": [0.0, 0.007, 2.15],
+        "rotationEuler": [-90.0, 0.0, 0.0],
+        "scale": [1.15, 0.85, 1.0]
       }
     },
     {
@@ -72,9 +83,9 @@
       "plane": "Simple",
       "color": [0.12, 0.21, 0.27, 1.0],
       "transform": {
-        "position": [3.0, 0.008, 2.05],
+        "position": [5.1, 0.008, 2.15],
         "rotationEuler": [-90.0, 0.0, 0.0],
-        "scale": [1.25, 0.9, 1.0]
+        "scale": [1.15, 0.85, 1.0]
       }
     },
     {
@@ -163,13 +174,69 @@
     {
       "name": "sprite_badge",
       "type": "SpriteNode",
-      "image": "Resources/Textures/texture-q.png",
-      "billboard": false,
+      "image": "Resources/Textures/generated/retro-crystal-terminal.png",
+      "billboard": true,
       "transform": {
-        "position": [6.0, 0.85, -2.0],
+        "position": [6.0, 0.78, -2.0],
         "rotationEuler": [0.0, -32.0, 0.0],
-        "scale": [0.62, 0.62, 0.62]
+        "scale": [0.72, 0.72, 0.72]
       }
+    },
+    {
+      "name": "hierarchy_parent",
+      "type": "SceneNode",
+      "transform": {
+        "position": [0.0, 0.12, 2.15],
+        "rotationEuler": [0.0, 28.0, 0.0]
+      },
+      "children": [
+        {
+          "name": "hierarchy_base",
+          "type": "PhongShapeNode",
+          "shape": "Cylinder",
+          "material": {
+            "diffuse": [0.96, 0.68, 0.24],
+            "ambient": [0.16, 0.10, 0.03],
+            "specular": [0.46, 0.32, 0.12],
+            "shininess": 22.0
+          },
+          "transform": {
+            "position": [0.0, 0.16, 0.0],
+            "scale": [0.5, 0.16, 0.5]
+          }
+        },
+        {
+          "name": "hierarchy_left_child",
+          "type": "PhongShapeNode",
+          "shape": "Sphere",
+          "material": {
+            "diffuse": [0.42, 0.78, 0.38],
+            "ambient": [0.06, 0.12, 0.05],
+            "specular": [0.28, 0.46, 0.25],
+            "shininess": 18.0
+          },
+          "transform": {
+            "position": [-0.45, 0.58, 0.0],
+            "scale": [0.22, 0.22, 0.22]
+          }
+        },
+        {
+          "name": "hierarchy_right_child",
+          "type": "PhongShapeNode",
+          "shape": "Cube",
+          "material": {
+            "diffuse": [0.18, 0.56, 0.96],
+            "ambient": [0.04, 0.08, 0.14],
+            "specular": [0.55, 0.65, 0.78],
+            "shininess": 32.0
+          },
+          "transform": {
+            "position": [0.45, 0.58, 0.0],
+            "rotationEuler": [0.0, 35.0, 0.0],
+            "scale": [0.22, 0.22, 0.22]
+          }
+        }
+      ]
     },
     {
       "name": "fountain",
@@ -177,7 +244,7 @@
       "particle": "WaterFountain",
       "billboard": true,
       "transform": {
-        "position": [3.0, 0.07, 2.05],
+        "position": [5.1, 0.07, 2.15],
         "scale": [0.17, 0.17, 0.17]
       }
     },
@@ -241,7 +308,7 @@
       "shadowOffset": [1.6, -1.6],
       "billboard": true,
       "transform": {
-        "position": [-3.0, 1.45, 2.05],
+        "position": [-5.1, 1.45, 2.15],
         "scale": [0.0036, 0.0036, 0.0036]
       }
     },
@@ -257,8 +324,24 @@
       "shadowOffset": [1.5, -1.5],
       "billboard": true,
       "transform": {
-        "position": [-3.0, 0.85, 2.05],
+        "position": [-5.1, 0.85, 2.15],
         "scale": [0.0033, 0.0033, 0.0033]
+      }
+    },
+    {
+      "name": "hierarchy_sample_label",
+      "type": "TextNode",
+      "text": "SceneNode children",
+      "alignment": "Center",
+      "anchor": "BottomCenter",
+      "fontSize": 50.0,
+      "textColor": [1.0, 1.0, 1.0, 1.0],
+      "shadowColor": [0.0, 0.0, 0.0, 0.7],
+      "shadowOffset": [1.6, -1.6],
+      "billboard": true,
+      "transform": {
+        "position": [0.0, 1.45, 2.15],
+        "scale": [0.0036, 0.0036, 0.0036]
       }
     },
     {
@@ -273,7 +356,7 @@
       "shadowOffset": [1.6, -1.6],
       "billboard": true,
       "transform": {
-        "position": [3.0, 1.55, 2.05],
+        "position": [5.1, 1.55, 2.15],
         "scale": [0.0036, 0.0036, 0.0036]
       }
     }

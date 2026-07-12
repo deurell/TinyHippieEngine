@@ -21,16 +21,21 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers `TextStarterScene` first, then `SkeletalAnimationBlendScene`;
+- Starter app registers the Kenney GLB `TextStarterScene` first, then the
+  generic sample `TextStarterScene`, then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
   `SpriteNode`, `TextNode`, `PlaneNode`, `PhongShapeNode`, and
   `ParticleSystemNode`.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/kenney_platformer.scene.json`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`,
-  `Resources/Textures/texture-q.png`, `Shaders/meshnode.*`,
+  `Resources/Textures/texture-q.png`,
+  `Resources/Textures/generated/retro-crystal-terminal.png`,
+  `Resources/Kenney/PlatformerKit/`,
+  `Shaders/meshnode.*`,
   `Shaders/colored_line.*`, `Shaders/status.*`, `Shaders/image.*`,
   `Shaders/particle.vert`, `Shaders/particlefx.frag`,
   `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and

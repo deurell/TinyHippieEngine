@@ -1,10 +1,10 @@
 # Tiny Hippie Engine
 
 A small C++20 OpenGL/WebGL2 starter engine for code-driven games and visual
-experiments. The default starter scene is `TextStarterScene`, which loads a
-small JSON scene description and then binds normal C++ behavior to named runtime
-nodes. `SkeletalAnimationBlendScene` remains available as a richer glTF
-animation and flocking example.
+experiments. The default starter scene is a `TextStarterScene` loading a small
+Kenney Platformer Kit GLB sample. A second `TextStarterScene` loads the generic
+node sample scene. `SkeletalAnimationBlendScene` remains available as a richer
+glTF animation and flocking example.
 
 ## Features
 
@@ -15,8 +15,8 @@ animation and flocking example.
 - glTF/GLB mesh loading with animation clips, animation playback, and skinning helpers.
 - Mesh rendering through `IRenderDevice` and the OpenGL backend.
 - ImGui debug UI, runtime logs, scene tree, and inspector.
-- Minimal starter resources: one JSON scene, two character GLBs, their
-  `Resources/Textures/` textures, and one mesh shader pair.
+- Minimal starter resources: JSON scene descriptions, GLB meshes, texture
+  assets, and shader pairs.
 - Optional audio system and optional physics wrapper.
 
 ## Requirements

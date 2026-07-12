@@ -1,0 +1,57 @@
+#pragma once
+
+#include "renderdevice.h"
+#include "renderresourcecache.h"
+#include "visualizerbase.h"
+#include <glm/glm.hpp>
+#include <string>
+#include <vector>
+
+namespace DL {
+
+struct SpriteBatchItem {
+  glm::vec3 position{0.0f};
+  glm::vec2 size{1.0f, 1.0f};
+  float rotationDegrees = 0.0f;
+  glm::vec4 sourceRectPixels{0.0f, 0.0f, -1.0f, -1.0f};
+  bool flipX = false;
+  bool flipY = false;
+  bool flipDiagonal = false;
+};
+
+struct SpriteBatchConfig {
+  std::string imagePath;
+  std::vector<SpriteBatchItem> sprites;
+};
+
+class SpriteBatchVisualizer : public VisualizerBase {
+public:
+  SpriteBatchVisualizer(
+      DL::Camera &camera, SceneNode &node, SpriteBatchConfig config,
+      DL::IRenderDevice *renderDevice,
+      DL::RenderResourceCache *resourceCache = nullptr,
+      std::string vertexShaderPath = "Shaders/tilemap.vert",
+      std::string fragmentShaderPath = "Shaders/tilemap.frag");
+
+  ~SpriteBatchVisualizer() override;
+
+  void render(const glm::mat4 &worldTransform, const DL::FrameContext &ctx,
+              DL::RenderPassId pass) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "SpriteBatchVisualizer";
+  }
+
+private:
+  void buildMesh();
+
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
+  SpriteBatchConfig config_;
+  MeshHandle mesh_;
+  TextureHandle texture_;
+  PipelineHandle pipeline_;
+  bool sharedTexture_ = false;
+  glm::vec2 atlasSize_{1.0f, 1.0f};
+};
+
+} // namespace DL

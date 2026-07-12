@@ -54,10 +54,12 @@ Current scene representation:
   settings, and animation defaults. C++ scenes bind to named/typed nodes for
   behavior.
 - The default scene node factory supports `SceneNode`, `CameraNode`, `MeshNode`,
-  `SpriteNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
-  `ParticleSystemNode`.
+  `SpriteNode`, `SpriteBatchNode`, `TextNode`, `TileMapNode`, `PlaneNode`,
+  `PhongShapeNode`, and `ParticleSystemNode`.
 - `SpriteNode` supports full-image sprites and atlas regions through
   `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
+- `SpriteBatchNode` supports many static atlas-backed sprite quads from one
+  image in one mesh/draw command.
 - `TileMapNode` supports compact atlas-backed orthogonal maps with Tiled-style
   global tile IDs and flip flags.
 - `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into

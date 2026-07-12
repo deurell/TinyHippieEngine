@@ -5,6 +5,7 @@
 #include "particlesystemnode.h"
 #include "phongshapenode.h"
 #include "planenode.h"
+#include "spritebatchnode.h"
 #include "spritenode.h"
 #include "textnode.h"
 #include "tilemapnode.h"
@@ -501,6 +502,34 @@ TileMapConfig parseTileMap(const JsonValue::Object &object) {
   return config;
 }
 
+SpriteBatchConfig parseSpriteBatch(const JsonValue::Object &object) {
+  SpriteBatchConfig config;
+  config.imagePath = stringOr(object, "image", config.imagePath);
+
+  const auto *sprites = find(object, "sprites");
+  if (sprites == nullptr) {
+    return config;
+  }
+
+  for (const auto &spriteValue : asArray(*sprites, "sprites")) {
+    const auto &spriteObject = asObject(spriteValue, "sprite");
+    SpriteBatchItem sprite;
+    sprite.position = vec3Or(spriteObject, "position", sprite.position);
+    sprite.size = vec2Or(spriteObject, "size", sprite.size);
+    sprite.rotationDegrees =
+        floatOr(spriteObject, "rotationDegrees", sprite.rotationDegrees);
+    sprite.sourceRectPixels =
+        vec4Or(spriteObject, "sourceRect", sprite.sourceRectPixels);
+    sprite.flipX = boolOr(spriteObject, "flipX", sprite.flipX);
+    sprite.flipY = boolOr(spriteObject, "flipY", sprite.flipY);
+    sprite.flipDiagonal =
+        boolOr(spriteObject, "flipDiagonal", sprite.flipDiagonal);
+    config.sprites.push_back(sprite);
+  }
+
+  return config;
+}
+
 SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   const auto &object = asObject(value, "node");
 
@@ -562,6 +591,11 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
 
   if (const auto *tileMap = find(object, "tileMap")) {
     description.tileMap = parseTileMap(asObject(*tileMap, "tileMap"));
+  }
+
+  if (const auto *spriteBatch = find(object, "spriteBatch")) {
+    description.spriteBatch =
+        parseSpriteBatch(asObject(*spriteBatch, "spriteBatch"));
   }
 
   if (const auto *children = find(object, "children")) {
@@ -716,6 +750,14 @@ std::unique_ptr<SceneNode> buildSpriteNode(
   return node;
 }
 
+std::unique_ptr<SceneNode> buildSpriteBatchNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  return std::make_unique<SpriteBatchNode>(
+      description.spriteBatch, context.renderDevice, context.renderResourceCache,
+      parent, context.camera);
+}
+
 std::unique_ptr<SceneNode> buildTextNode(const SceneNodeDescription &description,
                                          SceneBuilderContext context,
                                          SceneNode *parent) {
@@ -797,6 +839,7 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   factory.registerNodeType("CameraNode", buildCameraNode);
   factory.registerNodeType("MeshNode", buildMeshNode);
   factory.registerNodeType("SpriteNode", buildSpriteNode);
+  factory.registerNodeType("SpriteBatchNode", buildSpriteBatchNode);
   factory.registerNodeType("TextNode", buildTextNode);
   factory.registerNodeType("TileMapNode", buildTileMapNode);
   factory.registerNodeType("PlaneNode", buildPlaneNode);

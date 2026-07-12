@@ -8,6 +8,7 @@
 #include "renderresourcecache.h"
 #include "scenenode.h"
 #include "shapevisualizer.h"
+#include "spritebatchvisualizer.h"
 #include "tilemapvisualizer.h"
 #include <filesystem>
 #include <functional>
@@ -56,6 +57,7 @@ struct SceneNodeDescription {
   glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
   PhongMaterial material;
   MeshVisualizerSettings visualizerSettings;
+  SpriteBatchConfig spriteBatch;
   TileMapConfig tileMap;
   std::optional<SceneAnimationDescription> animation;
   std::vector<SceneNodeDescription> children;

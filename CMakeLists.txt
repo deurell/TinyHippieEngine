@@ -66,6 +66,8 @@ add_executable(tiny_hippie_engine
         source/phongshapenode.h source/phongshapenode.cpp
         source/shapegeometry.h source/shapegeometry.cpp
         source/shapevisualizer.h source/shapevisualizer.cpp
+        source/spritebatchnode.h source/spritebatchnode.cpp
+        source/spritebatchvisualizer.h source/spritebatchvisualizer.cpp
         source/spritenode.h source/spritenode.cpp
         source/spritevisualizer.h source/spritevisualizer.cpp
         source/textnode.h source/textnode.cpp
@@ -281,6 +283,8 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/scenenode.cpp
             source/shapegeometry.cpp
             source/shapevisualizer.cpp
+            source/spritebatchnode.cpp
+            source/spritebatchvisualizer.cpp
             source/spritenode.cpp
             source/spritevisualizer.cpp
             source/stb_image.cpp

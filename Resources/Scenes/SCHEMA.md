@@ -43,6 +43,8 @@ dimensions.
   source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
   `flipDiagonal` mirror/swap the selected region for Tiled-style atlas
   transforms; optional `billboard` makes it face the scene camera each frame.
+- `SpriteBatchNode`: uses `spriteBatch` to render many static atlas sprites
+  from one image as one mesh/draw command.
 - `TextNode`: uses `text`; optional `alignment` (`Left`, `Center`, `Right`),
   optional `anchor` (`TopLeft`, `TopCenter`, `TopRight`, `CenterLeft`,
   `Center`, `CenterRight`, `BottomLeft`, `BottomCenter`, `BottomRight`), and
@@ -113,6 +115,37 @@ and occasional atlas regions. Use `TileMapNode` for dense tile maps.
 `sourceRect` uses top-left image coordinates in pixels. Omit it to render the
 full image.
 
+## SpriteBatchNode
+
+`SpriteBatchNode` renders many static quads from one image. Use it for dense
+retro props, atlas decoration, pickups, foliage, signs, and other static sprite
+sets that should batch together. Use `SpriteNode` for one-off independently
+controlled sprites.
+
+```json
+{
+  "type": "SpriteBatchNode",
+  "spriteBatch": {
+    "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+    "sprites": [
+      {
+        "position": [0.0, 0.0, 0.0],
+        "size": [0.5, 0.5],
+        "rotationDegrees": 0.0,
+        "sourceRect": [32.0, 48.0, 16.0, 16.0],
+        "flipX": false,
+        "flipY": false,
+        "flipDiagonal": false
+      }
+    ]
+  }
+}
+```
+
+Each sprite `position` is local to the batch node. `size` is in scene units.
+`sourceRect` uses top-left image coordinates in pixels. Omit `sourceRect` to
+use the full image for that sprite.
+
 ## TileMapNode
 
 ```json
@@ -141,10 +174,40 @@ full image.
 `data` is row-major and may include Tiled flip bits. `0` means no tile.
 `firstGid` is the first Tiled global tile ID for the tileset used by the map.
 
+## TextNode
+
+```json
+{
+  "type": "TextNode",
+  "text": "Sample",
+  "alignment": "Center",
+  "anchor": "BottomCenter",
+  "fontSize": 42.0,
+  "textColor": [1.0, 1.0, 1.0, 1.0],
+  "shadowColor": [0.0, 0.0, 0.0, 0.58],
+  "shadowOffset": [1.5, -1.5],
+  "billboard": true
+}
+```
+
+## PlaneNode
+
+```json
+{
+  "type": "PlaneNode",
+  "plane": "Simple",
+  "color": [0.2, 0.45, 0.8, 1.0]
+}
+```
+
+`plane` may be `Simple` or `Spinner`.
+
 ## PhongShapeNode Material
 
 ```json
 {
+  "type": "PhongShapeNode",
+  "shape": "Cube",
   "material": {
     "diffuse": [0.8, 0.8, 0.8],
     "ambient": [0.25, 0.25, 0.25],
@@ -153,3 +216,17 @@ full image.
   }
 }
 ```
+
+`shape` may be `Cube`, `Sphere`, or `Cylinder`.
+
+## ParticleSystemNode
+
+```json
+{
+  "type": "ParticleSystemNode",
+  "particle": "WaterFountain",
+  "billboard": false
+}
+```
+
+`particle` may be `Default`, `SoftGlowBurst`, or `WaterFountain`.

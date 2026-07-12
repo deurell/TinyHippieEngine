@@ -27,9 +27,10 @@ Precedence:
   `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
-  `SpriteNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
-  `ParticleSystemNode`; `SpriteNode` supports atlas `sourceRect`, `flipX`,
-  `flipY`, and `flipDiagonal`.
+  `SpriteNode`, `SpriteBatchNode`, `TextNode`, `TileMapNode`, `PlaneNode`,
+  `PhongShapeNode`, and `ParticleSystemNode`; `SpriteNode` supports atlas
+  `sourceRect`, `flipX`, `flipY`, and `flipDiagonal`, and `SpriteBatchNode`
+  batches many static atlas sprites from one image.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
   `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`,

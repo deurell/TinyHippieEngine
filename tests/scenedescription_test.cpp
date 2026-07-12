@@ -73,6 +73,28 @@ constexpr char kSceneSource[] = R"json(
           "billboard": true
         },
         {
+          "name": "sprite_batch_child",
+          "type": "SpriteBatchNode",
+          "spriteBatch": {
+            "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+            "sprites": [
+              {
+                "position": [1.0, 2.0, 0.1],
+                "size": [0.5, 0.75],
+                "rotationDegrees": 15.0,
+                "sourceRect": [16.0, 32.0, 16.0, 16.0],
+                "flipY": true
+              },
+              {
+                "position": [-1.0, 0.0, 0.2],
+                "size": [1.0, 1.0],
+                "sourceRect": [32.0, 48.0, 16.0, 16.0],
+                "flipDiagonal": true
+              }
+            ]
+          }
+        },
+        {
           "name": "text_child",
           "type": "TextNode",
           "text": "hello",
@@ -168,7 +190,7 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.type, "SceneNode");
   EXPECT_EQ(root.position, glm::vec3(1.0f, 2.0f, 3.0f));
   EXPECT_EQ(root.scale, glm::vec3(2.0f, 2.0f, 2.0f));
-  ASSERT_EQ(root.children.size(), 7u);
+  ASSERT_EQ(root.children.size(), 8u);
 
   EXPECT_EQ(root.children[0].type, "CameraNode");
   EXPECT_TRUE(root.children[0].active);
@@ -200,16 +222,30 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_FALSE(root.children[4].flipY);
   EXPECT_TRUE(root.children[4].flipDiagonal);
   EXPECT_TRUE(root.children[4].billboard);
-  EXPECT_EQ(root.children[5].text, "hello");
-  EXPECT_EQ(root.children[5].textAlignment, "Center");
-  EXPECT_EQ(root.children[5].textAnchor, "BottomCenter");
-  EXPECT_FLOAT_EQ(root.children[5].fontSize, 56.0f);
-  EXPECT_EQ(root.children[5].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
-  EXPECT_EQ(root.children[5].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
-  EXPECT_EQ(root.children[5].shadowOffset, glm::vec2(2.0f, -2.0f));
-  EXPECT_TRUE(root.children[5].billboard);
-  EXPECT_EQ(root.children[6].particle, "WaterFountain");
+  EXPECT_EQ(root.children[5].type, "SpriteBatchNode");
+  EXPECT_EQ(root.children[5].spriteBatch.imagePath,
+            "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
+  ASSERT_EQ(root.children[5].spriteBatch.sprites.size(), 2u);
+  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].position,
+            glm::vec3(1.0f, 2.0f, 0.1f));
+  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].size,
+            glm::vec2(0.5f, 0.75f));
+  EXPECT_FLOAT_EQ(root.children[5].spriteBatch.sprites[0].rotationDegrees,
+                  15.0f);
+  EXPECT_EQ(root.children[5].spriteBatch.sprites[0].sourceRectPixels,
+            glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
+  EXPECT_TRUE(root.children[5].spriteBatch.sprites[0].flipY);
+  EXPECT_TRUE(root.children[5].spriteBatch.sprites[1].flipDiagonal);
+  EXPECT_EQ(root.children[6].text, "hello");
+  EXPECT_EQ(root.children[6].textAlignment, "Center");
+  EXPECT_EQ(root.children[6].textAnchor, "BottomCenter");
+  EXPECT_FLOAT_EQ(root.children[6].fontSize, 56.0f);
+  EXPECT_EQ(root.children[6].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
+  EXPECT_EQ(root.children[6].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+  EXPECT_EQ(root.children[6].shadowOffset, glm::vec2(2.0f, -2.0f));
   EXPECT_TRUE(root.children[6].billboard);
+  EXPECT_EQ(root.children[7].particle, "WaterFountain");
+  EXPECT_TRUE(root.children[7].billboard);
 }
 
 TEST(SceneDescriptionTest, BuildsRuntimeNodeTree) {
@@ -251,6 +287,7 @@ TEST(SceneDescriptionTest, DefaultFactoryRegistersEngineNodeTypes) {
   EXPECT_TRUE(factory.hasNodeType("CameraNode"));
   EXPECT_TRUE(factory.hasNodeType("MeshNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteNode"));
+  EXPECT_TRUE(factory.hasNodeType("SpriteBatchNode"));
   EXPECT_TRUE(factory.hasNodeType("TextNode"));
   EXPECT_TRUE(factory.hasNodeType("TileMapNode"));
   EXPECT_TRUE(factory.hasNodeType("PlaneNode"));

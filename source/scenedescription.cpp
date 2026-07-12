@@ -6,6 +6,7 @@
 #include "particlesystemnode.h"
 #include "phongshapenode.h"
 #include "planenode.h"
+#include "spriteanimationnode.h"
 #include "spritebatchnode.h"
 #include "spritenode.h"
 #include "textnode.h"
@@ -320,6 +321,13 @@ float floatOr(const JsonValue::Object &object, std::string_view key,
   throw std::runtime_error(std::string(key) + " must be a number");
 }
 
+float numberAsFloat(const JsonValue &value, std::string_view context) {
+  if (const auto *number = std::get_if<double>(&value.value)) {
+    return static_cast<float>(*number);
+  }
+  throw std::runtime_error(std::string(context) + " must be a number");
+}
+
 std::uint32_t uint32Or(const JsonValue::Object &object, std::string_view key,
                        std::uint32_t fallback) {
   const JsonValue *value = find(object, key);
@@ -546,6 +554,36 @@ SpriteBatchConfig parseSpriteBatch(const JsonValue::Object &object) {
   return config;
 }
 
+SceneSpriteAnimationDescription
+parseSpriteAnimation(const JsonValue::Object &object) {
+  SceneSpriteAnimationDescription animation;
+  animation.fps = floatOr(object, "fps", animation.fps);
+  animation.playing = boolOr(object, "playing", animation.playing);
+  animation.looping = boolOr(object, "looping", animation.looping);
+
+  const auto *frames = find(object, "frames");
+  if (frames == nullptr) {
+    return animation;
+  }
+
+  for (const auto &frameValue : asArray(*frames, "sprite animation frames")) {
+    const auto &frameArray = asArray(frameValue, "sprite animation frame");
+    if (frameArray.size() != 4u) {
+      throw std::runtime_error(
+          "sprite animation frame must contain four numbers");
+    }
+    SceneSpriteAnimationFrameDescription frame;
+    frame.sourceRect = {
+        numberAsFloat(frameArray[0], "sprite animation frame x"),
+        numberAsFloat(frameArray[1], "sprite animation frame y"),
+        numberAsFloat(frameArray[2], "sprite animation frame width"),
+        numberAsFloat(frameArray[3], "sprite animation frame height")};
+    animation.frames.push_back(frame);
+  }
+
+  return animation;
+}
+
 SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   const auto &object = asObject(value, "node");
 
@@ -616,6 +654,11 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   if (const auto *spriteBatch = find(object, "spriteBatch")) {
     description.spriteBatch =
         parseSpriteBatch(asObject(*spriteBatch, "spriteBatch"));
+  }
+
+  if (const auto *spriteAnimation = find(object, "spriteAnimation")) {
+    description.spriteAnimation =
+        parseSpriteAnimation(asObject(*spriteAnimation, "spriteAnimation"));
   }
 
   if (const auto *children = find(object, "children")) {
@@ -793,6 +836,30 @@ std::unique_ptr<SceneNode> buildSpriteNode(
   return node;
 }
 
+std::unique_ptr<SceneNode> buildSpriteAnimationNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  auto node = std::make_unique<SpriteAnimationNode>(
+      description.image, context.codeBook, context.renderDevice,
+      context.renderResourceCache, parent, context.camera);
+  node->setBillboardEnabled(description.billboard);
+  node->setAtlasSourceRectPixels(description.sourceRect);
+  node->setAtlasFlip(description.flipX, description.flipY,
+                     description.flipDiagonal);
+
+  SpriteAnimationConfig config;
+  config.fps = description.spriteAnimation.fps;
+  config.playing = description.spriteAnimation.playing;
+  config.looping = description.spriteAnimation.looping;
+  config.frames.reserve(description.spriteAnimation.frames.size());
+  for (const SceneSpriteAnimationFrameDescription &frame :
+       description.spriteAnimation.frames) {
+    config.frames.push_back({.sourceRectPixels = frame.sourceRect});
+  }
+  node->setAnimation(std::move(config));
+  return node;
+}
+
 std::unique_ptr<SceneNode> buildSpriteBatchNode(
     const SceneNodeDescription &description, SceneBuilderContext context,
     SceneNode *parent) {
@@ -883,6 +950,7 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   factory.registerNodeType("LightNode", buildLightNode);
   factory.registerNodeType("MeshNode", buildMeshNode);
   factory.registerNodeType("SpriteNode", buildSpriteNode);
+  factory.registerNodeType("SpriteAnimationNode", buildSpriteAnimationNode);
   factory.registerNodeType("SpriteBatchNode", buildSpriteBatchNode);
   factory.registerNodeType("TextNode", buildTextNode);
   factory.registerNodeType("TileMapNode", buildTileMapNode);

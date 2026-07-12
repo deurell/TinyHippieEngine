@@ -230,6 +230,28 @@
       }
     },
     {
+      "name": "sprite_animation_magic_torch",
+      "type": "SpriteAnimationNode",
+      "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+      "billboard": true,
+      "spriteAnimation": {
+        "fps": 5.0,
+        "playing": true,
+        "looping": true,
+        "frames": [
+          [128.0, 160.0, 16.0, 16.0],
+          [144.0, 160.0, 16.0, 16.0],
+          [160.0, 160.0, 16.0, 16.0],
+          [144.0, 160.0, 16.0, 16.0]
+        ]
+      },
+      "transform": {
+        "position": [5.35, 0.58, -1.78],
+        "rotationEuler": [0.0, -28.0, 0.0],
+        "scale": [0.48, 0.48, 0.48]
+      }
+    },
+    {
       "name": "sprite_batch_cluster",
       "type": "SpriteBatchNode",
       "spriteBatch": {
@@ -403,7 +425,7 @@
     {
       "name": "sprite_sample_label",
       "type": "TextNode",
-      "text": "SpriteNode + Batch",
+      "text": "SpriteNode + Animation + Batch",
       "alignment": "Center",
       "anchor": "BottomCenter",
       "fontSize": 50.0,

@@ -1,6 +1,7 @@
 #include "scenedescription.h"
 
 #include "meshnode.h"
+#include "spriteanimationnode.h"
 #include <algorithm>
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -106,6 +107,22 @@ constexpr char kSceneSource[] = R"json(
           }
         },
         {
+          "name": "sprite_animation_child",
+          "type": "SpriteAnimationNode",
+          "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+          "billboard": true,
+          "spriteAnimation": {
+            "fps": 6.0,
+            "playing": true,
+            "looping": false,
+            "frames": [
+              [0.0, 32.0, 16.0, 16.0],
+              [16.0, 32.0, 16.0, 16.0],
+              [32.0, 32.0, 16.0, 16.0]
+            ]
+          }
+        },
+        {
           "name": "text_child",
           "type": "TextNode",
           "text": "hello",
@@ -201,7 +218,7 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.type, "SceneNode");
   EXPECT_EQ(root.position, glm::vec3(1.0f, 2.0f, 3.0f));
   EXPECT_EQ(root.scale, glm::vec3(2.0f, 2.0f, 2.0f));
-  ASSERT_EQ(root.children.size(), 9u);
+  ASSERT_EQ(root.children.size(), 10u);
 
   EXPECT_EQ(root.children[0].type, "CameraNode");
   EXPECT_TRUE(root.children[0].active);
@@ -255,16 +272,26 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
             glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
   EXPECT_TRUE(root.children[6].spriteBatch.sprites[0].flipY);
   EXPECT_TRUE(root.children[6].spriteBatch.sprites[1].flipDiagonal);
-  EXPECT_EQ(root.children[7].text, "hello");
-  EXPECT_EQ(root.children[7].textAlignment, "Center");
-  EXPECT_EQ(root.children[7].textAnchor, "BottomCenter");
-  EXPECT_FLOAT_EQ(root.children[7].fontSize, 56.0f);
-  EXPECT_EQ(root.children[7].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
-  EXPECT_EQ(root.children[7].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
-  EXPECT_EQ(root.children[7].shadowOffset, glm::vec2(2.0f, -2.0f));
+  EXPECT_EQ(root.children[7].type, "SpriteAnimationNode");
+  EXPECT_EQ(root.children[7].image,
+            "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
   EXPECT_TRUE(root.children[7].billboard);
-  EXPECT_EQ(root.children[8].particle, "WaterFountain");
+  EXPECT_FLOAT_EQ(root.children[7].spriteAnimation.fps, 6.0f);
+  EXPECT_TRUE(root.children[7].spriteAnimation.playing);
+  EXPECT_FALSE(root.children[7].spriteAnimation.looping);
+  ASSERT_EQ(root.children[7].spriteAnimation.frames.size(), 3u);
+  EXPECT_EQ(root.children[7].spriteAnimation.frames[1].sourceRect,
+            glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
+  EXPECT_EQ(root.children[8].text, "hello");
+  EXPECT_EQ(root.children[8].textAlignment, "Center");
+  EXPECT_EQ(root.children[8].textAnchor, "BottomCenter");
+  EXPECT_FLOAT_EQ(root.children[8].fontSize, 56.0f);
+  EXPECT_EQ(root.children[8].textColor, glm::vec4(1.0f, 0.95f, 0.82f, 1.0f));
+  EXPECT_EQ(root.children[8].shadowColor, glm::vec4(0.0f, 0.0f, 0.0f, 0.65f));
+  EXPECT_EQ(root.children[8].shadowOffset, glm::vec2(2.0f, -2.0f));
   EXPECT_TRUE(root.children[8].billboard);
+  EXPECT_EQ(root.children[9].particle, "WaterFountain");
+  EXPECT_TRUE(root.children[9].billboard);
 }
 
 TEST(SceneDescriptionTest, BuildsRuntimeNodeTree) {
@@ -284,6 +311,27 @@ TEST(SceneDescriptionTest, BuildsRuntimeNodeTree) {
   EXPECT_NE(dynamic_cast<MeshNode *>(child), nullptr);
   EXPECT_EQ(child->getLocalPosition(), glm::vec3(0.5f, 0.0f, 0.0f));
   EXPECT_EQ(child->getLocalScale(), glm::vec3(0.5f, 0.5f, 0.5f));
+}
+
+TEST(SceneDescriptionTest, SpriteAnimationNodeAdvancesAtlasFrames) {
+  SpriteAnimationNode node("atlas.png", nullptr, nullptr);
+  node.setAnimation(SpriteAnimationConfig{
+      .frames = {{.sourceRectPixels = {0.0f, 0.0f, 16.0f, 16.0f}},
+                 {.sourceRectPixels = {16.0f, 0.0f, 16.0f, 16.0f}},
+                 {.sourceRectPixels = {32.0f, 0.0f, 16.0f, 16.0f}}},
+      .fps = 4.0f,
+      .playing = true,
+      .looping = true});
+
+  EXPECT_EQ(node.currentFrameIndex(), 0u);
+  EXPECT_EQ(node.atlasSourceRectPixels(),
+            glm::vec4(0.0f, 0.0f, 16.0f, 16.0f));
+
+  node.fixedUpdate(DL::FrameContext{.delta_time = 0.25f});
+
+  EXPECT_EQ(node.currentFrameIndex(), 1u);
+  EXPECT_EQ(node.atlasSourceRectPixels(),
+            glm::vec4(16.0f, 0.0f, 16.0f, 16.0f));
 }
 
 TEST(SceneDescriptionTest, PlaneNodeKeepsAuthoredTransformAfterInit) {
@@ -307,6 +355,7 @@ TEST(SceneDescriptionTest, DefaultFactoryRegistersEngineNodeTypes) {
   EXPECT_TRUE(factory.hasNodeType("LightNode"));
   EXPECT_TRUE(factory.hasNodeType("MeshNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteNode"));
+  EXPECT_TRUE(factory.hasNodeType("SpriteAnimationNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteBatchNode"));
   EXPECT_TRUE(factory.hasNodeType("TextNode"));
   EXPECT_TRUE(factory.hasNodeType("TileMapNode"));
@@ -363,6 +412,14 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
                                               "retro-crystal-terminal.png";
                                  }),
             scene.nodes.end());
+  const auto spriteAnimation =
+      std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
+        return node.name == "sprite_animation_magic_torch" &&
+               node.type == "SpriteAnimationNode";
+      });
+  ASSERT_NE(spriteAnimation, scene.nodes.end());
+  EXPECT_EQ(spriteAnimation->spriteAnimation.frames.size(), 4u);
+  EXPECT_FLOAT_EQ(spriteAnimation->spriteAnimation.fps, 5.0f);
   const auto spriteBatch =
       std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
         return node.name == "sprite_batch_cluster" &&

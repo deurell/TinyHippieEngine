@@ -45,6 +45,8 @@ dimensions.
   source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
   `flipDiagonal` mirror/swap the selected region for Tiled-style atlas
   transforms; optional `billboard` makes it face the scene camera each frame.
+- `SpriteAnimationNode`: uses `image` and `spriteAnimation` to play atlas-frame
+  animation by changing the active source rectangle during `fixedUpdate()`.
 - `SpriteBatchNode`: uses `spriteBatch` to render many static atlas sprites
   from one image as one mesh/draw command.
 - `TextNode`: uses `text`; optional `alignment` (`Left`, `Center`, `Right`),
@@ -138,6 +140,32 @@ and occasional atlas regions. Use `TileMapNode` for dense tile maps.
 
 `sourceRect` uses top-left image coordinates in pixels. Omit it to render the
 full image.
+
+## SpriteAnimationNode
+
+`SpriteAnimationNode` renders one quad like `SpriteNode`, but advances through
+atlas frame rectangles during `fixedUpdate()`. Use it for simple retro
+characters, torches, pickups, signs, and other hand-authored frame animation.
+
+```json
+{
+  "type": "SpriteAnimationNode",
+  "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+  "billboard": true,
+  "spriteAnimation": {
+    "fps": 8.0,
+    "playing": true,
+    "looping": true,
+    "frames": [
+      [0.0, 32.0, 16.0, 16.0],
+      [16.0, 32.0, 16.0, 16.0],
+      [32.0, 32.0, 16.0, 16.0]
+    ]
+  }
+}
+```
+
+Each frame is `[x, y, width, height]` in top-left image pixel coordinates.
 
 ## SpriteBatchNode
 

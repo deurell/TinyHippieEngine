@@ -37,6 +37,17 @@ struct SceneLightDescription {
   std::optional<glm::vec3> direction;
 };
 
+struct SceneSpriteAnimationFrameDescription {
+  glm::vec4 sourceRect{0.0f, 0.0f, -1.0f, -1.0f};
+};
+
+struct SceneSpriteAnimationDescription {
+  std::vector<SceneSpriteAnimationFrameDescription> frames;
+  float fps = 8.0f;
+  bool playing = true;
+  bool looping = true;
+};
+
 struct SceneNodeDescription {
   std::string name = "node";
   std::string type = "SceneNode";
@@ -69,6 +80,7 @@ struct SceneNodeDescription {
   MeshVisualizerSettings visualizerSettings;
   SpriteBatchConfig spriteBatch;
   TileMapConfig tileMap;
+  SceneSpriteAnimationDescription spriteAnimation;
   std::optional<SceneAnimationDescription> animation;
   std::vector<SceneNodeDescription> children;
 };

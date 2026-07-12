@@ -280,6 +280,9 @@ void drawFrameStatsOverlay(double frameTimeSeconds,
     ImGui::Separator();
     ImGui::Text("Draw calls %u", renderStats.drawCalls);
     ImGui::Text("Triangles %u", renderStats.triangles);
+    ImGui::Text("Pipeline switches %u", renderStats.pipelineSwitches);
+    ImGui::Text("Texture binds %u", renderStats.textureBinds);
+    ImGui::Text("Mesh binds %u", renderStats.meshBinds);
     ImGui::Text("Cached meshes %u", renderStats.meshCount);
     ImGui::Text("Cached textures %u", renderStats.textureCount);
     ImGui::Text("Cached shader programs %u", renderStats.pipelineCount);
@@ -335,6 +338,9 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
     if (ImGui::CollapsingHeader("Rendering", sectionFlags)) {
       ImGui::Text("Draw calls %u", renderStats.drawCalls);
       ImGui::Text("Triangles %u", renderStats.triangles);
+      ImGui::Text("Pipeline switches %u", renderStats.pipelineSwitches);
+      ImGui::Text("Texture binds %u", renderStats.textureBinds);
+      ImGui::Text("Mesh binds %u", renderStats.meshBinds);
       ImGui::Text("Meshes %u", renderStats.meshCount);
       ImGui::Text("Textures %u", renderStats.textureCount);
       ImGui::Text("Pipelines %u", renderStats.pipelineCount);

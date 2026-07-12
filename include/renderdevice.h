@@ -187,6 +187,9 @@ struct DrawCommand {
 struct RenderStats {
   std::uint32_t drawCalls = 0;
   std::uint32_t triangles = 0;
+  std::uint32_t pipelineSwitches = 0;
+  std::uint32_t textureBinds = 0;
+  std::uint32_t meshBinds = 0;
   std::uint32_t meshCount = 0;
   std::uint32_t textureCount = 0;
   std::uint32_t pipelineCount = 0;

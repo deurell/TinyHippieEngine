@@ -335,9 +335,24 @@ public:
     return storeResource<PipelineHandle>(std::move(shader), pipelines_);
   }
 
-  void destroy(MeshHandle handle) override { meshes_.erase(handle.value); }
-  void destroy(TextureHandle handle) override { textures_.erase(handle.value); }
-  void destroy(PipelineHandle handle) override { pipelines_.erase(handle.value); }
+  void destroy(MeshHandle handle) override {
+    if (currentMesh_ == handle.value) {
+      currentMesh_ = 0;
+    }
+    meshes_.erase(handle.value);
+  }
+  void destroy(TextureHandle handle) override {
+    if (currentTexture_ == handle.value) {
+      currentTexture_ = 0;
+    }
+    textures_.erase(handle.value);
+  }
+  void destroy(PipelineHandle handle) override {
+    if (currentPipeline_ == handle.value) {
+      currentPipeline_ = 0;
+    }
+    pipelines_.erase(handle.value);
+  }
   void destroy(RenderTargetHandle handle) override {
     const auto it = renderTargets_.find(handle.value);
     if (it == renderTargets_.end()) {
@@ -391,10 +406,16 @@ public:
     if (!frameInProgress_) {
       frameStats_.drawCalls = 0;
       frameStats_.triangles = 0;
+      frameStats_.pipelineSwitches = 0;
+      frameStats_.textureBinds = 0;
+      frameStats_.meshBinds = 0;
       frameStats_.meshCount = static_cast<std::uint32_t>(meshes_.size());
       frameStats_.textureCount = static_cast<std::uint32_t>(textures_.size());
       frameStats_.pipelineCount =
           static_cast<std::uint32_t>(pipelines_.size());
+      currentMesh_ = 0;
+      currentTexture_ = 0;
+      currentPipeline_ = 0;
       frameInProgress_ = true;
     } else {
       flushSortedCommands();
@@ -488,7 +509,11 @@ private:
     frameStats_.triangles +=
         static_cast<std::uint32_t>(mesh.index_count >= 3 ? mesh.index_count / 3
                                                          : 0);
-    pipeline.use();
+    if (currentPipeline_ != command.pipeline.value) {
+      pipeline.use();
+      currentPipeline_ = command.pipeline.value;
+      frameStats_.pipelineSwitches += 1;
+    }
 
     if (!command.depthTest) {
       glDisable(GL_DEPTH_TEST);
@@ -508,8 +533,12 @@ private:
     if (command.texture.valid()) {
       auto texture_it = textures_.find(command.texture.value);
       if (texture_it != textures_.end()) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture_it->second->id);
+        if (currentTexture_ != command.texture.value) {
+          glActiveTexture(GL_TEXTURE0);
+          glBindTexture(GL_TEXTURE_2D, texture_it->second->id);
+          currentTexture_ = command.texture.value;
+          frameStats_.textureBinds += 1;
+        }
         pipeline.setInt("texture0", 0);
         pipeline.setInt("texture1", 0);
       }
@@ -537,7 +566,11 @@ private:
       }
     }
 
-    glBindVertexArray(mesh.vao);
+    if (currentMesh_ != command.mesh.value) {
+      glBindVertexArray(mesh.vao);
+      currentMesh_ = command.mesh.value;
+      frameStats_.meshBinds += 1;
+    }
     const GLenum primitive =
         mesh.primitiveType == PrimitiveType::Lines ? GL_LINES : GL_TRIANGLES;
     if (mesh.primitiveType == PrimitiveType::Lines) {
@@ -547,8 +580,6 @@ private:
     if (mesh.primitiveType == PrimitiveType::Lines) {
       glLineWidth(1.0f);
     }
-    glBindVertexArray(0);
-
     if (!command.depthTest && currentDepthTestEnabled_) {
       glEnable(GL_DEPTH_TEST);
     }
@@ -613,6 +644,9 @@ private:
   RenderPassId currentPass_ = RenderPassId::Opaque;
   bool currentDepthTestEnabled_ = false;
   bool frameInProgress_ = false;
+  std::size_t currentMesh_ = 0;
+  std::size_t currentTexture_ = 0;
+  std::size_t currentPipeline_ = 0;
   std::vector<DrawCommand> sortedCommands_;
 };
 

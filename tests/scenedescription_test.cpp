@@ -334,6 +334,15 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
                                               "retro-crystal-terminal.png";
                                  }),
             scene.nodes.end());
+  const auto spriteBatch =
+      std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
+        return node.name == "sprite_batch_cluster" &&
+               node.type == "SpriteBatchNode";
+      });
+  ASSERT_NE(spriteBatch, scene.nodes.end());
+  EXPECT_EQ(spriteBatch->spriteBatch.imagePath,
+            "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png");
+  EXPECT_EQ(spriteBatch->spriteBatch.sprites.size(), 5u);
   const auto hierarchySample =
       std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
         return node.name == "hierarchy_parent" && node.type == "SceneNode";
@@ -342,7 +351,21 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
   EXPECT_EQ(hierarchySample->children.size(), 3u);
   EXPECT_NE(std::ranges::find_if(hierarchySample->children,
                                  [](const DL::SceneNodeDescription &node) {
-                                   return node.name == "hierarchy_left_child" &&
+                                   return node.name == "hierarchy_sun" &&
+                                          node.type == "PhongShapeNode";
+                                 }),
+            hierarchySample->children.end());
+  EXPECT_NE(std::ranges::find_if(hierarchySample->children,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name ==
+                                              "hierarchy_planet_orbit" &&
+                                          node.type == "SceneNode" &&
+                                          node.children.size() == 2u;
+                                 }),
+            hierarchySample->children.end());
+  EXPECT_NE(std::ranges::find_if(hierarchySample->children,
+                                 [](const DL::SceneNodeDescription &node) {
+                                   return node.name == "hierarchy_stand" &&
                                           node.type == "PhongShapeNode";
                                  }),
             hierarchySample->children.end());

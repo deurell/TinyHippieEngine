@@ -157,15 +157,15 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
   config.emission.direction = {0.0f, 1.0f, 0.0f};
   config.emission.coneAngle = glm::radians(18.0f);
 
-  config.motion.gravity = {0.0f, -19.0f, 0.0f};
+  config.motion.gravity = {0.0f, -15.0f, 0.0f};
   config.motion.drag = 0.04f;
-  config.motion.speedMin = 11.0f;
-  config.motion.speedMax = 15.0f;
+  config.motion.speedMin = 9.0f;
+  config.motion.speedMax = 12.0f;
   config.motion.angularSpeedMin = glm::radians(-40.0f);
   config.motion.angularSpeedMax = glm::radians(40.0f);
 
-  config.life.min = 1.2f;
-  config.life.max = 2.8f;
+  config.life.min = 0.65f;
+  config.life.max = 1.15f;
 
   config.appearance.startSize = {0.42f, 0.56f, 0.42f};
   config.appearance.endSize = {1.2f, 1.32f, 1.2f};

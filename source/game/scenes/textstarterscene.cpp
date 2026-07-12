@@ -57,6 +57,21 @@ void TextStarterScene::fixedUpdate(const DL::FrameContext &ctx) {
     heroYawRadians_ += ctx.delta_time * 0.45f;
     hero_->setLocalRotation(glm::quat(glm::vec3(0.0f, heroYawRadians_, 0.0f)));
   }
+  if (hierarchyPlanetOrbit_ != nullptr) {
+    planetOrbitRadians_ += ctx.delta_time * 0.7f;
+    hierarchyPlanetOrbit_->setLocalRotation(
+        glm::quat(glm::vec3(0.0f, planetOrbitRadians_, 0.0f)));
+  }
+  if (hierarchyMoonOrbit_ != nullptr) {
+    moonOrbitRadians_ += ctx.delta_time * 2.2f;
+    hierarchyMoonOrbit_->setLocalRotation(
+        glm::quat(glm::vec3(0.0f, moonOrbitRadians_, 0.0f)));
+  }
+  if (hierarchyMoon_ != nullptr) {
+    moonSpinRadians_ += ctx.delta_time * 3.1f;
+    hierarchyMoon_->setLocalRotation(
+        glm::quat(glm::vec3(0.0f, moonSpinRadians_, 0.0f)));
+  }
   SceneNode::fixedUpdate(ctx);
 }
 
@@ -131,6 +146,9 @@ void TextStarterScene::bindRuntimeNodes() {
     throw std::runtime_error(
         "TextStarterScene requires a node named 'hero' for C++ behavior");
   }
+  hierarchyPlanetOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_planet_orbit");
+  hierarchyMoonOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_moon_orbit");
+  hierarchyMoon_ = DL::findSceneNodeByName(*this, "hierarchy_moon");
 }
 
 void TextStarterScene::updateCameraController(const DL::FrameContext &ctx) {

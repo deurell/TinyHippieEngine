@@ -47,7 +47,13 @@ private:
   std::filesystem::path scenePath_;
   DL::CameraNode *activeCameraNode_ = nullptr;
   DL::SceneNode *hero_ = nullptr;
+  DL::SceneNode *hierarchyPlanetOrbit_ = nullptr;
+  DL::SceneNode *hierarchyMoonOrbit_ = nullptr;
+  DL::SceneNode *hierarchyMoon_ = nullptr;
   float heroYawRadians_ = 0.0f;
+  float planetOrbitRadians_ = 0.0f;
+  float moonOrbitRadians_ = 0.0f;
+  float moonSpinRadians_ = 0.0f;
   float cameraYaw_ = 0.0f;
   float cameraPitch_ = 0.0f;
 };

@@ -15,6 +15,9 @@ TEST(ParticleSystemNodeTest, WaterFountainPresetIsVolumetricForSampleScene) {
   EXPECT_GE(config.emission.spread, 0.5f);
   EXPECT_GE(config.emission.spawnRadius, 0.25f);
   EXPECT_GE(config.emission.coneAngle, glm::radians(18.0f));
+  EXPECT_LE(config.life.max, 1.2f);
+  EXPECT_LT(config.motion.speedMax / -config.motion.gravity.y,
+            config.life.max);
   EXPECT_GT(config.render.sparkle, 0.0f);
 }
 

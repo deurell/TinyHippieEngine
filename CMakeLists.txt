@@ -52,6 +52,10 @@ add_executable(tiny_hippie_engine
         source/cameranode.h source/cameranode.cpp
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
+        source/fogoverlaynode.h source/fogoverlaynode.cpp
+        source/fogoverlayvisualizer.h source/fogoverlayvisualizer.cpp
+        source/light2dnode.h source/light2dnode.cpp
+        source/light2dvisualizer.h source/light2dvisualizer.cpp
         source/lightnode.h source/lightnode.cpp
         source/meshasset.h source/meshasset.cpp
         source/meshassetcache.h source/meshassetcache.cpp
@@ -271,6 +275,10 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenedescription_test.cpp
             source/logger.cpp
             source/cameranode.cpp
+            source/fogoverlaynode.cpp
+            source/fogoverlayvisualizer.cpp
+            source/light2dnode.cpp
+            source/light2dvisualizer.cpp
             source/lightnode.cpp
             source/meshasset.cpp
             source/meshnode.cpp

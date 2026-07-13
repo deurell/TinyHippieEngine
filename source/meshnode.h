@@ -28,6 +28,7 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "MeshNode";
   }
+  [[nodiscard]] std::string_view assetPath() const { return assetPath_; }
   void setDebugNormals(bool enabled);
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
   void setVisualizerSettings(const DL::MeshVisualizerSettings &settings);

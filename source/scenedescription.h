@@ -37,6 +37,28 @@ struct SceneLightDescription {
   std::optional<glm::vec3> direction;
 };
 
+struct SceneLight2DDescription {
+  glm::vec4 color{1.0f, 0.62f, 0.22f, 1.0f};
+  float radius = 1.0f;
+  float intensity = 0.55f;
+  float softness = 0.75f;
+  float flickerAmount = 0.0f;
+  float flickerSpeed = 0.0f;
+};
+
+struct SceneFogOverlayDescription {
+  std::string image;
+  glm::vec4 color{0.72f, 0.86f, 0.94f, 0.18f};
+  glm::vec2 tiling{2.0f, 1.4f};
+  glm::vec2 scrollSpeed{0.015f, 0.004f};
+  float alpha = 0.18f;
+  float softness = 0.8f;
+  float secondLayerStrength = 0.45f;
+  glm::vec2 secondLayerScrollSpeed{-0.008f, 0.011f};
+  float pulseAmount = 0.04f;
+  float pulseSpeed = 0.35f;
+};
+
 struct SceneSpriteAnimationFrameDescription {
   glm::vec4 sourceRect{0.0f, 0.0f, -1.0f, -1.0f};
 };
@@ -78,6 +100,8 @@ struct SceneNodeDescription {
   std::optional<glm::vec3> lookAt;
   glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
   SceneLightDescription light;
+  SceneLight2DDescription light2D;
+  SceneFogOverlayDescription fogOverlay;
   PhongMaterial material;
   MeshVisualizerSettings visualizerSettings;
   SpriteBatchConfig spriteBatch;

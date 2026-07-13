@@ -21,6 +21,7 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "TileMapNode";
   }
+  [[nodiscard]] const DL::TileMapConfig &config() const { return config_; }
 
 private:
   void initCamera();

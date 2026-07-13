@@ -47,6 +47,18 @@ public:
   void setChromaticEnabled(bool enabled);
   float chromaticStrength() const;
   void setChromaticStrength(float strength);
+  bool bloomColorGradeEnabled() const;
+  void setBloomColorGradeEnabled(bool enabled);
+  float bloomIntensity() const;
+  void setBloomIntensity(float intensity);
+  float bloomThreshold() const;
+  void setBloomThreshold(float threshold);
+  float colorGradeSaturation() const;
+  void setColorGradeSaturation(float saturation);
+  float colorGradeContrast() const;
+  void setColorGradeContrast(float contrast);
+  float colorGradeWarmth() const;
+  void setColorGradeWarmth(float warmth);
   bool crtEnabled() const;
   void setCrtEnabled(bool enabled);
   float crtScanlineStrength() const;

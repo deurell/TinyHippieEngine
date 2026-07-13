@@ -357,6 +357,8 @@ TEST(SceneDescriptionTest, DefaultFactoryRegistersEngineNodeTypes) {
   EXPECT_TRUE(factory.hasNodeType("SceneNode"));
   EXPECT_TRUE(factory.hasNodeType("CameraNode"));
   EXPECT_TRUE(factory.hasNodeType("LightNode"));
+  EXPECT_TRUE(factory.hasNodeType("Light2DNode"));
+  EXPECT_TRUE(factory.hasNodeType("FogOverlayNode"));
   EXPECT_TRUE(factory.hasNodeType("MeshNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteNode"));
   EXPECT_TRUE(factory.hasNodeType("SpriteAnimationNode"));
@@ -470,7 +472,7 @@ TEST(SceneDescriptionTest, LoadsKenneyPlatformerSceneFile) {
 
   const DL::SceneDescription scene = DL::loadSceneDescription(path);
 
-  EXPECT_EQ(scene.name, "kenney_platformer_glb_spike");
+  EXPECT_EQ(scene.name, "kenney_platformer_glb");
   ASSERT_GE(scene.nodes.size(), 8u);
   EXPECT_NE(std::ranges::find_if(scene.nodes,
                                  [](const DL::SceneNodeDescription &node) {
@@ -506,7 +508,7 @@ TEST(SceneDescriptionTest, LoadsTinyDungeonAtlasSceneFile) {
   const DL::SceneDescription scene = DL::loadSceneDescription(path);
 
   EXPECT_EQ(scene.name, "kenney_tiny_dungeon_atlas_sample");
-  ASSERT_EQ(scene.nodes.size(), 3u);
+  ASSERT_EQ(scene.nodes.size(), 5u);
   EXPECT_EQ(scene.nodes[0].name, "main_camera");
   EXPECT_EQ(scene.nodes[0].type, "CameraNode");
   EXPECT_TRUE(scene.nodes[0].active);
@@ -540,6 +542,22 @@ TEST(SceneDescriptionTest, LoadsTinyDungeonAtlasSceneFile) {
                                   [](const DL::TileMapTile &tile) {
                                     return tile.flipDiagonal;
                                   }));
+
+  const DL::SceneNodeDescription &torchGlow = scene.nodes[3];
+  EXPECT_EQ(torchGlow.name, "torch_glow");
+  EXPECT_EQ(torchGlow.type, "Light2DNode");
+  EXPECT_FLOAT_EQ(torchGlow.light2D.radius, 1.25f);
+  EXPECT_FLOAT_EQ(torchGlow.light2D.intensity, 0.42f);
+  EXPECT_FLOAT_EQ(torchGlow.light2D.flickerAmount, 0.16f);
+
+  const DL::SceneNodeDescription &fogOverlay = scene.nodes[4];
+  EXPECT_EQ(fogOverlay.name, "dungeon_fog");
+  EXPECT_EQ(fogOverlay.type, "FogOverlayNode");
+  EXPECT_EQ(fogOverlay.fogOverlay.image,
+            "Resources/Textures/generated/fog-soft-noise.png");
+  EXPECT_EQ(fogOverlay.fogOverlay.tiling, glm::vec2(2.6f, 1.7f));
+  EXPECT_FLOAT_EQ(fogOverlay.fogOverlay.alpha, 0.14f);
+  EXPECT_FLOAT_EQ(fogOverlay.position.z, 0.95f);
 }
 
 TEST(SceneDescriptionTest, RejectsUnknownNodeTypes) {

@@ -29,6 +29,7 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "SpriteNode";
   }
+  [[nodiscard]] std::string_view imagePath() const { return imagePath_; }
   void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
   [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
   void setAtlasSourceRectPixels(const glm::vec4 &rect);

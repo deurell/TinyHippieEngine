@@ -23,30 +23,34 @@ Precedence:
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
 - Starter app registers the Tiny Dungeon atlas `TextStarterScene` first, then
   the Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
-  then `SkeletalAnimationBlendScene`; physics-enabled builds also register
-  `PhysicsTestScene`.
+  then `SkeletalAnimationBlendScene`;
+  physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
-  `LightNode`, `SpriteNode`, `SpriteAnimationNode`, `SpriteBatchNode`,
-  `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
+  `LightNode`, `Light2DNode`, `SpriteNode`, `SpriteAnimationNode`,
+  `SpriteBatchNode`, `FogOverlayNode`, `TextNode`, `TileMapNode`,
+  `PlaneNode`, `PhongShapeNode`, and
   `ParticleSystemNode`; `CameraNode` supports authored perspective or
   orthographic projection, `LightNode` provides one forward directional light
-  for lit renderers, `SpriteNode` supports atlas `sourceRect`, `flipX`,
-  `flipY`, and `flipDiagonal`, `SpriteAnimationNode` advances atlas frames in
-  `fixedUpdate()`, and `SpriteBatchNode` batches many static atlas sprites from
-  one image.
+  for lit renderers, `Light2DNode` provides additive 2D glows, `SpriteNode`
+  supports atlas `sourceRect`, `flipX`, `flipY`, and `flipDiagonal`,
+  `SpriteAnimationNode` advances atlas frames in `fixedUpdate()`,
+  `SpriteBatchNode` batches many static atlas sprites from one image, and
+  `FogOverlayNode` renders scrolling transparent mist/cloud overlays.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
   `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-l.glb`, `character-q.glb`, `Resources/Textures/texture-l.png`,
   `Resources/Textures/texture-q.png`,
+  `Resources/Textures/generated/fog-soft-noise.png`,
   `Resources/Textures/generated/retro-crystal-terminal.png`,
   `Resources/Kenney/TinyDungeon/`,
   `Resources/Kenney/PlatformerKit/`,
   `Shaders/meshnode.*`,
   `Shaders/colored_line.*`, `Shaders/status.*`, `Shaders/image.*`,
-  `Shaders/tilemap.*`,
+  `Shaders/tilemap.*`, `Shaders/fogoverlay.*`, `Shaders/light2d.frag`,
+  `Shaders/bloom_colorgrade.frag`,
   `Shaders/particle.vert`, `Shaders/particlefx.frag`,
   `Shaders/postprocess.vert`, `Shaders/chromatic_aberration.frag`, and
   `Shaders/crt.frag`.

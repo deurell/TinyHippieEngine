@@ -2009,6 +2009,41 @@
           }
         ]
       }
+    },
+    {
+      "name": "torch_glow",
+      "type": "Light2DNode",
+      "light2D": {
+        "color": [1.0, 0.46, 0.14, 1.0],
+        "radius": 1.25,
+        "intensity": 0.42,
+        "softness": 0.82,
+        "flickerAmount": 0.16,
+        "flickerSpeed": 7.5
+      },
+      "transform": {
+        "position": [0.0, 0.42, 0.72]
+      }
+    },
+    {
+      "name": "dungeon_fog",
+      "type": "FogOverlayNode",
+      "fogOverlay": {
+        "image": "Resources/Textures/generated/fog-soft-noise.png",
+        "color": [0.66, 0.82, 0.9, 1.0],
+        "tiling": [2.6, 1.7],
+        "scrollSpeed": [0.012, 0.004],
+        "alpha": 0.14,
+        "softness": 0.72,
+        "secondLayerStrength": 0.48,
+        "secondLayerScrollSpeed": [-0.006, 0.009],
+        "pulseAmount": 0.035,
+        "pulseSpeed": 0.45
+      },
+      "transform": {
+        "position": [0.0, 0.0, 0.95],
+        "scale": [6.8, 4.2, 1.0]
+      }
     }
   ]
 }

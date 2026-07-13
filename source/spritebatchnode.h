@@ -21,6 +21,7 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "SpriteBatchNode";
   }
+  [[nodiscard]] const DL::SpriteBatchConfig &config() const { return config_; }
 
 private:
   void initCamera();

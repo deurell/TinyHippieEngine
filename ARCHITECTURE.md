@@ -28,20 +28,23 @@ Core pieces:
 Starter content:
 - The app registers the Tiny Dungeon atlas `TextStarterScene` first, then the
   Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
-  then `SkeletalAnimationBlendScene`. Physics-enabled builds also register
-  `PhysicsTestScene`.
+  then `SkeletalAnimationBlendScene`.
+  Physics-enabled builds also register `PhysicsTestScene`.
 - Runtime resources are intentionally minimal:
   `Resources/Scenes/simple_starter.scene.json`,
   `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`, `character-l.glb`,
   `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
   `character-q.glb`, their PNG textures in `Resources/Textures/`,
+  `Resources/Textures/generated/fog-soft-noise.png`,
   `Resources/Textures/generated/retro-crystal-terminal.png`,
   `Resources/Kenney/TinyDungeon/`,
   `Resources/Kenney/PlatformerKit/`,
   `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/status.*`,
-  `Shaders/image.*`, `Shaders/tilemap.*`, `Shaders/particle.vert`,
-  `Shaders/particlefx.frag`, `Shaders/postprocess.vert`,
+  `Shaders/image.*`, `Shaders/tilemap.*`, `Shaders/fogoverlay.*`,
+  `Shaders/light2d.frag`, `Shaders/particle.vert`,
+  `Shaders/bloom_colorgrade.frag`, `Shaders/particlefx.frag`,
+  `Shaders/postprocess.vert`,
   `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
 - `MeshNode` + `MeshVisualizer` are the active node/render component pair.
 
@@ -54,20 +57,23 @@ Current scene representation:
   settings, and animation defaults. C++ scenes bind to named/typed nodes for
   behavior.
 - The default scene node factory supports `SceneNode`, `CameraNode`,
-  `LightNode`, `MeshNode`, `SpriteNode`, `SpriteAnimationNode`,
-  `SpriteBatchNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`,
-  and `ParticleSystemNode`.
+  `LightNode`, `Light2DNode`, `MeshNode`, `SpriteNode`,
+  `SpriteAnimationNode`, `SpriteBatchNode`, `FogOverlayNode`, `TextNode`,
+  `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and `ParticleSystemNode`.
 - `CameraNode` supports perspective and orthographic projection modes from
   scene JSON. Perspective uses `fov`; orthographic uses `orthographicHeight`
   as vertical world-space view size.
 - `LightNode` provides one scene directional light for forward-lit renderers
   (`MeshNode` and `PhongShapeNode`). Unlit renderers ignore it.
+- `Light2DNode` provides authored additive radial glow overlays for 2D scenes.
 - `SpriteNode` supports full-image sprites and atlas regions through
   `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
 - `SpriteAnimationNode` supports fixed-step atlas-frame animation through
   `spriteAnimation.frames`, `fps`, `playing`, and `looping` in scene JSON.
 - `SpriteBatchNode` supports many static atlas-backed sprite quads from one
   image in one mesh/draw command.
+- `FogOverlayNode` supports transparent scrolling texture overlays for mist,
+  clouds, and cloud shadows.
 - `TileMapNode` supports compact atlas-backed orthogonal maps with Tiled-style
   global tile IDs and flip flags.
 - `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into

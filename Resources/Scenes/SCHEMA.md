@@ -41,6 +41,8 @@ dimensions.
   `Orthographic`), `fov`, `orthographicHeight`, and optional `lookAt`.
 - `LightNode`: uses `light` to provide one scene directional light for lit
   renderers (`MeshNode` and `PhongShapeNode`).
+- `Light2DNode`: uses `light2D` to draw an unlit additive radial glow for 2D
+  scenes.
 - `MeshNode`: uses `mesh`, optional `animation`, optional `visualizer`.
 - `SpriteNode`: uses `image`; optional `sourceRect` selects an atlas region in
   source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
@@ -50,6 +52,8 @@ dimensions.
   animation by changing the active source rectangle during `fixedUpdate()`.
 - `SpriteBatchNode`: uses `spriteBatch` to render many static atlas sprites
   from one image as one mesh/draw command.
+- `FogOverlayNode`: uses `fogOverlay` to render a transparent scrolling texture
+  overlay for mist, clouds, or cloud shadows.
 - `TextNode`: uses `text`; optional `alignment` (`Left`, `Center`, `Right`),
   optional `anchor` (`TopLeft`, `TopCenter`, `TopRight`, `CenterLeft`,
   `Center`, `CenterRight`, `BottomLeft`, `BottomCenter`, `BottomRight`), and
@@ -105,6 +109,26 @@ lit renderers only: `MeshNode` and `PhongShapeNode`. Sprites, sprite batches,
 tile maps, text, particles, overlays, and postprocess are unlit.
 
 Omit `direction` to derive the light direction from the node rotation.
+
+## Light2DNode
+
+```json
+{
+  "type": "Light2DNode",
+  "light2D": {
+    "color": [1.0, 0.46, 0.14, 1.0],
+    "radius": 1.25,
+    "intensity": 0.42,
+    "softness": 0.82,
+    "flickerAmount": 0.16,
+    "flickerSpeed": 7.5
+  }
+}
+```
+
+`Light2DNode` renders an additive radial overlay. It is intentionally unlit and
+does not affect sprite, tilemap, mesh, or text shading. Use it for authored
+glows such as torches, magic, and pickups in 2D atlas scenes.
 
 ## MeshNode
 
@@ -203,6 +227,36 @@ controlled sprites.
 Each sprite `position` is local to the batch node. `size` is in scene units.
 `sourceRect` uses top-left image coordinates in pixels. Omit `sourceRect` to
 use the full image for that sprite.
+
+## FogOverlayNode
+
+```json
+{
+  "type": "FogOverlayNode",
+  "fogOverlay": {
+    "image": "Resources/Textures/generated/fog-soft-noise.png",
+    "color": [0.66, 0.82, 0.9, 1.0],
+    "tiling": [2.6, 1.7],
+    "scrollSpeed": [0.012, 0.004],
+    "alpha": 0.14,
+    "softness": 0.72,
+    "secondLayerStrength": 0.48,
+    "secondLayerScrollSpeed": [-0.006, 0.009],
+    "pulseAmount": 0.035,
+    "pulseSpeed": 0.45
+  },
+  "transform": {
+    "position": [0.0, 0.0, 0.95],
+    "scale": [6.8, 4.2, 1.0]
+  }
+}
+```
+
+`FogOverlayNode` renders a textured quad with alpha blending and depth disabled.
+Use `scale` for world-space coverage, `tiling` for texture repeat density,
+`scrollSpeed` for drift, and `alpha` as the main visible opacity control.
+`secondLayerStrength` blends a second scrolling sample from the same texture to
+avoid a single obvious sliding pattern.
 
 ## TileMapNode
 

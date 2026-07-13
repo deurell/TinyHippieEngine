@@ -29,6 +29,8 @@ public:
   }
 
   void setMaterial(const DL::PhongMaterial &material);
+  [[nodiscard]] ShapeType shapeType() const { return shapeType_; }
+  [[nodiscard]] const DL::PhongMaterial &material() const { return material_; }
 
 private:
   void initCamera();

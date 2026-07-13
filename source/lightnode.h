@@ -17,13 +17,19 @@ public:
   }
 
   void setKind(Kind kind) { kind_ = kind; }
+  [[nodiscard]] Kind kind() const { return kind_; }
   void setActive(bool active) { active_ = active; }
+  [[nodiscard]] bool active() const { return active_; }
   void setColor(glm::vec3 color) { color_ = color; }
+  [[nodiscard]] glm::vec3 color() const { return color_; }
   void setIntensity(float intensity) { intensity_ = intensity; }
+  [[nodiscard]] float intensity() const { return intensity_; }
   void setAmbientStrength(float ambientStrength) {
     ambientStrength_ = ambientStrength;
   }
+  [[nodiscard]] float ambientStrength() const { return ambientStrength_; }
   void setDirection(glm::vec3 direction);
+  [[nodiscard]] glm::vec3 direction() { return worldDirection(); }
 
 private:
   glm::vec3 worldDirection();

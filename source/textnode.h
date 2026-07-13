@@ -27,14 +27,21 @@ public:
   }
   DL::Camera &getCamera() { return *camera_; }
   DL::TextVisualizer *getTextVisualizer() const { return textVisualizer_; }
+  [[nodiscard]] std::string_view text() const { return text_; }
   void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
   [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
   void setTextAlignment(DL::TextAlignment alignment);
+  [[nodiscard]] DL::TextAlignment textAlignment() const { return alignment_; }
   void setTextAnchor(DL::TextAnchor anchor);
+  [[nodiscard]] DL::TextAnchor textAnchor() const { return anchor_; }
   void setFontPixelHeight(float pixelHeight) { fontPixelHeight_ = pixelHeight; }
+  [[nodiscard]] float fontPixelHeight() const { return fontPixelHeight_; }
   void setTextColor(glm::vec4 color);
+  [[nodiscard]] glm::vec4 textColor() const { return textColor_; }
   void setShadowColor(glm::vec4 color);
+  [[nodiscard]] glm::vec4 shadowColor() const { return shadowColor_; }
   void setShadowOffset(glm::vec2 offset);
+  [[nodiscard]] glm::vec2 shadowOffset() const { return shadowOffset_; }
 
 private:
   void initCamera();

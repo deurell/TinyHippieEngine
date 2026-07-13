@@ -1,6 +1,8 @@
 #include "scenedescription.h"
 
 #include "cameranode.h"
+#include "fogoverlaynode.h"
+#include "light2dnode.h"
 #include "lightnode.h"
 #include "meshnode.h"
 #include "particlesystemnode.h"
@@ -435,6 +437,40 @@ SceneLightDescription parseLight(const JsonValue::Object &object) {
   return description;
 }
 
+SceneLight2DDescription parseLight2D(const JsonValue::Object &object) {
+  SceneLight2DDescription description;
+  description.color = vec4Or(object, "color", description.color);
+  description.radius = floatOr(object, "radius", description.radius);
+  description.intensity = floatOr(object, "intensity", description.intensity);
+  description.softness = floatOr(object, "softness", description.softness);
+  description.flickerAmount =
+      floatOr(object, "flickerAmount", description.flickerAmount);
+  description.flickerSpeed =
+      floatOr(object, "flickerSpeed", description.flickerSpeed);
+  return description;
+}
+
+SceneFogOverlayDescription parseFogOverlay(const JsonValue::Object &object) {
+  SceneFogOverlayDescription description;
+  description.image = stringOr(object, "image", description.image);
+  description.color = vec4Or(object, "color", description.color);
+  description.tiling = vec2Or(object, "tiling", description.tiling);
+  description.scrollSpeed =
+      vec2Or(object, "scrollSpeed", description.scrollSpeed);
+  description.alpha = floatOr(object, "alpha", description.alpha);
+  description.softness = floatOr(object, "softness", description.softness);
+  description.secondLayerStrength =
+      floatOr(object, "secondLayerStrength", description.secondLayerStrength);
+  description.secondLayerScrollSpeed =
+      vec2Or(object, "secondLayerScrollSpeed",
+             description.secondLayerScrollSpeed);
+  description.pulseAmount =
+      floatOr(object, "pulseAmount", description.pulseAmount);
+  description.pulseSpeed =
+      floatOr(object, "pulseSpeed", description.pulseSpeed);
+  return description;
+}
+
 MeshVisualizerSettings parseVisualizerSettings(const JsonValue::Object &object,
                                                 MeshVisualizerSettings settings) {
   settings.lightDirection =
@@ -651,6 +687,15 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
     description.light = parseLight(asObject(*light, "light"));
   }
 
+  if (const auto *light2D = find(object, "light2D")) {
+    description.light2D = parseLight2D(asObject(*light2D, "light2D"));
+  }
+
+  if (const auto *fogOverlay = find(object, "fogOverlay")) {
+    description.fogOverlay =
+        parseFogOverlay(asObject(*fogOverlay, "fogOverlay"));
+  }
+
   if (const auto *tileMap = find(object, "tileMap")) {
     description.tileMap = parseTileMap(asObject(*tileMap, "tileMap"));
   }
@@ -825,6 +870,21 @@ std::unique_ptr<SceneNode> buildLightNode(
   return node;
 }
 
+std::unique_ptr<SceneNode> buildLight2DNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  Light2DNode::Config config;
+  config.color = description.light2D.color;
+  config.radius = description.light2D.radius;
+  config.intensity = description.light2D.intensity;
+  config.softness = description.light2D.softness;
+  config.flickerAmount = description.light2D.flickerAmount;
+  config.flickerSpeed = description.light2D.flickerSpeed;
+  return std::make_unique<Light2DNode>(
+      config, context.renderDevice, context.renderResourceCache, parent,
+      context.camera);
+}
+
 std::unique_ptr<SceneNode> buildMeshNode(const SceneNodeDescription &description,
                                          SceneBuilderContext context,
                                          SceneNode *parent) {
@@ -878,6 +938,26 @@ std::unique_ptr<SceneNode> buildSpriteBatchNode(
     SceneNode *parent) {
   return std::make_unique<SpriteBatchNode>(
       description.spriteBatch, context.renderDevice, context.renderResourceCache,
+      parent, context.camera);
+}
+
+std::unique_ptr<SceneNode> buildFogOverlayNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  FogOverlayNode::Config config;
+  config.imagePath = description.fogOverlay.image;
+  config.color = description.fogOverlay.color;
+  config.tiling = description.fogOverlay.tiling;
+  config.scrollSpeed = description.fogOverlay.scrollSpeed;
+  config.alpha = description.fogOverlay.alpha;
+  config.softness = description.fogOverlay.softness;
+  config.secondLayerStrength = description.fogOverlay.secondLayerStrength;
+  config.secondLayerScrollSpeed =
+      description.fogOverlay.secondLayerScrollSpeed;
+  config.pulseAmount = description.fogOverlay.pulseAmount;
+  config.pulseSpeed = description.fogOverlay.pulseSpeed;
+  return std::make_unique<FogOverlayNode>(
+      std::move(config), context.renderDevice, context.renderResourceCache,
       parent, context.camera);
 }
 
@@ -961,10 +1041,12 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   factory.registerNodeType("SceneNode", buildPlainNode);
   factory.registerNodeType("CameraNode", buildCameraNode);
   factory.registerNodeType("LightNode", buildLightNode);
+  factory.registerNodeType("Light2DNode", buildLight2DNode);
   factory.registerNodeType("MeshNode", buildMeshNode);
   factory.registerNodeType("SpriteNode", buildSpriteNode);
   factory.registerNodeType("SpriteAnimationNode", buildSpriteAnimationNode);
   factory.registerNodeType("SpriteBatchNode", buildSpriteBatchNode);
+  factory.registerNodeType("FogOverlayNode", buildFogOverlayNode);
   factory.registerNodeType("TextNode", buildTextNode);
   factory.registerNodeType("TileMapNode", buildTileMapNode);
   factory.registerNodeType("PlaneNode", buildPlaneNode);

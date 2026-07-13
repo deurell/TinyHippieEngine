@@ -125,6 +125,97 @@ void DL::App::setChromaticStrength(float strength) {
   }
 }
 
+bool DL::App::bloomColorGradeEnabled() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  return effect != nullptr && effect->enabled;
+}
+
+void DL::App::setBloomColorGradeEnabled(bool enabled) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    effect->enabled = enabled;
+  }
+}
+
+float DL::App::bloomIntensity() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "bloomIntensity")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setBloomIntensity(float intensity) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "bloomIntensity")) {
+      uniform->float_value = intensity;
+    }
+  }
+}
+
+float DL::App::bloomThreshold() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "bloomThreshold")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setBloomThreshold(float threshold) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "bloomThreshold")) {
+      uniform->float_value = threshold;
+    }
+  }
+}
+
+float DL::App::colorGradeSaturation() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeSaturation")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setColorGradeSaturation(float saturation) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeSaturation")) {
+      uniform->float_value = saturation;
+    }
+  }
+}
+
+float DL::App::colorGradeContrast() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeContrast")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setColorGradeContrast(float contrast) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeContrast")) {
+      uniform->float_value = contrast;
+    }
+  }
+}
+
+float DL::App::colorGradeWarmth() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeWarmth")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setColorGradeWarmth(float warmth) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeWarmth")) {
+      uniform->float_value = warmth;
+    }
+  }
+}
+
 bool DL::App::crtEnabled() const {
   const auto *effect = findPostProcessEffect("CRT");
   return effect != nullptr && effect->enabled;
@@ -571,6 +662,22 @@ void DL::App::configureDefaultPostProcessStack() {
   if (!postProcessStack_.effects.empty()) {
     return;
   }
+
+  PostProcessEffect bloomColorGradeEffect;
+  bloomColorGradeEffect.name = "Bloom Color Grade";
+  bloomColorGradeEffect.fragmentShaderPath = "Shaders/bloom_colorgrade.frag";
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("bloomIntensity", 0.08f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("bloomThreshold", 0.82f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeSaturation", 1.04f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeContrast", 1.02f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeWarmth", 0.015f));
+  bloomColorGradeEffect.enabled = false;
+  postProcessStack_.effects.push_back(std::move(bloomColorGradeEffect));
 
   PostProcessEffect chromaticEffect;
   chromaticEffect.name = "Chromatic Aberration";

@@ -35,6 +35,12 @@ public:
     return currentFrameIndex_;
   }
   void setAnimationPlaying(bool playing) { animation_.playing = playing; }
+  void setAnimationLooping(bool looping) { animation_.looping = looping; }
+  void setAnimationFps(float fps) {
+    if (fps > 0.0f) {
+      animation_.fps = fps;
+    }
+  }
 
 private:
   void applyCurrentFrame();

@@ -1,5 +1,6 @@
 build/
 build-nophysics/
+build-physics/
 deps/
 web/
 cmake-build-debug/

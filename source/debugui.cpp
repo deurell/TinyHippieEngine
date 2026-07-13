@@ -377,7 +377,7 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
         app.setCrtVignetteStrength(crtVignetteStrength);
       }
       float crtCurvature = app.crtCurvature();
-      if (ImGui::SliderFloat("CRT curvature", &crtCurvature, 1.0f, 1.2f,
+      if (ImGui::SliderFloat("CRT curvature", &crtCurvature, 0.0f, 1.2f,
                              "%.3f")) {
         app.setCrtCurvature(crtCurvature);
       }

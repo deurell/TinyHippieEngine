@@ -27,9 +27,8 @@ constexpr float kCrtCurveOffset = 0.04f;
 glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
   // Keep in sync with Shaders/crt.frag curve().
   uv = (uv - glm::vec2(0.5f)) * 2.0f;
-  uv *= curvature;
-  uv.x *= 1.0f + std::pow(std::abs(uv.y) / 5.0f, 2.0f);
-  uv.y *= 1.0f + std::pow(std::abs(uv.x) / 4.0f, 2.0f);
+  uv.x *= 1.0f + curvature * std::pow(std::abs(uv.y) / 5.0f, 2.0f);
+  uv.y *= 1.0f + curvature * std::pow(std::abs(uv.x) / 4.0f, 2.0f);
   uv = uv * 0.5f + glm::vec2(0.5f);
   uv = uv * kCrtCurveScale + glm::vec2(kCrtCurveOffset);
   return uv;

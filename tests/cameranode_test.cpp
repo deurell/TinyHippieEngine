@@ -36,3 +36,16 @@ TEST(CameraNodeTest, TranslateLocalMovesAuthoredNodeTransform) {
   EXPECT_NEAR(cameraNode.camera().getPosition().y, 0.0f, 1e-5f);
   EXPECT_NEAR(cameraNode.camera().getPosition().z, 0.0f, 1e-5f);
 }
+
+TEST(CameraNodeTest, ProjectionSettingsUpdateCamera) {
+  DL::CameraNode cameraNode;
+
+  cameraNode.setProjection(DL::CameraProjection::Orthographic);
+  cameraNode.setOrthographicHeight(7.5f);
+
+  EXPECT_EQ(cameraNode.projection(), DL::CameraProjection::Orthographic);
+  EXPECT_FLOAT_EQ(cameraNode.orthographicHeight(), 7.5f);
+  EXPECT_EQ(cameraNode.camera().mProjection,
+            DL::CameraProjection::Orthographic);
+  EXPECT_FLOAT_EQ(cameraNode.camera().mOrthographicHeight, 7.5f);
+}

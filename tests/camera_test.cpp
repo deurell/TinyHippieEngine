@@ -50,12 +50,25 @@ TEST(CameraTest, TranslateMovesPositionAlongCameraAxisAfterLookAt) {
 }
 
 TEST(CameraTest, OrthoTransformUsesProvidedBounds) {
-  const glm::mat4 projection = DL::Camera::getOrtoTransform(-2.0f, 6.0f, -3.0f, 5.0f);
+  const glm::mat4 projection =
+      DL::Camera::getOrthoTransform(-2.0f, 6.0f, -3.0f, 5.0f);
 
   EXPECT_NEAR(projection[0][0], 0.25f, 1e-6f);
   EXPECT_NEAR(projection[1][1], 0.25f, 1e-6f);
   EXPECT_NEAR(projection[3][0], -0.5f, 1e-6f);
   EXPECT_NEAR(projection[3][1], -0.25f, 1e-6f);
+}
+
+TEST(CameraTest, OrthographicProjectionUsesConfiguredHeightAndAspectRatio) {
+  DL::Camera camera({0.0f, 0.0f, 5.0f});
+  camera.mProjection = DL::CameraProjection::Orthographic;
+  camera.mOrthographicHeight = 6.0f;
+  camera.mScreenSize = {1200.0f, 600.0f};
+
+  const glm::mat4 projection = camera.getPerspectiveTransform();
+
+  EXPECT_NEAR(projection[0][0], 1.0f / 6.0f, 1e-6f);
+  EXPECT_NEAR(projection[1][1], 1.0f / 3.0f, 1e-6f);
 }
 
 } // namespace

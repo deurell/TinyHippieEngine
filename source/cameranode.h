@@ -24,6 +24,14 @@ public:
 
   void setFov(float fov);
   [[nodiscard]] float fov() const { return camera_.mFov; }
+  void setProjection(CameraProjection projection);
+  [[nodiscard]] CameraProjection projection() const {
+    return camera_.mProjection;
+  }
+  void setOrthographicHeight(float height);
+  [[nodiscard]] float orthographicHeight() const {
+    return camera_.mOrthographicHeight;
+  }
   void setActive(bool active) { active_ = active; }
   [[nodiscard]] bool active() const { return active_; }
   void setLookAtTarget(glm::vec3 target) { lookAtTarget_ = target; }

@@ -73,6 +73,8 @@ struct SceneNodeDescription {
   bool flipDiagonal = false;
   bool active = false;
   float fov = 45.0f;
+  std::string projection = "Perspective";
+  float orthographicHeight = 6.0f;
   std::optional<glm::vec3> lookAt;
   glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
   SceneLightDescription light;

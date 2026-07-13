@@ -29,9 +29,10 @@ Precedence:
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
   `LightNode`, `SpriteNode`, `SpriteAnimationNode`, `SpriteBatchNode`,
   `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and
-  `ParticleSystemNode`; `LightNode` provides one forward directional light for
-  lit renderers, `SpriteNode` supports atlas `sourceRect`, `flipX`, `flipY`,
-  and `flipDiagonal`, `SpriteAnimationNode` advances atlas frames in
+  `ParticleSystemNode`; `CameraNode` supports authored perspective or
+  orthographic projection, `LightNode` provides one forward directional light
+  for lit renderers, `SpriteNode` supports atlas `sourceRect`, `flipX`,
+  `flipY`, and `flipDiagonal`, `SpriteAnimationNode` advances atlas frames in
   `fixedUpdate()`, and `SpriteBatchNode` batches many static atlas sprites from
   one image.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,

@@ -26,6 +26,8 @@ constexpr char kSceneSource[] = R"json(
           "type": "CameraNode",
           "active": true,
           "fov": 38.0,
+          "projection": "Orthographic",
+          "orthographicHeight": 7.25,
           "lookAt": [0.0, 0.5, 0.0]
         },
         {
@@ -223,6 +225,8 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.children[0].type, "CameraNode");
   EXPECT_TRUE(root.children[0].active);
   EXPECT_FLOAT_EQ(root.children[0].fov, 38.0f);
+  EXPECT_EQ(root.children[0].projection, "Orthographic");
+  EXPECT_FLOAT_EQ(root.children[0].orthographicHeight, 7.25f);
   ASSERT_TRUE(root.children[0].lookAt.has_value());
   EXPECT_EQ(*root.children[0].lookAt, glm::vec3(0.0f, 0.5f, 0.0f));
 
@@ -419,7 +423,7 @@ TEST(SceneDescriptionTest, LoadsStarterSceneFile) {
       });
   ASSERT_NE(spriteAnimation, scene.nodes.end());
   EXPECT_EQ(spriteAnimation->spriteAnimation.frames.size(), 4u);
-  EXPECT_FLOAT_EQ(spriteAnimation->spriteAnimation.fps, 5.0f);
+  EXPECT_FLOAT_EQ(spriteAnimation->spriteAnimation.fps, 2.0f);
   const auto spriteBatch =
       std::ranges::find_if(scene.nodes, [](const DL::SceneNodeDescription &node) {
         return node.name == "sprite_batch_cluster" &&
@@ -506,10 +510,19 @@ TEST(SceneDescriptionTest, LoadsTinyDungeonAtlasSceneFile) {
   EXPECT_EQ(scene.nodes[0].name, "main_camera");
   EXPECT_EQ(scene.nodes[0].type, "CameraNode");
   EXPECT_TRUE(scene.nodes[0].active);
+  EXPECT_EQ(scene.nodes[0].projection, "Orthographic");
+  EXPECT_FLOAT_EQ(scene.nodes[0].orthographicHeight, 6.8f);
 
   const auto *hero = findDescriptionByName(scene.nodes[1], "hero");
   ASSERT_NE(hero, nullptr);
   EXPECT_EQ(hero->type, "SceneNode");
+  const auto *heroSprite = findDescriptionByName(*hero, "hero_sprite");
+  ASSERT_NE(heroSprite, nullptr);
+  EXPECT_EQ(heroSprite->type, "SpriteNode");
+  EXPECT_EQ(heroSprite->sourceRect,
+            glm::vec4(48.0f, 128.0f, 16.0f, 16.0f));
+  EXPECT_FLOAT_EQ(heroSprite->position.z, 0.35f);
+  EXPECT_EQ(heroSprite->scale, glm::vec3(0.17f));
 
   const DL::SceneNodeDescription &tileMap = scene.nodes[2];
   EXPECT_EQ(tileMap.name, "tiny_dungeon_map");

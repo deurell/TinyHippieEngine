@@ -235,7 +235,7 @@
       "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
       "billboard": true,
       "spriteAnimation": {
-        "fps": 5.0,
+        "fps": 2.0,
         "playing": true,
         "looping": true,
         "frames": [

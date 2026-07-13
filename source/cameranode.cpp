@@ -32,6 +32,16 @@ void CameraNode::onScreenSizeChanged(glm::vec2 size) {
 
 void CameraNode::setFov(float fov) { camera_.mFov = fov; }
 
+void CameraNode::setProjection(CameraProjection projection) {
+  camera_.mProjection = projection;
+}
+
+void CameraNode::setOrthographicHeight(float height) {
+  if (height > 0.0f) {
+    camera_.mOrthographicHeight = height;
+  }
+}
+
 void CameraNode::lookAtWorld(glm::vec3 target) {
   Camera lookAtCamera(getLocalPosition());
   lookAtCamera.lookAt(target);

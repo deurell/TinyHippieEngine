@@ -5,7 +5,8 @@
       "name": "main_camera",
       "type": "CameraNode",
       "active": true,
-      "fov": 38.0,
+      "projection": "Orthographic",
+      "orthographicHeight": 6.8,
       "lookAt": [
         0.0,
         0.0,
@@ -28,7 +29,32 @@
           0.0,
           0.0
         ]
-      }
+      },
+      "children": [
+        {
+          "name": "hero_sprite",
+          "type": "SpriteNode",
+          "image": "Resources/Kenney/TinyDungeon/Tilemap/tilemap_packed.png",
+          "sourceRect": [
+            48.0,
+            128.0,
+            16.0,
+            16.0
+          ],
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.35
+            ],
+            "scale": [
+              0.17,
+              0.17,
+              0.17
+            ]
+          }
+        }
+      ]
     },
     {
       "name": "tiny_dungeon_map",

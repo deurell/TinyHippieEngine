@@ -37,7 +37,8 @@ dimensions.
 ## Node Types
 
 - `SceneNode`: hierarchy/transform only.
-- `CameraNode`: uses `active`, `fov`, and optional `lookAt`.
+- `CameraNode`: uses `active`, optional `projection` (`Perspective` or
+  `Orthographic`), `fov`, `orthographicHeight`, and optional `lookAt`.
 - `LightNode`: uses `light` to provide one scene directional light for lit
   renderers (`MeshNode` and `PhongShapeNode`).
 - `MeshNode`: uses `mesh`, optional `animation`, optional `visualizer`.
@@ -70,13 +71,18 @@ dimensions.
 {
   "type": "CameraNode",
   "active": true,
+  "projection": "Perspective",
   "fov": 40.0,
+  "orthographicHeight": 6.0,
   "lookAt": [0.0, 0.75, 0.15]
 }
 ```
 
 The active root camera is built first by `TextStarterScene` so other nodes can
 render through it.
+`fov` is used by perspective cameras. `orthographicHeight` is the vertical
+world-space height visible through orthographic cameras; width is derived from
+the framebuffer aspect ratio.
 
 ## LightNode
 

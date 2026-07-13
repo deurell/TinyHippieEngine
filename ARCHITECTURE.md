@@ -57,6 +57,9 @@ Current scene representation:
   `LightNode`, `MeshNode`, `SpriteNode`, `SpriteAnimationNode`,
   `SpriteBatchNode`, `TextNode`, `TileMapNode`, `PlaneNode`, `PhongShapeNode`,
   and `ParticleSystemNode`.
+- `CameraNode` supports perspective and orthographic projection modes from
+  scene JSON. Perspective uses `fov`; orthographic uses `orthographicHeight`
+  as vertical world-space view size.
 - `LightNode` provides one scene directional light for forward-lit renderers
   (`MeshNode` and `PhongShapeNode`). Unlit renderers ignore it.
 - `SpriteNode` supports full-image sprites and atlas regions through

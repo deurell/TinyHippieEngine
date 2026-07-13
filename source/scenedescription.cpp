@@ -614,6 +614,10 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
       boolOr(object, "flipDiagonal", description.flipDiagonal);
   description.active = boolOr(object, "active", description.active);
   description.fov = floatOr(object, "fov", description.fov);
+  description.projection =
+      stringOr(object, "projection", description.projection);
+  description.orthographicHeight =
+      floatOr(object, "orthographicHeight", description.orthographicHeight);
   if (const auto *lookAt = find(object, "lookAt")) {
     const JsonValue::Object wrapper{{"lookAt", *lookAt}};
     description.lookAt = vec3Or(wrapper, "lookAt", glm::vec3(0.0f));
@@ -783,6 +787,15 @@ std::unique_ptr<SceneNode> buildCameraNode(
   auto node = std::make_unique<CameraNode>(parent);
   node->setActive(description.active);
   node->setFov(description.fov);
+  if (description.projection == "Orthographic") {
+    node->setProjection(CameraProjection::Orthographic);
+  } else if (description.projection == "Perspective") {
+    node->setProjection(CameraProjection::Perspective);
+  } else {
+    throw std::runtime_error("unknown camera projection: " +
+                             description.projection);
+  }
+  node->setOrthographicHeight(description.orthographicHeight);
   if (description.lookAt.has_value()) {
     node->setLookAtTarget(*description.lookAt);
   }

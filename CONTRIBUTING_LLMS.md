@@ -2,6 +2,9 @@
 
 This file defines guardrails for AI-assisted changes in this repo.
 Goal: keep changes easy to review, deterministic, and architecture-aligned.
+The engine goal is LLM-friendly, single-developer, slim/tiny game development:
+small text-authored surfaces, typed C++ runtime behavior, and fast validation
+instead of hidden editor magic.
 
 ## Primary Workflow
 
@@ -29,12 +32,27 @@ Prefer:
 - typed pointers/references
 - small abstractions with current use
 - code-first scene logic
+- text-authored data with clear validation
+- reusable engine primitives over game-specific nodes
+- samples/tests/docs that can be copied by humans and LLMs
 
 Avoid:
 - generic registries without real need
 - hidden callback chaining
 - editor-only state as source of truth
 - DSL indirection for core behavior
+- custom binary authoring formats without a readable source artifact
+- broad node catalogs where a small composable node would do
+
+## Adding Scene-Authored Features
+
+When adding or changing scene JSON support:
+- Update `SceneDescription` parsing/building.
+- Update `Resources/Scenes/SCHEMA.md`.
+- Update `scripts/tiny_hippie_validate.py` with fields, enum values, required
+  payloads, and asset references.
+- Add or update parser/validator tests or a validated sample scene.
+- Keep generated assets referenced by at least one scene, test, or doc.
 
 ## Expected Validation
 
@@ -42,6 +60,12 @@ At minimum, run one desktop build:
 
 ```bash
 cmake --build build-nophysics --target tiny_hippie_engine
+```
+
+When touching scene JSON, node parser fields, or authored assets, run:
+
+```bash
+scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json
 ```
 
 When touching web build or Emscripten integration, also run:
@@ -60,6 +84,7 @@ Before finalizing:
 - Debug UI changes do not own gameplay logic.
 - Input routing remains deterministic and explicit.
 - Relevant docs updated (`ARCHITECTURE.md`, `AGENTS.md`, README when needed).
+- Scene validator updated when scene-authored fields change.
 
 ## Commit Style
 
@@ -69,4 +94,3 @@ Use focused commit messages:
 - `add physics sandbox node debug names`
 
 Avoid umbrella commits that mix unrelated refactors and behavior changes.
-

@@ -4,6 +4,17 @@ Scene descriptions are JSON files used for text-authored composition. They
 create normal runtime nodes; gameplay behavior should still bind typed C++
 objects by name.
 
+Validate authored scenes with:
+
+```bash
+scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json
+```
+
+The validator checks JSON shape, known fields, node types, required node
+payloads, enum values, tilemap/atlas invariants, and referenced asset paths. It
+may warn about suspicious transforms; warnings are advisory unless tooling
+explicitly promotes them.
+
 ## Root
 
 ```json

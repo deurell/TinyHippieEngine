@@ -37,6 +37,9 @@ Precedence:
   `SpriteAnimationNode` advances atlas frames in `fixedUpdate()`,
   `SpriteBatchNode` batches many static atlas sprites from one image, and
   `FogOverlayNode` renders scrolling transparent mist/cloud overlays.
+- Scene JSON authoring is validated with `scripts/tiny_hippie_validate.py`;
+  it checks known fields, node types, required node payloads, enum values,
+  tilemap/atlas invariants, and referenced asset paths.
 - Starter runtime resources are `Resources/Scenes/simple_starter.scene.json`,
   `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
   `Resources/Scenes/kenney_platformer.scene.json`,
@@ -90,6 +93,12 @@ Tiled map conversion:
 scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-packed
 ```
 
+Scene validation:
+
+```bash
+scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json
+```
+
 Build flags (CMake options):
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.
 - `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) — Box3D wrapper sources; keep OFF unless the project needs physics.
@@ -100,7 +109,8 @@ Tests:
 scripts/run_tests.sh
 ```
 
-`run_tests.sh` runs `scripts/check_architecture.sh` first (requires `rg`), then builds and runs CTest.
+`run_tests.sh` runs `scripts/check_architecture.sh` first (requires `rg`),
+validates scene JSON, then builds and runs CTest.
 
 ## Minimum Verification Before Merge
 

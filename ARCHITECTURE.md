@@ -3,6 +3,26 @@
 This document captures the current runtime architecture and hard invariants.
 If behavior in code diverges from this file, update this file in the same change.
 
+## North Star
+
+Tiny Hippie Engine is optimized for LLM-friendly, single-developer game
+development. The engine should stay slim, explicit, and easy to inspect.
+
+Principles:
+- Keep the authored surface tiny and text-first. Prefer readable JSON, GLSL,
+  PNG, TTF, GLB, TMX/TSX source assets, and generated text artifacts over
+  custom binary formats.
+- Keep runtime code boring and typed. JSON creates normal C++ nodes; it does not
+  become a second gameplay language.
+- Prefer validation over editor complexity. A fast command-line validator is
+  more valuable than hidden editor behavior.
+- Keep the blessed node set small. New node types should be reusable engine
+  primitives, not one-off game behavior.
+- Keep samples and tests as executable documentation. Every broadly reusable
+  node feature should have schema docs and parser/validator coverage.
+- Avoid hidden magic. Defaults, units, ownership, and render behavior should be
+  visible in code or docs.
+
 ## Scope
 
 Tiny Hippie Engine is a code-first, cross-platform rendering/simulation engine.
@@ -24,6 +44,8 @@ Core pieces:
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
 - `SceneDescription`: JSON-authored scene composition that builds normal runtime
   nodes through `SceneNodeFactory`.
+- `scripts/tiny_hippie_validate.py`: command-line scene validator used for fast
+  authoring feedback before running the engine.
 
 Starter content:
 - The app registers the Tiny Dungeon atlas `TextStarterScene` first, then the
@@ -78,6 +100,10 @@ Current scene representation:
   global tile IDs and flip flags.
 - `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into
   JSON-authored `TileMapNode` scenes; runtime scene loading stays JSON-only.
+- `scripts/tiny_hippie_validate.py` validates scene JSON structure, known node
+  fields, node type payloads, enum values, common atlas/tilemap invariants, and
+  referenced asset paths. It may warn about suspicious authored transforms, but
+  warnings are advisory unless explicitly promoted by tooling.
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
 
 Current render pass model:
@@ -207,6 +233,12 @@ Principle:
 
 Desktop:
 - Use `scripts/build_desktop.sh`.
+
+Validation:
+- Use `scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json` to check
+  authored scene files without launching the app.
+- `scripts/run_tests.sh` runs the scene validator before configuring and
+  executing CTest.
 
 Build flags:
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) enables debug UI.

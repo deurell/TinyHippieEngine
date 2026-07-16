@@ -3,6 +3,7 @@
 #include "basisu_transcoder.h"
 #include "iscene.h"
 #include "meshassetcache.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "scenelifecycle.h"
 #include "scenemanager.h"
@@ -73,6 +74,9 @@ public:
   void setCrtGrilleStrength(float strength);
   float crtBrightness() const;
   void setCrtBrightness(float strength);
+  bool renderCullingEnabled() const { return renderCullingEnabled_; }
+  void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
+  RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
@@ -142,6 +146,8 @@ private:
   int lastFixedUpdateCount_ = 0;
   int requestedSimulationSteps_ = 0;
   bool simulationPaused_ = false;
+  bool renderCullingEnabled_ = true;
+  RenderQueueStats lastRenderQueueStats_;
   ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 lastMousePosition_{0.0f};

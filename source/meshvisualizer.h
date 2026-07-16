@@ -5,6 +5,7 @@
 #include "meshasset.h"
 #include "meshassetcache.h"
 #include "renderdevice.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "skinning.h"
 #include "visualizerbase.h"
@@ -105,6 +106,7 @@ private:
     bool sharedTexture = false;
     int sourceNodeIndex = -1;
     int skinIndex = -1;
+    Bounds localBounds;
   };
 
   TextureHandle createFallbackTexture(bool &sharedTexture);

@@ -128,15 +128,17 @@ MeshHandle RenderResourceCache::acquireTexturedQuad() {
 const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
     std::string_view path, float pixelHeight, std::uint32_t atlasWidth,
     std::uint32_t atlasHeight, std::uint32_t oversampleX,
-    std::uint32_t oversampleY, std::uint8_t firstChar,
-    std::uint8_t charCount) {
+    std::uint32_t oversampleY, const std::vector<int> &codepoints) {
+  std::string codepointKey;
+  for (const int codepoint : codepoints) {
+    codepointKey += std::to_string(codepoint);
+    codepointKey.push_back(',');
+  }
   const std::string key = std::string(path) + "|" + std::to_string(pixelHeight) +
                           "|" + std::to_string(atlasWidth) + "|" +
                           std::to_string(atlasHeight) + "|" +
                           std::to_string(oversampleX) + "|" +
-                          std::to_string(oversampleY) + "|" +
-                          std::to_string(firstChar) + "|" +
-                          std::to_string(charCount);
+                          std::to_string(oversampleY) + "|" + codepointKey;
   const auto it = fontAtlases_.find(key);
   if (it != fontAtlases_.end()) {
     return &it->second;
@@ -168,6 +170,8 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   }
 
   FontAtlasResource resource;
+  resource.atlasWidth = atlasWidth;
+  resource.atlasHeight = atlasHeight;
   resource.fontScale = stbtt_ScaleForPixelHeight(&fontInfo, pixelHeight);
 
   int ascent = 0;
@@ -179,7 +183,8 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   auto atlasData =
       std::make_unique<std::uint8_t[]>(atlasWidth * atlasHeight);
   resource.fontInfo = std::shared_ptr<stbtt_packedchar[]>(
-      new stbtt_packedchar[charCount], [](stbtt_packedchar *p) { delete[] p; });
+      new stbtt_packedchar[codepoints.size()],
+      [](stbtt_packedchar *p) { delete[] p; });
 
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(),
@@ -189,9 +194,15 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   }
   stbtt_PackSetOversampling(&context, oversampleX, oversampleY);
 
-  if (!stbtt_PackFontRange(
+  stbtt_pack_range range{};
+  range.font_size = resource.fontSize;
+  range.first_unicode_codepoint_in_range = 0;
+  range.array_of_unicode_codepoints = const_cast<int *>(codepoints.data());
+  range.num_chars = static_cast<int>(codepoints.size());
+  range.chardata_for_range = resource.fontInfo.get();
+  if (!stbtt_PackFontRanges(
           &context, reinterpret_cast<const unsigned char *>(fontData.get()), 0,
-          resource.fontSize, firstChar, charCount, resource.fontInfo.get())) {
+          &range, 1)) {
     stbtt_PackEnd(&context);
     return nullptr;
   }

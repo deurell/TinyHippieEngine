@@ -1,6 +1,29 @@
 #include "shapevisualizer.h"
 
+#include <limits>
+#include <utility>
+
 namespace DL {
+
+namespace {
+
+Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
+  if (positions.empty()) {
+    return {};
+  }
+
+  glm::vec3 minPosition(std::numeric_limits<float>::max());
+  glm::vec3 maxPosition(std::numeric_limits<float>::lowest());
+  for (const glm::vec3 &position : positions) {
+    minPosition = glm::min(minPosition, position);
+    maxPosition = glm::max(maxPosition, position);
+  }
+
+  return {.center = (minPosition + maxPosition) * 0.5f,
+          .halfExtents = (maxPosition - minPosition) * 0.5f};
+}
+
+} // namespace
 
 ShapeVisualizer::ShapeVisualizer(Camera &camera, SceneNode &node,
                                  GeneratedMeshData meshData,
@@ -19,6 +42,7 @@ ShapeVisualizer::ShapeVisualizer(Camera &camera, SceneNode &node,
                                                     fragmentShaderPath_)
                   : renderDevice_->createPipeline(vertexShaderPath_,
                                                   fragmentShaderPath_);
+  localBounds_ = boundsFromPositions(meshData.positions);
   mesh_ = renderDevice_->createMesh(meshData.positions, meshData.normals,
                                     meshData.uvs, meshData.indices);
 }
@@ -47,18 +71,20 @@ void ShapeVisualizer::render(const glm::mat4 &worldTransform,
   model = model * glm::mat4_cast(extractRotation(worldTransform));
   model = glm::scale(model, extractScale(worldTransform));
 
-  DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.pass = pass;
-  command.uniforms.push_back(
+  RenderItem item;
+  item.tag = RenderTag::Opaque;
+  item.localBounds = localBounds_;
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.pass = pass;
+  item.uniforms.push_back(
       UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(
       UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeMat4("projection", camera_.getPerspectiveTransform()));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("viewPos", camera_.getPosition()));
   const bool useSceneLight =
       ctx.lighting != nullptr && ctx.lighting->directionalEnabled;
@@ -69,19 +95,19 @@ void ShapeVisualizer::render(const glm::mat4 &worldTransform,
                     : lightColor;
   const float ambientScale =
       useSceneLight ? ctx.lighting->ambientStrength / 0.42f : 1.0f;
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("lightDirection", glm::normalize(sceneLightDirection)));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("lightColor", sceneLightColor));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("materialDiffuse", material.diffuse));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("materialAmbient", material.ambient * ambientScale));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeVec3("materialSpecular", material.specular));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeFloat("materialShininess", material.shininess));
-  renderDevice_->draw(command);
+  submitRenderItem(ctx, *renderDevice_, std::move(item));
 }
 
 } // namespace DL

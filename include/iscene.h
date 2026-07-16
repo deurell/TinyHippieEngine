@@ -6,6 +6,8 @@
 #include <string_view>
 
 namespace DL {
+class RenderQueue;
+
 enum class Key {
   W,
   A,
@@ -87,6 +89,7 @@ struct FrameContext {
   glm::vec2 windowSize{0.0f};
   glm::vec2 framebufferSize{0.0f};
   LightingState *lighting = nullptr;
+  RenderQueue *renderQueue = nullptr;
 };
 
 class IScene {

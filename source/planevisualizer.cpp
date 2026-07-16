@@ -1,5 +1,8 @@
 #include "planevisualizer.h"
 
+#include "renderqueue.h"
+#include <utility>
+
 DL::PlaneVisualizer::PlaneVisualizer(
     DL::Camera &camera, SceneNode &node, DL::IRenderDevice *renderDevice,
     DL::RenderResourceCache *resourceCache,
@@ -51,20 +54,23 @@ void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform,
   glm::mat4 view = camera_.getViewMatrix();
   glm::mat4 projectionMatrix = camera_.getPerspectiveTransform();
 
-  DL::DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.pass = pass;
-  command.uniforms.push_back(
+  DL::RenderItem item;
+  item.tag = DL::RenderTag::Opaque;
+  item.localBounds = {.center = glm::vec3(0.0f),
+                      .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.pass = pass;
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(DL::UniformValue::makeVec4("baseColor", baseColor));
-  command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
-  command.uniforms.push_back(
+  item.uniforms.push_back(DL::UniformValue::makeVec4("baseColor", baseColor));
+  item.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("projection", projectionMatrix));
   if (spinnerEnabled) {
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeFloat("speed", spinnerSpeed));
   }
-  renderDevice_->draw(command);
+  DL::submitRenderItem(ctx, *renderDevice_, std::move(item));
 }

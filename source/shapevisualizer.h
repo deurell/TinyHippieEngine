@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderdevice.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "shapegeometry.h"
 #include "visualizerbase.h"
@@ -38,6 +39,7 @@ private:
   RenderResourceCache *resourceCache_ = nullptr;
   MeshHandle mesh_;
   PipelineHandle pipeline_;
+  Bounds localBounds_;
 };
 
 } // namespace DL

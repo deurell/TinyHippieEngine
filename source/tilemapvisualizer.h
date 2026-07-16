@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderdevice.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "visualizerbase.h"
 #include <cstdint>
@@ -64,6 +65,7 @@ private:
   PipelineHandle pipeline_;
   bool sharedTexture_ = false;
   glm::vec2 atlasSize_{1.0f, 1.0f};
+  Bounds localBounds_;
 };
 
 } // namespace DL

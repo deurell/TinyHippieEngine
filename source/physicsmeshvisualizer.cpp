@@ -3,6 +3,8 @@
 #include "scenenode.h"
 #include <cmath>
 #include <glm/gtc/constants.hpp>
+#include <limits>
+#include <utility>
 
 namespace {
 
@@ -164,6 +166,22 @@ MeshData makeCapsuleMesh(float radius, float height, const glm::vec4 &color) {
   return mesh;
 }
 
+DL::Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
+  if (positions.empty()) {
+    return {};
+  }
+
+  glm::vec3 minPosition(std::numeric_limits<float>::max());
+  glm::vec3 maxPosition(std::numeric_limits<float>::lowest());
+  for (const glm::vec3 &position : positions) {
+    minPosition = glm::min(minPosition, position);
+    maxPosition = glm::max(maxPosition, position);
+  }
+
+  return {.center = (minPosition + maxPosition) * 0.5f,
+          .halfExtents = (maxPosition - minPosition) * 0.5f};
+}
+
 } // namespace
 
 PhysicsMeshVisualizer::PhysicsMeshVisualizer(
@@ -207,6 +225,7 @@ void PhysicsMeshVisualizer::createMesh(const DL::PhysicsShapeDesc &shape,
     mesh = makeCapsuleMesh(shape.radius, shape.height, color);
     break;
   }
+  localBounds_ = boundsFromPositions(mesh.positions);
   mesh_ = renderDevice_->createMesh(mesh.positions, mesh.normals, mesh.uvs,
                                     mesh.indices);
   const std::uint8_t whitePixel[] = {255, 255, 255, 255};
@@ -234,33 +253,35 @@ void PhysicsMeshVisualizer::render(const glm::mat4 &worldTransform,
     return;
   }
 
-  DL::DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.texture = texture_;
-  command.pass = pass;
-  command.uniforms.push_back(
+  DL::RenderItem item;
+  item.tag = DL::RenderTag::Opaque;
+  item.localBounds = localBounds_;
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.texture = texture_;
+  item.pass = pass;
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(DL::UniformValue::makeMat4("model", worldTransform));
-  command.uniforms.push_back(
+  item.uniforms.push_back(DL::UniformValue::makeMat4("model", worldTransform));
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(DL::UniformValue::makeMat4(
+  item.uniforms.push_back(DL::UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeVec3("viewPos", camera_.getPosition()));
-  command.uniforms.push_back(DL::UniformValue::makeVec3(
+  item.uniforms.push_back(DL::UniformValue::makeVec3(
       "lightDirection", glm::normalize(glm::vec3(0.35f, 1.0f, 0.42f))));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeVec3("lightColor", {1.0f, 0.96f, 0.9f}));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("ambientStrength", 0.58f));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("specularStrength", 0.24f));
-  command.uniforms.push_back(DL::UniformValue::makeFloat("shininess", 22.0f));
-  command.uniforms.push_back(DL::UniformValue::makeVec3("baseTint", baseTint_));
-  command.uniforms.push_back(
+  item.uniforms.push_back(DL::UniformValue::makeFloat("shininess", 22.0f));
+  item.uniforms.push_back(DL::UniformValue::makeVec3("baseTint", baseTint_));
+  item.uniforms.push_back(
       DL::UniformValue::makeVec3("ambientTint", ambientTint_));
-  command.uniforms.push_back(DL::UniformValue::makeInt("debugNormals", 0));
-  command.uniforms.push_back(DL::UniformValue::makeInt("useSkinning", 0));
-  renderDevice_->draw(command);
+  item.uniforms.push_back(DL::UniformValue::makeInt("debugNormals", 0));
+  item.uniforms.push_back(DL::UniformValue::makeInt("useSkinning", 0));
+  DL::submitRenderItem(ctx, *renderDevice_, std::move(item));
 }

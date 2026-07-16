@@ -1,9 +1,11 @@
 #include "spritebatchvisualizer.h"
 
+#include "renderqueue.h"
 #include "stb_image.h"
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <limits>
 #include <utility>
 
 namespace {
@@ -157,6 +159,17 @@ void SpriteBatchVisualizer::buildMesh() {
     indices.push_back(base + 3);
   }
 
+  if (!positions.empty()) {
+    glm::vec3 minBounds(std::numeric_limits<float>::max());
+    glm::vec3 maxBounds(std::numeric_limits<float>::lowest());
+    for (const glm::vec3 &position : positions) {
+      minBounds = glm::min(minBounds, position);
+      maxBounds = glm::max(maxBounds, position);
+    }
+    localBounds_.center = (minBounds + maxBounds) * 0.5f;
+    localBounds_.halfExtents = (maxBounds - minBounds) * 0.5f;
+  }
+
   mesh_ = renderDevice_->createMesh(positions, normals, uvs, indices);
 }
 
@@ -173,23 +186,25 @@ void SpriteBatchVisualizer::render(const glm::mat4 &worldTransform,
   model = model * glm::mat4_cast(extractRotation(worldTransform));
   model = glm::scale(model, extractScale(worldTransform));
 
-  DL::DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.texture = texture_;
-  command.pass = pass;
-  command.blendMode = BlendMode::Alpha;
-  command.depthTest = false;
-  command.sortMode = DrawSortMode::BackToFront;
-  command.sortDepth = cameraDistanceSortDepth(extractPosition(worldTransform));
-  command.uniforms.push_back(
+  DL::RenderItem item;
+  item.tag = RenderTag::SpriteBatch;
+  item.localBounds = localBounds_;
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.texture = texture_;
+  item.pass = pass;
+  item.blendMode = BlendMode::Alpha;
+  item.depthTest = false;
+  item.sortMode = DrawSortMode::BackToFront;
+  item.sortDepth = cameraDistanceSortDepth(extractPosition(worldTransform));
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
+  item.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(DL::UniformValue::makeMat4(
+  item.uniforms.push_back(DL::UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  renderDevice_->draw(command);
+  submitRenderItem(ctx, *renderDevice_, std::move(item));
 }
 
 } // namespace DL

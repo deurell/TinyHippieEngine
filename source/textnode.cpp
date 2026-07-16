@@ -1,6 +1,7 @@
 #include "textnode.h"
 #include "textvisualizer.h"
 
+#include <algorithm>
 #include <glm/gtc/quaternion.hpp>
 
 TextNode::TextNode(DL::SceneNode *parentNode, std::string text,
@@ -74,6 +75,13 @@ void TextNode::setTextAnchor(DL::TextAnchor anchor) {
   anchor_ = anchor;
   if (textVisualizer_ != nullptr) {
     textVisualizer_->setAnchor(anchor_);
+  }
+}
+
+void TextNode::setFontPixelHeight(float pixelHeight) {
+  fontPixelHeight_ = std::max(pixelHeight, 1.0f);
+  if (textVisualizer_ != nullptr) {
+    textVisualizer_->setFontPixelHeight(fontPixelHeight_);
   }
 }
 

@@ -1,6 +1,7 @@
 #include "fogoverlayvisualizer.h"
 
 #include "fogoverlaynode.h"
+#include "renderqueue.h"
 #include "stb_image.h"
 #include <iostream>
 #include <utility>
@@ -85,36 +86,39 @@ void DL::FogOverlayVisualizer::render(const glm::mat4 &worldTransform,
   model = model * glm::mat4_cast(extractRotation(worldTransform));
   model = glm::scale(model, extractScale(worldTransform));
 
-  DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.texture = texture_;
-  command.pass = pass;
-  command.blendMode = BlendMode::Alpha;
-  command.depthTest = false;
-  command.sortMode = DrawSortMode::BackToFront;
-  command.sortDepth = cameraDistanceSortDepth(extractPosition(worldTransform));
-  command.uniforms.push_back(
+  RenderItem item;
+  item.tag = RenderTag::Overlay;
+  item.localBounds = {.center = glm::vec3(0.0f),
+                      .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.texture = texture_;
+  item.pass = pass;
+  item.blendMode = BlendMode::Alpha;
+  item.depthTest = false;
+  item.sortMode = DrawSortMode::BackToFront;
+  item.sortDepth = cameraDistanceSortDepth(extractPosition(worldTransform));
+  item.uniforms.push_back(
       UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(UniformValue::makeVec4("fogColor", config.color));
-  command.uniforms.push_back(UniformValue::makeVec2("tiling", config.tiling));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeVec4("fogColor", config.color));
+  item.uniforms.push_back(UniformValue::makeVec2("tiling", config.tiling));
+  item.uniforms.push_back(
       UniformValue::makeVec2("scrollSpeed", config.scrollSpeed));
-  command.uniforms.push_back(UniformValue::makeFloat("alpha", config.alpha));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeFloat("alpha", config.alpha));
+  item.uniforms.push_back(
       UniformValue::makeFloat("softness", config.softness));
-  command.uniforms.push_back(UniformValue::makeFloat(
+  item.uniforms.push_back(UniformValue::makeFloat(
       "secondLayerStrength", config.secondLayerStrength));
-  command.uniforms.push_back(UniformValue::makeVec2(
+  item.uniforms.push_back(UniformValue::makeVec2(
       "secondLayerScrollSpeed", config.secondLayerScrollSpeed));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeFloat("pulseAmount", config.pulseAmount));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeFloat("pulseSpeed", config.pulseSpeed));
-  command.uniforms.push_back(UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(
       UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(UniformValue::makeMat4(
+  item.uniforms.push_back(UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  renderDevice_->draw(command);
+  submitRenderItem(ctx, *renderDevice_, std::move(item));
 }

@@ -5,9 +5,31 @@
 #include <cstdint>
 #include <glm/ext/quaternion_common.hpp>
 #include <glm/ext/quaternion_geometric.hpp>
+#include <limits>
 #include <unordered_map>
+#include <utility>
 
 namespace DL {
+
+namespace {
+
+Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
+  if (positions.empty()) {
+    return {};
+  }
+
+  glm::vec3 minPosition(std::numeric_limits<float>::max());
+  glm::vec3 maxPosition(std::numeric_limits<float>::lowest());
+  for (const glm::vec3 &position : positions) {
+    minPosition = glm::min(minPosition, position);
+    maxPosition = glm::max(maxPosition, position);
+  }
+
+  return {.center = (minPosition + maxPosition) * 0.5f,
+          .halfExtents = (maxPosition - minPosition) * 0.5f};
+}
+
+} // namespace
 
 MeshVisualizer::MeshVisualizer(
     DL::Camera &camera, SceneNode &node,
@@ -56,6 +78,7 @@ MeshVisualizer::MeshVisualizer(
     gpuSubmesh.sharedTexture = sharedTexture;
     gpuSubmesh.sourceNodeIndex = submesh.sourceNodeIndex;
     gpuSubmesh.skinIndex = submesh.skinIndex;
+    gpuSubmesh.localBounds = boundsFromPositions(submesh.positions);
     if (gpuSubmesh.mesh.valid() && gpuSubmesh.texture.valid()) {
       submeshes_.push_back(gpuSubmesh);
     } else {
@@ -237,7 +260,6 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
       continue;
     }
 
-    DL::DrawCommand command;
     glm::mat4 submeshModel = model;
     if (submesh.skinIndex < 0 && submesh.sourceNodeIndex >= 0 &&
         static_cast<std::size_t>(submesh.sourceNodeIndex) <
@@ -252,18 +274,22 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
       submeshModel = model * nodeAnimationDelta;
     }
 
-    command.mesh = submesh.mesh;
-    command.pipeline = pipeline_;
-    command.texture = submesh.texture;
-    command.pass = pass;
-    command.uniforms.push_back(
+    DL::RenderItem item;
+    item.tag = DL::RenderTag::Opaque;
+    item.localBounds = submesh.localBounds;
+    item.cullable = submesh.skinIndex < 0;
+    item.mesh = submesh.mesh;
+    item.pipeline = pipeline_;
+    item.texture = submesh.texture;
+    item.pass = pass;
+    item.uniforms.push_back(
         DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-    command.uniforms.push_back(DL::UniformValue::makeMat4("model", submeshModel));
-    command.uniforms.push_back(
+    item.uniforms.push_back(DL::UniformValue::makeMat4("model", submeshModel));
+    item.uniforms.push_back(
         DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeMat4("projection", camera_.getPerspectiveTransform()));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec3("viewPos", camera_.getPosition()));
     const bool useSceneLight =
         ctx.lighting != nullptr && ctx.lighting->directionalEnabled;
@@ -275,40 +301,40 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
     const float ambientStrength =
         useSceneLight ? ctx.lighting->ambientStrength
                       : settings_.ambientStrength;
-    command.uniforms.push_back(DL::UniformValue::makeVec3(
+    item.uniforms.push_back(DL::UniformValue::makeVec3(
         "lightDirection", glm::normalize(lightDirection)));
-    command.uniforms.push_back(DL::UniformValue::makeVec3(
+    item.uniforms.push_back(DL::UniformValue::makeVec3(
         "lightColor", lightColor));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeFloat("ambientStrength", ambientStrength));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeFloat(
             "specularStrength",
             settings_.specularStrength *
                 std::max({submesh.specularColor.r, submesh.specularColor.g,
                           submesh.specularColor.b})));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeFloat(
             "shininess",
             submesh.shininess > 0.0f ? submesh.shininess : settings_.shininess));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec3(
             "baseTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.diffuseColor));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec3(
             "ambientTint", submesh.hasTexture ? glm::vec3(1.0f) : submesh.ambientColor));
     const auto skinMatrixIt = skinMatricesBySkin.find(submesh.skinIndex);
     const bool useSkinning =
         skinMatrixIt != skinMatricesBySkin.end() && !skinMatrixIt->second.empty();
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeInt("useSkinning", useSkinning ? 1 : 0));
     if (useSkinning) {
-      command.uniforms.push_back(
+      item.uniforms.push_back(
           DL::UniformValue::makeMat4Array("boneMatrices", skinMatrixIt->second));
     }
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeInt("debugNormals", debugNormals_ ? 1 : 0));
-    renderDevice_->draw(command);
+    DL::submitRenderItem(ctx, *renderDevice_, std::move(item));
   }
 }
 

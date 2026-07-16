@@ -7,6 +7,7 @@
 #include <string>
 #include <string_view>
 #include <unordered_map>
+#include <vector>
 
 namespace DL {
 
@@ -15,6 +16,8 @@ struct FontAtlasResource {
   std::shared_ptr<stbtt_packedchar[]> fontInfo;
   float fontScale = 1.0f;
   float fontSize = 0.0f;
+  std::uint32_t atlasWidth = 0;
+  std::uint32_t atlasHeight = 0;
 };
 
 struct ImageTextureResource {
@@ -42,8 +45,7 @@ public:
                                             std::uint32_t atlasHeight,
                                             std::uint32_t oversampleX,
                                             std::uint32_t oversampleY,
-                                            std::uint8_t firstChar,
-                                            std::uint8_t charCount);
+                                            const std::vector<int> &codepoints);
 
 private:
   IRenderDevice &renderDevice_;

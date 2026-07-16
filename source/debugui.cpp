@@ -763,6 +763,14 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
     }
 
     if (ImGui::CollapsingHeader("Rendering", sectionFlags)) {
+      bool renderCullingEnabled = app.renderCullingEnabled();
+      if (ImGui::Checkbox("Render culling", &renderCullingEnabled)) {
+        app.setRenderCullingEnabled(renderCullingEnabled);
+      }
+      const RenderQueueStats queueStats = app.lastRenderQueueStats();
+      ImGui::Text("Render items submitted %u", queueStats.submittedItems);
+      ImGui::Text("Render items drawn %u", queueStats.drawnItems);
+      ImGui::Text("Render items culled %u", queueStats.culledItems);
       ImGui::Text("Draw calls %u", renderStats.drawCalls);
       ImGui::Text("Triangles %u", renderStats.triangles);
       ImGui::Text("Pipeline switches %u", renderStats.pipelineSwitches);

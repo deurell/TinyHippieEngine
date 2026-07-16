@@ -34,7 +34,7 @@ public:
   [[nodiscard]] DL::TextAlignment textAlignment() const { return alignment_; }
   void setTextAnchor(DL::TextAnchor anchor);
   [[nodiscard]] DL::TextAnchor textAnchor() const { return anchor_; }
-  void setFontPixelHeight(float pixelHeight) { fontPixelHeight_ = pixelHeight; }
+  void setFontPixelHeight(float pixelHeight);
   [[nodiscard]] float fontPixelHeight() const { return fontPixelHeight_; }
   void setTextColor(glm::vec4 color);
   [[nodiscard]] glm::vec4 textColor() const { return textColor_; }

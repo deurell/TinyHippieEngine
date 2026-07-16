@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/quaternion.hpp"
 #include "renderdevice.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "stb_truetype.h"
 #include "visualizerbase.h"
@@ -12,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace DL {
 
@@ -63,6 +65,7 @@ public:
   void setAlignment(TextAlignment alignment);
   void setAnchor(TextAnchor anchor);
   void setLayoutWidth(float width);
+  void setFontPixelHeight(float pixelHeight);
   void setTextColor(glm::vec4 color) { textColor_ = color; }
   void setShadowColor(glm::vec4 color) { shadowColor_ = color; }
   void setShadowOffset(glm::vec2 offset) { shadowOffset_ = offset; }
@@ -74,7 +77,10 @@ public:
 
 private:
   bool loadFontTexture(std::string_view fontPath);
-  TextGlyphInfo makeGlyphInfo(char character, float offsetX, float offsetY);
+  bool acquireFontTexture();
+  [[nodiscard]] std::uint32_t atlasSizeForPixelHeight() const;
+  TextGlyphInfo makeGlyphInfo(std::uint32_t codepoint, float offsetX,
+                              float offsetY);
   void initGraphics();
   void destroyMesh();
 
@@ -96,15 +102,14 @@ private:
   glm::vec4 shadowColor_{0.0f, 0.0f, 0.0f, 0.58f};
   glm::vec2 shadowOffset_{1.5f, -1.5f};
 
-  const uint32_t fontAtlasWidth_ = 1024;
-  const uint32_t FontAtlasHeight_ = 1024;
+  std::uint32_t fontAtlasWidth_ = 1024;
+  std::uint32_t fontAtlasHeight_ = 1024;
   const uint32_t fontOversampleX_ = 2;
   const uint32_t fontOversampleY_ = 2;
-  const uint8_t fontFirstChar_ = 32;
-  const uint8_t fontCharCount_ = 255 - 32;
   std::shared_ptr<stbtt_packedchar[]> fontCharInfo_;
   std::string fontPath_;
   bool sharedFontTexture_ = false;
+  Bounds localBounds_;
 };
 
 } // namespace DL

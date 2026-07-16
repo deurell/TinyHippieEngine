@@ -10,6 +10,7 @@
 #include "game/scenes/skeletalanimationblendscene.h"
 #include "game/scenes/textstarterscene.h"
 #include "logger.h"
+#include "renderqueue.h"
 #include "scenemanager.h"
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
 #include "game/scenes/physicstestscene.h"
@@ -817,7 +818,12 @@ void DL::App::renderScenePass(const FrameContext &ctx,
     renderDevice_->setViewport(framebufferWidth, framebufferHeight);
   }
   renderDevice_->beginFrame(passDesc);
-  scene_->render(ctx);
+  RenderQueue renderQueue;
+  FrameContext renderCtx = ctx;
+  renderCtx.renderQueue = &renderQueue;
+  scene_->render(renderCtx);
+  lastRenderQueueStats_ = renderQueue.flush(
+      *renderDevice_, {.cullingEnabled = renderCullingEnabled_});
 }
 
 void DL::App::renderPostProcessPass(const FrameContext &ctx,

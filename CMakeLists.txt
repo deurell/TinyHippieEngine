@@ -69,6 +69,7 @@ add_executable(tiny_hippie_engine
         source/planenode.h source/planenode.cpp
         source/planevisualizer.h source/planevisualizer.cpp
         source/phongshapenode.h source/phongshapenode.cpp
+        source/renderqueue.h source/renderqueue.cpp
         source/shapegeometry.h source/shapegeometry.cpp
         source/shapevisualizer.h source/shapevisualizer.cpp
         source/spriteanimationnode.h source/spriteanimationnode.cpp
@@ -289,6 +290,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/planevisualizer.cpp
             source/phongshapenode.cpp
             source/renderresourcecache.cpp
+            source/renderqueue.cpp
             source/scenedescription.cpp
             source/scenelifecycle.cpp
             source/scenenode.cpp

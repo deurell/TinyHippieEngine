@@ -1,7 +1,9 @@
 #include "physicsdebugvisualizer.h"
 
 #include "physicscontext.h"
+#include "renderqueue.h"
 #include "scenenode.h"
+#include <utility>
 
 PhysicsDebugVisualizer::PhysicsDebugVisualizer(
     DL::Camera &camera, DL::SceneNode &node, DL::IRenderDevice &renderDevice,
@@ -54,7 +56,7 @@ void PhysicsDebugVisualizer::rebuildMesh(
                                            DL::PrimitiveType::Lines);
 }
 
-void PhysicsDebugVisualizer::render(const glm::mat4 &, const DL::FrameContext &,
+void PhysicsDebugVisualizer::render(const glm::mat4 &, const DL::FrameContext &ctx,
                                     DL::RenderPassId pass) {
   if (renderDevice_ == nullptr || physicsContext_ == nullptr) {
     return;
@@ -83,17 +85,19 @@ void PhysicsDebugVisualizer::render(const glm::mat4 &, const DL::FrameContext &,
     return;
   }
 
-  DL::DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.pass = pass;
-  command.depthTest = !hasExtraLines;
-  command.lineWidth = hasExtraLines ? 4.0f : 2.0f;
-  command.uniforms.push_back(
+  DL::RenderItem item;
+  item.tag = DL::RenderTag::Opaque;
+  item.cullable = false;
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.pass = pass;
+  item.depthTest = !hasExtraLines;
+  item.lineWidth = hasExtraLines ? 4.0f : 2.0f;
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("model", glm::mat4(1.0f)));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(DL::UniformValue::makeMat4(
+  item.uniforms.push_back(DL::UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  renderDevice_->draw(command);
+  DL::submitRenderItem(ctx, *renderDevice_, std::move(item));
 }

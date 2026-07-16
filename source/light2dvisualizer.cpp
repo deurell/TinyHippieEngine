@@ -1,7 +1,9 @@
 #include "light2dvisualizer.h"
 
 #include "light2dnode.h"
+#include "renderqueue.h"
 #include <glm/gtc/quaternion.hpp>
+#include <utility>
 
 DL::Light2DVisualizer::Light2DVisualizer(
     Camera &camera, Light2DNode &node, IRenderDevice *renderDevice,
@@ -50,24 +52,27 @@ void DL::Light2DVisualizer::render(const glm::mat4 &worldTransform,
   model = glm::scale(model, extractScale(worldTransform) *
                                 glm::vec3(config.radius));
 
-  DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.pass = pass;
-  command.blendMode = BlendMode::Additive;
-  command.depthTest = false;
-  command.uniforms.push_back(
+  RenderItem item;
+  item.tag = RenderTag::Overlay;
+  item.localBounds = {.center = glm::vec3(0.0f),
+                      .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.pass = pass;
+  item.blendMode = BlendMode::Additive;
+  item.depthTest = false;
+  item.uniforms.push_back(
       UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(UniformValue::makeVec4("lightColor",
-                                                    config.color));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeVec4("lightColor",
+                                                 config.color));
+  item.uniforms.push_back(
       UniformValue::makeFloat("intensity", lightNode_.currentIntensity()));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       UniformValue::makeFloat("softness", config.softness));
-  command.uniforms.push_back(UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
+  item.uniforms.push_back(UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(
       UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(UniformValue::makeMat4(
+  item.uniforms.push_back(UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  renderDevice_->draw(command);
+  submitRenderItem(ctx, *renderDevice_, std::move(item));
 }

@@ -1,10 +1,12 @@
 #include "particlevisualizer.h"
 
 #include "particlesystemnode.h"
+#include "renderqueue.h"
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <utility>
 
 DL::ParticleVisualizer::ParticleVisualizer(
     DL::Camera &camera, ParticleSystemNode &node, DL::IRenderDevice *renderDevice,
@@ -103,39 +105,42 @@ void DL::ParticleVisualizer::render(const glm::mat4 &worldTransform,
                           glm::scale(glm::mat4(1.0f), nodeScale * renderScale);
     }
 
-    DL::DrawCommand command;
-    command.mesh = mesh_;
-    command.pipeline = pipeline_;
-    command.pass = pass;
-    command.blendMode = config.render.blendMode;
-    command.sortMode = DrawSortMode::BackToFront;
-    command.sortDepth = cameraDistanceSortDepth(worldPosition);
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    DL::RenderItem item;
+    item.tag = DL::RenderTag::Particle;
+    item.localBounds = {.center = glm::vec3(0.0f),
+                        .halfExtents = glm::vec3(1.0f)};
+    item.mesh = mesh_;
+    item.pipeline = pipeline_;
+    item.pass = pass;
+    item.blendMode = config.render.blendMode;
+    item.sortMode = DrawSortMode::BackToFront;
+    item.sortDepth = cameraDistanceSortDepth(worldPosition);
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "iTime", static_cast<float>(ctx.total_time)));
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "paletteSteps", config.render.paletteSteps));
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "coreRadius", config.render.coreRadius));
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "haloRadius", config.render.haloRadius));
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "outerRadius", config.render.outerRadius));
-    command.uniforms.push_back(DL::UniformValue::makeFloat(
+    item.uniforms.push_back(DL::UniformValue::makeFloat(
         "sparkleAmount", config.render.sparkle));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec4("hotColor", config.render.hotColor));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec4("deepColor", config.render.deepColor));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec4("baseColor", particle.color));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeVec3("particleScale", nodeScale * renderScale));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeMat4("model", particleTransform));
-    command.uniforms.push_back(
+    item.uniforms.push_back(
         DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-    command.uniforms.push_back(DL::UniformValue::makeMat4(
+    item.uniforms.push_back(DL::UniformValue::makeMat4(
         "projection", camera_.getPerspectiveTransform()));
-    renderDevice_->draw(command);
+    DL::submitRenderItem(ctx, *renderDevice_, std::move(item));
   }
 }

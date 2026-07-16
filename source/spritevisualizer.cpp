@@ -1,8 +1,9 @@
 #include "spritevisualizer.h"
 
+#include "renderqueue.h"
+#include "stb_image.h"
 #include <iostream>
 #include <utility>
-#include "stb_image.h"
 
 namespace {
 
@@ -62,31 +63,35 @@ void DL::SpriteVisualizer::render(const glm::mat4 &worldTransform,
   model = model * glm::mat4_cast(extractRotation(worldTransform));
   model = glm::scale(model, extractScale(worldTransform));
 
-  DL::DrawCommand command;
-  command.mesh = mesh_;
-  command.pipeline = pipeline_;
-  command.texture = texture_;
-  command.pass = pass;
-  command.blendMode = BlendMode::Alpha;
-  command.depthTest = false;
-  command.sortMode = DrawSortMode::BackToFront;
+  DL::RenderItem item;
+  item.tag = RenderTag::Sprite;
+  item.localBounds = {.center = glm::vec3(0.0f),
+                      .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
+  item.mesh = mesh_;
+  item.pipeline = pipeline_;
+  item.texture = texture_;
+  item.pass = pass;
+  item.blendMode = BlendMode::Alpha;
+  item.depthTest = false;
+  item.sortMode = DrawSortMode::BackToFront;
   const glm::vec3 spritePosition = extractPosition(worldTransform);
-  command.sortDepth = cameraDistanceSortDepth(spritePosition);
-  command.uniforms.push_back(
+  item.sortDepth = cameraDistanceSortDepth(spritePosition);
+  item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeVec2("atlasSize", textureSize_));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeVec4("atlasSourceRectPixels",
                                  atlasSourceRectPixels_));
-  command.uniforms.push_back(
+  item.uniforms.push_back(
       DL::UniformValue::makeVec3("atlasFlip", atlasFlip_));
-  command.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
-  command.uniforms.push_back(
+  item.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
+  item.uniforms.push_back(
       DL::UniformValue::makeMat4("view", camera_.getViewMatrix()));
-  command.uniforms.push_back(DL::UniformValue::makeMat4(
+  item.uniforms.push_back(DL::UniformValue::makeMat4(
       "projection", camera_.getPerspectiveTransform()));
-  renderDevice_->draw(command);
+
+  submitRenderItem(ctx, *renderDevice_, std::move(item));
 }
 
 bool DL::SpriteVisualizer::loadTexture() {

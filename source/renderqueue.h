@@ -34,6 +34,7 @@ struct RenderItem {
   RenderPassId pass = RenderPassId::Opaque;
   BlendMode blendMode = BlendMode::Opaque;
   bool depthTest = true;
+  int renderLayer = 0;
   DrawSortMode sortMode = DrawSortMode::None;
   float sortDepth = 0.0f;
   float lineWidth = 1.0f;

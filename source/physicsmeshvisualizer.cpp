@@ -255,6 +255,7 @@ void PhysicsMeshVisualizer::render(const glm::mat4 &worldTransform,
 
   DL::RenderItem item;
   item.tag = DL::RenderTag::Opaque;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = localBounds_;
   item.mesh = mesh_;
   item.pipeline = pipeline_;

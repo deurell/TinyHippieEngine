@@ -1,6 +1,7 @@
 #include "spritevisualizer.h"
 
 #include "renderqueue.h"
+#include "scenenode.h"
 #include "stb_image.h"
 #include <iostream>
 #include <utility>
@@ -65,6 +66,7 @@ void DL::SpriteVisualizer::render(const glm::mat4 &worldTransform,
 
   DL::RenderItem item;
   item.tag = RenderTag::Sprite;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = {.center = glm::vec3(0.0f),
                       .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
   item.mesh = mesh_;

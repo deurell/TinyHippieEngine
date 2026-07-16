@@ -3,7 +3,6 @@
 #include "shader.h"
 #include "texture.h"
 #include <glad/glad.h>
-#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -417,8 +416,6 @@ public:
       currentTexture_ = 0;
       currentPipeline_ = 0;
       frameInProgress_ = true;
-    } else {
-      flushSortedCommands();
     }
     currentPass_ = desc.passId;
 
@@ -458,7 +455,6 @@ public:
   }
 
   void endFrame() override {
-    flushSortedCommands();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     frameInProgress_ = false;
   }
@@ -468,31 +464,10 @@ public:
   }
 
   void draw(const DrawCommand &command) override {
-    if (command.sortMode == DrawSortMode::BackToFront) {
-      sortedCommands_.push_back(command);
-      return;
-    }
     drawNow(command);
   }
 
 private:
-  void flushSortedCommands() {
-    if (sortedCommands_.empty()) {
-      return;
-    }
-
-    std::stable_sort(sortedCommands_.begin(), sortedCommands_.end(),
-                     [](const DrawCommand &lhs, const DrawCommand &rhs) {
-                       return lhs.sortDepth > rhs.sortDepth;
-                     });
-
-    const std::vector<DrawCommand> commands = std::move(sortedCommands_);
-    sortedCommands_.clear();
-    for (const DrawCommand &command : commands) {
-      drawNow(command);
-    }
-  }
-
   void drawNow(const DrawCommand &command) {
     if (command.pass != currentPass_) {
       return;
@@ -647,7 +622,6 @@ private:
   std::size_t currentMesh_ = 0;
   std::size_t currentTexture_ = 0;
   std::size_t currentPipeline_ = 0;
-  std::vector<DrawCommand> sortedCommands_;
 };
 
 } // namespace

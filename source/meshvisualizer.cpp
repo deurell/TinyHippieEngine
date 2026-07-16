@@ -1,5 +1,6 @@
 #include "meshvisualizer.h"
 
+#include "scenenode.h"
 #include "stb_image.h"
 #include <algorithm>
 #include <cstdint>
@@ -276,6 +277,7 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
 
     DL::RenderItem item;
     item.tag = DL::RenderTag::Opaque;
+    item.renderLayer = node_.renderLayer();
     item.localBounds = submesh.localBounds;
     item.cullable = submesh.skinIndex < 0;
     item.mesh = submesh.mesh;

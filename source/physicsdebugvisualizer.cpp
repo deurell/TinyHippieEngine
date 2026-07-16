@@ -87,6 +87,7 @@ void PhysicsDebugVisualizer::render(const glm::mat4 &, const DL::FrameContext &c
 
   DL::RenderItem item;
   item.tag = DL::RenderTag::Opaque;
+  item.renderLayer = node_.renderLayer();
   item.cullable = false;
   item.mesh = mesh_;
   item.pipeline = pipeline_;

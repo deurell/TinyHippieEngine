@@ -273,6 +273,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenemanager_test.cpp
             tests/scenenode_test.cpp
             tests/particlesystemnode_test.cpp
+            tests/renderqueue_test.cpp
             tests/scenedescription_test.cpp
             source/logger.cpp
             source/cameranode.cpp

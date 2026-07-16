@@ -1,5 +1,6 @@
 #include "shapevisualizer.h"
 
+#include "scenenode.h"
 #include <limits>
 #include <utility>
 
@@ -73,6 +74,7 @@ void ShapeVisualizer::render(const glm::mat4 &worldTransform,
 
   RenderItem item;
   item.tag = RenderTag::Opaque;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = localBounds_;
   item.mesh = mesh_;
   item.pipeline = pipeline_;

@@ -13,6 +13,7 @@
 #include "spritenode.h"
 #include "textnode.h"
 #include "tilemapnode.h"
+#include <cmath>
 #include <cctype>
 #include <cstdlib>
 #include <fstream>
@@ -323,6 +324,21 @@ float floatOr(const JsonValue::Object &object, std::string_view key,
   throw std::runtime_error(std::string(key) + " must be a number");
 }
 
+int intOr(const JsonValue::Object &object, std::string_view key,
+          int fallback) {
+  const JsonValue *value = find(object, key);
+  if (value == nullptr) {
+    return fallback;
+  }
+  if (const auto *number = std::get_if<double>(&value->value)) {
+    if (std::floor(*number) != *number) {
+      throw std::runtime_error(std::string(key) + " must be an integer");
+    }
+    return static_cast<int>(*number);
+  }
+  throw std::runtime_error(std::string(key) + " must be a number");
+}
+
 float numberAsFloat(const JsonValue &value, std::string_view context) {
   if (const auto *number = std::get_if<double>(&value.value)) {
     return static_cast<float>(*number);
@@ -626,6 +642,8 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   SceneNodeDescription description;
   description.name = stringOr(object, "name", description.name);
   description.type = stringOr(object, "type", description.type);
+  description.renderLayer =
+      intOr(object, "renderLayer", description.renderLayer);
   description.mesh = stringOr(object, "mesh", description.mesh);
   description.image = stringOr(object, "image", description.image);
   description.sourceRect =
@@ -1091,6 +1109,7 @@ std::unique_ptr<SceneNode> buildSceneNode(const SceneNodeDescription &descriptio
   std::unique_ptr<SceneNode> node = factory.build(description, context, parent);
 
   node->setDebugName(description.name);
+  node->setRenderLayer(description.renderLayer);
   applyTransform(*node, description);
 
   node->init();

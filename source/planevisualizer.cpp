@@ -1,6 +1,7 @@
 #include "planevisualizer.h"
 
 #include "renderqueue.h"
+#include "scenenode.h"
 #include <utility>
 
 DL::PlaneVisualizer::PlaneVisualizer(
@@ -56,6 +57,7 @@ void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform,
 
   DL::RenderItem item;
   item.tag = DL::RenderTag::Opaque;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = {.center = glm::vec3(0.0f),
                       .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
   item.mesh = mesh_;

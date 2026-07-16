@@ -2,6 +2,7 @@
 
 #include "fogoverlaynode.h"
 #include "renderqueue.h"
+#include "scenenode.h"
 #include "stb_image.h"
 #include <iostream>
 #include <utility>
@@ -88,6 +89,7 @@ void DL::FogOverlayVisualizer::render(const glm::mat4 &worldTransform,
 
   RenderItem item;
   item.tag = RenderTag::Overlay;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = {.center = glm::vec3(0.0f),
                       .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
   item.mesh = mesh_;

@@ -54,6 +54,8 @@ public:
   void setDebugLocalScale(const glm::vec3 &scale);
   void setDebugName(std::string name);
   std::string_view getDebugName() const;
+  void setRenderLayer(int layer) { renderLayer_ = layer; }
+  [[nodiscard]] int renderLayer() const { return renderLayer_; }
   bool hasParent() const { return parent != nullptr; }
   SceneNode *parentNode() const { return parent; }
   void setDebugTransformOverrideEnabled(bool enabled);
@@ -84,6 +86,7 @@ protected:
   glm::quat localRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
   glm::vec3 localScale = glm::vec3(1.0f, 1.0f, 1.0f);
   std::string debugName_ = "SceneNode";
+  int renderLayer_ = 0;
   bool debugTransformOverrideEnabled_ = false;
   std::vector<std::unique_ptr<VisualizerBase>> renderComponents_;
 

@@ -2,6 +2,7 @@
 
 #include "particlesystemnode.h"
 #include "renderqueue.h"
+#include "scenenode.h"
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -107,6 +108,7 @@ void DL::ParticleVisualizer::render(const glm::mat4 &worldTransform,
 
     DL::RenderItem item;
     item.tag = DL::RenderTag::Particle;
+    item.renderLayer = node_.renderLayer();
     item.localBounds = {.center = glm::vec3(0.0f),
                         .halfExtents = glm::vec3(1.0f)};
     item.mesh = mesh_;

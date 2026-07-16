@@ -127,6 +127,7 @@ constexpr char kSceneSource[] = R"json(
         {
           "name": "text_child",
           "type": "TextNode",
+          "renderLayer": 12,
           "text": "hello",
           "alignment": "Center",
           "anchor": "BottomCenter",
@@ -164,6 +165,7 @@ constexpr char kBuildSceneSource[] = R"json(
           "name": "mesh_child",
           "type": "MeshNode",
           "mesh": "Resources/character-l.glb",
+          "renderLayer": 7,
           "transform": {
             "position": [0.5, 0.0, 0.0],
             "scale": [0.5, 0.5, 0.5]
@@ -287,6 +289,7 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(root.children[7].spriteAnimation.frames[1].sourceRect,
             glm::vec4(16.0f, 32.0f, 16.0f, 16.0f));
   EXPECT_EQ(root.children[8].text, "hello");
+  EXPECT_EQ(root.children[8].renderLayer, 12);
   EXPECT_EQ(root.children[8].textAlignment, "Center");
   EXPECT_EQ(root.children[8].textAnchor, "BottomCenter");
   EXPECT_FLOAT_EQ(root.children[8].fontSize, 56.0f);
@@ -315,6 +318,7 @@ TEST(SceneDescriptionTest, BuildsRuntimeNodeTree) {
   EXPECT_NE(dynamic_cast<MeshNode *>(child), nullptr);
   EXPECT_EQ(child->getLocalPosition(), glm::vec3(0.5f, 0.0f, 0.0f));
   EXPECT_EQ(child->getLocalScale(), glm::vec3(0.5f, 0.5f, 0.5f));
+  EXPECT_EQ(child->renderLayer(), 7);
 }
 
 TEST(SceneDescriptionTest, SpriteAnimationNodeAdvancesAtlasFrames) {

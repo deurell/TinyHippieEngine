@@ -76,6 +76,7 @@ struct SceneNodeDescription {
   glm::vec3 position{0.0f};
   glm::vec3 rotationEulerDegrees{0.0f};
   glm::vec3 scale{1.0f};
+  int renderLayer = 0;
   std::string mesh;
   std::string image;
   glm::vec4 sourceRect{0.0f, 0.0f, -1.0f, -1.0f};

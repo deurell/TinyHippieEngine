@@ -1,5 +1,6 @@
 #include "textvisualizer.h"
 #include "renderqueue.h"
+#include "scenenode.h"
 #include <algorithm>
 #include <fstream>
 #include <iostream>
@@ -140,6 +141,7 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
   auto makeItem = [&](const glm::mat4 &drawModel, glm::vec4 color) {
     RenderItem item;
     item.tag = RenderTag::Text;
+    item.renderLayer = node_.renderLayer();
     item.localBounds = localBounds_;
     item.mesh = mesh_;
     item.pipeline = pipeline_;

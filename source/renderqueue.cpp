@@ -1,6 +1,7 @@
 #include "renderqueue.h"
 
 #include "iscene.h"
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <utility>
@@ -66,6 +67,31 @@ bool isVisibleInClipSpace(const RenderItem &item) {
          !isClipSpaceOutsidePlane(clipCorners, 2, 1.0f);
 }
 
+bool isTransparentLike(const RenderItem &item) {
+  return item.sortMode == DrawSortMode::BackToFront ||
+         item.blendMode != BlendMode::Opaque || !item.depthTest;
+}
+
+bool shouldDrawBefore(const RenderItem &lhs, const RenderItem &rhs) {
+  if (lhs.renderLayer != rhs.renderLayer) {
+    return lhs.renderLayer < rhs.renderLayer;
+  }
+
+  const bool lhsTransparent = isTransparentLike(lhs);
+  const bool rhsTransparent = isTransparentLike(rhs);
+  if (lhsTransparent != rhsTransparent) {
+    return !lhsTransparent;
+  }
+
+  if (lhs.sortMode == DrawSortMode::BackToFront &&
+      rhs.sortMode == DrawSortMode::BackToFront &&
+      lhs.sortDepth != rhs.sortDepth) {
+    return lhs.sortDepth > rhs.sortDepth;
+  }
+
+  return false;
+}
+
 } // namespace
 
 DrawCommand toDrawCommand(const RenderItem &item) {
@@ -100,13 +126,24 @@ RenderQueueStats RenderQueue::flush(IRenderDevice &renderDevice,
   items_.clear();
   RenderQueueStats stats;
   stats.submittedItems = static_cast<std::uint32_t>(items.size());
+
+  std::vector<RenderItem> visibleItems;
+  visibleItems.reserve(items.size());
   for (const RenderItem &item : items) {
     if (options.cullingEnabled && item.cullable &&
         !isVisibleInClipSpace(item)) {
       ++stats.culledItems;
       continue;
     }
-    renderDevice.draw(toDrawCommand(item));
+    visibleItems.push_back(item);
+  }
+
+  std::stable_sort(visibleItems.begin(), visibleItems.end(), shouldDrawBefore);
+
+  for (const RenderItem &item : visibleItems) {
+    DrawCommand command = toDrawCommand(item);
+    command.sortMode = DrawSortMode::None;
+    renderDevice.draw(command);
     ++stats.drawnItems;
   }
   return stats;

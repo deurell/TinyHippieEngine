@@ -45,6 +45,11 @@ Every node supports:
 meter for authored positions, scales, camera movement, and gameplay-facing
 dimensions.
 
+Visual nodes may set `renderLayer` as an integer. Lower layers draw first;
+higher layers draw later. Within one layer, opaque/depth-tested items draw
+before transparent items, and transparent items with `BackToFront` sorting draw
+far-to-near.
+
 ## Node Types
 
 - `SceneNode`: hierarchy/transform only.

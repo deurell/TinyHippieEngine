@@ -584,6 +584,10 @@ void drawNodeInspector(SceneNode &node) {
       node.setLocalScale(localScale);
     }
   }
+  int renderLayer = node.renderLayer();
+  if (ImGui::InputInt("Render layer", &renderLayer)) {
+    node.setRenderLayer(renderLayer);
+  }
 
   if (ImGui::Button("Reset transform")) {
     if (node.isDebugTransformOverrideEnabled()) {

@@ -2,6 +2,7 @@
 
 #include "light2dnode.h"
 #include "renderqueue.h"
+#include "scenenode.h"
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
 
@@ -54,6 +55,7 @@ void DL::Light2DVisualizer::render(const glm::mat4 &worldTransform,
 
   RenderItem item;
   item.tag = RenderTag::Overlay;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = {.center = glm::vec3(0.0f),
                       .halfExtents = glm::vec3(1.0f, 1.0f, 0.0f)};
   item.mesh = mesh_;

@@ -1,6 +1,7 @@
 #include "tilemapvisualizer.h"
 
 #include "renderqueue.h"
+#include "scenenode.h"
 #include "stb_image.h"
 #include <array>
 #include <iostream>
@@ -203,6 +204,7 @@ void TileMapVisualizer::render(const glm::mat4 &worldTransform,
 
   DL::RenderItem item;
   item.tag = RenderTag::TileMap;
+  item.renderLayer = node_.renderLayer();
   item.localBounds = localBounds_;
   item.mesh = mesh_;
   item.pipeline = pipeline_;

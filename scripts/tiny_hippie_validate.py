@@ -32,6 +32,7 @@ ROOT_FIELDS = {"name", "nodes"}
 NODE_FIELDS = {
     "name",
     "type",
+    "renderLayer",
     "transform",
     "children",
     "mesh",
@@ -247,6 +248,7 @@ class Validator:
         self.check_string(node, "mesh", f"{path}.mesh", required=False)
         self.check_string(node, "image", f"{path}.image", required=False)
         self.check_string(node, "text", f"{path}.text", required=False)
+        self.check_int(node, "renderLayer", f"{path}.renderLayer")
         self.check_number(node, "fontSize", f"{path}.fontSize")
         self.check_number(node, "fov", f"{path}.fov")
         self.check_number(node, "orthographicHeight", f"{path}.orthographicHeight")

@@ -110,10 +110,11 @@ void main() {
     float chromaticScale = textureSizePixels.y / 720.0;
     vec2 chromaticOffset = vec2(chromaticPixels * chromaticScale * texel.x, 0.0);
 
-    float red = texture(texture0, saturate(sampleUv + chromaticOffset)).r;
-    float green = texture(texture0, sampleUv).g;
-    float blue = texture(texture0, saturate(sampleUv - chromaticOffset)).b;
-    vec3 color = vec3(red, green, blue);
+    vec3 color = texture(texture0, sampleUv).rgb;
+    if (chromaticPixels > 0.0) {
+        color.r = texture(texture0, saturate(sampleUv + chromaticOffset)).r;
+        color.b = texture(texture0, saturate(sampleUv - chromaticOffset)).b;
+    }
 
     vec2 sourcePixels = sampleUv * textureSizePixels;
     vec2 maskPixels = sourcePixels * (720.0 / max(textureSizePixels.y, 1.0));

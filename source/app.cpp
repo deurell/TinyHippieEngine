@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #endif
 #include "game/scenes/skeletalanimationblendscene.h"
+#include "game/scenes/inputdebugscene.h"
 #include "game/scenes/textstarterscene.h"
 #include "logger.h"
 #include "renderqueue.h"
@@ -668,6 +669,10 @@ void DL::App::registerScenes() {
     return std::make_unique<TextStarterScene>(
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get());
+  });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<InputDebugScene>(renderDevice_.get(),
+                                             renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
     return std::make_unique<TextStarterScene>(

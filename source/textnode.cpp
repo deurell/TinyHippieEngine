@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <glm/gtc/quaternion.hpp>
+#include <utility>
 
 TextNode::TextNode(DL::SceneNode *parentNode, std::string text,
                    DL::IRenderDevice *renderDevice,
@@ -62,6 +63,13 @@ void TextNode::updateBillboardRotation() {
   }
 
   setLocalRotation(glm::inverse(camera_->mOrientation));
+}
+
+void TextNode::setText(std::string text) {
+  text_ = std::move(text);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setText(text_);
+  }
 }
 
 void TextNode::setTextAlignment(DL::TextAlignment alignment) {

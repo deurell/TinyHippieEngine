@@ -85,6 +85,8 @@ add_executable(tiny_hippie_engine
         source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
+        source/game/scenes/inputdebugscene.h
+        source/game/scenes/inputdebugscene.cpp
         source/game/scenes/textstarterscene.h
         source/game/scenes/textstarterscene.cpp
         source/game/scenes/skeletalanimationblendscene.h

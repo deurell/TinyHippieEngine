@@ -25,8 +25,8 @@ Precedence:
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
 - Starter app registers the generic sample `TextStarterScene` first, then
-  the Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
-  then `SkeletalAnimationBlendScene`;
+  `InputDebugScene`, then the Tiny Dungeon atlas `TextStarterScene`, then the
+  Kenney GLB `TextStarterScene`, then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,

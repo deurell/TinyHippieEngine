@@ -1,4 +1,4 @@
-#include "meshvisualizer.h"
+#include "meshrendercomponent.h"
 
 #include "scenenode.h"
 #include "stb_image.h"
@@ -32,14 +32,14 @@ Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
 
 } // namespace
 
-MeshVisualizer::MeshVisualizer(
+MeshRenderComponent::MeshRenderComponent(
     DL::Camera &camera, SceneNode &node,
     std::shared_ptr<const MeshAsset> asset,
     basist::etc1_global_selector_codebook *codeBook,
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache),
       codeBook_(codeBook), pipeline_(), asset_(std::move(asset)) {
@@ -93,7 +93,7 @@ MeshVisualizer::MeshVisualizer(
   }
 }
 
-MeshVisualizer::~MeshVisualizer() {
+MeshRenderComponent::~MeshRenderComponent() {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -110,14 +110,14 @@ MeshVisualizer::~MeshVisualizer() {
   }
 }
 
-void MeshVisualizer::updateAnimation(float deltaTime) {
+void MeshRenderComponent::updateAnimation(float deltaTime) {
   if (asset_ != nullptr) {
     animationPlayer_.update(asset_->animations, deltaTime);
     blendAnimationPlayer_.update(asset_->animations, deltaTime);
   }
 }
 
-std::size_t MeshVisualizer::findAnimationClipIndex(std::string_view name,
+std::size_t MeshRenderComponent::findAnimationClipIndex(std::string_view name,
                                                    std::size_t fallback) const {
   if (asset_ == nullptr || asset_->animations.empty()) {
     return 0u;
@@ -130,21 +130,21 @@ std::size_t MeshVisualizer::findAnimationClipIndex(std::string_view name,
   return fallback < asset_->animations.size() ? fallback : 0u;
 }
 
-std::string_view MeshVisualizer::animationClipName(std::size_t index) const {
+std::string_view MeshRenderComponent::animationClipName(std::size_t index) const {
   if (asset_ == nullptr || index >= asset_->animations.size()) {
     return {};
   }
   return asset_->animations[index].name;
 }
 
-void MeshVisualizer::applyAnimationBlend(const AnimationBlendState &state) {
+void MeshRenderComponent::applyAnimationBlend(const AnimationBlendState &state) {
   setAnimationPlaying(state.playing);
   setAnimationLooping(state.looping);
   setAnimationPlaybackSpeed(state.playbackSpeed);
   setAnimationBlend(state.baseClipIndex, state.blendClipIndex, state.weight);
 }
 
-void MeshVisualizer::setAnimationBlend(std::size_t baseClipIndex,
+void MeshRenderComponent::setAnimationBlend(std::size_t baseClipIndex,
                                        std::size_t blendClipIndex,
                                        float weight) {
   animationBlendWeight_ = std::clamp(weight, 0.0f, 1.0f);
@@ -156,14 +156,14 @@ void MeshVisualizer::setAnimationBlend(std::size_t baseClipIndex,
   }
 }
 
-void MeshVisualizer::setAnimationBlendByName(std::string_view baseClipName,
+void MeshRenderComponent::setAnimationBlendByName(std::string_view baseClipName,
                                              std::string_view blendClipName,
                                              float weight) {
   setAnimationBlend(findAnimationClipIndex(baseClipName),
                     findAnimationClipIndex(blendClipName), weight);
 }
 
-AnimationPose MeshVisualizer::currentAnimationPose() const {
+AnimationPose MeshRenderComponent::currentAnimationPose() const {
   if (asset_ == nullptr || asset_->animations.empty() ||
       animationPlayer_.clipIndex() >= asset_->animations.size()) {
     return {};
@@ -225,7 +225,7 @@ AnimationPose MeshVisualizer::currentAnimationPose() const {
   return mixedPose;
 }
 
-void MeshVisualizer::render(const glm::mat4 &worldTransform,
+void MeshRenderComponent::render(const glm::mat4 &worldTransform,
                             const DL::FrameContext &ctx,
                             DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque) {
@@ -340,7 +340,7 @@ void MeshVisualizer::render(const glm::mat4 &worldTransform,
   }
 }
 
-TextureHandle MeshVisualizer::createFallbackTexture(bool &sharedTexture) {
+TextureHandle MeshRenderComponent::createFallbackTexture(bool &sharedTexture) {
   if (resourceCache_ != nullptr) {
     sharedTexture = true;
     return resourceCache_->acquireWhiteTexture();
@@ -389,7 +389,7 @@ TextureHandle loadTextureFile(IRenderDevice &renderDevice, std::string_view path
   return texture;
 }
 
-TextureHandle MeshVisualizer::loadTexture(const MeshAssetSubmesh &submesh,
+TextureHandle MeshRenderComponent::loadTexture(const MeshAssetSubmesh &submesh,
                                           bool &sharedTexture) {
   if (!submesh.texturePath.empty() && codeBook_ != nullptr &&
       submesh.texturePath.ends_with(".basis")) {

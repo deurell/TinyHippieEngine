@@ -306,7 +306,7 @@ void drawMeshNodeInspector(MeshNode &node) {
   if (ImGui::Checkbox("Debug normals", &debugNormals)) {
     node.setDebugNormals(debugNormals);
   }
-  const auto &settings = node.visualizerSettings();
+  const auto &settings = node.renderSettings();
   ImGui::Text("Ambient %.3f", settings.ambientStrength);
   ImGui::Text("Specular %.3f", settings.specularStrength);
   ImGui::Text("Shininess %.3f", settings.shininess);

@@ -1,8 +1,8 @@
 #include "physicstestscene.h"
 
 #include "debugui.h"
-#include "physicsdebugvisualizer.h"
-#include "physicsmeshvisualizer.h"
+#include "physicsdebugrendercomponent.h"
+#include "physicsmeshrendercomponent.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
@@ -37,7 +37,7 @@ void PhysicsTestScene::init() {
   initHitMarker();
 
   if (renderDevice_ != nullptr) {
-    addRenderComponent(std::make_unique<PhysicsDebugVisualizer>(
+    addRenderComponent(std::make_unique<PhysicsDebugRenderComponent>(
         camera_, *this, *renderDevice_, physicsContext_, markerLines_));
   }
 }
@@ -69,7 +69,7 @@ DL::PhysicsBodyHandle PhysicsTestScene::addBody(DL::PhysicsBodyDesc desc,
     node->setDebugName("physics body");
     node->setLocalPosition(desc.position);
     node->setLocalRotation(desc.rotation);
-    node->addRenderComponent(std::make_unique<PhysicsMeshVisualizer>(
+    node->addRenderComponent(std::make_unique<PhysicsMeshRenderComponent>(
         camera_, *node, *renderDevice_, desc.shape, color));
     nodePtr = node.get();
     addChild(std::move(node));
@@ -91,7 +91,7 @@ void PhysicsTestScene::initHitMarker() {
   marker->init();
   marker->setDebugName("physics hit marker");
   marker->setLocalPosition({0.0f, -1000.0f, 0.0f});
-  marker->addRenderComponent(std::make_unique<PhysicsMeshVisualizer>(
+  marker->addRenderComponent(std::make_unique<PhysicsMeshRenderComponent>(
       camera_, *marker, *renderDevice_, DL::PhysicsShapeDesc::makeSphere(0.16f),
       glm::vec4{1.0f, 0.95f, 0.05f, 1.0f}));
   hitMarkerNode_ = marker.get();

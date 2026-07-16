@@ -2,36 +2,34 @@
 
 #include "renderdevice.h"
 #include "renderresourcecache.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <string>
 
-class FogOverlayNode;
+class Light2DNode;
 
 namespace DL {
 
-class FogOverlayVisualizer : public VisualizerBase {
+class Light2DRenderComponent : public RenderComponent {
 public:
-  FogOverlayVisualizer(
-      Camera &camera, FogOverlayNode &node, IRenderDevice *renderDevice,
+  explicit Light2DRenderComponent(
+      Camera &camera, Light2DNode &node, IRenderDevice *renderDevice,
       RenderResourceCache *resourceCache = nullptr,
-      std::string vertexShaderPath = "Shaders/fogoverlay.vert",
-      std::string fragmentShaderPath = "Shaders/fogoverlay.frag");
-  ~FogOverlayVisualizer() override;
+      std::string vertexShaderPath = "Shaders/image.vert",
+      std::string fragmentShaderPath = "Shaders/light2d.frag");
+  ~Light2DRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform, const FrameContext &ctx,
               RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "FogOverlayVisualizer";
+    return "Light2DRenderComponent";
   }
 
 private:
-  FogOverlayNode &fogNode_;
+  Light2DNode &lightNode_;
   IRenderDevice *renderDevice_ = nullptr;
   RenderResourceCache *resourceCache_ = nullptr;
   MeshHandle mesh_;
-  TextureHandle texture_;
   PipelineHandle pipeline_;
-  bool sharedTexture_ = false;
 };
 
 } // namespace DL

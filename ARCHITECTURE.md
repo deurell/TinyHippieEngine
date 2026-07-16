@@ -40,7 +40,7 @@ Core pieces:
 - `IScene`: scene contract (`init`, `fixedUpdate`, `update`, `render`, input hooks).
 - `SceneNode`: scene-graph base class with local/world transforms + hierarchy.
 - `CameraNode`: scene-graph camera node with authored transform/projection.
-- Render components (`VisualizerBase` descendants): attached to `SceneNode` and rendered from node world transforms.
+- Render components (`RenderComponent` descendants): attached to `SceneNode` and rendered from node world transforms.
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
 - `SceneDescription`: JSON-authored scene composition that builds normal runtime
   nodes through `SceneNodeFactory`.
@@ -48,8 +48,8 @@ Core pieces:
   authoring feedback before running the engine.
 
 Starter content:
-- The app registers the Tiny Dungeon atlas `TextStarterScene` first, then the
-  Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
+- The app registers the generic sample `TextStarterScene` first, then the
+  Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
   then `SkeletalAnimationBlendScene`.
   Physics-enabled builds also register `PhysicsTestScene`.
 - Runtime resources are intentionally minimal:
@@ -68,14 +68,14 @@ Starter content:
   `Shaders/bloom_colorgrade.frag`, `Shaders/particlefx.frag`,
   `Shaders/postprocess.vert`,
   `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
-- `MeshNode` + `MeshVisualizer` are the active node/render component pair.
+- `MeshNode` + `MeshRenderComponent` are the active node/render component pair.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
 - World units are meters: `1.0` scene unit represents roughly one meter for
   authored transforms, sample spacing, camera movement, and future physics.
-- Text scene files may describe composition, transforms, mesh paths, visualizer
+- Text scene files may describe composition, transforms, mesh paths, render
   settings, and animation defaults. C++ scenes bind to named/typed nodes for
   behavior.
 - The default scene node factory supports `SceneNode`, `CameraNode`,
@@ -85,8 +85,8 @@ Current scene representation:
 - `CameraNode` supports perspective and orthographic projection modes from
   scene JSON. Perspective uses `fov`; orthographic uses `orthographicHeight`
   as vertical world-space view size.
-- `LightNode` provides one scene directional light for forward-lit renderers
-  (`MeshNode` and `PhongShapeNode`). Unlit renderers ignore it.
+- `LightNode` provides one scene directional light for forward-lit render
+  components (`MeshNode` and `PhongShapeNode`). Unlit render components ignore it.
 - `Light2DNode` provides authored additive radial glow overlays for 2D scenes.
 - `SpriteNode` supports full-image sprites and atlas regions through
   `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
@@ -110,7 +110,7 @@ Current render pass model:
 - The app owns pass order.
 - Scene-node render components are evaluated in `Opaque` then `Overlay`.
 - `DrawCommand`s can opt into back-to-front sorting with a renderer-facing sort
-  depth. Text, sprite, and particle visualizers use this for alpha/additive
+  depth. Text, sprite, and particle render components use this for alpha/additive
   content so JSON node order does not decide whether later planes overdraw
   earlier translucent samples.
 - The starter runtime renders scene content into an offscreen color+depth target,
@@ -144,7 +144,7 @@ Desktop/Web Frame Driver
     +-----+------------------------------+
     |                                    |
     v                                    v
-children (SceneNode)          renderComponents (VisualizerBase...)
+children (SceneNode)          renderComponents (RenderComponent...)
  hierarchy + transforms         draw using node world transform
 ```
 

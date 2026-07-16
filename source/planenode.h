@@ -5,7 +5,7 @@
 #pragma once
 
 #include "camera.h"
-#include "planevisualizer.h"
+#include "planerendercomponent.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -39,6 +39,6 @@ private:
   DL::Camera *camera_;
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
-  DL::PlaneVisualizer *planeVisualizer_ = nullptr;
+  DL::PlaneRenderComponent *planeRenderComponent_ = nullptr;
   glm::vec2 screenSize_{0, 0};
 };

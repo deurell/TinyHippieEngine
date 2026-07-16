@@ -1,14 +1,14 @@
-#include "planevisualizer.h"
+#include "planerendercomponent.h"
 
 #include "renderqueue.h"
 #include "scenenode.h"
 #include <utility>
 
-DL::PlaneVisualizer::PlaneVisualizer(
+DL::PlaneRenderComponent::PlaneRenderComponent(
     DL::Camera &camera, SceneNode &node, DL::IRenderDevice *renderDevice,
     DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
+    : RenderComponent(camera, vertexShaderPath, fragmentShaderPath, node),
       renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
     return;
@@ -23,7 +23,7 @@ DL::PlaneVisualizer::PlaneVisualizer(
                                     : renderDevice_->createTexturedQuad();
 }
 
-DL::PlaneVisualizer::~PlaneVisualizer() {
+DL::PlaneRenderComponent::~PlaneRenderComponent() {
   if (renderDevice_ != nullptr) {
     if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
@@ -34,7 +34,7 @@ DL::PlaneVisualizer::~PlaneVisualizer() {
   }
 }
 
-void DL::PlaneVisualizer::render(const glm::mat4 &worldTransform,
+void DL::PlaneRenderComponent::render(const glm::mat4 &worldTransform,
                                  const DL::FrameContext &ctx,
                                  DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||

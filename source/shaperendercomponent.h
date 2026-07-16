@@ -4,7 +4,7 @@
 #include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "shapegeometry.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 
 namespace DL {
 
@@ -15,19 +15,19 @@ struct PhongMaterial {
   float shininess = 16.0f;
 };
 
-class ShapeVisualizer : public VisualizerBase {
+class ShapeRenderComponent : public RenderComponent {
 public:
-  ShapeVisualizer(Camera &camera, SceneNode &node, GeneratedMeshData meshData,
+  ShapeRenderComponent(Camera &camera, SceneNode &node, GeneratedMeshData meshData,
                   IRenderDevice *renderDevice,
                   RenderResourceCache *resourceCache = nullptr,
                   std::string vertexShaderPath = "Shaders/phongshape.vert",
                   std::string fragmentShaderPath = "Shaders/phongshape.frag");
-  ~ShapeVisualizer() override;
+  ~ShapeRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform,
               const FrameContext &ctx, RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "ShapeVisualizer";
+    return "ShapeRenderComponent";
   }
 
   PhongMaterial material;

@@ -53,34 +53,34 @@ add_executable(tiny_hippie_engine
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
         source/fogoverlaynode.h source/fogoverlaynode.cpp
-        source/fogoverlayvisualizer.h source/fogoverlayvisualizer.cpp
+        source/fogoverlayrendercomponent.h source/fogoverlayrendercomponent.cpp
         source/light2dnode.h source/light2dnode.cpp
-        source/light2dvisualizer.h source/light2dvisualizer.cpp
+        source/light2drendercomponent.h source/light2drendercomponent.cpp
         source/lightnode.h source/lightnode.cpp
         source/meshasset.h source/meshasset.cpp
         source/meshassetcache.h source/meshassetcache.cpp
         source/meshnode.h source/meshnode.cpp
-        source/meshvisualizer.h source/meshvisualizer.cpp
+        source/meshrendercomponent.h source/meshrendercomponent.cpp
         source/model.h source/model.cpp
         source/particle.cpp
         source/particlesystem.cpp
         source/particlesystemnode.h source/particlesystemnode.cpp
-        source/particlevisualizer.h source/particlevisualizer.cpp
+        source/particlerendercomponent.h source/particlerendercomponent.cpp
         source/planenode.h source/planenode.cpp
-        source/planevisualizer.h source/planevisualizer.cpp
+        source/planerendercomponent.h source/planerendercomponent.cpp
         source/phongshapenode.h source/phongshapenode.cpp
         source/renderqueue.h source/renderqueue.cpp
         source/shapegeometry.h source/shapegeometry.cpp
-        source/shapevisualizer.h source/shapevisualizer.cpp
+        source/shaperendercomponent.h source/shaperendercomponent.cpp
         source/spriteanimationnode.h source/spriteanimationnode.cpp
         source/spritebatchnode.h source/spritebatchnode.cpp
-        source/spritebatchvisualizer.h source/spritebatchvisualizer.cpp
+        source/spritebatchrendercomponent.h source/spritebatchrendercomponent.cpp
         source/spritenode.h source/spritenode.cpp
-        source/spritevisualizer.h source/spritevisualizer.cpp
+        source/spriterendercomponent.h source/spriterendercomponent.cpp
         source/textnode.h source/textnode.cpp
-        source/textvisualizer.h source/textvisualizer.cpp
+        source/textrendercomponent.h source/textrendercomponent.cpp
         source/tilemapnode.h source/tilemapnode.cpp
-        source/tilemapvisualizer.h source/tilemapvisualizer.cpp
+        source/tilemaprendercomponent.h source/tilemaprendercomponent.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
@@ -105,7 +105,7 @@ add_executable(tiny_hippie_engine
         include/scenemanager.h
         include/scenenode.h source/scenenode.cpp
         include/textsprite.h source/textsprite.cpp
-        include/visualizerbase.h
+        include/rendercomponent.h
 )
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
@@ -113,8 +113,8 @@ if (TINY_ENGINE_ENABLE_PHYSICS)
             source/physicscontext.h source/physicscontext.cpp
             source/physicsworld.h source/physicsworld.cpp
             source/physicsbodycomponent.h source/physicsbodycomponent.cpp
-            source/physicsdebugvisualizer.h source/physicsdebugvisualizer.cpp
-            source/physicsmeshvisualizer.h source/physicsmeshvisualizer.cpp
+            source/physicsdebugrendercomponent.h source/physicsdebugrendercomponent.cpp
+            source/physicsmeshrendercomponent.h source/physicsmeshrendercomponent.cpp
             source/game/scenes/physicstestscene.h
             source/game/scenes/physicstestscene.cpp
     )
@@ -278,17 +278,17 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/logger.cpp
             source/cameranode.cpp
             source/fogoverlaynode.cpp
-            source/fogoverlayvisualizer.cpp
+            source/fogoverlayrendercomponent.cpp
             source/light2dnode.cpp
-            source/light2dvisualizer.cpp
+            source/light2drendercomponent.cpp
             source/lightnode.cpp
             source/meshasset.cpp
             source/meshnode.cpp
-            source/meshvisualizer.cpp
-            source/particlevisualizer.cpp
+            source/meshrendercomponent.cpp
+            source/particlerendercomponent.cpp
             source/particlesystemnode.cpp
             source/planenode.cpp
-            source/planevisualizer.cpp
+            source/planerendercomponent.cpp
             source/phongshapenode.cpp
             source/renderresourcecache.cpp
             source/renderqueue.cpp
@@ -296,18 +296,18 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/scenelifecycle.cpp
             source/scenenode.cpp
             source/shapegeometry.cpp
-            source/shapevisualizer.cpp
+            source/shaperendercomponent.cpp
             source/spriteanimationnode.cpp
             source/spritebatchnode.cpp
-            source/spritebatchvisualizer.cpp
+            source/spritebatchrendercomponent.cpp
             source/spritenode.cpp
-            source/spritevisualizer.cpp
+            source/spriterendercomponent.cpp
             source/stb_image.cpp
             source/stb_truetype.cpp
             source/textnode.cpp
-            source/textvisualizer.cpp
+            source/textrendercomponent.cpp
             source/tilemapnode.cpp
-            source/tilemapvisualizer.cpp
+            source/tilemaprendercomponent.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)

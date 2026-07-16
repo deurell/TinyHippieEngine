@@ -1,4 +1,4 @@
-#include "particlevisualizer.h"
+#include "particlerendercomponent.h"
 #include "particlesystemnode.h"
 
 #include <glm/geometric.hpp>
@@ -28,7 +28,7 @@ TEST(ParticleSystemNodeTest, BillboardModelFacesParticleTowardCameraPosition) {
   const glm::vec3 particlePosition{1.0f, 0.5f, -0.25f};
   const glm::vec3 scale{0.4f, 0.6f, 0.8f};
   const glm::mat4 model =
-      DL::ParticleVisualizer::buildBillboardModel(particlePosition, scale,
+      DL::ParticleRenderComponent::buildBillboardModel(particlePosition, scale,
                                                   camera);
 
   const glm::vec3 modelForward = glm::normalize(glm::vec3(model[2]));

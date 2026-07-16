@@ -21,8 +21,8 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers the Tiny Dungeon atlas `TextStarterScene` first, then
-  the Kenney GLB `TextStarterScene`, then the generic sample `TextStarterScene`,
+- Starter app registers the generic sample `TextStarterScene` first, then
+  the Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
   then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
@@ -32,7 +32,7 @@ Precedence:
   `PlaneNode`, `PhongShapeNode`, and
   `ParticleSystemNode`; `CameraNode` supports authored perspective or
   orthographic projection, `LightNode` provides one forward directional light
-  for lit renderers, `Light2DNode` provides additive 2D glows, `SpriteNode`
+  for lit render components, `Light2DNode` provides additive 2D glows, `SpriteNode`
   supports atlas `sourceRect`, `flipX`, `flipY`, and `flipDiagonal`,
   `SpriteAnimationNode` advances atlas frames in `fixedUpdate()`,
   `SpriteBatchNode` batches many static atlas sprites from one image, and
@@ -60,8 +60,8 @@ Precedence:
 - Rendering uses engine-owned passes: `Opaque`, `Overlay`, then a fullscreen `PostProcess` stack.
 - Physics is optional (`TINY_ENGINE_ENABLE_PHYSICS`, default OFF); gated via `#ifdef TINY_ENGINE_ENABLE_PHYSICS`.
 - Available typed node type in the starter is `MeshNode`.
-- Available visualizer type in the starter is `MeshVisualizer`.
-- Raw OpenGL (`gl*`, `GL_*`, `GLFW`, `glfw`) must not appear in scene/node/visualizer files — enforced by `scripts/check_architecture.sh`.
+- Available render component type in the starter is `MeshRenderComponent`.
+- Raw OpenGL (`gl*`, `GL_*`, `GLFW`, `glfw`) must not appear in scene/node/render-component files — enforced by `scripts/check_architecture.sh`.
 
 ## Working Agreements
 

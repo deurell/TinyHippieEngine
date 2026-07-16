@@ -1,4 +1,4 @@
-#include "textvisualizer.h"
+#include "textrendercomponent.h"
 #include "renderqueue.h"
 #include "scenenode.h"
 #include <algorithm>
@@ -78,7 +78,7 @@ std::vector<std::uint32_t> decodeUtf8(std::string_view text) {
 
 } // namespace
 
-DL::TextVisualizer::TextVisualizer(DL::Camera &camera, SceneNode &node,
+DL::TextRenderComponent::TextRenderComponent(DL::Camera &camera, SceneNode &node,
                                    const std::string text,
                                    const std::string &fontPath,
                                    DL::IRenderDevice *renderDevice,
@@ -86,7 +86,7 @@ DL::TextVisualizer::TextVisualizer(DL::Camera &camera, SceneNode &node,
                                    const std::string vertexShaderPath,
                                    const std::string fragmentShaderPath,
                                    float pixelHeight)
-    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
+    : RenderComponent(camera, vertexShaderPath, fragmentShaderPath, node),
       text_(text), renderDevice_(renderDevice), resourceCache_(resourceCache),
       desiredPixelHeight_(pixelHeight), fontPath_(fontPath) {
   if (renderDevice_ == nullptr) {
@@ -106,7 +106,7 @@ DL::TextVisualizer::TextVisualizer(DL::Camera &camera, SceneNode &node,
   initGraphics();
 }
 
-DL::TextVisualizer::~TextVisualizer() {
+DL::TextRenderComponent::~TextRenderComponent() {
   if (renderDevice_ != nullptr) {
     if (mesh_.valid()) {
       renderDevice_->destroy(mesh_);
@@ -120,7 +120,7 @@ DL::TextVisualizer::~TextVisualizer() {
   }
 }
 
-void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
+void DL::TextRenderComponent::render(const glm::mat4 &worldTransform,
                                 const DL::FrameContext &ctx,
                                 DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||
@@ -175,12 +175,12 @@ void DL::TextVisualizer::render(const glm::mat4 &worldTransform,
   submit(makeItem(model, textColor_));
 }
 
-void DL::TextVisualizer::setText(std::string text) {
+void DL::TextRenderComponent::setText(std::string text) {
   text_ = std::move(text);
   initGraphics();
 }
 
-void DL::TextVisualizer::setAlignment(TextAlignment alignment) {
+void DL::TextRenderComponent::setAlignment(TextAlignment alignment) {
   if (alignment_ == alignment) {
     return;
   }
@@ -188,7 +188,7 @@ void DL::TextVisualizer::setAlignment(TextAlignment alignment) {
   initGraphics();
 }
 
-void DL::TextVisualizer::setAnchor(TextAnchor anchor) {
+void DL::TextRenderComponent::setAnchor(TextAnchor anchor) {
   if (anchor_ == anchor) {
     return;
   }
@@ -196,7 +196,7 @@ void DL::TextVisualizer::setAnchor(TextAnchor anchor) {
   initGraphics();
 }
 
-void DL::TextVisualizer::setLayoutWidth(float width) {
+void DL::TextRenderComponent::setLayoutWidth(float width) {
   if (layoutWidth_ == width) {
     return;
   }
@@ -204,7 +204,7 @@ void DL::TextVisualizer::setLayoutWidth(float width) {
   initGraphics();
 }
 
-void DL::TextVisualizer::setFontPixelHeight(float pixelHeight) {
+void DL::TextRenderComponent::setFontPixelHeight(float pixelHeight) {
   pixelHeight = std::max(pixelHeight, 1.0f);
   if (desiredPixelHeight_ == pixelHeight) {
     return;
@@ -237,7 +237,7 @@ void DL::TextVisualizer::setFontPixelHeight(float pixelHeight) {
   initGraphics();
 }
 
-bool DL::TextVisualizer::acquireFontTexture() {
+bool DL::TextRenderComponent::acquireFontTexture() {
   const std::uint32_t atlasSize = atlasSizeForPixelHeight();
   if (resourceCache_ != nullptr) {
     const auto *fontAtlas = resourceCache_->acquireFontAtlas(
@@ -259,7 +259,7 @@ bool DL::TextVisualizer::acquireFontTexture() {
   return loadFontTexture(fontPath_);
 }
 
-std::uint32_t DL::TextVisualizer::atlasSizeForPixelHeight() const {
+std::uint32_t DL::TextRenderComponent::atlasSizeForPixelHeight() const {
   if (desiredPixelHeight_ <= 64.0f) {
     return 1024;
   }
@@ -269,7 +269,7 @@ std::uint32_t DL::TextVisualizer::atlasSizeForPixelHeight() const {
   return 4096;
 }
 
-bool DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
+bool DL::TextRenderComponent::loadFontTexture(std::string_view fontPath) {
   std::ifstream iStream(std::string(fontPath), std::ios::binary);
   if (!iStream) {
     std::cout << "Failed to open font: " << fontPath << std::endl;
@@ -354,7 +354,7 @@ bool DL::TextVisualizer::loadFontTexture(std::string_view fontPath) {
   return fontTexture_.valid();
 }
 
-DL::TextGlyphInfo DL::TextVisualizer::makeGlyphInfo(std::uint32_t codepoint,
+DL::TextGlyphInfo DL::TextRenderComponent::makeGlyphInfo(std::uint32_t codepoint,
                                                     float offsetX,
                                                     float offsetY) {
   stbtt_aligned_quad quad;
@@ -375,7 +375,7 @@ DL::TextGlyphInfo DL::TextVisualizer::makeGlyphInfo(std::uint32_t codepoint,
       offsetY};
 }
 
-void DL::TextVisualizer::initGraphics() {
+void DL::TextRenderComponent::initGraphics() {
   if (renderDevice_ == nullptr || !fontTexture_.valid() || !fontCharInfo_) {
     return;
   }
@@ -522,7 +522,7 @@ void DL::TextVisualizer::initGraphics() {
   }
 }
 
-void DL::TextVisualizer::destroyMesh() {
+void DL::TextRenderComponent::destroyMesh() {
   if (renderDevice_ != nullptr && mesh_.valid()) {
     renderDevice_->destroy(mesh_);
     mesh_ = {};

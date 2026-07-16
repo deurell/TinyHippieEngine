@@ -2,27 +2,27 @@
 
 #include "renderdevice.h"
 #include "renderresourcecache.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 
 class ParticleSystemNode;
 
 namespace DL {
 
-class ParticleVisualizer : public VisualizerBase {
+class ParticleRenderComponent : public RenderComponent {
 public:
-  ParticleVisualizer(DL::Camera &camera, ParticleSystemNode &node,
+  ParticleRenderComponent(DL::Camera &camera, ParticleSystemNode &node,
                      DL::IRenderDevice *renderDevice,
                      DL::RenderResourceCache *resourceCache = nullptr,
                      std::string vertexShaderPath = "Shaders/particle.vert",
                      std::string fragmentShaderPath = "Shaders/particlefx.frag");
 
-  ~ParticleVisualizer() override;
+  ~ParticleRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "ParticleVisualizer";
+    return "ParticleRenderComponent";
   }
 
   static glm::mat4 buildBillboardModel(const glm::vec3 &worldPosition,

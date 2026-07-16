@@ -487,8 +487,8 @@ SceneFogOverlayDescription parseFogOverlay(const JsonValue::Object &object) {
   return description;
 }
 
-MeshVisualizerSettings parseVisualizerSettings(const JsonValue::Object &object,
-                                                MeshVisualizerSettings settings) {
+MeshRenderSettings parseRenderSettings(const JsonValue::Object &object,
+                                                MeshRenderSettings settings) {
   settings.lightDirection =
       glm::normalize(vec3Or(object, "lightDirection", settings.lightDirection));
   settings.lightColor = vec3Or(object, "lightColor", settings.lightColor);
@@ -687,9 +687,9 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
     description.scale = vec3Or(transformObject, "scale", description.scale);
   }
 
-  if (const auto *visualizer = find(object, "visualizer")) {
-    description.visualizerSettings = parseVisualizerSettings(
-        asObject(*visualizer, "visualizer"), description.visualizerSettings);
+  if (const auto *renderSettings = find(object, "renderSettings")) {
+    description.renderSettings = parseRenderSettings(
+        asObject(*renderSettings, "renderSettings"), description.renderSettings);
   }
 
   if (const auto *material = find(object, "material")) {
@@ -910,7 +910,7 @@ std::unique_ptr<SceneNode> buildMeshNode(const SceneNodeDescription &description
       description.mesh, context.codeBook, context.renderDevice,
       context.meshAssetCache, context.renderResourceCache, parent,
       context.camera);
-  node->setVisualizerSettings(description.visualizerSettings);
+  node->setRenderSettings(description.renderSettings);
   return node;
 }
 

@@ -183,10 +183,10 @@ SkeletalAnimationBlendScene::SkeletalAnimationBlendScene(
     : SceneNode(nullptr), renderDevice_(renderDevice), codeBook_(codeBook),
       meshAssetCache_(meshAssetCache),
       renderResourceCache_(renderResourceCache) {
-  visualizerSettings_.lightDirection =
+  renderSettings_.lightDirection =
       glm::normalize(glm::vec3(0.25f, 1.0f, 0.55f));
-  visualizerSettings_.ambientStrength = 0.58f;
-  visualizerSettings_.specularStrength = 0.08f;
+  renderSettings_.ambientStrength = 0.58f;
+  renderSettings_.specularStrength = 0.08f;
 }
 
 void SkeletalAnimationBlendScene::init() {
@@ -207,7 +207,7 @@ std::unique_ptr<MeshNode> SkeletalAnimationBlendScene::createCharacterNode(
       renderResourceCache_, this, camera_.get());
   node->init();
   node->setDebugName(std::move(debugName));
-  node->setVisualizerSettings(visualizerSettings_);
+  node->setRenderSettings(renderSettings_);
   node->setLocalPosition(position);
   node->setLocalScale(scale);
   return node;
@@ -322,15 +322,15 @@ void SkeletalAnimationBlendScene::render(const DL::FrameContext &ctx) {
     meshNode_->setDebugNormals(debugNormals_);
   }
   bool changed = false;
-  changed |= ImGui::SliderFloat3("Light dir", &visualizerSettings_.lightDirection.x,
+  changed |= ImGui::SliderFloat3("Light dir", &renderSettings_.lightDirection.x,
                                  -1.0f, 1.0f);
-  changed |= ImGui::ColorEdit3("Light color", &visualizerSettings_.lightColor.x);
-  changed |= ImGui::SliderFloat("Ambient", &visualizerSettings_.ambientStrength,
+  changed |= ImGui::ColorEdit3("Light color", &renderSettings_.lightColor.x);
+  changed |= ImGui::SliderFloat("Ambient", &renderSettings_.ambientStrength,
                                 0.0f, 1.5f);
-  changed |= ImGui::SliderFloat("Specular", &visualizerSettings_.specularStrength,
+  changed |= ImGui::SliderFloat("Specular", &renderSettings_.specularStrength,
                                 0.0f, 1.0f);
   if (changed && meshNode_ != nullptr) {
-    meshNode_->setVisualizerSettings(visualizerSettings_);
+    meshNode_->setRenderSettings(renderSettings_);
   }
   ImGui::End();
 #endif

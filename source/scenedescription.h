@@ -3,13 +3,13 @@
 #include "basisu_global_selector_palette.h"
 #include "camera.h"
 #include "meshassetcache.h"
-#include "meshvisualizer.h"
+#include "meshrendercomponent.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
-#include "shapevisualizer.h"
-#include "spritebatchvisualizer.h"
-#include "tilemapvisualizer.h"
+#include "shaperendercomponent.h"
+#include "spritebatchrendercomponent.h"
+#include "tilemaprendercomponent.h"
 #include <filesystem>
 #include <functional>
 #include <string_view>
@@ -104,7 +104,7 @@ struct SceneNodeDescription {
   SceneLight2DDescription light2D;
   SceneFogOverlayDescription fogOverlay;
   PhongMaterial material;
-  MeshVisualizerSettings visualizerSettings;
+  MeshRenderSettings renderSettings;
   SpriteBatchConfig spriteBatch;
   TileMapConfig tileMap;
   SceneSpriteAnimationDescription spriteAnimation;

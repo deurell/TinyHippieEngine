@@ -7,7 +7,7 @@
 #include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "stb_truetype.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <cstdint>
 #include <map>
 #include <memory>
@@ -44,9 +44,9 @@ struct FontData {
   float fontSize = 0.0f;
 };
 
-class TextVisualizer : public VisualizerBase {
+class TextRenderComponent : public RenderComponent {
 public:
-  explicit TextVisualizer(DL::Camera &camera, SceneNode &node, std::string text,
+  explicit TextRenderComponent(DL::Camera &camera, SceneNode &node, std::string text,
                           const std::string &fontPath,
                           DL::IRenderDevice *renderDevice,
                           DL::RenderResourceCache *resourceCache,
@@ -54,12 +54,12 @@ public:
                           std::string fragmentShaderPath,
                           float pixelHeight = 48.0f);
 
-  ~TextVisualizer() override;
+  ~TextRenderComponent() override;
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "TextVisualizer";
+    return "TextRenderComponent";
   }
   void setText(std::string text);
   void setAlignment(TextAlignment alignment);

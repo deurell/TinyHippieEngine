@@ -44,6 +44,6 @@ void SpriteBatchNode::initComponents() {
     return;
   }
 
-  addRenderComponent(std::make_unique<DL::SpriteBatchVisualizer>(
+  addRenderComponent(std::make_unique<DL::SpriteBatchRenderComponent>(
       *camera_, *this, config_, renderDevice_, renderResourceCache_));
 }

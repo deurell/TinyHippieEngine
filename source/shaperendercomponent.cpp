@@ -1,4 +1,4 @@
-#include "shapevisualizer.h"
+#include "shaperendercomponent.h"
 
 #include "scenenode.h"
 #include <limits>
@@ -26,13 +26,13 @@ Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
 
 } // namespace
 
-ShapeVisualizer::ShapeVisualizer(Camera &camera, SceneNode &node,
+ShapeRenderComponent::ShapeRenderComponent(Camera &camera, SceneNode &node,
                                  GeneratedMeshData meshData,
                                  IRenderDevice *renderDevice,
                                  RenderResourceCache *resourceCache,
                                  std::string vertexShaderPath,
                                  std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
@@ -48,7 +48,7 @@ ShapeVisualizer::ShapeVisualizer(Camera &camera, SceneNode &node,
                                     meshData.uvs, meshData.indices);
 }
 
-ShapeVisualizer::~ShapeVisualizer() {
+ShapeRenderComponent::~ShapeRenderComponent() {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -60,7 +60,7 @@ ShapeVisualizer::~ShapeVisualizer() {
   }
 }
 
-void ShapeVisualizer::render(const glm::mat4 &worldTransform,
+void ShapeRenderComponent::render(const glm::mat4 &worldTransform,
                              const FrameContext &ctx, RenderPassId pass) {
   if (pass != RenderPassId::Opaque || renderDevice_ == nullptr ||
       !mesh_.valid() || !pipeline_.valid()) {

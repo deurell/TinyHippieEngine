@@ -4,7 +4,7 @@
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
-#include "textvisualizer.h"
+#include "textrendercomponent.h"
 #include <memory>
 #include <string_view>
 
@@ -26,7 +26,7 @@ public:
     return "TextNode";
   }
   DL::Camera &getCamera() { return *camera_; }
-  DL::TextVisualizer *getTextVisualizer() const { return textVisualizer_; }
+  DL::TextRenderComponent *getTextRenderComponent() const { return textRenderComponent_; }
   [[nodiscard]] std::string_view text() const { return text_; }
   void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
   [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
@@ -54,7 +54,7 @@ private:
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
   std::string text_;
-  DL::TextVisualizer *textVisualizer_ = nullptr;
+  DL::TextRenderComponent *textRenderComponent_ = nullptr;
   bool billboardEnabled_ = false;
   DL::TextAlignment alignment_ = DL::TextAlignment::CENTER;
   DL::TextAnchor anchor_ = DL::TextAnchor::CENTER;

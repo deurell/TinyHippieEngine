@@ -186,7 +186,7 @@ void SceneNode::markDirty() {
   }
 }
 
-void SceneNode::addRenderComponent(std::unique_ptr<VisualizerBase> component) {
+void SceneNode::addRenderComponent(std::unique_ptr<RenderComponent> component) {
   renderComponents_.push_back(std::move(component));
 }
 

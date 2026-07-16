@@ -4,24 +4,24 @@
 #include "physicsworld.h"
 #include "renderdevice.h"
 #include "renderqueue.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <vector>
 
-class PhysicsMeshVisualizer final : public DL::VisualizerBase {
+class PhysicsMeshRenderComponent final : public DL::RenderComponent {
 public:
-  PhysicsMeshVisualizer(DL::Camera &camera, DL::SceneNode &node,
+  PhysicsMeshRenderComponent(DL::Camera &camera, DL::SceneNode &node,
                         DL::IRenderDevice &renderDevice,
                         const DL::PhysicsShapeDesc &shape,
                         const glm::vec4 &color);
-  ~PhysicsMeshVisualizer() override;
+  ~PhysicsMeshRenderComponent() override;
 
-  PhysicsMeshVisualizer(const PhysicsMeshVisualizer &) = delete;
-  PhysicsMeshVisualizer &operator=(const PhysicsMeshVisualizer &) = delete;
+  PhysicsMeshRenderComponent(const PhysicsMeshRenderComponent &) = delete;
+  PhysicsMeshRenderComponent &operator=(const PhysicsMeshRenderComponent &) = delete;
 
   void render(const glm::mat4 &worldTransform, const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "PhysicsMeshVisualizer";
+    return "PhysicsMeshRenderComponent";
   }
 
 private:

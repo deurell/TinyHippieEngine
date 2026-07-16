@@ -3,28 +3,28 @@
 #include "camera.h"
 #include "physicsworld.h"
 #include "renderdevice.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <vector>
 
 namespace DL {
 class PhysicsContext;
 }
 
-class PhysicsDebugVisualizer final : public DL::VisualizerBase {
+class PhysicsDebugRenderComponent final : public DL::RenderComponent {
 public:
-  PhysicsDebugVisualizer(DL::Camera &camera, DL::SceneNode &node,
+  PhysicsDebugRenderComponent(DL::Camera &camera, DL::SceneNode &node,
                          DL::IRenderDevice &renderDevice,
                          const DL::PhysicsContext &physicsContext,
                          const std::vector<DL::PhysicsDebugLine> &extraLines);
-  ~PhysicsDebugVisualizer() override;
+  ~PhysicsDebugRenderComponent() override;
 
-  PhysicsDebugVisualizer(const PhysicsDebugVisualizer &) = delete;
-  PhysicsDebugVisualizer &operator=(const PhysicsDebugVisualizer &) = delete;
+  PhysicsDebugRenderComponent(const PhysicsDebugRenderComponent &) = delete;
+  PhysicsDebugRenderComponent &operator=(const PhysicsDebugRenderComponent &) = delete;
 
   void render(const glm::mat4 &worldTransform, const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "PhysicsDebugVisualizer";
+    return "PhysicsDebugRenderComponent";
   }
 
 private:

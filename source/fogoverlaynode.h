@@ -11,7 +11,7 @@
 #include <utility>
 
 namespace DL {
-class FogOverlayVisualizer;
+class FogOverlayRenderComponent;
 }
 
 class FogOverlayNode : public DL::SceneNode {

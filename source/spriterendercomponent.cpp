@@ -1,4 +1,4 @@
-#include "spritevisualizer.h"
+#include "spriterendercomponent.h"
 
 #include "renderqueue.h"
 #include "scenenode.h"
@@ -15,12 +15,12 @@ bool hasExtension(std::string_view path, std::string_view extension) {
 
 } // namespace
 
-DL::SpriteVisualizer::SpriteVisualizer(
+DL::SpriteRenderComponent::SpriteRenderComponent(
     DL::Camera &camera, SceneNode &node, std::string texturePath,
     basist::etc1_global_selector_codebook *codeBook,
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, vertexShaderPath, fragmentShaderPath, node),
+    : RenderComponent(camera, vertexShaderPath, fragmentShaderPath, node),
       renderDevice_(renderDevice), texturePath_(std::move(texturePath)),
       codeBook_(codeBook), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
@@ -37,7 +37,7 @@ DL::SpriteVisualizer::SpriteVisualizer(
   loadTexture();
 }
 
-DL::SpriteVisualizer::~SpriteVisualizer() {
+DL::SpriteRenderComponent::~SpriteRenderComponent() {
   if (renderDevice_ != nullptr) {
     if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
@@ -51,7 +51,7 @@ DL::SpriteVisualizer::~SpriteVisualizer() {
   }
 }
 
-void DL::SpriteVisualizer::render(const glm::mat4 &worldTransform,
+void DL::SpriteRenderComponent::render(const glm::mat4 &worldTransform,
                                   const DL::FrameContext &ctx,
                                   DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||
@@ -96,7 +96,7 @@ void DL::SpriteVisualizer::render(const glm::mat4 &worldTransform,
   submitRenderItem(ctx, *renderDevice_, std::move(item));
 }
 
-bool DL::SpriteVisualizer::loadTexture() {
+bool DL::SpriteRenderComponent::loadTexture() {
   if (hasExtension(texturePath_, ".basis")) {
     if (codeBook_ == nullptr) {
       std::cerr << "Sprite texture needs a Basis codebook: " << texturePath_

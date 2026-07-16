@@ -9,7 +9,7 @@
 #include <string_view>
 
 namespace DL {
-class Light2DVisualizer;
+class Light2DRenderComponent;
 }
 
 class Light2DNode : public DL::SceneNode {

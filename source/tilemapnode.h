@@ -4,7 +4,7 @@
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
-#include "tilemapvisualizer.h"
+#include "tilemaprendercomponent.h"
 #include <string>
 
 class TileMapNode : public DL::SceneNode {

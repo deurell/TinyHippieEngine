@@ -1,28 +1,25 @@
-#include "tilemapvisualizer.h"
+#include "spritebatchrendercomponent.h"
 
 #include "renderqueue.h"
 #include "scenenode.h"
 #include "stb_image.h"
 #include <array>
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <utility>
 
 namespace {
 
-std::array<glm::vec2, 4> transformedTileUvs(std::uint32_t tileIndex,
-                                            std::uint32_t columns,
-                                            std::uint32_t tileWidth,
-                                            std::uint32_t tileHeight,
-                                            const glm::vec2 &atlasSize,
-                                            bool flipX, bool flipY,
-                                            bool flipDiagonal) {
-  const std::uint32_t col = columns > 0 ? tileIndex % columns : 0u;
-  const std::uint32_t row = columns > 0 ? tileIndex / columns : 0u;
-  const glm::vec2 origin{static_cast<float>(col * tileWidth),
-                         static_cast<float>(row * tileHeight)};
-  const glm::vec2 size{static_cast<float>(tileWidth),
-                       static_cast<float>(tileHeight)};
+std::array<glm::vec2, 4> spriteUvs(const glm::vec4 &sourceRectPixels,
+                                   const glm::vec2 &atlasSize, bool flipX,
+                                   bool flipY, bool flipDiagonal) {
+  glm::vec2 origin = sourceRectPixels.z > 0.0f && sourceRectPixels.w > 0.0f
+                         ? glm::vec2(sourceRectPixels)
+                         : glm::vec2(0.0f);
+  glm::vec2 size = sourceRectPixels.z > 0.0f && sourceRectPixels.w > 0.0f
+                       ? glm::vec2(sourceRectPixels.z, sourceRectPixels.w)
+                       : atlasSize;
 
   std::array<glm::vec2, 4> local = {
       glm::vec2{1.0f, 0.0f}, glm::vec2{1.0f, 1.0f},
@@ -46,11 +43,11 @@ std::array<glm::vec2, 4> transformedTileUvs(std::uint32_t tileIndex,
 
 namespace DL {
 
-TileMapVisualizer::TileMapVisualizer(
-    DL::Camera &camera, SceneNode &node, TileMapConfig config,
+SpriteBatchRenderComponent::SpriteBatchRenderComponent(
+    DL::Camera &camera, SceneNode &node, SpriteBatchConfig config,
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache),
       config_(std::move(config)) {
@@ -95,14 +92,15 @@ TileMapVisualizer::TileMapVisualizer(
   }
 
   if (!texture_.valid()) {
-    std::cerr << "Failed to load tilemap texture: " << config_.imagePath << "\n";
+    std::cerr << "Failed to load sprite batch texture: " << config_.imagePath
+              << "\n";
     return;
   }
 
   buildMesh();
 }
 
-TileMapVisualizer::~TileMapVisualizer() {
+SpriteBatchRenderComponent::~SpriteBatchRenderComponent() {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -117,62 +115,49 @@ TileMapVisualizer::~TileMapVisualizer() {
   }
 }
 
-void TileMapVisualizer::buildMesh() {
-  if (renderDevice_ == nullptr || config_.columns == 0 ||
-      config_.mapWidth == 0 || config_.mapHeight == 0 ||
-      config_.tileWidth == 0 || config_.tileHeight == 0 ||
-      atlasSize_.x <= 0.0f || atlasSize_.y <= 0.0f) {
+void SpriteBatchRenderComponent::buildMesh() {
+  if (renderDevice_ == nullptr || atlasSize_.x <= 0.0f ||
+      atlasSize_.y <= 0.0f || config_.sprites.empty()) {
     return;
   }
-
-  const glm::vec2 atlasSize = atlasSize_;
 
   std::vector<glm::vec3> positions;
   std::vector<glm::vec3> normals;
   std::vector<glm::vec2> uvs;
   std::vector<std::uint32_t> indices;
+  positions.reserve(config_.sprites.size() * 4);
+  normals.reserve(config_.sprites.size() * 4);
+  uvs.reserve(config_.sprites.size() * 4);
+  indices.reserve(config_.sprites.size() * 6);
 
-  std::size_t tileCount = 0;
-  for (const auto &layer : config_.layers) {
-    tileCount += layer.tiles.size();
-  }
-  positions.reserve(tileCount * 4);
-  normals.reserve(tileCount * 4);
-  uvs.reserve(tileCount * 4);
-  indices.reserve(tileCount * 6);
+  for (const SpriteBatchItem &sprite : config_.sprites) {
+    const float radians = glm::radians(sprite.rotationDegrees);
+    const float cosTheta = std::cos(radians);
+    const float sinTheta = std::sin(radians);
+    const glm::vec2 halfSize = sprite.size * 0.5f;
+    const std::array<glm::vec2, 4> corners = {
+        glm::vec2{halfSize.x, halfSize.y}, glm::vec2{halfSize.x, -halfSize.y},
+        glm::vec2{-halfSize.x, -halfSize.y}, glm::vec2{-halfSize.x, halfSize.y}};
+    const std::uint32_t base = static_cast<std::uint32_t>(positions.size());
 
-  const float halfTile = config_.tileWorldSize * 0.5f;
-  const float centerX = (static_cast<float>(config_.mapWidth) - 1.0f) * 0.5f;
-  const float centerY = (static_cast<float>(config_.mapHeight) - 1.0f) * 0.5f;
-
-  for (const auto &layer : config_.layers) {
-    for (const auto &tile : layer.tiles) {
-      const float x =
-          (static_cast<float>(tile.x) - centerX) * config_.tileWorldSize;
-      const float y =
-          (centerY - static_cast<float>(tile.y)) * config_.tileWorldSize;
-      const float z = layer.z;
-      const std::uint32_t base = static_cast<std::uint32_t>(positions.size());
-
-      positions.push_back({x + halfTile, y + halfTile, z});
-      positions.push_back({x + halfTile, y - halfTile, z});
-      positions.push_back({x - halfTile, y - halfTile, z});
-      positions.push_back({x - halfTile, y + halfTile, z});
-      normals.insert(normals.end(), 4, glm::vec3(0.0f, 0.0f, 1.0f));
-
-      const auto tileUvs =
-          transformedTileUvs(tile.tileIndex, config_.columns, config_.tileWidth,
-                             config_.tileHeight, atlasSize, tile.flipX,
-                             tile.flipY, tile.flipDiagonal);
-      uvs.insert(uvs.end(), tileUvs.begin(), tileUvs.end());
-
-      indices.push_back(base + 0);
-      indices.push_back(base + 1);
-      indices.push_back(base + 3);
-      indices.push_back(base + 1);
-      indices.push_back(base + 2);
-      indices.push_back(base + 3);
+    for (const glm::vec2 &corner : corners) {
+      const glm::vec2 rotated{corner.x * cosTheta - corner.y * sinTheta,
+                              corner.x * sinTheta + corner.y * cosTheta};
+      positions.push_back(sprite.position + glm::vec3(rotated, 0.0f));
     }
+    normals.insert(normals.end(), 4, glm::vec3(0.0f, 0.0f, 1.0f));
+
+    const auto quadUvs =
+        spriteUvs(sprite.sourceRectPixels, atlasSize_, sprite.flipX,
+                  sprite.flipY, sprite.flipDiagonal);
+    uvs.insert(uvs.end(), quadUvs.begin(), quadUvs.end());
+
+    indices.push_back(base + 0);
+    indices.push_back(base + 1);
+    indices.push_back(base + 3);
+    indices.push_back(base + 1);
+    indices.push_back(base + 2);
+    indices.push_back(base + 3);
   }
 
   if (!positions.empty()) {
@@ -189,9 +174,9 @@ void TileMapVisualizer::buildMesh() {
   mesh_ = renderDevice_->createMesh(positions, normals, uvs, indices);
 }
 
-void TileMapVisualizer::render(const glm::mat4 &worldTransform,
-                               const DL::FrameContext &ctx,
-                               DL::RenderPassId pass) {
+void SpriteBatchRenderComponent::render(const glm::mat4 &worldTransform,
+                                   const DL::FrameContext &ctx,
+                                   DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||
       !mesh_.valid() || !texture_.valid() || !pipeline_.valid()) {
     return;
@@ -203,7 +188,7 @@ void TileMapVisualizer::render(const glm::mat4 &worldTransform,
   model = glm::scale(model, extractScale(worldTransform));
 
   DL::RenderItem item;
-  item.tag = RenderTag::TileMap;
+  item.tag = RenderTag::SpriteBatch;
   item.renderLayer = node_.renderLayer();
   item.localBounds = localBounds_;
   item.mesh = mesh_;
@@ -212,6 +197,8 @@ void TileMapVisualizer::render(const glm::mat4 &worldTransform,
   item.pass = pass;
   item.blendMode = BlendMode::Alpha;
   item.depthTest = false;
+  item.sortMode = DrawSortMode::BackToFront;
+  item.sortDepth = cameraDistanceSortDepth(extractPosition(worldTransform));
   item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
   item.uniforms.push_back(DL::UniformValue::makeMat4("model", model));

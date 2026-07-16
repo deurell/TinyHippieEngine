@@ -4,13 +4,13 @@ set -euo pipefail
 paths=(
   include/renderdevice.h
   include/scenenode.h
-  include/visualizerbase.h
+  include/rendercomponent.h
   source/app.cpp
   source/debugui.h
   source/meshnode.cpp
   source/meshnode.h
-  source/meshvisualizer.cpp
-  source/meshvisualizer.h
+  source/meshrendercomponent.cpp
+  source/meshrendercomponent.h
   source/openglrenderdevice.cpp
   source/scenenode.cpp
   source/game/scenes/skeletalanimationblendscene.cpp

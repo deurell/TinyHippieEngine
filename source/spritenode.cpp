@@ -1,6 +1,6 @@
 #include "spritenode.h"
 
-#include "spritevisualizer.h"
+#include "spriterendercomponent.h"
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
 
@@ -36,15 +36,15 @@ void SpriteNode::onScreenSizeChanged(glm::vec2 size) {
 
 void SpriteNode::setAtlasSourceRectPixels(const glm::vec4 &rect) {
   atlasSourceRectPixels_ = rect;
-  if (spriteVisualizer_ != nullptr) {
-    spriteVisualizer_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
+  if (spriteRenderComponent_ != nullptr) {
+    spriteRenderComponent_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
   }
 }
 
 void SpriteNode::setAtlasFlip(bool flipX, bool flipY, bool flipDiagonal) {
   atlasFlip_ = {flipX, flipY, flipDiagonal};
-  if (spriteVisualizer_ != nullptr) {
-    spriteVisualizer_->setAtlasFlip(flipX, flipY, flipDiagonal);
+  if (spriteRenderComponent_ != nullptr) {
+    spriteRenderComponent_->setAtlasFlip(flipX, flipY, flipDiagonal);
   }
 }
 
@@ -62,13 +62,13 @@ void SpriteNode::initComponents() {
     return;
   }
 
-  auto visualizer = std::make_unique<DL::SpriteVisualizer>(
+  auto renderer = std::make_unique<DL::SpriteRenderComponent>(
       *camera_, *this, imagePath_, codeBook_, renderDevice_,
       renderResourceCache_);
-  spriteVisualizer_ = visualizer.get();
-  spriteVisualizer_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
-  spriteVisualizer_->setAtlasFlip(atlasFlip_.x, atlasFlip_.y, atlasFlip_.z);
-  addRenderComponent(std::move(visualizer));
+  spriteRenderComponent_ = renderer.get();
+  spriteRenderComponent_->setAtlasSourceRectPixels(atlasSourceRectPixels_);
+  spriteRenderComponent_->setAtlasFlip(atlasFlip_.x, atlasFlip_.y, atlasFlip_.z);
+  addRenderComponent(std::move(renderer));
 }
 
 void SpriteNode::updateBillboardRotation() {

@@ -1,6 +1,6 @@
 #include "fogoverlaynode.h"
 
-#include "fogoverlayvisualizer.h"
+#include "fogoverlayrendercomponent.h"
 #include <algorithm>
 #include <utility>
 
@@ -69,6 +69,6 @@ void FogOverlayNode::initComponents() {
     return;
   }
 
-  addRenderComponent(std::make_unique<DL::FogOverlayVisualizer>(
+  addRenderComponent(std::make_unique<DL::FogOverlayRenderComponent>(
       *camera_, *this, renderDevice_, renderResourceCache_));
 }

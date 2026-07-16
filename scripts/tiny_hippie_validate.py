@@ -58,7 +58,7 @@ NODE_FIELDS = {
     "orthographicHeight",
     "lookAt",
     "color",
-    "visualizer",
+    "renderSettings",
     "material",
     "animation",
     "light",
@@ -70,7 +70,7 @@ NODE_FIELDS = {
 }
 
 TRANSFORM_FIELDS = {"position", "rotationEuler", "scale"}
-VISUALIZER_FIELDS = {
+RENDER_SETTINGS_FIELDS = {
     "lightDirection",
     "lightColor",
     "ambientStrength",
@@ -262,7 +262,7 @@ class Validator:
         self.check_enum(node, "shape", SHAPE_TYPES, f"{path}.shape")
         self.check_enum(node, "particle", PARTICLE_PRESETS, f"{path}.particle")
 
-        self.validate_named_object(node, "visualizer", VISUALIZER_FIELDS, path)
+        self.validate_named_object(node, "renderSettings", RENDER_SETTINGS_FIELDS, path)
         self.validate_named_object(node, "material", MATERIAL_FIELDS, path)
         self.validate_named_object(node, "animation", ANIMATION_FIELDS, path)
         self.validate_light(node, path)

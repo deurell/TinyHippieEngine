@@ -1,4 +1,4 @@
-#include "light2dvisualizer.h"
+#include "light2drendercomponent.h"
 
 #include "light2dnode.h"
 #include "renderqueue.h"
@@ -6,11 +6,11 @@
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
 
-DL::Light2DVisualizer::Light2DVisualizer(
+DL::Light2DRenderComponent::Light2DRenderComponent(
     Camera &camera, Light2DNode &node, IRenderDevice *renderDevice,
     RenderResourceCache *resourceCache, std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       lightNode_(node), renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
@@ -26,7 +26,7 @@ DL::Light2DVisualizer::Light2DVisualizer(
                                     : renderDevice_->createTexturedQuad();
 }
 
-DL::Light2DVisualizer::~Light2DVisualizer() {
+DL::Light2DRenderComponent::~Light2DRenderComponent() {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -38,7 +38,7 @@ DL::Light2DVisualizer::~Light2DVisualizer() {
   }
 }
 
-void DL::Light2DVisualizer::render(const glm::mat4 &worldTransform,
+void DL::Light2DRenderComponent::render(const glm::mat4 &worldTransform,
                                    const FrameContext &ctx,
                                    RenderPassId pass) {
   if (pass != RenderPassId::Opaque || renderDevice_ == nullptr ||

@@ -1,4 +1,4 @@
-#include "physicsmeshvisualizer.h"
+#include "physicsmeshrendercomponent.h"
 
 #include "scenenode.h"
 #include <cmath>
@@ -184,10 +184,10 @@ DL::Bounds boundsFromPositions(const std::vector<glm::vec3> &positions) {
 
 } // namespace
 
-PhysicsMeshVisualizer::PhysicsMeshVisualizer(
+PhysicsMeshRenderComponent::PhysicsMeshRenderComponent(
     DL::Camera &camera, DL::SceneNode &node, DL::IRenderDevice &renderDevice,
     const DL::PhysicsShapeDesc &shape, const glm::vec4 &color)
-    : VisualizerBase(camera, "Shaders/colored_line.vert",
+    : RenderComponent(camera, "Shaders/colored_line.vert",
                      "Shaders/colored_line.frag", node),
       renderDevice_(&renderDevice), baseTint_(color), ambientTint_(glm::vec3(color) * 0.5f + glm::vec3(0.2f)) {
   vertexShaderPath_ = "Shaders/meshnode.vert";
@@ -195,7 +195,7 @@ PhysicsMeshVisualizer::PhysicsMeshVisualizer(
   createMesh(shape, color);
 }
 
-PhysicsMeshVisualizer::~PhysicsMeshVisualizer() {
+PhysicsMeshRenderComponent::~PhysicsMeshRenderComponent() {
   if (renderDevice_ != nullptr && mesh_.valid()) {
     renderDevice_->destroy(mesh_);
   }
@@ -207,7 +207,7 @@ PhysicsMeshVisualizer::~PhysicsMeshVisualizer() {
   }
 }
 
-void PhysicsMeshVisualizer::createMesh(const DL::PhysicsShapeDesc &shape,
+void PhysicsMeshRenderComponent::createMesh(const DL::PhysicsShapeDesc &shape,
                                        const glm::vec4 &color) {
   if (renderDevice_ == nullptr) {
     return;
@@ -237,7 +237,7 @@ void PhysicsMeshVisualizer::createMesh(const DL::PhysicsShapeDesc &shape,
        .generateMipmaps = false});
 }
 
-void PhysicsMeshVisualizer::render(const glm::mat4 &worldTransform,
+void PhysicsMeshRenderComponent::render(const glm::mat4 &worldTransform,
                                    const DL::FrameContext &ctx,
                                    DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||

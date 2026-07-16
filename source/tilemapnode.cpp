@@ -40,6 +40,6 @@ void TileMapNode::initComponents() {
     return;
   }
 
-  addRenderComponent(std::make_unique<DL::TileMapVisualizer>(
+  addRenderComponent(std::make_unique<DL::TileMapRenderComponent>(
       *camera_, *this, config_, renderDevice_, renderResourceCache_));
 }

@@ -4,7 +4,7 @@
 #include "camera.h"
 #include "meshassetcache.h"
 #include "meshnode.h"
-#include "meshvisualizer.h"
+#include "meshrendercomponent.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -109,5 +109,5 @@ private:
   float targetLocomotionBlendWeight_ = 0.0f;
   glm::vec3 characterPosition_{-2.6f, 0.0f, -1.4f};
   glm::vec3 leaderForward_{1.0f, 0.0f, 0.0f};
-  DL::MeshVisualizerSettings visualizerSettings_;
+  DL::MeshRenderSettings renderSettings_;
 };

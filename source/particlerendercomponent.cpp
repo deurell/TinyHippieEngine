@@ -1,4 +1,4 @@
-#include "particlevisualizer.h"
+#include "particlerendercomponent.h"
 
 #include "particlesystemnode.h"
 #include "renderqueue.h"
@@ -9,12 +9,12 @@
 #include <glm/gtc/quaternion.hpp>
 #include <utility>
 
-DL::ParticleVisualizer::ParticleVisualizer(
+DL::ParticleRenderComponent::ParticleRenderComponent(
     DL::Camera &camera, ParticleSystemNode &node, DL::IRenderDevice *renderDevice,
     DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       particleNode_(node), renderDevice_(renderDevice),
       resourceCache_(resourceCache),
@@ -32,7 +32,7 @@ DL::ParticleVisualizer::ParticleVisualizer(
                                     : renderDevice_->createTexturedQuad();
 }
 
-DL::ParticleVisualizer::~ParticleVisualizer() {
+DL::ParticleRenderComponent::~ParticleRenderComponent() {
   if (renderDevice_ != nullptr) {
     if (mesh_.valid() && resourceCache_ == nullptr) {
       renderDevice_->destroy(mesh_);
@@ -43,7 +43,7 @@ DL::ParticleVisualizer::~ParticleVisualizer() {
   }
 }
 
-glm::mat4 DL::ParticleVisualizer::buildBillboardModel(
+glm::mat4 DL::ParticleRenderComponent::buildBillboardModel(
     const glm::vec3 &worldPosition, const glm::vec3 &scale,
     const DL::Camera &camera) {
   glm::vec3 forward = camera.getPosition() - worldPosition;
@@ -69,7 +69,7 @@ glm::mat4 DL::ParticleVisualizer::buildBillboardModel(
   return model;
 }
 
-void DL::ParticleVisualizer::render(const glm::mat4 &worldTransform,
+void DL::ParticleRenderComponent::render(const glm::mat4 &worldTransform,
                                     const DL::FrameContext &ctx,
                                     DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||

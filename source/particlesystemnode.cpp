@@ -1,6 +1,6 @@
 #include "particlesystemnode.h"
 
-#include "particlevisualizer.h"
+#include "particlerendercomponent.h"
 #include <glm/ext/scalar_constants.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -189,11 +189,11 @@ ParticleSystemNode::Config ParticleSystemNode::Config::waterFountain() {
 void ParticleSystemNode::init() {
   SceneNode::init();
 
-  auto visualizer = std::make_unique<DL::ParticleVisualizer>(
+  auto renderer = std::make_unique<DL::ParticleRenderComponent>(
       *camera_, *this, renderDevice_,
       renderResourceCache_, "Shaders/particle.vert",
       "Shaders/particlefx.frag");
-  addRenderComponent(std::move(visualizer));
+  addRenderComponent(std::move(renderer));
 
   particles_.reserve(static_cast<std::size_t>(config_.emission.maxParticles));
 

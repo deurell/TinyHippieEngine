@@ -1,27 +1,27 @@
 #pragma once
 #include "renderdevice.h"
 #include "renderresourcecache.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <glm/glm.hpp>
 #include <string>
 
 namespace DL {
 
-class PlaneVisualizer : public VisualizerBase {
+class PlaneRenderComponent : public RenderComponent {
 public:
-  explicit PlaneVisualizer(
+  explicit PlaneRenderComponent(
       DL::Camera &camera, SceneNode &node, DL::IRenderDevice *renderDevice,
       DL::RenderResourceCache *resourceCache = nullptr,
       std::string vertexShaderPath = "Shaders/simple.vert",
       std::string fragmentShaderPath = "Shaders/simple.frag");
 
-  ~PlaneVisualizer() override;
+  ~PlaneRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "PlaneVisualizer";
+    return "PlaneRenderComponent";
   }
   glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
   bool spinnerEnabled = false;

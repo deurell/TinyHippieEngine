@@ -8,7 +8,7 @@
 #include <string>
 
 namespace DL {
-class SpriteVisualizer;
+class SpriteRenderComponent;
 }
 
 class SpriteNode : public DL::SceneNode {
@@ -54,5 +54,5 @@ private:
   bool billboardEnabled_ = false;
   glm::vec4 atlasSourceRectPixels_{0.0f, 0.0f, -1.0f, -1.0f};
   glm::bvec3 atlasFlip_{false, false, false};
-  DL::SpriteVisualizer *spriteVisualizer_ = nullptr;
+  DL::SpriteRenderComponent *spriteRenderComponent_ = nullptr;
 };

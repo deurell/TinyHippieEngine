@@ -1,5 +1,5 @@
 #include "textnode.h"
-#include "textvisualizer.h"
+#include "textrendercomponent.h"
 
 #include <algorithm>
 #include <glm/gtc/quaternion.hpp>
@@ -43,7 +43,7 @@ void TextNode::initCamera() {
 }
 
 void TextNode::initComponents() {
-  auto component = std::make_unique<DL::TextVisualizer>(
+  auto component = std::make_unique<DL::TextRenderComponent>(
       *camera_, *this, text_, "Resources/C64_Pro-STYLE.ttf",
       renderDevice_, renderResourceCache_, "Shaders/status.vert",
       "Shaders/status.frag", fontPixelHeight_);
@@ -52,7 +52,7 @@ void TextNode::initComponents() {
   component->setTextColor(textColor_);
   component->setShadowColor(shadowColor_);
   component->setShadowOffset(shadowOffset_);
-  textVisualizer_ = component.get();
+  textRenderComponent_ = component.get();
   addRenderComponent(std::move(component));
 }
 
@@ -66,42 +66,42 @@ void TextNode::updateBillboardRotation() {
 
 void TextNode::setTextAlignment(DL::TextAlignment alignment) {
   alignment_ = alignment;
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setAlignment(alignment_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setAlignment(alignment_);
   }
 }
 
 void TextNode::setTextAnchor(DL::TextAnchor anchor) {
   anchor_ = anchor;
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setAnchor(anchor_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setAnchor(anchor_);
   }
 }
 
 void TextNode::setFontPixelHeight(float pixelHeight) {
   fontPixelHeight_ = std::max(pixelHeight, 1.0f);
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setFontPixelHeight(fontPixelHeight_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setFontPixelHeight(fontPixelHeight_);
   }
 }
 
 void TextNode::setTextColor(glm::vec4 color) {
   textColor_ = color;
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setTextColor(textColor_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setTextColor(textColor_);
   }
 }
 
 void TextNode::setShadowColor(glm::vec4 color) {
   shadowColor_ = color;
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setShadowColor(shadowColor_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setShadowColor(shadowColor_);
   }
 }
 
 void TextNode::setShadowOffset(glm::vec2 offset) {
   shadowOffset_ = offset;
-  if (textVisualizer_ != nullptr) {
-    textVisualizer_->setShadowOffset(shadowOffset_);
+  if (textRenderComponent_ != nullptr) {
+    textRenderComponent_->setShadowOffset(shadowOffset_);
   }
 }

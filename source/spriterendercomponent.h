@@ -3,15 +3,15 @@
 #include "basisu_global_selector_palette.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <glm/glm.hpp>
 #include <string>
 
 namespace DL {
 
-class SpriteVisualizer : public VisualizerBase {
+class SpriteRenderComponent : public RenderComponent {
 public:
-  explicit SpriteVisualizer(
+  explicit SpriteRenderComponent(
       DL::Camera &camera, SceneNode &node, std::string texturePath,
       basist::etc1_global_selector_codebook *codeBook,
       DL::IRenderDevice *renderDevice,
@@ -19,13 +19,13 @@ public:
       std::string vertexShaderPath = "Shaders/image.vert",
       std::string fragmentShaderPath = "Shaders/image.frag");
 
-  ~SpriteVisualizer() override;
+  ~SpriteRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "SpriteVisualizer";
+    return "SpriteRenderComponent";
   }
   void setAtlasSourceRectPixels(const glm::vec4 &rect) {
     atlasSourceRectPixels_ = rect;

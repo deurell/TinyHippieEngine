@@ -56,10 +56,10 @@ far-to-near.
 - `CameraNode`: uses `active`, optional `projection` (`Perspective` or
   `Orthographic`), `fov`, `orthographicHeight`, and optional `lookAt`.
 - `LightNode`: uses `light` to provide one scene directional light for lit
-  renderers (`MeshNode` and `PhongShapeNode`).
+  render components (`MeshNode` and `PhongShapeNode`).
 - `Light2DNode`: uses `light2D` to draw an unlit additive radial glow for 2D
   scenes.
-- `MeshNode`: uses `mesh`, optional `animation`, optional `visualizer`.
+- `MeshNode`: uses `mesh`, optional `animation`, optional `renderSettings`.
 - `SpriteNode`: uses `image`; optional `sourceRect` selects an atlas region in
   source pixels as `[x, y, width, height]`; optional `flipX`, `flipY`, and
   `flipDiagonal` mirror/swap the selected region for Tiled-style atlas
@@ -121,7 +121,7 @@ the framebuffer aspect ratio.
 ```
 
 `LightNode` currently supports one simple forward directional light. It affects
-lit renderers only: `MeshNode` and `PhongShapeNode`. Sprites, sprite batches,
+lit render components only: `MeshNode` and `PhongShapeNode`. Sprites, sprite batches,
 tile maps, text, particles, overlays, and postprocess are unlit.
 
 Omit `direction` to derive the light direction from the node rotation.
@@ -158,7 +158,7 @@ glows such as torches, magic, and pickups in 2D atlas scenes.
     "looping": true,
     "playbackSpeed": 1.0
   },
-  "visualizer": {
+  "renderSettings": {
     "lightDirection": [0.35, 1.0, 0.25],
     "lightColor": [1.0, 0.96, 0.9],
     "ambientStrength": 0.42,

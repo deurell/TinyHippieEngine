@@ -1,6 +1,6 @@
 #include "light2dnode.h"
 
-#include "light2dvisualizer.h"
+#include "light2drendercomponent.h"
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -82,7 +82,7 @@ void Light2DNode::initComponents() {
   if (camera_ == nullptr) {
     return;
   }
-  auto visualizer = std::make_unique<DL::Light2DVisualizer>(
+  auto renderer = std::make_unique<DL::Light2DRenderComponent>(
       *camera_, *this, renderDevice_, renderResourceCache_);
-  addRenderComponent(std::move(visualizer));
+  addRenderComponent(std::move(renderer));
 }

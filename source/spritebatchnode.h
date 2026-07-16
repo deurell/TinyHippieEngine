@@ -4,7 +4,7 @@
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
-#include "spritebatchvisualizer.h"
+#include "spritebatchrendercomponent.h"
 
 class SpriteBatchNode : public DL::SceneNode {
 public:

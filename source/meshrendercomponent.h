@@ -8,13 +8,13 @@
 #include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "skinning.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <string_view>
 #include <vector>
 
 namespace DL {
 
-struct MeshVisualizerSettings {
+struct MeshRenderSettings {
   glm::vec3 lightDirection = glm::normalize(glm::vec3(0.35f, 1.0f, 0.25f));
   glm::vec3 lightColor{1.0f, 0.96f, 0.9f};
   float ambientStrength = 0.42f;
@@ -31,27 +31,27 @@ struct AnimationBlendState {
   bool looping = true;
 };
 
-class MeshVisualizer : public VisualizerBase {
+class MeshRenderComponent : public RenderComponent {
 public:
-  MeshVisualizer(DL::Camera &camera, SceneNode &node,
+  MeshRenderComponent(DL::Camera &camera, SceneNode &node,
                  std::shared_ptr<const MeshAsset> asset,
                  basist::etc1_global_selector_codebook *codeBook,
                  DL::IRenderDevice *renderDevice,
                  DL::RenderResourceCache *resourceCache = nullptr,
                  std::string vertexShaderPath = "Shaders/meshnode.vert",
                  std::string fragmentShaderPath = "Shaders/meshnode.frag");
-  ~MeshVisualizer() override;
+  ~MeshRenderComponent() override;
 
   void render(const glm::mat4 &worldTransform,
               const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
-    return "MeshVisualizer";
+    return "MeshRenderComponent";
   }
   void setDebugNormals(bool enabled) { debugNormals_ = enabled; }
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
-  void setSettings(const MeshVisualizerSettings &settings) { settings_ = settings; }
-  [[nodiscard]] const MeshVisualizerSettings &settings() const { return settings_; }
+  void setSettings(const MeshRenderSettings &settings) { settings_ = settings; }
+  [[nodiscard]] const MeshRenderSettings &settings() const { return settings_; }
   void updateAnimation(float deltaTime);
   void setAnimationPlaying(bool playing) {
     animationPlayer_.setPlaying(playing);
@@ -120,7 +120,7 @@ private:
   std::shared_ptr<const MeshAsset> asset_;
   std::vector<GpuSubmesh> submeshes_;
   bool debugNormals_ = false;
-  MeshVisualizerSettings settings_;
+  MeshRenderSettings settings_;
   AnimationPlayer animationPlayer_;
   AnimationPlayer blendAnimationPlayer_;
   float animationBlendWeight_ = 0.0f;

@@ -1,34 +1,34 @@
-#include "physicsdebugvisualizer.h"
+#include "physicsdebugrendercomponent.h"
 
 #include "physicscontext.h"
 #include "renderqueue.h"
 #include "scenenode.h"
 #include <utility>
 
-PhysicsDebugVisualizer::PhysicsDebugVisualizer(
+PhysicsDebugRenderComponent::PhysicsDebugRenderComponent(
     DL::Camera &camera, DL::SceneNode &node, DL::IRenderDevice &renderDevice,
     const DL::PhysicsContext &physicsContext,
     const std::vector<DL::PhysicsDebugLine> &extraLines)
-    : VisualizerBase(camera, "Shaders/colored_line.vert",
+    : RenderComponent(camera, "Shaders/colored_line.vert",
                      "Shaders/colored_line.frag", node),
       renderDevice_(&renderDevice), physicsContext_(&physicsContext),
       extraLines_(&extraLines) {}
 
-PhysicsDebugVisualizer::~PhysicsDebugVisualizer() {
+PhysicsDebugRenderComponent::~PhysicsDebugRenderComponent() {
   destroyMesh();
   if (renderDevice_ != nullptr && pipeline_.valid()) {
     renderDevice_->destroy(pipeline_);
   }
 }
 
-void PhysicsDebugVisualizer::destroyMesh() {
+void PhysicsDebugRenderComponent::destroyMesh() {
   if (renderDevice_ != nullptr && mesh_.valid()) {
     renderDevice_->destroy(mesh_);
     mesh_ = {};
   }
 }
 
-void PhysicsDebugVisualizer::rebuildMesh(
+void PhysicsDebugRenderComponent::rebuildMesh(
     const std::vector<DL::PhysicsDebugLine> &lines) {
   destroyMesh();
   if (renderDevice_ == nullptr || lines.empty()) {
@@ -56,7 +56,7 @@ void PhysicsDebugVisualizer::rebuildMesh(
                                            DL::PrimitiveType::Lines);
 }
 
-void PhysicsDebugVisualizer::render(const glm::mat4 &, const DL::FrameContext &ctx,
+void PhysicsDebugRenderComponent::render(const glm::mat4 &, const DL::FrameContext &ctx,
                                     DL::RenderPassId pass) {
   if (renderDevice_ == nullptr || physicsContext_ == nullptr) {
     return;

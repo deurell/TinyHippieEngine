@@ -18,21 +18,21 @@
 namespace DL {
 class SceneNode;
 
-class VisualizerBase {
+class RenderComponent {
 public:
-  VisualizerBase(DL::Camera &camera,
-                 std::string vertexShaderPath, std::string fragmentShaderPath,
-                 SceneNode &node)
+  RenderComponent(DL::Camera &camera,
+                  std::string vertexShaderPath, std::string fragmentShaderPath,
+                  SceneNode &node)
       : camera_(camera), vertexShaderPath_(std::move(vertexShaderPath)),
         fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
 
   virtual void render(const glm::mat4 &worldTransform,
                       const DL::FrameContext &ctx,
                       DL::RenderPassId pass) = 0;
-  virtual ~VisualizerBase() = default;
+  virtual ~RenderComponent() = default;
 
   [[nodiscard]] virtual std::string_view debugTypeName() const {
-    return "Visualizer";
+    return "RenderComponent";
   }
 
   static glm::mat4 normalizeRotation(const glm::mat4 &matrix) {

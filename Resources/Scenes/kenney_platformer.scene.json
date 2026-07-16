@@ -34,7 +34,7 @@
             "position": [-2.0, 0.0, 0.0],
             "scale": [1.0, 1.0, 1.0]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.62,
             "specularStrength": 0.08
@@ -48,7 +48,7 @@
             "position": [0.0, 0.0, 0.0],
             "scale": [1.0, 1.0, 1.0]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.62,
             "specularStrength": 0.08
@@ -63,7 +63,7 @@
             "rotationEuler": [0.0, 180.0, 0.0],
             "scale": [1.0, 1.0, 1.0]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.62,
             "specularStrength": 0.08
@@ -77,7 +77,7 @@
             "position": [3.55, -0.38, 0.85],
             "scale": [0.85, 0.85, 0.85]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.62,
             "specularStrength": 0.08
@@ -100,7 +100,7 @@
         "looping": true,
         "playbackSpeed": 0.65
       },
-      "visualizer": {
+      "renderSettings": {
         "lightDirection": [0.35, 1.0, 0.45],
         "ambientStrength": 0.58,
         "specularStrength": 0.1
@@ -121,7 +121,7 @@
             "position": [0.0, 0.0, 0.0],
             "scale": [0.55, 0.55, 0.55]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.58,
             "specularStrength": 0.08
@@ -136,7 +136,7 @@
             "rotationEuler": [0.0, 22.0, 0.0],
             "scale": [0.5, 0.5, 0.5]
           },
-          "visualizer": {
+          "renderSettings": {
             "lightDirection": [0.35, 1.0, 0.45],
             "ambientStrength": 0.58,
             "specularStrength": 0.08
@@ -189,7 +189,7 @@
         "rotationEuler": [0.0, -25.0, 0.0],
         "scale": [0.7, 0.7, 0.7]
       },
-      "visualizer": {
+      "renderSettings": {
         "lightDirection": [0.35, 1.0, 0.45],
         "ambientStrength": 0.58,
         "specularStrength": 0.05

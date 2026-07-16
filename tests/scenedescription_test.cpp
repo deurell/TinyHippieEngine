@@ -55,7 +55,7 @@ constexpr char kSceneSource[] = R"json(
             "looping": true,
             "playbackSpeed": 0.75
           },
-          "visualizer": {
+          "renderSettings": {
             "ambientStrength": 0.6,
             "specularStrength": 0.1
           }
@@ -248,8 +248,8 @@ TEST(SceneDescriptionTest, ParsesNodeHierarchyAndMeshSettings) {
   EXPECT_EQ(child.animation->clip, "idle");
   EXPECT_FALSE(child.animation->playing);
   EXPECT_FLOAT_EQ(child.animation->playbackSpeed, 0.75f);
-  EXPECT_FLOAT_EQ(child.visualizerSettings.ambientStrength, 0.6f);
-  EXPECT_FLOAT_EQ(child.visualizerSettings.specularStrength, 0.1f);
+  EXPECT_FLOAT_EQ(child.renderSettings.ambientStrength, 0.6f);
+  EXPECT_FLOAT_EQ(child.renderSettings.specularStrength, 0.1f);
 
   EXPECT_EQ(root.children[3].type, "PlaneNode");
   EXPECT_EQ(root.children[3].plane, "Spinner");

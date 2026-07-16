@@ -1,4 +1,4 @@
-#include "fogoverlayvisualizer.h"
+#include "fogoverlayrendercomponent.h"
 
 #include "fogoverlaynode.h"
 #include "renderqueue.h"
@@ -7,11 +7,11 @@
 #include <iostream>
 #include <utility>
 
-DL::FogOverlayVisualizer::FogOverlayVisualizer(
+DL::FogOverlayRenderComponent::FogOverlayRenderComponent(
     Camera &camera, FogOverlayNode &node, IRenderDevice *renderDevice,
     RenderResourceCache *resourceCache, std::string vertexShaderPath,
     std::string fragmentShaderPath)
-    : VisualizerBase(camera, std::move(vertexShaderPath),
+    : RenderComponent(camera, std::move(vertexShaderPath),
                      std::move(fragmentShaderPath), node),
       fogNode_(node), renderDevice_(renderDevice), resourceCache_(resourceCache) {
   if (renderDevice_ == nullptr) {
@@ -58,7 +58,7 @@ DL::FogOverlayVisualizer::FogOverlayVisualizer(
   }
 }
 
-DL::FogOverlayVisualizer::~FogOverlayVisualizer() {
+DL::FogOverlayRenderComponent::~FogOverlayRenderComponent() {
   if (renderDevice_ == nullptr) {
     return;
   }
@@ -73,7 +73,7 @@ DL::FogOverlayVisualizer::~FogOverlayVisualizer() {
   }
 }
 
-void DL::FogOverlayVisualizer::render(const glm::mat4 &worldTransform,
+void DL::FogOverlayRenderComponent::render(const glm::mat4 &worldTransform,
                                       const FrameContext &ctx,
                                       RenderPassId pass) {
   if (pass != RenderPassId::Opaque || renderDevice_ == nullptr ||

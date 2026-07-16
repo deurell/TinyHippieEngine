@@ -21,10 +21,10 @@ public:
   glm::vec2 lastScreenSize{0.0f, 0.0f};
 };
 
-class TestVisualizer final : public DL::VisualizerBase {
+class TestRenderComponent final : public DL::RenderComponent {
 public:
-  TestVisualizer(DL::Camera &camera, DL::SceneNode &node, int &renderCount)
-      : DL::VisualizerBase(camera, "", "", node), renderCount_(renderCount) {}
+  TestRenderComponent(DL::Camera &camera, DL::SceneNode &node, int &renderCount)
+      : DL::RenderComponent(camera, "", "", node), renderCount_(renderCount) {}
 
   void render(const glm::mat4 &, const DL::FrameContext &,
               DL::RenderPassId) override {
@@ -116,18 +116,19 @@ TEST(SceneNodeTest, WorldRotationTracksLocalRotation) {
   EXPECT_NEAR(glm::axis(worldRotation).z, glm::axis(rotation).z, 1e-5f);
 }
 
-TEST(SceneNodeTest, AddRenderComponentStoresAndRendersVisualizer) {
+TEST(SceneNodeTest, AddRenderComponentStoresAndRendersComponent) {
   TestSceneNode node;
   DL::Camera camera({0.0f, 0.0f, 1.0f});
   int renderCount = 0;
 
-  auto visualizer = std::make_unique<TestVisualizer>(camera, node, renderCount);
-  auto *visualizerPtr = visualizer.get();
-  node.addRenderComponent(std::move(visualizer));
+  auto component =
+      std::make_unique<TestRenderComponent>(camera, node, renderCount);
+  auto *componentPtr = component.get();
+  node.addRenderComponent(std::move(component));
 
   ASSERT_EQ(node.renderComponentCount(), 1u);
   ASSERT_EQ(node.renderComponents().size(), 1u);
-  EXPECT_EQ(node.renderComponents().front().get(), visualizerPtr);
+  EXPECT_EQ(node.renderComponents().front().get(), componentPtr);
 
   node.render({});
 

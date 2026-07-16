@@ -1,6 +1,6 @@
 #pragma once
 #include "iscene.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -63,11 +63,11 @@ public:
     return debugTransformOverrideEnabled_;
   }
 
-  void addRenderComponent(std::unique_ptr<VisualizerBase> component);
+  void addRenderComponent(std::unique_ptr<RenderComponent> component);
   [[nodiscard]] std::size_t renderComponentCount() const {
     return renderComponents_.size();
   }
-  [[nodiscard]] const std::vector<std::unique_ptr<VisualizerBase>> &
+  [[nodiscard]] const std::vector<std::unique_ptr<RenderComponent>> &
   renderComponents() const {
     return renderComponents_;
   }
@@ -88,7 +88,7 @@ protected:
   std::string debugName_ = "SceneNode";
   int renderLayer_ = 0;
   bool debugTransformOverrideEnabled_ = false;
-  std::vector<std::unique_ptr<VisualizerBase>> renderComponents_;
+  std::vector<std::unique_ptr<RenderComponent>> renderComponents_;
 
 private:
   void renderPass(const FrameContext &ctx, RenderPassId pass);

@@ -4,7 +4,7 @@
 #include "camera.h"
 #include "meshassetcache.h"
 #include "meshasset.h"
-#include "meshvisualizer.h"
+#include "meshrendercomponent.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -31,9 +31,9 @@ public:
   [[nodiscard]] std::string_view assetPath() const { return assetPath_; }
   void setDebugNormals(bool enabled);
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
-  void setVisualizerSettings(const DL::MeshVisualizerSettings &settings);
-  [[nodiscard]] const DL::MeshVisualizerSettings &visualizerSettings() const {
-    return visualizerSettings_;
+  void setRenderSettings(const DL::MeshRenderSettings &settings);
+  [[nodiscard]] const DL::MeshRenderSettings &renderSettings() const {
+    return renderSettings_;
   }
   void setAnimationPlaying(bool playing);
   [[nodiscard]] bool isAnimationPlaying() const;
@@ -67,7 +67,7 @@ private:
   DL::MeshAssetCache *meshAssetCache_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0.0f, 0.0f};
-  DL::MeshVisualizer *meshVisualizer_ = nullptr;
+  DL::MeshRenderComponent *meshRenderComponent_ = nullptr;
   bool debugNormals_ = false;
-  DL::MeshVisualizerSettings visualizerSettings_;
+  DL::MeshRenderSettings renderSettings_;
 };

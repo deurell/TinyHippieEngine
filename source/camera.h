@@ -5,6 +5,8 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace DL {
+enum class CameraProjection { Perspective, Orthographic };
+
 class Camera {
 public:
   Camera() = default;
@@ -46,19 +48,39 @@ public:
   void roll(float angle) { rotate(angle, 0.0f, 0.0f, 1.0f); }
 
   glm::mat4 getPerspectiveTransform() const {
+    if (mProjection == CameraProjection::Orthographic) {
+      return getOrthographicTransform();
+    }
     float width = mScreenSize.x > 0.0f ? mScreenSize.x : 1.0f;
     float height = mScreenSize.y > 0.0f ? mScreenSize.y : 1.0f;
     return glm::perspective(glm::radians(mFov), width / height, 0.1f, 100.0f);
   }
 
+  glm::mat4 getOrthographicTransform() const {
+    const float width = mScreenSize.x > 0.0f ? mScreenSize.x : 1.0f;
+    const float height = mScreenSize.y > 0.0f ? mScreenSize.y : 1.0f;
+    const float aspect = width / height;
+    const float halfHeight = mOrthographicHeight * 0.5f;
+    const float halfWidth = halfHeight * aspect;
+    return glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, 0.1f,
+                      100.0f);
+  }
+
+  static glm::mat4 getOrthoTransform(float left, float right, float bottom,
+                                     float up) {
+    return glm::ortho(left, right, bottom, up, 0.1f, 100.0f);
+  }
+
   static glm::mat4 getOrtoTransform(float left, float right, float bottom,
                                     float up) {
-    return glm::ortho(left, right, bottom, up, 0.0f, 100.0f);
+    return getOrthoTransform(left, right, bottom, up);
   }
 
   glm::vec3 mPosition = {0, 0, 0};
   glm::quat mOrientation = glm::mat4(1);
   glm::vec2 mScreenSize = {0, 0};
+  CameraProjection mProjection = CameraProjection::Perspective;
   float mFov = 45;
+  float mOrthographicHeight = 6.0f;
 };
 } // namespace DL

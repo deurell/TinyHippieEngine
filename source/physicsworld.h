@@ -39,8 +39,11 @@ struct PhysicsBodyDesc {
   glm::vec3 linearVelocity{0.0f};
   float linearDamping = 0.05f;
   float angularDamping = 0.1f;
+  float gravityScale = 1.0f;
   unsigned short categoryBits = 0x0001;
   unsigned short maskBits = 0xFFFF;
+  bool enableSleep = true;
+  bool startAwake = true;
 };
 
 struct PhysicsBodyState {
@@ -72,10 +75,6 @@ struct PhysicsDebugLine {
 struct PhysicsDebugRenderSettings {
   bool collisionShapes = true;
   bool velocityVectors = false;
-  bool contactPoints = false;
-  bool contactNormals = false;
-  bool colliderAabbs = false;
-  bool broadphaseAabbs = false;
   float velocityScale = 0.2f;
 };
 
@@ -97,6 +96,7 @@ public:
   void setBodyTransform(PhysicsBodyHandle handle, const glm::vec3 &position,
                         const glm::quat &rotation);
   void setLinearVelocity(PhysicsBodyHandle handle, const glm::vec3 &velocity);
+  void setAwake(PhysicsBodyHandle handle, bool awake);
   [[nodiscard]] PhysicsBodyState getBodyState(PhysicsBodyHandle handle) const;
   [[nodiscard]] PhysicsRaycastHit raycast(
       const glm::vec3 &start, const glm::vec3 &end,

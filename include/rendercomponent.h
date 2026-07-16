@@ -1,0 +1,74 @@
+//
+// Created by Mikael Deurell on 2023-08-15.
+//
+
+#pragma once
+#include "camera.h"
+#include "iscene.h"
+#include "renderpass.h"
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <utility>
+
+namespace DL {
+class SceneNode;
+
+class RenderComponent {
+public:
+  RenderComponent(DL::Camera &camera,
+                  std::string vertexShaderPath, std::string fragmentShaderPath,
+                  SceneNode &node)
+      : camera_(camera), vertexShaderPath_(std::move(vertexShaderPath)),
+        fragmentShaderPath_(std::move(fragmentShaderPath)), node_(node) {}
+
+  virtual void render(const glm::mat4 &worldTransform,
+                      const DL::FrameContext &ctx,
+                      DL::RenderPassId pass) = 0;
+  virtual ~RenderComponent() = default;
+
+  [[nodiscard]] virtual std::string_view debugTypeName() const {
+    return "RenderComponent";
+  }
+
+  static glm::mat4 normalizeRotation(const glm::mat4 &matrix) {
+    glm::mat4 normalizedMatrix = matrix;
+    normalizedMatrix[0] = glm::normalize(matrix[0]);
+    normalizedMatrix[1] = glm::normalize(matrix[1]);
+    normalizedMatrix[2] = glm::normalize(matrix[2]);
+    return normalizedMatrix;
+  }
+
+protected:
+  static glm::quat extractRotation(const glm::mat4 &matrix) {
+    glm::mat4 normalizedMatrix = normalizeRotation(matrix);
+    return glm::quat_cast(normalizedMatrix);
+  }
+
+  static glm::vec3 extractScale(const glm::mat4 &matrix) {
+    glm::vec3 scale;
+    scale.x = glm::length(matrix[0]);
+    scale.y = glm::length(matrix[1]);
+    scale.z = glm::length(matrix[2]);
+    return scale;
+  }
+
+  static glm::vec3 extractPosition(const glm::mat4 &matrix) {
+    return glm::vec3(matrix[3]);
+  }
+
+  float cameraDistanceSortDepth(const glm::vec3 &worldPosition) const {
+    const glm::vec3 toCamera = camera_.getPosition() - worldPosition;
+    return glm::dot(toCamera, toCamera);
+  }
+
+  DL::Camera &camera_;
+  std::string vertexShaderPath_;
+  std::string fragmentShaderPath_;
+  DL::SceneNode &node_;
+};
+} // namespace DL

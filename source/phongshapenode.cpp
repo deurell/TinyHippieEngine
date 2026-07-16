@@ -31,8 +31,8 @@ void PhongShapeNode::onScreenSizeChanged(glm::vec2 size) {
 
 void PhongShapeNode::setMaterial(const DL::PhongMaterial &material) {
   material_ = material;
-  if (visualizer_ != nullptr) {
-    visualizer_->material = material_;
+  if (renderer_ != nullptr) {
+    renderer_->material = material_;
   }
 }
 
@@ -49,12 +49,12 @@ void PhongShapeNode::initComponents() {
   if (camera_ == nullptr || renderDevice_ == nullptr) {
     return;
   }
-  auto visualizer = std::make_unique<DL::ShapeVisualizer>(
+  auto renderer = std::make_unique<DL::ShapeRenderComponent>(
       *camera_, *this, buildMeshData(), renderDevice_,
       renderResourceCache_);
-  visualizer_ = visualizer.get();
-  visualizer_->material = material_;
-  addRenderComponent(std::move(visualizer));
+  renderer_ = renderer.get();
+  renderer_->material = material_;
+  addRenderComponent(std::move(renderer));
 }
 
 DL::GeneratedMeshData PhongShapeNode::buildMeshData() const {

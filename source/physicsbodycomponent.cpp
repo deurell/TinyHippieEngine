@@ -2,6 +2,33 @@
 
 namespace DL {
 
+namespace {
+
+glm::vec3 worldPositionToNodeLocal(SceneNode &node,
+                                   const glm::vec3 &worldPosition) {
+  SceneNode *parent = node.parentNode();
+  if (parent == nullptr) {
+    return worldPosition;
+  }
+
+  const glm::vec4 localPosition =
+      glm::inverse(parent->getWorldTransform()) * glm::vec4(worldPosition, 1.0f);
+  return glm::vec3(localPosition);
+}
+
+glm::quat worldRotationToNodeLocal(SceneNode &node,
+                                   const glm::quat &worldRotation) {
+  SceneNode *parent = node.parentNode();
+  if (parent == nullptr) {
+    return worldRotation;
+  }
+
+  return glm::normalize(glm::inverse(parent->getWorldRotation()) *
+                        worldRotation);
+}
+
+} // namespace
+
 PhysicsBodyComponent::PhysicsBodyComponent(PhysicsContext &physicsContext,
                                            SceneNode &node,
                                            const PhysicsBodyDesc &bodyDesc)
@@ -41,8 +68,8 @@ void PhysicsBodyComponent::syncAfterStep() {
 
   if (bodyType_ == PhysicsBodyType::Dynamic) {
     const auto bodyState = physicsWorld_->getBodyState(handle_);
-    node_->setLocalPosition(bodyState.position);
-    node_->setLocalRotation(bodyState.rotation);
+    node_->setLocalPosition(worldPositionToNodeLocal(*node_, bodyState.position));
+    node_->setLocalRotation(worldRotationToNodeLocal(*node_, bodyState.rotation));
   }
 }
 

@@ -1,34 +1,40 @@
 #include "app.h"
 #include "GLFW/glfw3.h"
-#include "c64scene.h"
 #include "debugui.h"
-#include "demoscene.h"
-#include "glosifyscene.h"
-#include "gltfnodescene.h"
+#include "glad/glad.h"
 #ifdef USE_IMGUI
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
-#include "introscene.h"
-#include "nodeexamplescene.h"
-#include "particlenodescene.h"
-#include "particlescene.h"
-#if defined(TINY_ENGINE_ENABLE_PHYSICS)
-#include "physicssandboxscene.h"
-#endif
+#include "game/scenes/skeletalanimationblendscene.h"
+#include "game/scenes/textstarterscene.h"
 #include "logger.h"
-#include "meshnodescene.h"
-#include "phongshapescene.h"
-#include "quicknodescene.h"
+#include "renderqueue.h"
 #include "scenemanager.h"
-#include "simplescene.h"
-#include "skeletalanimationblendscene.h"
-#include "spectrumanalyzerscene.h"
-#include "truetypescene.h"
-#include "wildcopperscene.h"
+#ifdef TINY_ENGINE_ENABLE_PHYSICS
+#include "game/scenes/physicstestscene.h"
+#endif
+#include <cmath>
 #include <iostream>
 #include <thread>
+
+namespace {
+constexpr char kCrtEffectName[] = "CRT";
+constexpr char kCrtCurvatureUniform[] = "crtCurvature";
+constexpr float kCrtCurveScale = 0.92f;
+constexpr float kCrtCurveOffset = 0.04f;
+
+glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
+  // Keep in sync with Shaders/crt.frag curve().
+  uv = (uv - glm::vec2(0.5f)) * 2.0f;
+  uv.x *= 1.0f + curvature * std::pow(std::abs(uv.y) / 5.0f, 2.0f);
+  uv.y *= 1.0f + curvature * std::pow(std::abs(uv.x) / 4.0f, 2.0f);
+  uv = uv * 0.5f + glm::vec2(0.5f);
+  uv = uv * kCrtCurveScale + glm::vec2(kCrtCurveOffset);
+  return uv;
+}
+} // namespace
 
 void renderloop_callback(void *arg) {
   auto app = static_cast<DL::App *>(arg);
@@ -83,12 +89,247 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   app->onFramebufferSizeChanged(width, height);
 }
 
+DL::App::~App() { shutdown(); }
+
+bool DL::App::postProcessEnabled() const { return postProcessStack_.enabled; }
+
+void DL::App::setPostProcessEnabled(bool enabled) {
+  postProcessStack_.enabled = enabled;
+}
+
+bool DL::App::chromaticEnabled() const {
+  const auto *effect = findPostProcessEffect("Chromatic Aberration");
+  return effect != nullptr && effect->enabled;
+}
+
+void DL::App::setChromaticEnabled(bool enabled) {
+  if (auto *effect = findPostProcessEffect("Chromatic Aberration")) {
+    effect->enabled = enabled;
+  }
+}
+
+float DL::App::chromaticStrength() const {
+  const auto *effect = findPostProcessEffect("Chromatic Aberration");
+  const auto *uniform =
+      effect != nullptr
+          ? findEffectUniform(*effect, "chromaticAberrationStrength")
+          : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setChromaticStrength(float strength) {
+  if (auto *effect = findPostProcessEffect("Chromatic Aberration")) {
+    if (auto *uniform =
+            findEffectUniform(*effect, "chromaticAberrationStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+bool DL::App::bloomColorGradeEnabled() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  return effect != nullptr && effect->enabled;
+}
+
+void DL::App::setBloomColorGradeEnabled(bool enabled) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    effect->enabled = enabled;
+  }
+}
+
+float DL::App::bloomIntensity() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "bloomIntensity")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setBloomIntensity(float intensity) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "bloomIntensity")) {
+      uniform->float_value = intensity;
+    }
+  }
+}
+
+float DL::App::bloomThreshold() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "bloomThreshold")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setBloomThreshold(float threshold) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "bloomThreshold")) {
+      uniform->float_value = threshold;
+    }
+  }
+}
+
+float DL::App::colorGradeSaturation() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeSaturation")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setColorGradeSaturation(float saturation) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeSaturation")) {
+      uniform->float_value = saturation;
+    }
+  }
+}
+
+float DL::App::colorGradeContrast() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeContrast")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 1.0f;
+}
+
+void DL::App::setColorGradeContrast(float contrast) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeContrast")) {
+      uniform->float_value = contrast;
+    }
+  }
+}
+
+float DL::App::colorGradeWarmth() const {
+  const auto *effect = findPostProcessEffect("Bloom Color Grade");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "colorGradeWarmth")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setColorGradeWarmth(float warmth) {
+  if (auto *effect = findPostProcessEffect("Bloom Color Grade")) {
+    if (auto *uniform = findEffectUniform(*effect, "colorGradeWarmth")) {
+      uniform->float_value = warmth;
+    }
+  }
+}
+
+bool DL::App::crtEnabled() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  return effect != nullptr && effect->enabled;
+}
+
+void DL::App::setCrtEnabled(bool enabled) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    effect->enabled = enabled;
+  }
+}
+
+float DL::App::crtScanlineStrength() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtScanlineStrength")
+                            : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtScanlineStrength(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtScanlineStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtVignetteStrength() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtVignetteStrength")
+                            : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtVignetteStrength(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtVignetteStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtCurvature() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "crtCurvature") : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtCurvature(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtCurvature")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtWobble() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtWobbleStrength")
+                            : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtWobble(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtWobbleStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtGrilleStrength() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform = effect != nullptr
+                            ? findEffectUniform(*effect, "crtGrilleStrength")
+                            : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtGrilleStrength(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtGrilleStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtBrightness() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "crtBrightness") : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtBrightness(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtBrightness")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
 bool DL::App::init() {
   if (!glfwInit()) {
     LogError("GLFW initialization failed");
     return false;
   }
+  initActionMap();
   basisInit();
+  configureDefaultPostProcessStack();
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
 #else
@@ -103,8 +344,16 @@ bool DL::App::init() {
   return true;
 }
 
+void DL::App::initActionMap() {
+  actionMap_.bind(Action::MoveForward, Key::W);
+  actionMap_.bind(Action::MoveBackward, Key::S);
+  actionMap_.bind(Action::MoveLeft, Key::A);
+  actionMap_.bind(Action::MoveRight, Key::D);
+}
+
 int DL::App::run() {
   if (!init()) {
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -123,7 +372,7 @@ int DL::App::run() {
                              nullptr, nullptr);
   if (window_ == nullptr) {
     std::cerr << "window create failed" << std::endl;
-    glfwTerminate();
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -142,6 +391,7 @@ int DL::App::run() {
 
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
     LogError("GLAD initialization failed");
+    shutdown();
     return EXIT_FAILURE;
   }
 
@@ -181,17 +431,45 @@ int DL::App::run() {
     update();
     render();
   }
+#endif
+  shutdown();
+  return EXIT_SUCCESS;
+}
+
+void DL::App::shutdown() {
   scene_.reset();
+  renderResourceCache_.reset();
+  meshAssetCache_.reset();
+  if (renderDevice_ != nullptr && sceneRenderTarget_.valid()) {
+    renderDevice_->destroy(sceneRenderTarget_);
+    sceneRenderTarget_ = {};
+  }
+  if (renderDevice_ != nullptr) {
+    for (auto &target : postProcessTargets_) {
+      if (target.valid()) {
+        renderDevice_->destroy(target);
+        target = {};
+      }
+    }
+  }
+  renderDevice_.reset();
+  codebook_.reset();
+
+  if (window_ != nullptr) {
 #ifdef USE_IMGUI
-  ImGui_ImplOpenGL3_Shutdown();
-  ImGui_ImplGlfw_Shutdown();
-  ImGui::DestroyContext();
+    if (ImGui::GetCurrentContext() != nullptr) {
+      ImGui_ImplOpenGL3_Shutdown();
+      ImGui_ImplGlfw_Shutdown();
+      ImGui::DestroyContext();
+    }
 #endif
-  glfwDestroyWindow(window_);
-#endif
+    glfwSetWindowUserPointer(window_, nullptr);
+    glfwDestroyWindow(window_);
+    window_ = nullptr;
+  }
+
   audioSystem_.shutdown();
   glfwTerminate();
-  return EXIT_SUCCESS;
 }
 
 void DL::App::update() {
@@ -203,33 +481,52 @@ void DL::App::update() {
   if (!scene_)
     return;
   const auto frameTime = glfwGetTime();
+  const glm::vec2 windowSize = getWindowSize();
+  const glm::vec2 framebufferSize = getFramebufferSize();
   lastFixedUpdateCount_ = 0;
   if (simulationPaused_) {
     while (requestedSimulationSteps_ > 0) {
-      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_, windowSize,
+                           framebufferSize});
       --requestedSimulationSteps_;
       ++lastFixedUpdateCount_;
     }
   } else {
     fixedTimeAccumulator_ += deltaTime_;
     while (fixedTimeAccumulator_ >= fixedTimeStep_) {
-      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_});
+      scene_->fixedUpdate({fixedTimeStep_, frameTime, inputState_, windowSize,
+                           framebufferSize});
       fixedTimeAccumulator_ -= fixedTimeStep_;
       ++lastFixedUpdateCount_;
     }
   }
-  scene_->update({deltaTime_, frameTime, inputState_});
+  scene_->update(
+      {deltaTime_, frameTime, inputState_, windowSize, framebufferSize});
 }
 
 void DL::App::render() {
-  if (!scene_)
+  if (!scene_ || renderDevice_ == nullptr)
     return;
+  int frameWidth = 0;
+  int frameHeight = 0;
+  glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
+  const FrameContext frameCtx{
+      deltaTime_,
+      glfwGetTime(),
+      inputState_,
+      getWindowSize(),
+      {static_cast<float>(frameWidth), static_cast<float>(frameHeight)}};
+  ensurePostProcessResources(static_cast<std::uint32_t>(frameWidth),
+                             static_cast<std::uint32_t>(frameHeight));
+
   DL::beginDebugUiFrame();
-  scene_->render({deltaTime_, glfwGetTime(), inputState_});
-  if (renderDevice_ != nullptr) {
-    DL::drawEngineDebugWindows(*this, deltaTime_,
-                               renderDevice_->getRenderStats());
-  }
+  renderScenePass(frameCtx, static_cast<std::uint32_t>(frameWidth),
+                  static_cast<std::uint32_t>(frameHeight));
+  renderPostProcessPass(frameCtx, static_cast<std::uint32_t>(frameWidth),
+                        static_cast<std::uint32_t>(frameHeight));
+  renderDevice_->endFrame();
+  DL::drawEngineDebugWindows(*this, deltaTime_,
+                             renderDevice_->getRenderStats());
   DL::drawLogWindow();
 
 #ifdef USE_IMGUI
@@ -238,8 +535,6 @@ void DL::App::render() {
   DL::endDebugUiFrame();
 #endif
 
-  int frameWidth, frameHeight;
-  glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
   renderDevice_->setViewport(static_cast<std::uint32_t>(frameWidth),
                              static_cast<std::uint32_t>(frameHeight));
   glfwSwapBuffers(window_);
@@ -261,6 +556,13 @@ void DL::App::processInput(GLFWwindow *window) {
     glfwSetWindowShouldClose(window, true);
   }
 
+#ifdef USE_IMGUI
+  const bool imguiWantsMouse =
+      ImGui::GetCurrentContext() != nullptr && ImGui::GetIO().WantCaptureMouse;
+#else
+  const bool imguiWantsMouse = false;
+#endif
+
   inputState_.keysDown[static_cast<std::size_t>(Key::W)] =
       glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
   inputState_.keysDown[static_cast<std::size_t>(Key::A)] =
@@ -270,10 +572,13 @@ void DL::App::processInput(GLFWwindow *window) {
   inputState_.keysDown[static_cast<std::size_t>(Key::D)] =
       glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Left)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Right)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Middle)] =
+      !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS;
 
   double mouseX = 0.0;
@@ -281,16 +586,35 @@ void DL::App::processInput(GLFWwindow *window) {
   glfwGetCursorPos(window, &mouseX, &mouseY);
   const glm::vec2 mousePosition{static_cast<float>(mouseX),
                                 static_cast<float>(mouseY)};
-  inputState_.mouseDelta =
-      hasLastMousePosition_ ? mousePosition - lastMousePosition_ : glm::vec2(0.0f);
+  inputState_.mousePosition = mousePosition;
+  inputState_.sceneMousePosition =
+      mapMousePositionToScene(mousePosition, getWindowSize());
+  inputState_.mouseDelta = hasLastMousePosition_
+                               ? mousePosition - lastMousePosition_
+                               : glm::vec2(0.0f);
   lastMousePosition_ = mousePosition;
   hasLastMousePosition_ = true;
+  actionMap_.apply(inputState_, inputState_);
 }
 
-void DL::App::loadSimpleScene() {
-  scene_ = replacePreparedScene(
-      std::move(scene_), std::make_unique<SimpleScene>(renderDevice_.get()),
-      getWindowSize(), getFramebufferSize());
+glm::vec2 DL::App::mapMousePositionToScene(glm::vec2 mousePosition,
+                                           glm::vec2 windowSize) const {
+  if (!postProcessStack_.enabled || windowSize.x <= 0.0f ||
+      windowSize.y <= 0.0f) {
+    return mousePosition;
+  }
+
+  const auto *crtEffect = findPostProcessEffect(kCrtEffectName);
+  if (crtEffect == nullptr || !crtEffect->enabled) {
+    return mousePosition;
+  }
+
+  const auto *curvatureUniform =
+      findEffectUniform(*crtEffect, kCrtCurvatureUniform);
+  const float curvature =
+      curvatureUniform != nullptr ? curvatureUniform->float_value : 1.0f;
+
+  return applyCrtCurve(mousePosition / windowSize, curvature) * windowSize;
 }
 
 void DL::App::loadCurrentScene() {
@@ -307,65 +631,256 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
-    return std::make_unique<SkeletalAnimationBlendScene>(
+    return std::make_unique<TextStarterScene>(
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get());
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<ParticleNodeScene>(renderDevice_.get(),
-                                               renderResourceCache_.get());
+    return std::make_unique<TextStarterScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get(),
+        "Resources/Scenes/tiny_dungeon_atlas.scene.json");
   });
   sceneManager_.registerScene([this] {
-    return std::make_unique<GltfNodeScene>(renderDevice_.get(), codebook_.get(),
-                                           meshAssetCache_.get(),
-                                           renderResourceCache_.get());
+    return std::make_unique<TextStarterScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get(),
+        "Resources/Scenes/kenney_platformer.scene.json");
   });
-#if defined(TINY_ENGINE_ENABLE_PHYSICS)
+#ifdef TINY_ENGINE_ENABLE_PHYSICS
   sceneManager_.registerScene([this] {
-    return std::make_unique<PhysicsSandboxScene>(renderDevice_.get(),
-                                                 renderResourceCache_.get());
+    return std::make_unique<PhysicsTestScene>(renderDevice_.get());
   });
 #endif
   sceneManager_.registerScene([this] {
-    return std::make_unique<SpectrumAnalyzerScene>(
-        renderDevice_.get(), renderResourceCache_.get(), &audioSystem_);
+    return std::make_unique<SkeletalAnimationBlendScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get());
   });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<QuickNodeScene>(renderDevice_.get(),
-                                            renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<NodeExampleScene>(
-        renderDevice_.get(), codebook_.get(), renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<MeshNodeScene>(renderDevice_.get(), codebook_.get(),
-                                           meshAssetCache_.get(),
-                                           renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<PhongShapeScene>(renderDevice_.get(),
-                                             renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DemoScene>(glslVersionString_, codebook_.get());
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<TrueTypeScene>(glslVersionString_); });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<GlosifyScene>(codebook_.get(), renderDevice_.get(),
-                                          renderResourceCache_.get());
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<IntroScene>(glslVersionString_); });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<C64Scene>(glslVersionString_, codebook_.get(),
-                                      renderDevice_.get(), &audioSystem_);
-  });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<ParticleScene>(glslVersionString_); });
-  sceneManager_.registerScene(
-      [this] { return std::make_unique<WildCopperScene>(glslVersionString_); });
+}
+
+void DL::App::configureDefaultPostProcessStack() {
+  if (!postProcessStack_.effects.empty()) {
+    return;
+  }
+
+  PostProcessEffect bloomColorGradeEffect;
+  bloomColorGradeEffect.name = "Bloom Color Grade";
+  bloomColorGradeEffect.fragmentShaderPath = "Shaders/bloom_colorgrade.frag";
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("bloomIntensity", 0.08f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("bloomThreshold", 0.82f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeSaturation", 1.04f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeContrast", 1.02f));
+  bloomColorGradeEffect.uniforms.push_back(
+      UniformValue::makeFloat("colorGradeWarmth", 0.015f));
+  bloomColorGradeEffect.enabled = false;
+  postProcessStack_.effects.push_back(std::move(bloomColorGradeEffect));
+
+  PostProcessEffect chromaticEffect;
+  chromaticEffect.name = "Chromatic Aberration";
+  chromaticEffect.fragmentShaderPath = "Shaders/chromatic_aberration.frag";
+  chromaticEffect.uniforms.push_back(
+      UniformValue::makeFloat("chromaticAberrationStrength", 0.0235f));
+  chromaticEffect.enabled = false;
+  postProcessStack_.effects.push_back(std::move(chromaticEffect));
+
+  PostProcessEffect crtEffect;
+  crtEffect.name = "CRT";
+  crtEffect.fragmentShaderPath = "Shaders/crt.frag";
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtScanlineStrength", 0.555f));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtVignetteStrength", 0.035f));
+  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtCurvature", 1.00f));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtWobbleStrength", 0.0007f));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtGrilleStrength", 0.292f));
+  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtBrightness", 1.68f));
+  postProcessStack_.effects.push_back(std::move(crtEffect));
+}
+
+void DL::App::ensurePostProcessResources(std::uint32_t framebufferWidth,
+                                         std::uint32_t framebufferHeight) {
+  if (renderDevice_ == nullptr || renderResourceCache_ == nullptr ||
+      framebufferWidth == 0 || framebufferHeight == 0) {
+    return;
+  }
+
+  configureDefaultPostProcessStack();
+  if (!postProcessQuad_.valid()) {
+    postProcessQuad_ = renderResourceCache_->acquireTexturedQuad();
+  }
+  for (auto &effect : postProcessStack_.effects) {
+    if (!effect.pipeline.valid()) {
+      effect.pipeline = renderResourceCache_->acquirePipeline(
+          effect.vertexShaderPath, effect.fragmentShaderPath);
+    }
+  }
+
+  if (!sceneRenderTarget_.valid()) {
+    sceneRenderTarget_ =
+        renderDevice_->createRenderTarget(framebufferWidth, framebufferHeight);
+  } else if (postProcessTargetSize_.x != framebufferWidth ||
+             postProcessTargetSize_.y != framebufferHeight) {
+    renderDevice_->resizeRenderTarget(sceneRenderTarget_, framebufferWidth,
+                                      framebufferHeight);
+  }
+
+  for (auto &target : postProcessTargets_) {
+    if (!target.valid()) {
+      target = renderDevice_->createRenderTarget(framebufferWidth,
+                                                 framebufferHeight);
+    } else if (postProcessTargetSize_.x != framebufferWidth ||
+               postProcessTargetSize_.y != framebufferHeight) {
+      renderDevice_->resizeRenderTarget(target, framebufferWidth,
+                                        framebufferHeight);
+    }
+  }
+
+  if (sceneRenderTarget_.valid() && postProcessTargets_[0].valid() &&
+      postProcessTargets_[1].valid()) {
+    postProcessTargetSize_ = {framebufferWidth, framebufferHeight};
+  }
+}
+
+bool DL::App::hasEnabledPostProcessEffects() const {
+  if (!postProcessStack_.enabled) {
+    return false;
+  }
+  for (const auto &effect : postProcessStack_.effects) {
+    if (effect.enabled && effect.pipeline.valid()) {
+      return true;
+    }
+  }
+  return false;
+}
+
+DL::App::PostProcessEffect *
+DL::App::findPostProcessEffect(std::string_view name) {
+  for (auto &effect : postProcessStack_.effects) {
+    if (effect.name == name) {
+      return &effect;
+    }
+  }
+  return nullptr;
+}
+
+const DL::App::PostProcessEffect *
+DL::App::findPostProcessEffect(std::string_view name) const {
+  for (const auto &effect : postProcessStack_.effects) {
+    if (effect.name == name) {
+      return &effect;
+    }
+  }
+  return nullptr;
+}
+
+DL::UniformValue *DL::App::findEffectUniform(PostProcessEffect &effect,
+                                             std::string_view name) {
+  for (auto &uniform : effect.uniforms) {
+    if (uniform.name == name) {
+      return &uniform;
+    }
+  }
+  return nullptr;
+}
+
+const DL::UniformValue *
+DL::App::findEffectUniform(const PostProcessEffect &effect,
+                           std::string_view name) const {
+  for (const auto &uniform : effect.uniforms) {
+    if (uniform.name == name) {
+      return &uniform;
+    }
+  }
+  return nullptr;
+}
+
+void DL::App::renderScenePass(const FrameContext &ctx,
+                              std::uint32_t framebufferWidth,
+                              std::uint32_t framebufferHeight) {
+  const bool usePostProcess =
+      hasEnabledPostProcessEffects() && sceneRenderTarget_.valid();
+  FramePassDesc passDesc{
+      .passId = RenderPassId::Opaque,
+      .target = usePostProcess ? sceneRenderTarget_ : RenderTargetHandle{},
+      .clearColor = {0.78f, 0.84f, 0.80f, 1.0f},
+      .clearFlags = ClearFlags::ColorDepth,
+      .depthMode = DepthMode::Less,
+  };
+
+  if (!usePostProcess) {
+    renderDevice_->setViewport(framebufferWidth, framebufferHeight);
+  }
+  renderDevice_->beginFrame(passDesc);
+  RenderQueue renderQueue;
+  FrameContext renderCtx = ctx;
+  renderCtx.renderQueue = &renderQueue;
+  scene_->render(renderCtx);
+  lastRenderQueueStats_ = renderQueue.flush(
+      *renderDevice_, {.cullingEnabled = renderCullingEnabled_});
+}
+
+void DL::App::renderPostProcessPass(const FrameContext &ctx,
+                                    std::uint32_t framebufferWidth,
+                                    std::uint32_t framebufferHeight) {
+  if (!hasEnabledPostProcessEffects() || !postProcessQuad_.valid() ||
+      !sceneRenderTarget_.valid()) {
+    return;
+  }
+
+  std::vector<const PostProcessEffect *> enabledEffects;
+  enabledEffects.reserve(postProcessStack_.effects.size());
+  for (const auto &effect : postProcessStack_.effects) {
+    if (effect.enabled && effect.pipeline.valid()) {
+      enabledEffects.push_back(&effect);
+    }
+  }
+  if (enabledEffects.empty()) {
+    return;
+  }
+
+  TextureHandle inputTexture =
+      renderDevice_->getRenderTargetColorTexture(sceneRenderTarget_);
+  std::size_t scratchIndex = 0;
+  for (std::size_t effectIndex = 0; effectIndex < enabledEffects.size();
+       ++effectIndex) {
+    const auto &effect = *enabledEffects[effectIndex];
+    const bool isLastEffect = effectIndex + 1 == enabledEffects.size();
+    if (isLastEffect) {
+      renderDevice_->setViewport(framebufferWidth, framebufferHeight);
+    }
+    renderDevice_->beginFrame(
+        {.passId = RenderPassId::PostProcess,
+         .target = isLastEffect ? RenderTargetHandle{}
+                                : postProcessTargets_[scratchIndex],
+         .clearColor = {0.0f, 0.0f, 0.0f, 1.0f},
+         .clearFlags = ClearFlags::Color,
+         .depthMode = DepthMode::Disabled});
+
+    DrawCommand command;
+    command.mesh = postProcessQuad_;
+    command.pipeline = effect.pipeline;
+    command.texture = inputTexture;
+    command.pass = RenderPassId::PostProcess;
+    command.uniforms = effect.uniforms;
+    command.uniforms.push_back(UniformValue::makeVec2(
+        "screenSize", glm::vec2(framebufferWidth, framebufferHeight)));
+    command.uniforms.push_back(
+        UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
+    renderDevice_->draw(command);
+
+    if (!isLastEffect) {
+      inputTexture = renderDevice_->getRenderTargetColorTexture(
+          postProcessTargets_[scratchIndex]);
+      scratchIndex = 1 - scratchIndex;
+    }
+  }
 }
 
 void DL::App::onClick(int button, int action, int /*mod*/) {
@@ -383,7 +898,10 @@ void DL::App::onClick(int button, int action, int /*mod*/) {
     double x, y;
     glfwGetCursorPos(window_, &x, &y);
     if (scene_) {
-      scene_->onClick(static_cast<float>(x), static_cast<float>(y));
+      const glm::vec2 sceneMousePosition =
+          mapMousePositionToScene({static_cast<float>(x), static_cast<float>(y)},
+                                  getWindowSize());
+      scene_->onClick(sceneMousePosition.x, sceneMousePosition.y);
     }
   }
 }
@@ -411,12 +929,6 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
         return;
       }
     }
-    return;
-  }
-
-  if (key == GLFW_KEY_SPACE) {
-    Logger::instance().logEvent(LogLevel::Info, "scene", "load_simple_scene");
-    loadSimpleScene();
     return;
   }
 

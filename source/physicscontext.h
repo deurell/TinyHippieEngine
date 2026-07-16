@@ -14,8 +14,8 @@ public:
 
   PhysicsContext(const PhysicsContext &) = delete;
   PhysicsContext &operator=(const PhysicsContext &) = delete;
-  PhysicsContext(PhysicsContext &&) noexcept = default;
-  PhysicsContext &operator=(PhysicsContext &&) noexcept = default;
+  PhysicsContext(PhysicsContext &&) noexcept = delete;
+  PhysicsContext &operator=(PhysicsContext &&) noexcept = delete;
 
   void setGravity(const glm::vec3 &gravity);
   void registerBody(PhysicsBodyComponent &body);

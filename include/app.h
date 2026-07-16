@@ -1,17 +1,17 @@
 #pragma once
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
-#include "camera.h"
 #include "iscene.h"
 #include "meshassetcache.h"
+#include "renderqueue.h"
 #include "renderresourcecache.h"
 #include "scenelifecycle.h"
 #include "scenemanager.h"
-#include "model.h"
 #include "renderdevice.h"
-#include "shader.h"
+#include <array>
 #include <GLFW/glfw3.h>
 #include <memory>
+#include <vector>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -21,7 +21,7 @@ namespace DL {
 class App {
 public:
   App() = default;
-  ~App() = default;
+  ~App();
 
   int run();
   void update();
@@ -42,18 +42,86 @@ public:
   void requestSimulationStep() { ++requestedSimulationSteps_; }
   AudioSystem &audioSystem() { return audioSystem_; }
   const AudioSystem &audioSystem() const { return audioSystem_; }
+  bool postProcessEnabled() const;
+  void setPostProcessEnabled(bool enabled);
+  bool chromaticEnabled() const;
+  void setChromaticEnabled(bool enabled);
+  float chromaticStrength() const;
+  void setChromaticStrength(float strength);
+  bool bloomColorGradeEnabled() const;
+  void setBloomColorGradeEnabled(bool enabled);
+  float bloomIntensity() const;
+  void setBloomIntensity(float intensity);
+  float bloomThreshold() const;
+  void setBloomThreshold(float threshold);
+  float colorGradeSaturation() const;
+  void setColorGradeSaturation(float saturation);
+  float colorGradeContrast() const;
+  void setColorGradeContrast(float contrast);
+  float colorGradeWarmth() const;
+  void setColorGradeWarmth(float warmth);
+  bool crtEnabled() const;
+  void setCrtEnabled(bool enabled);
+  float crtScanlineStrength() const;
+  void setCrtScanlineStrength(float strength);
+  float crtVignetteStrength() const;
+  void setCrtVignetteStrength(float strength);
+  float crtCurvature() const;
+  void setCrtCurvature(float strength);
+  float crtWobble() const;
+  void setCrtWobble(float strength);
+  float crtGrilleStrength() const;
+  void setCrtGrilleStrength(float strength);
+  float crtBrightness() const;
+  void setCrtBrightness(float strength);
+  bool renderCullingEnabled() const { return renderCullingEnabled_; }
+  void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
+  RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
   static constexpr float screen_height = 720;
 
 private:
+  struct PostProcessEffect {
+    std::string name;
+    bool enabled = true;
+    std::string vertexShaderPath = "Shaders/postprocess.vert";
+    std::string fragmentShaderPath;
+    PipelineHandle pipeline;
+    std::vector<UniformValue> uniforms;
+  };
+
+  struct PostProcessStack {
+    bool enabled = true;
+    std::vector<PostProcessEffect> effects;
+  };
+
   bool init();
+  void shutdown();
   void basisInit();
   void calculateDeltaTime();
-  void loadSimpleScene();
+  void initActionMap();
   void loadCurrentScene();
   void registerScenes();
+  void configureDefaultPostProcessStack();
+  void ensurePostProcessResources(std::uint32_t framebufferWidth,
+                                  std::uint32_t framebufferHeight);
+  void renderScenePass(const FrameContext &ctx,
+                       std::uint32_t framebufferWidth,
+                       std::uint32_t framebufferHeight);
+  void renderPostProcessPass(const FrameContext &ctx,
+                             std::uint32_t framebufferWidth,
+                             std::uint32_t framebufferHeight);
+  bool hasEnabledPostProcessEffects() const;
+  PostProcessEffect *findPostProcessEffect(std::string_view name);
+  const PostProcessEffect *findPostProcessEffect(std::string_view name) const;
+  UniformValue *findEffectUniform(PostProcessEffect &effect,
+                                  std::string_view name);
+  const UniformValue *findEffectUniform(const PostProcessEffect &effect,
+                                        std::string_view name) const;
+  glm::vec2 mapMousePositionToScene(glm::vec2 mousePosition,
+                                    glm::vec2 windowSize) const;
 
   GLFWwindow *window_{};
   AudioSystem audioSystem_;
@@ -63,6 +131,11 @@ private:
   std::unique_ptr<DL::IRenderDevice> renderDevice_;
   std::unique_ptr<DL::MeshAssetCache> meshAssetCache_;
   std::unique_ptr<DL::RenderResourceCache> renderResourceCache_;
+  RenderTargetHandle sceneRenderTarget_;
+  MeshHandle postProcessQuad_;
+  std::array<RenderTargetHandle, 2> postProcessTargets_{};
+  glm::uvec2 postProcessTargetSize_{0u, 0u};
+  PostProcessStack postProcessStack_;
   std::string glslVersionString_;
   float deltaTime_ = 0.0f;
   float startFrameTime_ = 0.0f;
@@ -73,10 +146,12 @@ private:
   int lastFixedUpdateCount_ = 0;
   int requestedSimulationSteps_ = 0;
   bool simulationPaused_ = false;
-  bool nextSceneHeld_ = false;
-  bool prevSceneHeld_ = false;
+  bool renderCullingEnabled_ = true;
+  RenderQueueStats lastRenderQueueStats_;
+  ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 lastMousePosition_{0.0f};
+
   bool hasLastMousePosition_ = false;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;

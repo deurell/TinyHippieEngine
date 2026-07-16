@@ -1,14 +1,26 @@
 #pragma once
+#include "lighting.h"
 #include <array>
 #include <glm/glm.hpp>
+#include <string>
 #include <string_view>
 
 namespace DL {
+class RenderQueue;
+
 enum class Key {
   W,
   A,
   S,
   D,
+  Count,
+};
+
+enum class Action {
+  MoveForward,
+  MoveBackward,
+  MoveLeft,
+  MoveRight,
   Count,
 };
 
@@ -21,11 +33,20 @@ enum class MouseButton {
 
 struct InputState {
   std::array<bool, static_cast<std::size_t>(Key::Count)> keysDown{};
+  std::array<bool, static_cast<std::size_t>(Action::Count)> actionsDown{};
   std::array<bool, static_cast<std::size_t>(MouseButton::Count)> mouseButtonsDown{};
+  // Raw GLFW window-space mouse coordinates.
+  glm::vec2 mousePosition{0.0f};
+  // Mouse coordinates mapped into the rendered scene after screen-space effects.
+  glm::vec2 sceneMousePosition{0.0f};
   glm::vec2 mouseDelta{0.0f};
 
   [[nodiscard]] bool isKeyDown(Key key) const {
     return keysDown[static_cast<std::size_t>(key)];
+  }
+
+  [[nodiscard]] bool isActionDown(Action action) const {
+    return actionsDown[static_cast<std::size_t>(action)];
   }
 
   [[nodiscard]] bool isMouseButtonDown(MouseButton button) const {
@@ -33,10 +54,42 @@ struct InputState {
   }
 };
 
+class ActionMap {
+public:
+  ActionMap() { bindings_.fill(Key::Count); }
+
+  void bind(Action action, Key key) {
+    bindings_[static_cast<std::size_t>(action)] = key;
+  }
+
+  [[nodiscard]] Key binding(Action action) const {
+    return bindings_[static_cast<std::size_t>(action)];
+  }
+
+  void apply(const InputState &sourceKeys, InputState &target) const {
+    target.actionsDown.fill(false);
+    for (std::size_t index = 0; index < bindings_.size(); ++index) {
+      const Key key = bindings_[index];
+      if (key == Key::Count) {
+        continue;
+      }
+      target.actionsDown[index] =
+          sourceKeys.keysDown[static_cast<std::size_t>(key)];
+    }
+  }
+
+private:
+  std::array<Key, static_cast<std::size_t>(Action::Count)> bindings_{};
+};
+
 struct FrameContext {
   float delta_time = 0.0f;
   double total_time = 0.0;
   InputState input;
+  glm::vec2 windowSize{0.0f};
+  glm::vec2 framebufferSize{0.0f};
+  LightingState *lighting = nullptr;
+  RenderQueue *renderQueue = nullptr;
 };
 
 class IScene {

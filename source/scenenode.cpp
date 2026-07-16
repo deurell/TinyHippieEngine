@@ -92,14 +92,24 @@ void SceneNode::update(const FrameContext &ctx) {
   }
 }
 
-void SceneNode::render(const FrameContext &ctx) {
+void SceneNode::fixedUpdate(const FrameContext &ctx) {
+  for (auto &child : children) {
+    child->fixedUpdate(ctx);
+  }
+}
 
+void SceneNode::render(const FrameContext &ctx) {
+  renderPass(ctx, RenderPassId::Opaque);
+  renderPass(ctx, RenderPassId::Overlay);
+}
+
+void SceneNode::renderPass(const FrameContext &ctx, RenderPassId pass) {
   for (auto &component : renderComponents_) {
-    component->render(worldTransform, ctx);
+    component->render(worldTransform, ctx, pass);
   }
 
   for (auto &child : children) {
-    child->render(ctx);
+    child->renderPass(ctx, pass);
   }
 }
 
@@ -176,7 +186,7 @@ void SceneNode::markDirty() {
   }
 }
 
-void SceneNode::addRenderComponent(std::unique_ptr<VisualizerBase> component) {
+void SceneNode::addRenderComponent(std::unique_ptr<RenderComponent> component) {
   renderComponents_.push_back(std::move(component));
 }
 

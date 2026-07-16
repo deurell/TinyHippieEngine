@@ -6,8 +6,8 @@ namespace {
 TEST(MeshAssetCacheTest, ReusesLoadedMeshAssetInstanceForSamePath) {
   DL::MeshAssetCache cache;
 
-  const auto first = cache.load("../Resources/triangle.gltf");
-  const auto second = cache.load("../Resources/triangle.gltf");
+  const auto first = cache.load("../Resources/character-l.glb");
+  const auto second = cache.load("../Resources/character-l.glb");
 
   ASSERT_NE(first, nullptr);
   ASSERT_NE(second, nullptr);

@@ -140,8 +140,7 @@ bool AudioSystem::hasClip(const std::string &name) const {
 }
 
 AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
-                                              AudioGroup group,
-                                              float volume) {
+                                              AudioGroup group, float volume) {
   if (!initialized_ && !init()) {
     return kInvalidSoundId;
   }
@@ -160,8 +159,7 @@ AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
 }
 
 AudioSystem::SoundId AudioSystem::playLoop(const std::string &name,
-                                           AudioGroup group,
-                                           float volume) {
+                                           AudioGroup group, float volume) {
   return playInternal(name, group, true, volume);
 }
 
@@ -259,9 +257,9 @@ std::size_t AudioSystem::activeSoundCount(AudioGroup group) const {
   return count;
 }
 
-AudioSystem::SoundId AudioSystem::playPooledSfxOneShot(const std::string &clipName,
-                                                       ClipData &clip,
-                                                       float volume) {
+AudioSystem::SoundId
+AudioSystem::playPooledSfxOneShot(const std::string &clipName, ClipData &clip,
+                                  float volume) {
   if (clip.sfxPool.empty()) {
     return playInternal(clipName, AudioGroup::SFX, false, volume);
   }
@@ -329,8 +327,7 @@ AudioSystem::SoundId AudioSystem::playPooledSfxOneShot(const std::string &clipNa
 }
 
 AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
-                                               AudioGroup group,
-                                               bool loop,
+                                               AudioGroup group, bool loop,
                                                float volume) {
   if (!initialized_ && !init()) {
     return kInvalidSoundId;
@@ -468,7 +465,7 @@ bool AudioSystem::ensureSfxPool(ClipData &clip, std::size_t desiredSize) {
   return true;
 }
 
-bool AudioSystem::initLiveDecoder(ClipData &clip) {  // static
+bool AudioSystem::initLiveDecoder(ClipData &clip) { // static
   if (clip.analysisDecoderInitialized) {
     return true;
   }
@@ -532,9 +529,11 @@ void AudioSystem::updateSpectrum() {
       continue;
     }
 
-    // Use playback seconds to avoid frame-domain mismatch between mixer and decoder.
-    const ma_uint64 targetFrame = static_cast<ma_uint64>(
-        std::max(0.0f, cursorSeconds) * static_cast<float>(clip.analysisSampleRate));
+    // Use playback seconds to avoid frame-domain mismatch between mixer and
+    // decoder.
+    const ma_uint64 targetFrame =
+        static_cast<ma_uint64>(std::max(0.0f, cursorSeconds) *
+                               static_cast<float>(clip.analysisSampleRate));
     if (ma_decoder_seek_to_pcm_frame(clip.analysisDecoder.get(), targetFrame) !=
         MA_SUCCESS) {
       continue;
@@ -546,16 +545,17 @@ void AudioSystem::updateSpectrum() {
       continue;
     }
     // Zero-pad if we read fewer frames than the window (e.g. near end of file)
-    const ma_uint64 readEnd = std::min(framesRead, static_cast<ma_uint64>(kWindowSize));
+    const ma_uint64 readEnd =
+        std::min(framesRead, static_cast<ma_uint64>(kWindowSize));
     for (auto n = static_cast<std::size_t>(readEnd); n < kWindowSize; ++n) {
       windowSamples[n] = 0.0f;
     }
 
     // Apply Hanning window
     for (std::size_t n = 0; n < kWindowSize; ++n) {
-      const float w = 0.5f - 0.5f * std::cos(
-          (2.0f * kPi * static_cast<float>(n)) /
-          static_cast<float>(kWindowSize - 1));
+      const float w =
+          0.5f - 0.5f * std::cos((2.0f * kPi * static_cast<float>(n)) /
+                                 static_cast<float>(kWindowSize - 1));
       windowSamples[n] *= w;
     }
 
@@ -564,19 +564,21 @@ void AudioSystem::updateSpectrum() {
     const float maxFrequency = std::max(minFrequency + 1.0f, nyquist - 40.0f);
 
     for (std::size_t band = 0; band < kSpectrumBandCount; ++band) {
-      const float frequency = bandCenterFrequency(
-          band, kSpectrumBandCount, minFrequency, maxFrequency);
+      const float frequency = bandCenterFrequency(band, kSpectrumBandCount,
+                                                  minFrequency, maxFrequency);
       const float magnitude = goertzelMagnitude(
           windowSamples.data(), kWindowSize,
           static_cast<float>(clip.analysisSampleRate), frequency);
       const float compressed = std::log1p(magnitude * 16.0f);
-      if (!std::isfinite(compressed)) continue;
+      if (!std::isfinite(compressed))
+        continue;
       targetBands[band] += compressed * gain;
       framePeak = std::max(framePeak, targetBands[band]);
     }
   }
 
-  // Don't normalize silence/noise; that amplifies low-band residue and makes bars stick.
+  // Don't normalize silence/noise; that amplifies low-band residue and makes
+  // bars stick.
   const bool hasUsableSignal = framePeak >= kMinPeakForNormalize;
   const float desiredNormalizationPeak =
       hasUsableSignal ? std::max(kBaseNormalizationPeak, framePeak)
@@ -591,14 +593,13 @@ void AudioSystem::updateSpectrum() {
 
   for (std::size_t band = 0; band < kSpectrumBandCount; ++band) {
     const float energy = std::max(0.0f, targetBands[band] - kNoiseFloor);
-    const float target = hasUsableSignal
-                             ? std::clamp(std::pow(
-                                              std::clamp(energy / normalizationPeak,
-                                                         0.0f,
-                                                         1.0f),
-                                              0.7f),
-                                          0.0f, 2.0f)
-                             : 0.0f;
+    const float target =
+        hasUsableSignal
+            ? std::clamp(
+                  std::pow(std::clamp(energy / normalizationPeak, 0.0f, 1.0f),
+                           0.7f),
+                  0.0f, 2.0f)
+            : 0.0f;
     const float current = spectrumBands_[band];
     const float blend = target > current ? 0.45f : 0.22f;
     spectrumBands_[band] =

@@ -7,6 +7,10 @@
 #include "scenenode.h"
 #include <string>
 
+namespace DL {
+class SpriteRenderComponent;
+}
+
 class SpriteNode : public DL::SceneNode {
 public:
   explicit SpriteNode(std::string imagePath,
@@ -25,10 +29,20 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "SpriteNode";
   }
+  [[nodiscard]] std::string_view imagePath() const { return imagePath_; }
+  void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
+  [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
+  void setAtlasSourceRectPixels(const glm::vec4 &rect);
+  [[nodiscard]] const glm::vec4 &atlasSourceRectPixels() const {
+    return atlasSourceRectPixels_;
+  }
+  void setAtlasFlip(bool flipX, bool flipY, bool flipDiagonal = false);
+  [[nodiscard]] glm::bvec3 atlasFlip() const { return atlasFlip_; }
 
 private:
   void initCamera();
   void initComponents();
+  void updateBillboardRotation();
 
   std::string imagePath_;
   basist::etc1_global_selector_codebook *codeBook_ = nullptr;
@@ -37,4 +51,8 @@ private:
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0, 0};
+  bool billboardEnabled_ = false;
+  glm::vec4 atlasSourceRectPixels_{0.0f, 0.0f, -1.0f, -1.0f};
+  glm::bvec3 atlasFlip_{false, false, false};
+  DL::SpriteRenderComponent *spriteRenderComponent_ = nullptr;
 };

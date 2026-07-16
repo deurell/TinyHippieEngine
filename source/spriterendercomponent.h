@@ -1,0 +1,57 @@
+#pragma once
+
+#include "basisu_global_selector_palette.h"
+#include "renderdevice.h"
+#include "renderresourcecache.h"
+#include "rendercomponent.h"
+#include <glm/glm.hpp>
+#include <string>
+
+namespace DL {
+
+class SpriteRenderComponent : public RenderComponent {
+public:
+  explicit SpriteRenderComponent(
+      DL::Camera &camera, SceneNode &node, std::string texturePath,
+      basist::etc1_global_selector_codebook *codeBook,
+      DL::IRenderDevice *renderDevice,
+      DL::RenderResourceCache *resourceCache = nullptr,
+      std::string vertexShaderPath = "Shaders/image.vert",
+      std::string fragmentShaderPath = "Shaders/image.frag");
+
+  ~SpriteRenderComponent() override;
+
+  void render(const glm::mat4 &worldTransform,
+              const DL::FrameContext &ctx,
+              DL::RenderPassId pass) override;
+  [[nodiscard]] std::string_view debugTypeName() const override {
+    return "SpriteRenderComponent";
+  }
+  void setAtlasSourceRectPixels(const glm::vec4 &rect) {
+    atlasSourceRectPixels_ = rect;
+  }
+  [[nodiscard]] const glm::vec4 &atlasSourceRectPixels() const {
+    return atlasSourceRectPixels_;
+  }
+  void setAtlasFlip(bool flipX, bool flipY, bool flipDiagonal = false) {
+    atlasFlip_ = {flipX ? 1.0f : 0.0f, flipY ? 1.0f : 0.0f,
+                  flipDiagonal ? 1.0f : 0.0f};
+  }
+
+private:
+  bool loadTexture();
+
+  DL::IRenderDevice *renderDevice_ = nullptr;
+  MeshHandle mesh_;
+  TextureHandle texture_;
+  PipelineHandle pipeline_;
+  std::string texturePath_;
+  basist::etc1_global_selector_codebook *codeBook_ = nullptr;
+  DL::RenderResourceCache *resourceCache_ = nullptr;
+  bool sharedTexture_ = false;
+  glm::vec2 textureSize_{1.0f, 1.0f};
+  glm::vec4 atlasSourceRectPixels_{0.0f, 0.0f, -1.0f, -1.0f};
+  glm::vec3 atlasFlip_{0.0f, 0.0f, 0.0f};
+};
+
+} // namespace DL

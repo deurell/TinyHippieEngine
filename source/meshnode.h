@@ -4,7 +4,7 @@
 #include "camera.h"
 #include "meshassetcache.h"
 #include "meshasset.h"
-#include "meshvisualizer.h"
+#include "meshrendercomponent.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -28,11 +28,12 @@ public:
   [[nodiscard]] std::string_view debugTypeName() const override {
     return "MeshNode";
   }
+  [[nodiscard]] std::string_view assetPath() const { return assetPath_; }
   void setDebugNormals(bool enabled);
   [[nodiscard]] bool debugNormals() const { return debugNormals_; }
-  void setVisualizerSettings(const DL::MeshVisualizerSettings &settings);
-  [[nodiscard]] const DL::MeshVisualizerSettings &visualizerSettings() const {
-    return visualizerSettings_;
+  void setRenderSettings(const DL::MeshRenderSettings &settings);
+  [[nodiscard]] const DL::MeshRenderSettings &renderSettings() const {
+    return renderSettings_;
   }
   void setAnimationPlaying(bool playing);
   [[nodiscard]] bool isAnimationPlaying() const;
@@ -40,13 +41,18 @@ public:
   [[nodiscard]] bool isAnimationLooping() const;
   void setAnimationPlaybackSpeed(float speed);
   [[nodiscard]] float animationPlaybackSpeed() const;
+  [[nodiscard]] std::size_t findAnimationClipIndex(std::string_view name,
+                                                   std::size_t fallback = 0u) const;
   void setAnimationClipIndex(std::size_t index);
   [[nodiscard]] std::size_t animationClipIndex() const;
   [[nodiscard]] std::string_view animationClipName(std::size_t index) const;
   [[nodiscard]] std::size_t animationClipCount() const;
   [[nodiscard]] bool hasAnimations() const;
+  void applyAnimationBlend(const DL::AnimationBlendState &state);
   void setAnimationBlend(std::size_t baseClipIndex, std::size_t blendClipIndex,
                          float weight);
+  void setAnimationBlendByName(std::string_view baseClipName,
+                               std::string_view blendClipName, float weight);
   [[nodiscard]] float animationBlendWeight() const;
 
 private:
@@ -61,7 +67,7 @@ private:
   DL::MeshAssetCache *meshAssetCache_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   glm::vec2 screenSize_{0.0f, 0.0f};
-  DL::MeshVisualizer *meshVisualizer_ = nullptr;
+  DL::MeshRenderComponent *meshRenderComponent_ = nullptr;
   bool debugNormals_ = false;
-  DL::MeshVisualizerSettings visualizerSettings_;
+  DL::MeshRenderSettings renderSettings_;
 };

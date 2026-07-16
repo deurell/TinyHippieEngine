@@ -3,7 +3,7 @@
 #include "camera.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
-#include "shapevisualizer.h"
+#include "shaperendercomponent.h"
 #include <memory>
 
 enum class ShapeType {
@@ -29,6 +29,8 @@ public:
   }
 
   void setMaterial(const DL::PhongMaterial &material);
+  [[nodiscard]] ShapeType shapeType() const { return shapeType_; }
+  [[nodiscard]] const DL::PhongMaterial &material() const { return material_; }
 
 private:
   void initCamera();
@@ -40,6 +42,6 @@ private:
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::unique_ptr<DL::Camera> localCamera_;
   DL::Camera *camera_ = nullptr;
-  DL::ShapeVisualizer *visualizer_ = nullptr;
+  DL::ShapeRenderComponent *renderer_ = nullptr;
   DL::PhongMaterial material_;
 };

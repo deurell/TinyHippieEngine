@@ -1,6 +1,8 @@
 #include "renderresourcecache.h"
 
+#include "stb_image.h"
 #include <fstream>
+#include <iostream>
 
 namespace DL {
 
@@ -13,6 +15,11 @@ RenderResourceCache::~RenderResourceCache() {
   for (const auto &[_, texture] : basisTextures_) {
     if (texture.valid()) {
       renderDevice_.destroy(texture);
+    }
+  }
+  for (const auto &[_, texture] : imageTextures_) {
+    if (texture.texture.valid()) {
+      renderDevice_.destroy(texture.texture);
     }
   }
   for (const auto &[_, fontAtlas] : fontAtlases_) {
@@ -54,6 +61,47 @@ TextureHandle RenderResourceCache::acquireBasisTexture(
   return handle;
 }
 
+const ImageTextureResource *
+RenderResourceCache::acquireImageTexture(std::string_view path) {
+  const std::string key(path);
+  const auto it = imageTextures_.find(key);
+  if (it != imageTextures_.end()) {
+    return &it->second;
+  }
+
+  stbi_set_flip_vertically_on_load(false);
+  int width = 0;
+  int height = 0;
+  int channels = 0;
+  unsigned char *pixels = stbi_load(key.c_str(), &width, &height, &channels, 4);
+  if (pixels == nullptr || width <= 0 || height <= 0) {
+    std::cerr << "Failed to load image texture: " << key << "\n";
+    if (pixels != nullptr) {
+      stbi_image_free(pixels);
+    }
+    return nullptr;
+  }
+
+  ImageTextureResource resource;
+  resource.texture = renderDevice_.createTexture(
+      {.pixels = pixels,
+       .width = static_cast<std::uint32_t>(width),
+       .height = static_cast<std::uint32_t>(height),
+       .format = TextureFormat::RGBA8,
+       .filter = TextureFilter::Nearest,
+       .generateMipmaps = false});
+  resource.size = {static_cast<float>(width), static_cast<float>(height)};
+  stbi_image_free(pixels);
+
+  if (!resource.texture.valid()) {
+    std::cerr << "Failed to create image texture: " << key << "\n";
+    return nullptr;
+  }
+
+  auto [insertedIt, inserted] = imageTextures_.emplace(key, resource);
+  return inserted ? &insertedIt->second : nullptr;
+}
+
 TextureHandle RenderResourceCache::acquireWhiteTexture() {
   if (whiteTexture_.valid()) {
     return whiteTexture_;
@@ -80,15 +128,17 @@ MeshHandle RenderResourceCache::acquireTexturedQuad() {
 const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
     std::string_view path, float pixelHeight, std::uint32_t atlasWidth,
     std::uint32_t atlasHeight, std::uint32_t oversampleX,
-    std::uint32_t oversampleY, std::uint8_t firstChar,
-    std::uint8_t charCount) {
+    std::uint32_t oversampleY, const std::vector<int> &codepoints) {
+  std::string codepointKey;
+  for (const int codepoint : codepoints) {
+    codepointKey += std::to_string(codepoint);
+    codepointKey.push_back(',');
+  }
   const std::string key = std::string(path) + "|" + std::to_string(pixelHeight) +
                           "|" + std::to_string(atlasWidth) + "|" +
                           std::to_string(atlasHeight) + "|" +
                           std::to_string(oversampleX) + "|" +
-                          std::to_string(oversampleY) + "|" +
-                          std::to_string(firstChar) + "|" +
-                          std::to_string(charCount);
+                          std::to_string(oversampleY) + "|" + codepointKey;
   const auto it = fontAtlases_.find(key);
   if (it != fontAtlases_.end()) {
     return &it->second;
@@ -120,6 +170,8 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   }
 
   FontAtlasResource resource;
+  resource.atlasWidth = atlasWidth;
+  resource.atlasHeight = atlasHeight;
   resource.fontScale = stbtt_ScaleForPixelHeight(&fontInfo, pixelHeight);
 
   int ascent = 0;
@@ -131,7 +183,8 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   auto atlasData =
       std::make_unique<std::uint8_t[]>(atlasWidth * atlasHeight);
   resource.fontInfo = std::shared_ptr<stbtt_packedchar[]>(
-      new stbtt_packedchar[charCount], [](stbtt_packedchar *p) { delete[] p; });
+      new stbtt_packedchar[codepoints.size()],
+      [](stbtt_packedchar *p) { delete[] p; });
 
   stbtt_pack_context context;
   if (!stbtt_PackBegin(&context, atlasData.get(),
@@ -141,9 +194,15 @@ const FontAtlasResource *RenderResourceCache::acquireFontAtlas(
   }
   stbtt_PackSetOversampling(&context, oversampleX, oversampleY);
 
-  if (!stbtt_PackFontRange(
+  stbtt_pack_range range{};
+  range.font_size = resource.fontSize;
+  range.first_unicode_codepoint_in_range = 0;
+  range.array_of_unicode_codepoints = const_cast<int *>(codepoints.data());
+  range.num_chars = static_cast<int>(codepoints.size());
+  range.chardata_for_range = resource.fontInfo.get();
+  if (!stbtt_PackFontRanges(
           &context, reinterpret_cast<const unsigned char *>(fontData.get()), 0,
-          resource.fontSize, firstChar, charCount, resource.fontInfo.get())) {
+          &range, 1)) {
     stbtt_PackEnd(&context);
     return nullptr;
   }

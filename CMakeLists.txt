@@ -7,11 +7,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set_property(GLOBAL PROPERTY TARGET_SUPPORTS_SHARED_LIBS FALSE)
 
+if (APPLE)
+    enable_language(OBJC)
+endif ()
+
 include(CTest)
 include(FetchContent)
 
 option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
-option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with ReactPhysics3D" ON)
+option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with Box3D" OFF)
 
 set(PLATFORM_LIBS "")
 
@@ -27,86 +31,92 @@ if (EMSCRIPTEN)
 endif ()
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
+    set(BOX3D_SAMPLES OFF CACHE BOOL "" FORCE)
+    set(BOX3D_UNIT_TESTS OFF CACHE BOOL "" FORCE)
+    set(BOX3D_BENCHMARKS OFF CACHE BOOL "" FORCE)
+    set(BOX3D_DOCS OFF CACHE BOOL "" FORCE)
     FetchContent_Declare(
-            reactphysics3d
-            GIT_REPOSITORY https://github.com/DanielChappuis/reactphysics3d.git
-            GIT_TAG v0.10.2
+            box3d
+            GIT_REPOSITORY https://github.com/erincatto/box3d.git
+            GIT_TAG v0.1.0
     )
-    FetchContent_MakeAvailable(reactphysics3d)
+    FetchContent_MakeAvailable(box3d)
 endif ()
 
-add_executable(tiny_hippie_engine source/glad.c source/main.cpp source/app.cpp source/logger.cpp source/camera.h
+add_executable(tiny_hippie_engine
+        source/glad.c
+        source/main.cpp
+        source/app.cpp
+        source/logger.cpp
+        source/camera.h
+        source/cameranode.h source/cameranode.cpp
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
+        source/fogoverlaynode.h source/fogoverlaynode.cpp
+        source/fogoverlayrendercomponent.h source/fogoverlayrendercomponent.cpp
+        source/light2dnode.h source/light2dnode.cpp
+        source/light2drendercomponent.h source/light2drendercomponent.cpp
+        source/lightnode.h source/lightnode.cpp
+        source/meshasset.h source/meshasset.cpp
         source/meshassetcache.h source/meshassetcache.cpp
+        source/meshnode.h source/meshnode.cpp
+        source/meshrendercomponent.h source/meshrendercomponent.cpp
+        source/model.h source/model.cpp
+        source/particle.cpp
+        source/particlesystem.cpp
+        source/particlesystemnode.h source/particlesystemnode.cpp
+        source/particlerendercomponent.h source/particlerendercomponent.cpp
+        source/planenode.h source/planenode.cpp
+        source/planerendercomponent.h source/planerendercomponent.cpp
+        source/phongshapenode.h source/phongshapenode.cpp
+        source/renderqueue.h source/renderqueue.cpp
+        source/shapegeometry.h source/shapegeometry.cpp
+        source/shaperendercomponent.h source/shaperendercomponent.cpp
+        source/spriteanimationnode.h source/spriteanimationnode.cpp
+        source/spritebatchnode.h source/spritebatchnode.cpp
+        source/spritebatchrendercomponent.h source/spritebatchrendercomponent.cpp
+        source/spritenode.h source/spritenode.cpp
+        source/spriterendercomponent.h source/spriterendercomponent.cpp
+        source/textnode.h source/textnode.cpp
+        source/textrendercomponent.h source/textrendercomponent.cpp
+        source/tilemapnode.h source/tilemapnode.cpp
+        source/tilemaprendercomponent.h source/tilemaprendercomponent.cpp
         source/renderresourcecache.h source/renderresourcecache.cpp
+        source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
-        include/renderdevice.h source/openglrenderdevice.cpp include/scenelifecycle.h source/scenelifecycle.cpp
-        source/mesh.h source/model.h source/texture.h source/shader.h source/stb_image.h source/stb_truetype.h
-        source/demoscene.cpp source/c64scene.cpp source/truetypescene.cpp source/textsprite.cpp include/app.h include/iscene.h include/demoscene.h include/c64scene.h include/truetypescene.h include/textsprite.h
-        include/introscene.h source/introscene.cpp include/plane.h source/plane.cpp include/wildcopperscene.h
-        source/wildcopperscene.cpp include/miniaudio.h source/audiosystem.cpp include/audiosystem.h source/simplescene.cpp include/simplescene.h
-        include/particlescene.h source/particlescene.cpp include/particle.h source/particle.cpp source/particlesystem.cpp include/particlesystem.h
-        include/scenenode.h
-        source/scenenode.cpp
-        include/visualizerbase.h
-        source/planenode.cpp
-        source/planenode.h
-        source/nodeexamplescene.h
-        source/nodeexamplescene.cpp
-        source/textnode.cpp
-        source/textnode.h
-        source/textvisualizer.h
-        source/textvisualizer.cpp
-        source/planevisualizer.h
-        source/planevisualizer.cpp
-        source/glosifyscene.cpp
-        source/glosifyscene.h
-        source/spritenode.cpp
-        source/spritenode.h
-        source/spritevisualizer.cpp
-        source/spritevisualizer.h
-        source/quicknodescene.cpp
-        source/quicknodescene.h
-        source/particlesystemnode.cpp
-        source/particlesystemnode.h
-        source/particlevisualizer.cpp
-        source/particlevisualizer.h
-        source/particlenodescene.cpp
-        source/model.cpp
-        source/gltfnodescene.h
-        source/gltfnodescene.cpp
-        source/skeletalanimationblendscene.h
-        source/skeletalanimationblendscene.cpp
-        source/meshasset.h
-        source/meshasset.cpp
-        source/meshvisualizer.h
-        source/meshvisualizer.cpp
-        source/meshnode.h
-        source/meshnode.cpp
-        source/meshnodescene.h
-        source/meshnodescene.cpp
-        source/shapegeometry.h
-        source/shapegeometry.cpp
-        source/shapevisualizer.h
-        source/shapevisualizer.cpp
-        source/phongshapenode.h
-        source/phongshapenode.cpp
-        source/phongshapescene.h
-        source/phongshapescene.cpp
-        source/spectrumanalyzerscene.h
-        source/spectrumanalyzerscene.cpp
-        include/particlenodescene.h
+        source/game/scenes/textstarterscene.h
+        source/game/scenes/textstarterscene.cpp
+        source/game/scenes/skeletalanimationblendscene.h
+        source/game/scenes/skeletalanimationblendscene.cpp
+        source/shader.h
+        source/stb_image.h source/stb_image.cpp
+        source/stb_truetype.h source/stb_truetype.cpp
+        source/texture.h
+        include/app.h
+        include/audiosystem.h source/audiosystem.cpp
+        include/iscene.h
+        include/miniaudio.h
+        include/particle.h
+        include/particlesystem.h
+        include/plane.h source/plane.cpp
+        include/renderdevice.h source/openglrenderdevice.cpp
+        include/scenelifecycle.h source/scenelifecycle.cpp
+        include/scenemanager.h
+        include/scenenode.h source/scenenode.cpp
+        include/textsprite.h source/textsprite.cpp
+        include/rendercomponent.h
 )
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
     target_sources(tiny_hippie_engine PRIVATE
-            source/physicsdebugrenderer.h source/physicsdebugrenderer.cpp
             source/physicscontext.h source/physicscontext.cpp
             source/physicsworld.h source/physicsworld.cpp
             source/physicsbodycomponent.h source/physicsbodycomponent.cpp
-            source/physicssandboxscene.h source/physicssandboxscene.cpp
+            source/physicsdebugrendercomponent.h source/physicsdebugrendercomponent.cpp
+            source/physicsmeshrendercomponent.h source/physicsmeshrendercomponent.cpp
+            source/game/scenes/physicstestscene.h
+            source/game/scenes/physicstestscene.cpp
     )
 endif ()
 
@@ -198,10 +208,10 @@ if (APPLE)
     endforeach ()
 endif ()
 
-if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-    target_link_libraries(tiny_hippie_engine PRIVATE reactphysics3d)
-elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-    target_link_libraries(tiny_hippie_engine PRIVATE ReactPhysics3D)
+if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
+    target_link_libraries(tiny_hippie_engine PRIVATE box3d::box3d)
+elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
+    target_link_libraries(tiny_hippie_engine PRIVATE box3d)
 endif ()
 
 target_link_libraries(tiny_hippie_engine PRIVATE basisu ${PLATFORM_LIBS})
@@ -209,15 +219,16 @@ if (TINY_ENGINE_ENABLE_IMGUI)
     target_link_libraries(tiny_hippie_engine PRIVATE imgui)
 endif ()
 
-foreach (asset_dir IN ITEMS Shaders Resources)
-    add_custom_command(
-            TARGET tiny_hippie_engine POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_directory
-            ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
-            $<TARGET_FILE_DIR:tiny_hippie_engine>/${asset_dir}
-            COMMENT "Copying ${asset_dir}" VERBATIM
-    )
-endforeach ()
+add_custom_target(tiny_hippie_engine_assets
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Shaders
+        ${CMAKE_CURRENT_BINARY_DIR}/Shaders
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/Resources
+        ${CMAKE_CURRENT_BINARY_DIR}/Resources
+        COMMENT "Copying runtime assets" VERBATIM
+)
+add_dependencies(tiny_hippie_engine tiny_hippie_engine_assets)
 
 if (EMSCRIPTEN)
     foreach (asset_dir IN ITEMS Shaders Resources)
@@ -248,6 +259,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
     add_executable(tiny_hippie_engine_tests
             tests/animationclip_test.cpp
             tests/animationplayer_test.cpp
+            tests/cameranode_test.cpp
             tests/camera_test.cpp
             tests/iscene_test.cpp
             tests/meshasset_test.cpp
@@ -260,10 +272,42 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenelifecycle_test.cpp
             tests/scenemanager_test.cpp
             tests/scenenode_test.cpp
+            tests/particlesystemnode_test.cpp
+            tests/renderqueue_test.cpp
+            tests/scenedescription_test.cpp
             source/logger.cpp
+            source/cameranode.cpp
+            source/fogoverlaynode.cpp
+            source/fogoverlayrendercomponent.cpp
+            source/light2dnode.cpp
+            source/light2drendercomponent.cpp
+            source/lightnode.cpp
             source/meshasset.cpp
+            source/meshnode.cpp
+            source/meshrendercomponent.cpp
+            source/particlerendercomponent.cpp
+            source/particlesystemnode.cpp
+            source/planenode.cpp
+            source/planerendercomponent.cpp
+            source/phongshapenode.cpp
+            source/renderresourcecache.cpp
+            source/renderqueue.cpp
+            source/scenedescription.cpp
             source/scenelifecycle.cpp
             source/scenenode.cpp
+            source/shapegeometry.cpp
+            source/shaperendercomponent.cpp
+            source/spriteanimationnode.cpp
+            source/spritebatchnode.cpp
+            source/spritebatchrendercomponent.cpp
+            source/spritenode.cpp
+            source/spriterendercomponent.cpp
+            source/stb_image.cpp
+            source/stb_truetype.cpp
+            source/textnode.cpp
+            source/textrendercomponent.cpp
+            source/tilemapnode.cpp
+            source/tilemaprendercomponent.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)
@@ -279,6 +323,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             PRIVATE
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/source
+            ${CMAKE_SOURCE_DIR}/transcoder
     )
 
     target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
@@ -286,10 +331,10 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
         target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
     endif ()
 
-    if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET reactphysics3d)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE reactphysics3d)
-    elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET ReactPhysics3D)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE ReactPhysics3D)
+    if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d::box3d)
+    elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
+        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d)
     endif ()
 
     target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)

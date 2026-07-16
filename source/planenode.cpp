@@ -3,7 +3,7 @@
 //
 
 #include "planenode.h"
-#include "planevisualizer.h"
+#include "planerendercomponent.h"
 
 PlaneNode::PlaneNode(DL::SceneNode *parentNode, DL::Camera *camera,
                      DL::IRenderDevice *renderDevice,
@@ -15,14 +15,13 @@ void PlaneNode::init() {
   SceneNode::init();
   initCamera();
   initComponents();
-  setLocalPosition({0, 0, 0});
 }
 
 void PlaneNode::update(const DL::FrameContext &ctx) {
   SceneNode::update(ctx);
 
-  if (planeVisualizer_ != nullptr) {
-    planeVisualizer_->baseColor = color;
+  if (planeRenderComponent_ != nullptr) {
+    planeRenderComponent_->baseColor = color;
   }
 }
 
@@ -51,11 +50,11 @@ void PlaneNode::initComponents() {
                                        ? "Shaders/simple.frag"
                                        : "Shaders/spinner.frag";
 
-  auto visualizer = std::make_unique<DL::PlaneVisualizer>(
+  auto renderer = std::make_unique<DL::PlaneRenderComponent>(
       *camera_, *this, renderDevice_, renderResourceCache_,
       vertexShaderPath, fragmentShaderPath);
-  visualizer->baseColor = color;
-  visualizer->spinnerEnabled = planeType == PlaneType::Spinner;
-  planeVisualizer_ = visualizer.get();
-  addRenderComponent(std::move(visualizer));
+  renderer->baseColor = color;
+  renderer->spinnerEnabled = planeType == PlaneType::Spinner;
+  planeRenderComponent_ = renderer.get();
+  addRenderComponent(std::move(renderer));
 }

@@ -1,7 +1,20 @@
 #include "debugui.h"
 #include "app.h"
+#include "cameranode.h"
+#include "fogoverlaynode.h"
+#include "light2dnode.h"
+#include "lightnode.h"
 #include "logger.h"
+#include "meshnode.h"
+#include "particlesystemnode.h"
+#include "phongshapenode.h"
+#include "planenode.h"
 #include "scenenode.h"
+#include "spriteanimationnode.h"
+#include "spritebatchnode.h"
+#include "spritenode.h"
+#include "textnode.h"
+#include "tilemapnode.h"
 
 #ifdef USE_IMGUI
 #include "imgui.h"
@@ -11,6 +24,8 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <algorithm>
+#include <utility>
 
 namespace DL {
 
@@ -120,6 +135,414 @@ void drawSceneNodeTree(SceneNode &node, std::size_t index = 0) {
   }
 }
 
+const char *projectionLabel(CameraProjection projection) {
+  switch (projection) {
+  case CameraProjection::Perspective:
+    return "Perspective";
+  case CameraProjection::Orthographic:
+    return "Orthographic";
+  }
+  return "Perspective";
+}
+
+const char *lightKindLabel(LightNode::Kind kind) {
+  switch (kind) {
+  case LightNode::Kind::Directional:
+    return "Directional";
+  }
+  return "Directional";
+}
+
+const char *planeTypeLabel(PlaneNode::PlaneType type) {
+  switch (type) {
+  case PlaneNode::PlaneType::Simple:
+    return "Simple";
+  case PlaneNode::PlaneType::Spinner:
+    return "Spinner";
+  }
+  return "Simple";
+}
+
+const char *shapeTypeLabel(ShapeType type) {
+  switch (type) {
+  case ShapeType::Cube:
+    return "Cube";
+  case ShapeType::Sphere:
+    return "Sphere";
+  case ShapeType::Cylinder:
+    return "Cylinder";
+  }
+  return "Cube";
+}
+
+const char *textAlignmentLabel(TextAlignment alignment) {
+  switch (alignment) {
+  case TextAlignment::LEFT:
+    return "Left";
+  case TextAlignment::CENTER:
+    return "Center";
+  case TextAlignment::RIGHT:
+    return "Right";
+  }
+  return "Center";
+}
+
+const char *textAnchorLabel(TextAnchor anchor) {
+  switch (anchor) {
+  case TextAnchor::TOP_LEFT:
+    return "TopLeft";
+  case TextAnchor::TOP_CENTER:
+    return "TopCenter";
+  case TextAnchor::TOP_RIGHT:
+    return "TopRight";
+  case TextAnchor::CENTER_LEFT:
+    return "CenterLeft";
+  case TextAnchor::CENTER:
+    return "Center";
+  case TextAnchor::CENTER_RIGHT:
+    return "CenterRight";
+  case TextAnchor::BOTTOM_LEFT:
+    return "BottomLeft";
+  case TextAnchor::BOTTOM_CENTER:
+    return "BottomCenter";
+  case TextAnchor::BOTTOM_RIGHT:
+    return "BottomRight";
+  }
+  return "Center";
+}
+
+std::size_t aliveParticleCount(const ParticleSystemNode &node) {
+  const auto &particles = node.getParticles();
+  return static_cast<std::size_t>(
+      std::count_if(particles.begin(), particles.end(),
+                    [](const ParticleSystemNode::ParticleState &particle) {
+                      return particle.alive;
+                    }));
+}
+
+void drawCameraNodeInspector(CameraNode &node) {
+  ImGui::TextUnformatted("CameraNode");
+  bool active = node.active();
+  if (ImGui::Checkbox("Active camera", &active)) {
+    node.setActive(active);
+  }
+
+  int projectionIndex =
+      node.projection() == CameraProjection::Orthographic ? 1 : 0;
+  const char *projectionItems[] = {"Perspective", "Orthographic"};
+  if (ImGui::Combo("Projection", &projectionIndex, projectionItems, 2)) {
+    node.setProjection(projectionIndex == 1 ? CameraProjection::Orthographic
+                                            : CameraProjection::Perspective);
+  }
+
+  float fov = node.fov();
+  if (ImGui::DragFloat("FOV", &fov, 0.25f, 1.0f, 160.0f, "%.2f")) {
+    node.setFov(fov);
+  }
+  float orthographicHeight = node.orthographicHeight();
+  if (ImGui::DragFloat("Ortho height", &orthographicHeight, 0.05f, 0.01f,
+                       1000.0f, "%.3f")) {
+    node.setOrthographicHeight(orthographicHeight);
+  }
+  ImGui::Text("Current projection %s", projectionLabel(node.projection()));
+}
+
+void drawLightNodeInspector(LightNode &node) {
+  ImGui::Text("LightNode %s", lightKindLabel(node.kind()));
+  bool active = node.active();
+  if (ImGui::Checkbox("Light active", &active)) {
+    node.setActive(active);
+  }
+  glm::vec3 color = node.color();
+  if (ImGui::ColorEdit3("Light color", glm::value_ptr(color))) {
+    node.setColor(color);
+  }
+  float intensity = node.intensity();
+  if (ImGui::DragFloat("Intensity", &intensity, 0.01f, 0.0f, 20.0f, "%.3f")) {
+    node.setIntensity(intensity);
+  }
+  float ambientStrength = node.ambientStrength();
+  if (ImGui::DragFloat("Ambient", &ambientStrength, 0.01f, 0.0f, 2.0f,
+                       "%.3f")) {
+    node.setAmbientStrength(ambientStrength);
+  }
+  glm::vec3 direction = node.direction();
+  if (ImGui::DragFloat3("Direction", glm::value_ptr(direction), 0.01f, -1.0f,
+                        1.0f, "%.3f")) {
+    node.setDirection(direction);
+  }
+}
+
+void drawLight2DNodeInspector(Light2DNode &node) {
+  ImGui::TextUnformatted("Light2DNode");
+  Light2DNode::Config config = node.config();
+  bool changed = ImGui::ColorEdit4("Color", glm::value_ptr(config.color));
+  changed = ImGui::DragFloat("Radius", &config.radius, 0.01f, 0.0f, 100.0f,
+                             "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Intensity", &config.intensity, 0.01f, 0.0f,
+                             10.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Softness", &config.softness, 0.01f, 0.0f, 1.0f,
+                             "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Flicker amount", &config.flickerAmount, 0.01f,
+                             0.0f, 1.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Flicker speed", &config.flickerSpeed, 0.05f,
+                             0.0f, 60.0f, "%.2f") ||
+            changed;
+  if (changed) {
+    node.setConfig(config);
+  }
+  ImGui::Text("Current intensity %.3f", node.currentIntensity());
+}
+
+void drawMeshNodeInspector(MeshNode &node) {
+  ImGui::TextUnformatted("MeshNode");
+  ImGui::TextWrapped("Mesh %.*s", static_cast<int>(node.assetPath().size()),
+                     node.assetPath().data());
+  bool debugNormals = node.debugNormals();
+  if (ImGui::Checkbox("Debug normals", &debugNormals)) {
+    node.setDebugNormals(debugNormals);
+  }
+  const auto &settings = node.renderSettings();
+  ImGui::Text("Ambient %.3f", settings.ambientStrength);
+  ImGui::Text("Specular %.3f", settings.specularStrength);
+  ImGui::Text("Shininess %.3f", settings.shininess);
+
+  if (node.hasAnimations()) {
+    ImGui::Separator();
+    ImGui::TextUnformatted("Animation");
+    bool playing = node.isAnimationPlaying();
+    if (ImGui::Checkbox("Playing", &playing)) {
+      node.setAnimationPlaying(playing);
+    }
+    bool looping = node.isAnimationLooping();
+    if (ImGui::Checkbox("Looping", &looping)) {
+      node.setAnimationLooping(looping);
+    }
+    float playbackSpeed = node.animationPlaybackSpeed();
+    if (ImGui::DragFloat("Playback speed", &playbackSpeed, 0.01f, 0.0f, 4.0f,
+                         "%.3f")) {
+      node.setAnimationPlaybackSpeed(playbackSpeed);
+    }
+    const std::size_t clipIndex = node.animationClipIndex();
+    ImGui::Text("Clip %zu / %zu", clipIndex, node.animationClipCount());
+    ImGui::Text("Clip name %.*s",
+                static_cast<int>(node.animationClipName(clipIndex).size()),
+                node.animationClipName(clipIndex).data());
+    ImGui::Text("Blend weight %.3f", node.animationBlendWeight());
+  }
+}
+
+void drawSpriteNodeInspector(SpriteNode &node) {
+  ImGui::TextUnformatted("SpriteNode");
+  ImGui::TextWrapped("Image %.*s", static_cast<int>(node.imagePath().size()),
+                     node.imagePath().data());
+  bool billboard = node.billboardEnabled();
+  if (ImGui::Checkbox("Billboard", &billboard)) {
+    node.setBillboardEnabled(billboard);
+  }
+  glm::vec4 sourceRect = node.atlasSourceRectPixels();
+  if (ImGui::DragFloat4("Source rect", glm::value_ptr(sourceRect), 1.0f,
+                        -1.0f, 8192.0f, "%.1f")) {
+    node.setAtlasSourceRectPixels(sourceRect);
+  }
+  glm::bvec3 flip = node.atlasFlip();
+  bool flipX = flip.x;
+  bool flipY = flip.y;
+  bool flipDiagonal = flip.z;
+  bool changed = ImGui::Checkbox("Flip X", &flipX);
+  changed = ImGui::Checkbox("Flip Y", &flipY) || changed;
+  changed = ImGui::Checkbox("Flip diagonal", &flipDiagonal) || changed;
+  if (changed) {
+    node.setAtlasFlip(flipX, flipY, flipDiagonal);
+  }
+}
+
+void drawSpriteAnimationNodeInspector(SpriteAnimationNode &node) {
+  ImGui::TextUnformatted("SpriteAnimationNode");
+  const SpriteAnimationConfig &animation = node.animation();
+  bool playing = animation.playing;
+  if (ImGui::Checkbox("Animation playing", &playing)) {
+    node.setAnimationPlaying(playing);
+  }
+  bool looping = animation.looping;
+  if (ImGui::Checkbox("Animation looping", &looping)) {
+    node.setAnimationLooping(looping);
+  }
+  float fps = animation.fps;
+  if (ImGui::DragFloat("FPS", &fps, 0.1f, 0.1f, 60.0f, "%.2f")) {
+    node.setAnimationFps(fps);
+  }
+  ImGui::Text("Frame %zu / %zu", node.currentFrameIndex(),
+              animation.frames.size());
+}
+
+void drawTextNodeInspector(TextNode &node) {
+  ImGui::TextUnformatted("TextNode");
+  ImGui::TextWrapped("Text %.*s", static_cast<int>(node.text().size()),
+                     node.text().data());
+  bool billboard = node.billboardEnabled();
+  if (ImGui::Checkbox("Billboard", &billboard)) {
+    node.setBillboardEnabled(billboard);
+  }
+  float fontHeight = node.fontPixelHeight();
+  if (ImGui::DragFloat("Font px", &fontHeight, 1.0f, 1.0f, 256.0f, "%.1f")) {
+    node.setFontPixelHeight(fontHeight);
+  }
+  glm::vec4 textColor = node.textColor();
+  if (ImGui::ColorEdit4("Text color", glm::value_ptr(textColor))) {
+    node.setTextColor(textColor);
+  }
+  glm::vec4 shadowColor = node.shadowColor();
+  if (ImGui::ColorEdit4("Shadow color", glm::value_ptr(shadowColor))) {
+    node.setShadowColor(shadowColor);
+  }
+  glm::vec2 shadowOffset = node.shadowOffset();
+  if (ImGui::DragFloat2("Shadow offset", glm::value_ptr(shadowOffset), 0.1f,
+                        -64.0f, 64.0f, "%.2f")) {
+    node.setShadowOffset(shadowOffset);
+  }
+  ImGui::Text("Alignment %s", textAlignmentLabel(node.textAlignment()));
+  ImGui::Text("Anchor %s", textAnchorLabel(node.textAnchor()));
+}
+
+void drawPlaneNodeInspector(PlaneNode &node) {
+  ImGui::Text("PlaneNode %s", planeTypeLabel(node.planeType));
+  int planeIndex = node.planeType == PlaneNode::PlaneType::Spinner ? 1 : 0;
+  const char *planeItems[] = {"Simple", "Spinner"};
+  if (ImGui::Combo("Plane type", &planeIndex, planeItems, 2)) {
+    node.planeType = planeIndex == 1 ? PlaneNode::PlaneType::Spinner
+                                     : PlaneNode::PlaneType::Simple;
+  }
+  glm::vec4 color = node.color;
+  if (ImGui::ColorEdit4("Color", glm::value_ptr(color))) {
+    node.color = color;
+  }
+}
+
+void drawPhongShapeNodeInspector(PhongShapeNode &node) {
+  ImGui::Text("PhongShapeNode %s", shapeTypeLabel(node.shapeType()));
+  DL::PhongMaterial material = node.material();
+  bool changed = ImGui::ColorEdit3("Diffuse", glm::value_ptr(material.diffuse));
+  changed = ImGui::ColorEdit3("Ambient", glm::value_ptr(material.ambient)) ||
+            changed;
+  changed = ImGui::ColorEdit3("Specular", glm::value_ptr(material.specular)) ||
+            changed;
+  changed = ImGui::DragFloat("Shininess", &material.shininess, 0.25f, 1.0f,
+                             256.0f, "%.2f") ||
+            changed;
+  if (changed) {
+    node.setMaterial(material);
+  }
+}
+
+void drawParticleSystemNodeInspector(ParticleSystemNode &node) {
+  ImGui::TextUnformatted("ParticleSystemNode");
+  bool billboard = node.isBillboardEnabled();
+  if (ImGui::Checkbox("Billboard", &billboard)) {
+    node.setBillboardEnabled(billboard);
+  }
+  const auto &config = node.getConfig();
+  ImGui::Text("Alive particles %zu / %zu", aliveParticleCount(node),
+              node.getParticles().size());
+  ImGui::Text("Max particles %d", config.emission.maxParticles);
+  ImGui::Text("Emission rate %.2f", config.emission.rate);
+  ImGui::Text("Life %.2f - %.2f", config.life.min, config.life.max);
+}
+
+void drawTileMapNodeInspector(TileMapNode &node) {
+  ImGui::TextUnformatted("TileMapNode");
+  const DL::TileMapConfig &config = node.config();
+  ImGui::TextWrapped("Image %s", config.imagePath.c_str());
+  ImGui::Text("Map %u x %u", config.mapWidth, config.mapHeight);
+  ImGui::Text("Tile %u x %u px", config.tileWidth, config.tileHeight);
+  ImGui::Text("Columns %u", config.columns);
+  ImGui::Text("Tile world size %.3f", config.tileWorldSize);
+  ImGui::Text("Layers %zu", config.layers.size());
+}
+
+void drawSpriteBatchNodeInspector(SpriteBatchNode &node) {
+  ImGui::TextUnformatted("SpriteBatchNode");
+  const DL::SpriteBatchConfig &config = node.config();
+  ImGui::TextWrapped("Image %s", config.imagePath.c_str());
+  ImGui::Text("Sprites %zu", config.sprites.size());
+}
+
+void drawFogOverlayNodeInspector(FogOverlayNode &node) {
+  ImGui::TextUnformatted("FogOverlayNode");
+  FogOverlayNode::Config config = node.config();
+  ImGui::TextWrapped("Image %s", config.imagePath.c_str());
+  bool changed = ImGui::ColorEdit3("Color", glm::value_ptr(config.color));
+  changed = ImGui::DragFloat("Alpha", &config.alpha, 0.01f, 0.0f, 1.0f,
+                             "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Softness", &config.softness, 0.01f, 0.0f, 1.0f,
+                             "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat2("Tiling", glm::value_ptr(config.tiling), 0.01f,
+                              0.001f, 32.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat2("Scroll speed",
+                              glm::value_ptr(config.scrollSpeed), 0.001f,
+                              -2.0f, 2.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Second layer", &config.secondLayerStrength,
+                             0.01f, 0.0f, 1.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat2(
+                "Second scroll", glm::value_ptr(config.secondLayerScrollSpeed),
+                0.001f, -2.0f, 2.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Pulse amount", &config.pulseAmount, 0.01f,
+                             0.0f, 1.0f, "%.3f") ||
+            changed;
+  changed = ImGui::DragFloat("Pulse speed", &config.pulseSpeed, 0.01f, 0.0f,
+                             10.0f, "%.3f") ||
+            changed;
+  if (changed) {
+    node.setConfig(std::move(config));
+  }
+}
+
+void drawTypedNodeInspector(SceneNode &node) {
+  if (auto *cameraNode = dynamic_cast<CameraNode *>(&node)) {
+    drawCameraNodeInspector(*cameraNode);
+  } else if (auto *lightNode = dynamic_cast<LightNode *>(&node)) {
+    drawLightNodeInspector(*lightNode);
+  } else if (auto *light2DNode = dynamic_cast<Light2DNode *>(&node)) {
+    drawLight2DNodeInspector(*light2DNode);
+  } else if (auto *meshNode = dynamic_cast<MeshNode *>(&node)) {
+    drawMeshNodeInspector(*meshNode);
+  } else if (auto *spriteAnimationNode =
+                 dynamic_cast<SpriteAnimationNode *>(&node)) {
+    drawSpriteAnimationNodeInspector(*spriteAnimationNode);
+    ImGui::Separator();
+    ImGui::TextUnformatted("Sprite");
+    drawSpriteNodeInspector(*spriteAnimationNode);
+  } else if (auto *spriteNode = dynamic_cast<SpriteNode *>(&node)) {
+    drawSpriteNodeInspector(*spriteNode);
+  } else if (auto *spriteBatchNode = dynamic_cast<SpriteBatchNode *>(&node)) {
+    drawSpriteBatchNodeInspector(*spriteBatchNode);
+  } else if (auto *fogOverlayNode = dynamic_cast<FogOverlayNode *>(&node)) {
+    drawFogOverlayNodeInspector(*fogOverlayNode);
+  } else if (auto *textNode = dynamic_cast<TextNode *>(&node)) {
+    drawTextNodeInspector(*textNode);
+  } else if (auto *tileMapNode = dynamic_cast<TileMapNode *>(&node)) {
+    drawTileMapNodeInspector(*tileMapNode);
+  } else if (auto *planeNode = dynamic_cast<PlaneNode *>(&node)) {
+    drawPlaneNodeInspector(*planeNode);
+  } else if (auto *shapeNode = dynamic_cast<PhongShapeNode *>(&node)) {
+    drawPhongShapeNodeInspector(*shapeNode);
+  } else if (auto *particleNode = dynamic_cast<ParticleSystemNode *>(&node)) {
+    drawParticleSystemNodeInspector(*particleNode);
+  } else {
+    ImGui::TextUnformatted("No typed properties.");
+  }
+}
+
 void drawNodeInspector(SceneNode &node) {
   glm::vec3 localPosition = node.getLocalPosition();
   glm::vec3 localScale = node.getLocalScale();
@@ -161,6 +584,10 @@ void drawNodeInspector(SceneNode &node) {
       node.setLocalScale(localScale);
     }
   }
+  int renderLayer = node.renderLayer();
+  if (ImGui::InputInt("Render layer", &renderLayer)) {
+    node.setRenderLayer(renderLayer);
+  }
 
   if (ImGui::Button("Reset transform")) {
     if (node.isDebugTransformOverrideEnabled()) {
@@ -187,6 +614,10 @@ void drawNodeInspector(SceneNode &node) {
               worldRotationEuler.y, worldRotationEuler.z);
   ImGui::Text("World scale %.2f %.2f %.2f", worldScale.x, worldScale.y,
               worldScale.z);
+
+  ImGui::Separator();
+  ImGui::TextUnformatted("Node Properties");
+  drawTypedNodeInspector(node);
 
   if (node.renderComponentCount() > 0) {
     ImGui::Separator();
@@ -280,6 +711,9 @@ void drawFrameStatsOverlay(double frameTimeSeconds,
     ImGui::Separator();
     ImGui::Text("Draw calls %u", renderStats.drawCalls);
     ImGui::Text("Triangles %u", renderStats.triangles);
+    ImGui::Text("Pipeline switches %u", renderStats.pipelineSwitches);
+    ImGui::Text("Texture binds %u", renderStats.textureBinds);
+    ImGui::Text("Mesh binds %u", renderStats.meshBinds);
     ImGui::Text("Cached meshes %u", renderStats.meshCount);
     ImGui::Text("Cached textures %u", renderStats.textureCount);
     ImGui::Text("Cached shader programs %u", renderStats.pipelineCount);
@@ -333,11 +767,104 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
     }
 
     if (ImGui::CollapsingHeader("Rendering", sectionFlags)) {
+      bool renderCullingEnabled = app.renderCullingEnabled();
+      if (ImGui::Checkbox("Render culling", &renderCullingEnabled)) {
+        app.setRenderCullingEnabled(renderCullingEnabled);
+      }
+      const RenderQueueStats queueStats = app.lastRenderQueueStats();
+      ImGui::Text("Render items submitted %u", queueStats.submittedItems);
+      ImGui::Text("Render items drawn %u", queueStats.drawnItems);
+      ImGui::Text("Render items culled %u", queueStats.culledItems);
       ImGui::Text("Draw calls %u", renderStats.drawCalls);
       ImGui::Text("Triangles %u", renderStats.triangles);
+      ImGui::Text("Pipeline switches %u", renderStats.pipelineSwitches);
+      ImGui::Text("Texture binds %u", renderStats.textureBinds);
+      ImGui::Text("Mesh binds %u", renderStats.meshBinds);
       ImGui::Text("Meshes %u", renderStats.meshCount);
       ImGui::Text("Textures %u", renderStats.textureCount);
       ImGui::Text("Pipelines %u", renderStats.pipelineCount);
+    }
+
+    if (ImGui::CollapsingHeader("Post Process", sectionFlags)) {
+      bool postProcessEnabled = app.postProcessEnabled();
+      if (ImGui::Checkbox("Enabled", &postProcessEnabled)) {
+        app.setPostProcessEnabled(postProcessEnabled);
+      }
+
+      bool chromaticEnabled = app.chromaticEnabled();
+      if (ImGui::Checkbox("Chromatic aberration", &chromaticEnabled)) {
+        app.setChromaticEnabled(chromaticEnabled);
+      }
+      float chromaticStrength = app.chromaticStrength();
+      if (ImGui::SliderFloat("Chromatic strength", &chromaticStrength, 0.0f,
+                             0.08f, "%.3f")) {
+        app.setChromaticStrength(chromaticStrength);
+      }
+
+      bool bloomColorGradeEnabled = app.bloomColorGradeEnabled();
+      if (ImGui::Checkbox("Bloom color grade", &bloomColorGradeEnabled)) {
+        app.setBloomColorGradeEnabled(bloomColorGradeEnabled);
+      }
+      float bloomIntensity = app.bloomIntensity();
+      if (ImGui::SliderFloat("Bloom intensity", &bloomIntensity, 0.0f, 1.5f,
+                             "%.3f")) {
+        app.setBloomIntensity(bloomIntensity);
+      }
+      float bloomThreshold = app.bloomThreshold();
+      if (ImGui::SliderFloat("Bloom threshold", &bloomThreshold, 0.0f, 1.2f,
+                             "%.3f")) {
+        app.setBloomThreshold(bloomThreshold);
+      }
+      float colorGradeSaturation = app.colorGradeSaturation();
+      if (ImGui::SliderFloat("Color saturation", &colorGradeSaturation, 0.0f,
+                             2.0f, "%.3f")) {
+        app.setColorGradeSaturation(colorGradeSaturation);
+      }
+      float colorGradeContrast = app.colorGradeContrast();
+      if (ImGui::SliderFloat("Color contrast", &colorGradeContrast, 0.5f,
+                             2.0f, "%.3f")) {
+        app.setColorGradeContrast(colorGradeContrast);
+      }
+      float colorGradeWarmth = app.colorGradeWarmth();
+      if (ImGui::SliderFloat("Color warmth", &colorGradeWarmth, -1.0f, 1.0f,
+                             "%.3f")) {
+        app.setColorGradeWarmth(colorGradeWarmth);
+      }
+
+      bool crtEnabled = app.crtEnabled();
+      if (ImGui::Checkbox("CRT scanlines", &crtEnabled)) {
+        app.setCrtEnabled(crtEnabled);
+      }
+      float crtScanlineStrength = app.crtScanlineStrength();
+      if (ImGui::SliderFloat("Scanline strength", &crtScanlineStrength, 0.0f,
+                             0.6f, "%.3f")) {
+        app.setCrtScanlineStrength(crtScanlineStrength);
+      }
+      float crtVignetteStrength = app.crtVignetteStrength();
+      if (ImGui::SliderFloat("CRT vignette", &crtVignetteStrength, 0.0f, 0.6f,
+                             "%.3f")) {
+        app.setCrtVignetteStrength(crtVignetteStrength);
+      }
+      float crtCurvature = app.crtCurvature();
+      if (ImGui::SliderFloat("CRT curvature", &crtCurvature, 0.0f, 1.2f,
+                             "%.3f")) {
+        app.setCrtCurvature(crtCurvature);
+      }
+      float crtWobble = app.crtWobble();
+      if (ImGui::SliderFloat("CRT wobble", &crtWobble, 0.0f, 0.004f,
+                             "%.4f")) {
+        app.setCrtWobble(crtWobble);
+      }
+      float crtGrilleStrength = app.crtGrilleStrength();
+      if (ImGui::SliderFloat("CRT grille", &crtGrilleStrength, 0.0f, 0.4f,
+                             "%.3f")) {
+        app.setCrtGrilleStrength(crtGrilleStrength);
+      }
+      float crtBrightness = app.crtBrightness();
+      if (ImGui::SliderFloat("CRT brightness", &crtBrightness, 0.5f, 3.0f,
+                             "%.2f")) {
+        app.setCrtBrightness(crtBrightness);
+      }
     }
 
     if (ImGui::CollapsingHeader("Audio", sectionFlags)) {

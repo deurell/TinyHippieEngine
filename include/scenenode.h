@@ -1,6 +1,6 @@
 #pragma once
 #include "iscene.h"
-#include "visualizerbase.h"
+#include "rendercomponent.h"
 #include <algorithm>
 #include <cmath>
 #include <glm/glm.hpp>
@@ -26,6 +26,7 @@ public:
   // IScene methods
   void init() override;
   void update(const FrameContext &ctx) override;
+  void fixedUpdate(const FrameContext &ctx) override;
   void render(const FrameContext &ctx) override;
   void onClick(double x, double y) override;
   void onKey(int key) override;
@@ -53,17 +54,20 @@ public:
   void setDebugLocalScale(const glm::vec3 &scale);
   void setDebugName(std::string name);
   std::string_view getDebugName() const;
+  void setRenderLayer(int layer) { renderLayer_ = layer; }
+  [[nodiscard]] int renderLayer() const { return renderLayer_; }
   bool hasParent() const { return parent != nullptr; }
+  SceneNode *parentNode() const { return parent; }
   void setDebugTransformOverrideEnabled(bool enabled);
   bool isDebugTransformOverrideEnabled() const {
     return debugTransformOverrideEnabled_;
   }
 
-  void addRenderComponent(std::unique_ptr<VisualizerBase> component);
+  void addRenderComponent(std::unique_ptr<RenderComponent> component);
   [[nodiscard]] std::size_t renderComponentCount() const {
     return renderComponents_.size();
   }
-  [[nodiscard]] const std::vector<std::unique_ptr<VisualizerBase>> &
+  [[nodiscard]] const std::vector<std::unique_ptr<RenderComponent>> &
   renderComponents() const {
     return renderComponents_;
   }
@@ -82,10 +86,12 @@ protected:
   glm::quat localRotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
   glm::vec3 localScale = glm::vec3(1.0f, 1.0f, 1.0f);
   std::string debugName_ = "SceneNode";
+  int renderLayer_ = 0;
   bool debugTransformOverrideEnabled_ = false;
-  std::vector<std::unique_ptr<VisualizerBase>> renderComponents_;
+  std::vector<std::unique_ptr<RenderComponent>> renderComponents_;
 
 private:
+  void renderPass(const FrameContext &ctx, RenderPassId pass);
   void applyLocalPosition(const glm::vec3 &position);
   void applyLocalRotation(const glm::quat &rotation);
   void applyLocalScale(const glm::vec3 &scale);

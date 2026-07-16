@@ -1,19 +1,24 @@
 #include "physicsworld.h"
 
+#include <box3d/box3d.h>
 #include <glm/gtc/constants.hpp>
-#include <reactphysics3d/reactphysics3d.h>
 #include <unordered_map>
 
 namespace DL {
 
 namespace {
 
-reactphysics3d::Vector3 toRp3d(const glm::vec3 &value) {
-  return reactphysics3d::Vector3(value.x, value.y, value.z);
+b3Vec3 toB3Vec3(const glm::vec3 &value) {
+  return {value.x, value.y, value.z};
 }
 
-glm::vec3 toGlm(const reactphysics3d::Vector3 &value) {
+glm::vec3 toGlm(const b3Vec3 &value) {
   return {value.x, value.y, value.z};
+}
+
+glm::vec3 toGlmPos(const b3Pos &value) {
+  return {static_cast<float>(value.x), static_cast<float>(value.y),
+          static_cast<float>(value.z)};
 }
 
 glm::vec4 debugColorToGlm(std::uint32_t color) {
@@ -143,84 +148,70 @@ void appendCapsuleLines(std::vector<PhysicsDebugLine> &lines, const glm::vec3 &p
   }
 }
 
-reactphysics3d::Quaternion toRp3d(const glm::quat &value) {
-  return reactphysics3d::Quaternion(value.x, value.y, value.z, value.w);
+b3Quat toB3Quat(const glm::quat &value) {
+  return {{value.x, value.y, value.z}, value.w};
 }
 
-glm::quat toGlm(const reactphysics3d::Quaternion &value) {
-  return {value.w, value.x, value.y, value.z};
+glm::quat toGlm(const b3Quat &value) {
+  return {value.s, value.v.x, value.v.y, value.v.z};
 }
 
-reactphysics3d::BodyType toRp3d(PhysicsBodyType type) {
+b3BodyType toB3BodyType(PhysicsBodyType type) {
   switch (type) {
   case PhysicsBodyType::Static:
-    return reactphysics3d::BodyType::STATIC;
+    return b3_staticBody;
   case PhysicsBodyType::Kinematic:
-    return reactphysics3d::BodyType::KINEMATIC;
+    return b3_kinematicBody;
   case PhysicsBodyType::Dynamic:
-    return reactphysics3d::BodyType::DYNAMIC;
+    return b3_dynamicBody;
   }
-  return reactphysics3d::BodyType::STATIC;
+  return b3_staticBody;
+}
+
+bool isValidShapeDesc(const PhysicsShapeDesc &shape) {
+  switch (shape.type) {
+  case PhysicsShapeType::Box:
+    return shape.halfExtents.x > 0.0f && shape.halfExtents.y > 0.0f &&
+           shape.halfExtents.z > 0.0f;
+  case PhysicsShapeType::Sphere:
+    return shape.radius > 0.0f;
+  case PhysicsShapeType::Capsule:
+    return shape.radius > 0.0f && shape.height > 0.0f;
+  }
+  return false;
 }
 
 } // namespace
 
 struct PhysicsWorld::Impl {
   struct BodyEntry {
-    reactphysics3d::RigidBody *body = nullptr;
-    reactphysics3d::CollisionShape *shape = nullptr;
-    reactphysics3d::Collider *collider = nullptr;
+    std::size_t engineId = 0;
+    b3BodyId body = b3_nullBodyId;
+    b3ShapeId shape = b3_nullShapeId;
     PhysicsShapeDesc shapeDesc;
     PhysicsShapeType shapeType = PhysicsShapeType::Box;
   };
 
-  reactphysics3d::PhysicsCommon physicsCommon;
-  reactphysics3d::PhysicsWorld *world = nullptr;
-  std::unordered_map<std::size_t, BodyEntry> bodies;
+  b3WorldId world = b3_nullWorldId;
+  std::unordered_map<std::size_t, std::unique_ptr<BodyEntry>> bodies;
   std::size_t nextBodyId = 1;
   PhysicsDebugRenderSettings debugSettings;
+  bool debugRenderingEnabled = false;
 
   Impl() {
-    reactphysics3d::PhysicsWorld::WorldSettings settings;
-    settings.gravity = reactphysics3d::Vector3(0.0f, -9.81f, 0.0f);
-    world = physicsCommon.createPhysicsWorld(settings);
+    b3WorldDef settings = b3DefaultWorldDef();
+    settings.gravity = {0.0f, -9.81f, 0.0f};
+    world = b3CreateWorld(&settings);
   }
 
   ~Impl() {
-    if (world == nullptr) {
+    if (B3_IS_NULL(world)) {
       return;
     }
 
-    for (auto &[_, entry] : bodies) {
-      if (entry.body != nullptr) {
-        world->destroyRigidBody(entry.body);
-      }
-      destroyShape(entry);
-    }
     bodies.clear();
-    physicsCommon.destroyPhysicsWorld(world);
-    world = nullptr;
-  }
-
-  void destroyShape(const BodyEntry &entry) {
-    if (entry.shape == nullptr) {
-      return;
-    }
-
-    switch (entry.shapeType) {
-    case PhysicsShapeType::Box:
-      physicsCommon.destroyBoxShape(
-          static_cast<reactphysics3d::BoxShape *>(entry.shape));
-      break;
-    case PhysicsShapeType::Sphere:
-      physicsCommon.destroySphereShape(
-          static_cast<reactphysics3d::SphereShape *>(entry.shape));
-      break;
-    case PhysicsShapeType::Capsule:
-      physicsCommon.destroyCapsuleShape(
-          static_cast<reactphysics3d::CapsuleShape *>(entry.shape));
-      break;
-    }
+    b3DestroyWorld(world);
+    world = b3_nullWorldId;
   }
 };
 
@@ -255,67 +246,84 @@ PhysicsWorld::PhysicsWorld(PhysicsWorld &&) noexcept = default;
 PhysicsWorld &PhysicsWorld::operator=(PhysicsWorld &&) noexcept = default;
 
 void PhysicsWorld::setGravity(const glm::vec3 &gravity) {
-  if (impl_ != nullptr && impl_->world != nullptr) {
-    impl_->world->setGravity(toRp3d(gravity));
+  if (impl_ != nullptr && B3_IS_NON_NULL(impl_->world)) {
+    b3World_SetGravity(impl_->world, toB3Vec3(gravity));
   }
 }
 
 PhysicsBodyHandle PhysicsWorld::createBody(const PhysicsBodyDesc &desc) {
-  if (impl_ == nullptr || impl_->world == nullptr) {
+  if (impl_ == nullptr || B3_IS_NULL(impl_->world)) {
+    return {};
+  }
+  if (!isValidShapeDesc(desc.shape)) {
     return {};
   }
 
-  reactphysics3d::CollisionShape *shape = nullptr;
+  b3BodyDef bodyDef = b3DefaultBodyDef();
+  bodyDef.type = toB3BodyType(desc.type);
+  bodyDef.position = toB3Vec3(desc.position);
+  bodyDef.rotation = toB3Quat(desc.rotation);
+  bodyDef.linearVelocity = toB3Vec3(desc.linearVelocity);
+  bodyDef.linearDamping = desc.linearDamping;
+  bodyDef.angularDamping = desc.angularDamping;
+  bodyDef.gravityScale = desc.gravityScale;
+  bodyDef.enableSleep = desc.enableSleep;
+  bodyDef.isAwake = desc.startAwake;
+
+  b3BodyId body = b3CreateBody(impl_->world, &bodyDef);
+  if (!b3Body_IsValid(body)) {
+    return {};
+  }
+
+  b3ShapeDef shapeDef = b3DefaultShapeDef();
+  shapeDef.density = desc.type == PhysicsBodyType::Dynamic ? 1.0f : 0.0f;
+  shapeDef.filter.categoryBits = desc.categoryBits;
+  shapeDef.filter.maskBits = desc.maskBits;
+
+  b3ShapeId shape = b3_nullShapeId;
   switch (desc.shape.type) {
   case PhysicsShapeType::Box:
-    shape = impl_->physicsCommon.createBoxShape(toRp3d(desc.shape.halfExtents));
+  {
+    const b3BoxHull box = b3MakeBoxHull(desc.shape.halfExtents.x,
+                                        desc.shape.halfExtents.y,
+                                        desc.shape.halfExtents.z);
+    shape = b3CreateHullShape(body, &shapeDef, &box.base);
     break;
+  }
   case PhysicsShapeType::Sphere:
-    shape = impl_->physicsCommon.createSphereShape(desc.shape.radius);
+  {
+    const b3Sphere sphere{{0.0f, 0.0f, 0.0f}, desc.shape.radius};
+    shape = b3CreateSphereShape(body, &shapeDef, &sphere);
     break;
+  }
   case PhysicsShapeType::Capsule:
-    shape = impl_->physicsCommon.createCapsuleShape(desc.shape.radius,
-                                                    desc.shape.height);
+  {
+    const float halfHeight = desc.shape.height * 0.5f;
+    const b3Capsule capsule{{0.0f, -halfHeight, 0.0f},
+                            {0.0f, halfHeight, 0.0f},
+                            desc.shape.radius};
+    shape = b3CreateCapsuleShape(body, &shapeDef, &capsule);
     break;
   }
-  if (shape == nullptr) {
+  }
+  if (!b3Shape_IsValid(shape)) {
+    b3DestroyBody(body);
     return {};
   }
 
-  const reactphysics3d::Transform transform(toRp3d(desc.position),
-                                            toRp3d(desc.rotation));
-  auto *body = impl_->world->createRigidBody(transform);
-  if (body == nullptr) {
-    Impl::BodyEntry failedEntry{.shape = shape, .shapeType = desc.shape.type};
-    impl_->destroyShape(failedEntry);
-    return {};
-  }
-
-  body->setType(toRp3d(desc.type));
-  body->setLinearDamping(desc.linearDamping);
-  body->setAngularDamping(desc.angularDamping);
-  auto *collider =
-      body->addCollider(shape, reactphysics3d::Transform::identity());
-  if (collider == nullptr) {
-    impl_->world->destroyRigidBody(body);
-    Impl::BodyEntry failedEntry{.shape = shape, .shapeType = desc.shape.type};
-    impl_->destroyShape(failedEntry);
-    return {};
-  }
-  body->setLinearVelocity(toRp3d(desc.linearVelocity));
-  body->setIsDebugEnabled(true);
-  collider->setCollisionCategoryBits(desc.categoryBits);
-  collider->setCollideWithMaskBits(desc.maskBits);
   if (desc.type == PhysicsBodyType::Dynamic) {
-    body->updateMassPropertiesFromColliders();
+    b3Body_ApplyMassFromShapes(body);
   }
 
   const std::size_t id = impl_->nextBodyId++;
-  impl_->bodies.emplace(id, Impl::BodyEntry{.body = body,
-                                            .shape = shape,
-                                            .collider = collider,
-                                            .shapeDesc = desc.shape,
-                                            .shapeType = desc.shape.type});
+  auto entry = std::make_unique<Impl::BodyEntry>(
+      Impl::BodyEntry{.engineId = id,
+                      .body = body,
+                      .shape = shape,
+                      .shapeDesc = desc.shape,
+                      .shapeType = desc.shape.type});
+  b3Body_SetUserData(body, entry.get());
+  impl_->bodies.emplace(id, std::move(entry));
   return PhysicsBodyHandle{id};
 }
 
@@ -329,16 +337,15 @@ void PhysicsWorld::destroyBody(PhysicsBodyHandle handle) {
     return;
   }
 
-  if (it->second.body != nullptr && impl_->world != nullptr) {
-    impl_->world->destroyRigidBody(it->second.body);
+  if (b3Body_IsValid(it->second->body)) {
+    b3DestroyBody(it->second->body);
   }
-  impl_->destroyShape(it->second);
   impl_->bodies.erase(it);
 }
 
 void PhysicsWorld::step(float timeStep) {
-  if (impl_ != nullptr && impl_->world != nullptr) {
-    impl_->world->update(timeStep);
+  if (impl_ != nullptr && B3_IS_NON_NULL(impl_->world)) {
+    b3World_Step(impl_->world, timeStep, 4);
   }
 }
 
@@ -350,12 +357,11 @@ void PhysicsWorld::setBodyTransform(PhysicsBodyHandle handle,
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || it->second.body == nullptr) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return;
   }
 
-  it->second.body->setTransform(
-      reactphysics3d::Transform(toRp3d(position), toRp3d(rotation)));
+  b3Body_SetTransform(it->second->body, toB3Vec3(position), toB3Quat(rotation));
 }
 
 void PhysicsWorld::setLinearVelocity(PhysicsBodyHandle handle,
@@ -365,11 +371,24 @@ void PhysicsWorld::setLinearVelocity(PhysicsBodyHandle handle,
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || it->second.body == nullptr) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return;
   }
 
-  it->second.body->setLinearVelocity(toRp3d(velocity));
+  b3Body_SetLinearVelocity(it->second->body, toB3Vec3(velocity));
+}
+
+void PhysicsWorld::setAwake(PhysicsBodyHandle handle, bool awake) {
+  if (impl_ == nullptr || !handle.valid()) {
+    return;
+  }
+
+  const auto it = impl_->bodies.find(handle.value);
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
+    return;
+  }
+
+  b3Body_SetAwake(it->second->body, awake);
 }
 
 PhysicsBodyState PhysicsWorld::getBodyState(PhysicsBodyHandle handle) const {
@@ -378,100 +397,65 @@ PhysicsBodyState PhysicsWorld::getBodyState(PhysicsBodyHandle handle) const {
   }
 
   const auto it = impl_->bodies.find(handle.value);
-  if (it == impl_->bodies.end() || it->second.body == nullptr) {
+  if (it == impl_->bodies.end() || !b3Body_IsValid(it->second->body)) {
     return {};
   }
 
-  const auto transform = it->second.body->getTransform();
   return PhysicsBodyState{
-      .position = toGlm(transform.getPosition()),
-      .rotation = toGlm(transform.getOrientation()),
-      .linearVelocity = toGlm(it->second.body->getLinearVelocity()),
+      .position = toGlm(b3Body_GetPosition(it->second->body)),
+      .rotation = toGlm(b3Body_GetRotation(it->second->body)),
+      .linearVelocity = toGlm(b3Body_GetLinearVelocity(it->second->body)),
   };
 }
 
 PhysicsRaycastHit PhysicsWorld::raycast(const glm::vec3 &start,
                                         const glm::vec3 &end,
                                         unsigned short categoryMaskBits) const {
-  if (impl_ == nullptr || impl_->world == nullptr) {
+  if (impl_ == nullptr || B3_IS_NULL(impl_->world)) {
     return {};
   }
 
-  struct Callback final : reactphysics3d::RaycastCallback {
-    const PhysicsWorld::Impl *impl = nullptr;
-    unsigned short categoryMaskBits = 0xFFFF;
-    PhysicsRaycastHit hit;
+  b3QueryFilter filter = b3DefaultQueryFilter();
+  filter.categoryBits = 0xFFFF;
+  filter.maskBits = categoryMaskBits;
+  const b3Vec3 translation = toB3Vec3(end - start);
+  const b3RayResult result =
+      b3World_CastRayClosest(impl_->world, toB3Vec3(start), translation, filter);
+  if (!result.hit || !b3Shape_IsValid(result.shapeId)) {
+    return {};
+  }
 
-    reactphysics3d::decimal notifyRaycastHit(
-        const reactphysics3d::RaycastInfo &info) override {
-      if (info.collider == nullptr) {
-        return 1.0f;
-      }
+  PhysicsRaycastHit hit;
+  hit.hasHit = true;
+  hit.point = toGlmPos(result.point);
+  hit.normal = toGlm(result.normal);
+  hit.fraction = result.fraction;
 
-      if ((info.collider->getCollisionCategoryBits() & categoryMaskBits) == 0) {
-        return 1.0f;
-      }
-
-      hit.hasHit = true;
-      hit.point = toGlm(info.worldPoint);
-      hit.normal = toGlm(info.worldNormal);
-      hit.fraction = static_cast<float>(info.hitFraction);
-
-      if (impl != nullptr && info.body != nullptr) {
-        for (const auto &[id, entry] : impl->bodies) {
-          if (entry.body == info.body) {
-            hit.body = PhysicsBodyHandle{id};
-            break;
-          }
-        }
-      }
-
-      return info.hitFraction;
-    }
-  };
-
-  Callback callback;
-  callback.impl = impl_.get();
-  callback.categoryMaskBits = categoryMaskBits;
-  impl_->world->raycast(reactphysics3d::Ray(toRp3d(start), toRp3d(end)),
-                        &callback);
-  return callback.hit;
+  const b3BodyId body = b3Shape_GetBody(result.shapeId);
+  const auto *entry = static_cast<const Impl::BodyEntry *>(b3Body_GetUserData(body));
+  if (entry != nullptr) {
+    hit.body = PhysicsBodyHandle{entry->engineId};
+  }
+  return hit;
 }
 
 void PhysicsWorld::setDebugRenderingEnabled(bool enabled) {
-  if (impl_ != nullptr && impl_->world != nullptr) {
-    impl_->world->setIsDebugRenderingEnabled(enabled);
+  if (impl_ != nullptr) {
+    impl_->debugRenderingEnabled = enabled;
   }
 }
 
 bool PhysicsWorld::isDebugRenderingEnabled() const {
-  return impl_ != nullptr && impl_->world != nullptr &&
-         impl_->world->getIsDebugRenderingEnabled();
+  return impl_ != nullptr && impl_->debugRenderingEnabled;
 }
 
 void PhysicsWorld::setDebugRenderSettings(
     const PhysicsDebugRenderSettings &settings) {
-  if (impl_ == nullptr || impl_->world == nullptr) {
+  if (impl_ == nullptr) {
     return;
   }
 
   impl_->debugSettings = settings;
-  auto &debugRenderer = impl_->world->getDebugRenderer();
-  debugRenderer.setIsDebugItemDisplayed(
-      reactphysics3d::DebugRenderer::DebugItem::COLLISION_SHAPE,
-      settings.collisionShapes);
-  debugRenderer.setIsDebugItemDisplayed(
-      reactphysics3d::DebugRenderer::DebugItem::CONTACT_POINT,
-      settings.contactPoints);
-  debugRenderer.setIsDebugItemDisplayed(
-      reactphysics3d::DebugRenderer::DebugItem::CONTACT_NORMAL,
-      settings.contactNormals);
-  debugRenderer.setIsDebugItemDisplayed(
-      reactphysics3d::DebugRenderer::DebugItem::COLLIDER_AABB,
-      settings.colliderAabbs);
-  debugRenderer.setIsDebugItemDisplayed(
-      reactphysics3d::DebugRenderer::DebugItem::COLLIDER_BROADPHASE_AABB,
-      settings.broadphaseAabbs);
 }
 
 PhysicsDebugRenderSettings PhysicsWorld::getDebugRenderSettings() const {
@@ -483,8 +467,7 @@ PhysicsDebugRenderSettings PhysicsWorld::getDebugRenderSettings() const {
 
 std::vector<PhysicsDebugLine> PhysicsWorld::getDebugLines() const {
   std::vector<PhysicsDebugLine> lines;
-  if (impl_ == nullptr || impl_->world == nullptr ||
-      !impl_->world->getIsDebugRenderingEnabled()) {
+  if (impl_ == nullptr || !impl_->debugRenderingEnabled) {
     return lines;
   }
 
@@ -496,34 +479,34 @@ std::vector<PhysicsDebugLine> PhysicsWorld::getDebugLines() const {
   const glm::vec4 shapeColor = debugColorToGlm(0x00ff00);
   const glm::vec4 velocityColor = debugColorToGlm(0xffff00);
   for (const auto &[_, entry] : impl_->bodies) {
-    if (entry.body == nullptr) {
+    if (!b3Body_IsValid(entry->body)) {
       continue;
     }
 
-    const auto transform = entry.body->getTransform();
-    const glm::vec3 position = toGlm(transform.getPosition());
-    const glm::quat rotation = glm::normalize(toGlm(transform.getOrientation()));
+    const glm::vec3 position = toGlm(b3Body_GetPosition(entry->body));
+    const glm::quat rotation =
+        glm::normalize(toGlm(b3Body_GetRotation(entry->body)));
 
     if (impl_->debugSettings.collisionShapes) {
-      switch (entry.shapeType) {
+      switch (entry->shapeType) {
       case PhysicsShapeType::Box:
-        appendBoxLines(lines, position, rotation, entry.shapeDesc.halfExtents,
+        appendBoxLines(lines, position, rotation, entry->shapeDesc.halfExtents,
                        shapeColor);
         break;
       case PhysicsShapeType::Sphere:
-        appendSphereLines(lines, position, rotation, entry.shapeDesc.radius,
+        appendSphereLines(lines, position, rotation, entry->shapeDesc.radius,
                           shapeColor);
         break;
       case PhysicsShapeType::Capsule:
-        appendCapsuleLines(lines, position, rotation, entry.shapeDesc.radius,
-                           entry.shapeDesc.height, shapeColor);
+        appendCapsuleLines(lines, position, rotation, entry->shapeDesc.radius,
+                           entry->shapeDesc.height, shapeColor);
         break;
       }
     }
 
     if (impl_->debugSettings.velocityVectors &&
-        entry.body->getType() == reactphysics3d::BodyType::DYNAMIC) {
-      const glm::vec3 velocity = toGlm(entry.body->getLinearVelocity());
+        b3Body_GetType(entry->body) == b3_dynamicBody) {
+      const glm::vec3 velocity = toGlm(b3Body_GetLinearVelocity(entry->body));
       const float velocityLength = glm::length(velocity);
       if (velocityLength > 0.0001f) {
         lines.push_back(makeDebugLine(

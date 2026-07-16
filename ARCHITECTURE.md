@@ -3,10 +3,31 @@
 This document captures the current runtime architecture and hard invariants.
 If behavior in code diverges from this file, update this file in the same change.
 
+## North Star
+
+Tiny Hippie Engine is optimized for LLM-friendly, single-developer game
+development. The engine should stay slim, explicit, and easy to inspect.
+
+Principles:
+- Keep the authored surface tiny and text-first. Prefer readable JSON, GLSL,
+  PNG, TTF, GLB, TMX/TSX source assets, and generated text artifacts over
+  custom binary formats.
+- Keep runtime code boring and typed. JSON creates normal C++ nodes; it does not
+  become a second gameplay language.
+- Prefer validation over editor complexity. A fast command-line validator is
+  more valuable than hidden editor behavior.
+- Keep the blessed node set small. New node types should be reusable engine
+  primitives, not one-off game behavior.
+- Keep samples and tests as executable documentation. Every broadly reusable
+  node feature should have schema docs and parser/validator coverage.
+- Avoid hidden magic. Defaults, units, ownership, and render behavior should be
+  visible in code or docs.
+
 ## Scope
 
 Tiny Hippie Engine is a code-first, cross-platform rendering/simulation engine.
-It is intentionally not editor-first and not DSL-first.
+It supports text-authored composition for LLM/coder cooperation, but runtime
+behavior remains typed C++.
 
 Primary targets:
 - Desktop OpenGL via GLFW/GLAD
@@ -18,13 +39,85 @@ Core pieces:
 - `App`: owns window, main loop, scene lifecycle, debug UI frame boundaries.
 - `IScene`: scene contract (`init`, `fixedUpdate`, `update`, `render`, input hooks).
 - `SceneNode`: scene-graph base class with local/world transforms + hierarchy.
-- Render components (`VisualizerBase` descendants): attached to `SceneNode` and rendered from node world transforms.
+- `CameraNode`: scene-graph camera node with authored transform/projection.
+- Render components (`RenderComponent` descendants): attached to `SceneNode` and rendered from node world transforms.
 - `IRenderDevice`: renderer abstraction with OpenGL implementation.
+- `SceneDescription`: JSON-authored scene composition that builds normal runtime
+  nodes through `SceneNodeFactory`.
+- `scripts/tiny_hippie_validate.py`: command-line scene validator used for fast
+  authoring feedback before running the engine.
+
+Starter content:
+- The app registers the generic sample `TextStarterScene` first, then the
+  Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
+  then `SkeletalAnimationBlendScene`.
+  Physics-enabled builds also register `PhysicsTestScene`.
+- Runtime resources are intentionally minimal:
+  `Resources/Scenes/simple_starter.scene.json`,
+  `Resources/Scenes/tiny_dungeon_atlas.scene.json`,
+  `Resources/Scenes/kenney_platformer.scene.json`, `character-l.glb`,
+  `Resources/Scenes/SCHEMA.md`, `Resources/C64_Pro-STYLE.ttf`,
+  `character-q.glb`, their PNG textures in `Resources/Textures/`,
+  `Resources/Textures/generated/fog-soft-noise.png`,
+  `Resources/Textures/generated/retro-crystal-terminal.png`,
+  `Resources/Kenney/TinyDungeon/`,
+  `Resources/Kenney/PlatformerKit/`,
+  `Shaders/meshnode.*`, `Shaders/colored_line.*`, `Shaders/status.*`,
+  `Shaders/image.*`, `Shaders/tilemap.*`, `Shaders/fogoverlay.*`,
+  `Shaders/light2d.frag`, `Shaders/particle.vert`,
+  `Shaders/bloom_colorgrade.frag`, `Shaders/particlefx.frag`,
+  `Shaders/postprocess.vert`,
+  `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
+- `MeshNode` + `MeshRenderComponent` are the active node/render component pair.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).
+- World units are meters: `1.0` scene unit represents roughly one meter for
+  authored transforms, sample spacing, camera movement, and future physics.
+- Text scene files may describe composition, transforms, mesh paths, render
+  settings, and animation defaults. C++ scenes bind to named/typed nodes for
+  behavior.
+- The default scene node factory supports `SceneNode`, `CameraNode`,
+  `LightNode`, `Light2DNode`, `MeshNode`, `SpriteNode`,
+  `SpriteAnimationNode`, `SpriteBatchNode`, `FogOverlayNode`, `TextNode`,
+  `TileMapNode`, `PlaneNode`, `PhongShapeNode`, and `ParticleSystemNode`.
+- `CameraNode` supports perspective and orthographic projection modes from
+  scene JSON. Perspective uses `fov`; orthographic uses `orthographicHeight`
+  as vertical world-space view size.
+- `LightNode` provides one scene directional light for forward-lit render
+  components (`MeshNode` and `PhongShapeNode`). Unlit render components ignore it.
+- `Light2DNode` provides authored additive radial glow overlays for 2D scenes.
+- `SpriteNode` supports full-image sprites and atlas regions through
+  `sourceRect`, `flipX`, `flipY`, and `flipDiagonal` in scene JSON.
+- `SpriteAnimationNode` supports fixed-step atlas-frame animation through
+  `spriteAnimation.frames`, `fps`, `playing`, and `looping` in scene JSON.
+- `SpriteBatchNode` supports many static atlas-backed sprite quads from one
+  image in one mesh/draw command.
+- `FogOverlayNode` supports transparent scrolling texture overlays for mist,
+  clouds, and cloud shadows.
+- `TileMapNode` supports compact atlas-backed orthogonal maps with Tiled-style
+  global tile IDs and flip flags.
+- `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into
+  JSON-authored `TileMapNode` scenes; runtime scene loading stays JSON-only.
+- `scripts/tiny_hippie_validate.py` validates scene JSON structure, known node
+  fields, node type payloads, enum values, common atlas/tilemap invariants, and
+  referenced asset paths. It may warn about suspicious authored transforms, but
+  warnings are advisory unless explicitly promoted by tooling.
 - Scene tree/debug selection is node-only. Components are listed in inspector metadata.
+
+Current render pass model:
+- The app owns pass order.
+- Scene-node render components are evaluated in `Opaque` then `Overlay`.
+- `DrawCommand`s can opt into back-to-front sorting with a renderer-facing sort
+  depth. Text, sprite, and particle render components use this for alpha/additive
+  content so JSON node order does not decide whether later planes overdraw
+  earlier translucent samples.
+- The starter runtime renders scene content into an offscreen color+depth target,
+  then executes a fullscreen `PostProcess` effect stack before debug UI.
+- Postprocess effects are stack entries defined by shader paths + uniforms, and
+  run through ping-pong render targets so effects are composable without
+  hard-coding each effect into the frame loop.
 
 ## Architecture Diagram
 
@@ -51,7 +144,7 @@ Desktop/Web Frame Driver
     +-----+------------------------------+
     |                                    |
     v                                    v
-children (SceneNode)          renderComponents (VisualizerBase...)
+children (SceneNode)          renderComponents (RenderComponent...)
  hierarchy + transforms         draw using node world transform
 ```
 
@@ -66,7 +159,7 @@ GLFW callbacks owned by App
 Scene lifecycle and switching:
 
 App::registerScenes()
-    -> SceneManager (stores scene factories)
+    -> SceneManager (stores the starter scene factory)
 
 App::loadCurrentScene()
     -> SceneManager::createCurrent()
@@ -92,7 +185,7 @@ Fixed-step invariant:
 - `update()` runs once per render frame and is variable-rate.
 
 Rules:
-- Gameplay/simulation/physics state belongs in `fixedUpdate()`.
+- Gameplay/simulation state belongs in `fixedUpdate()`.
 - Presentation, smoothing, and UI belong in `update()`/`render()`.
 - Do not make simulation correctness depend on render FPS.
 
@@ -141,6 +234,17 @@ Principle:
 Desktop:
 - Use `scripts/build_desktop.sh`.
 
+Validation:
+- Use `scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json` to check
+  authored scene files without launching the app.
+- `scripts/run_tests.sh` runs the scene validator before configuring and
+  executing CTest.
+
+Build flags:
+- `TINY_ENGINE_ENABLE_IMGUI` (default ON) enables debug UI.
+- `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) builds the optional Box3D wrapper
+  sources.
+
 Web:
 - Use `scripts/build_web.sh`.
 - `EMS` may point to either:
@@ -152,6 +256,8 @@ Web:
 
 What this repo intentionally is:
 - Scene graph with explicit code-driven scenes and components.
+- Text-authored scene composition that stays diffable and easy for humans/LLMs
+  to edit.
 - Small, inspectable abstractions.
 
 What this repo intentionally is not:

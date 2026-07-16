@@ -1,6 +1,7 @@
 #pragma once
 
 #include "basisu_transcoder.h"
+#include "renderpass.h"
 #include <cstdint>
 #include <array>
 #include <glm/glm.hpp>
@@ -33,6 +34,11 @@ struct PipelineHandle {
   [[nodiscard]] bool valid() const { return value != 0; }
 };
 
+struct RenderTargetHandle {
+  std::size_t value = 0;
+  [[nodiscard]] bool valid() const { return value != 0; }
+};
+
 enum class ClearFlags : std::uint8_t {
   None = 0,
   Color = 1 << 0,
@@ -61,7 +67,14 @@ enum class BlendMode {
   Additive,
 };
 
+enum class DrawSortMode {
+  None,
+  BackToFront,
+};
+
 struct FramePassDesc {
+  RenderPassId passId = RenderPassId::Opaque;
+  RenderTargetHandle target;
   glm::vec4 clearColor = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
   ClearFlags clearFlags = ClearFlags::ColorDepth;
   DepthMode depthMode = DepthMode::Disabled;
@@ -73,11 +86,17 @@ enum class TextureFormat {
   RGBA8,
 };
 
+enum class TextureFilter {
+  Linear,
+  Nearest,
+};
+
 struct TextureDesc {
   const std::uint8_t *pixels = nullptr;
   std::uint32_t width = 0;
   std::uint32_t height = 0;
   TextureFormat format = TextureFormat::RGBA8;
+  TextureFilter filter = TextureFilter::Linear;
   bool generateMipmaps = true;
 };
 
@@ -156,7 +175,11 @@ struct DrawCommand {
   MeshHandle mesh;
   PipelineHandle pipeline;
   TextureHandle texture;
+  RenderPassId pass = RenderPassId::Opaque;
   BlendMode blendMode = BlendMode::Opaque;
+  bool depthTest = true;
+  DrawSortMode sortMode = DrawSortMode::None;
+  float sortDepth = 0.0f;
   float lineWidth = 1.0f;
   std::vector<UniformValue> uniforms;
 };
@@ -164,6 +187,9 @@ struct DrawCommand {
 struct RenderStats {
   std::uint32_t drawCalls = 0;
   std::uint32_t triangles = 0;
+  std::uint32_t pipelineSwitches = 0;
+  std::uint32_t textureBinds = 0;
+  std::uint32_t meshBinds = 0;
   std::uint32_t meshCount = 0;
   std::uint32_t textureCount = 0;
   std::uint32_t pipelineCount = 0;
@@ -188,6 +214,8 @@ public:
       std::string_view path,
       basist::etc1_global_selector_codebook &codebook) = 0;
   virtual TextureHandle createTexture(const TextureDesc &desc) = 0;
+  virtual RenderTargetHandle createRenderTarget(std::uint32_t width,
+                                                std::uint32_t height) = 0;
   virtual PipelineHandle createPipeline(std::string_view vertex_path,
                                         std::string_view fragment_path) = 0;
   virtual PipelineHandle createPipeline(std::string_view vertex_path,
@@ -197,8 +225,14 @@ public:
   virtual void destroy(MeshHandle handle) = 0;
   virtual void destroy(TextureHandle handle) = 0;
   virtual void destroy(PipelineHandle handle) = 0;
+  virtual void destroy(RenderTargetHandle handle) = 0;
 
   virtual void setViewport(std::uint32_t width, std::uint32_t height) = 0;
+  virtual void resizeRenderTarget(RenderTargetHandle handle,
+                                  std::uint32_t width,
+                                  std::uint32_t height) = 0;
+  [[nodiscard]] virtual TextureHandle
+  getRenderTargetColorTexture(RenderTargetHandle handle) const = 0;
   virtual void beginFrame(const FramePassDesc &desc) = 0;
   virtual void endFrame() = 0;
   virtual void draw(const DrawCommand &command) = 0;

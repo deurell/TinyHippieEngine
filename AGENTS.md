@@ -18,6 +18,8 @@ Precedence:
 - Main stats panel is `Engine` (old frame-stats overlay is not used in app flow).
 - Input integration: app-owned GLFW callbacks explicitly forward to ImGui callbacks.
 - Default actions are movement on `WASD` and `Fire` on `Space`.
+- `InputState::moveAxis` is the preferred directional movement input; web
+  virtual stick input writes it directly.
 - Fixed timestep: `1/60` in `App`.
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.

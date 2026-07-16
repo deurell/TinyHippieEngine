@@ -75,6 +75,32 @@
       grid-template-rows: repeat(3, 58px);
       gap: 8px;
     }
+    #mobile-controls .mobile-stick {
+      position: absolute;
+      left: calc(24px + env(safe-area-inset-left));
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      width: 148px;
+      height: 148px;
+      border: 2px solid rgba(255, 255, 255, 0.48);
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.10), rgba(12, 18, 24, 0.42));
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 0 22px rgba(255, 255, 255, 0.08);
+      pointer-events: auto;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #mobile-controls .mobile-stick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 58px;
+      height: 58px;
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      background: rgba(72, 142, 255, 0.46);
+      transform: translate(-50%, -50%);
+      box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.10);
+    }
     #mobile-controls .mobile-actions {
       position: absolute;
       right: calc(24px + env(safe-area-inset-right));
@@ -145,11 +171,27 @@
     .touch-controls-enabled #mobile-controls {
       display: block;
     }
+    .touch-control-mode-stick #mobile-controls .mobile-dpad {
+      display: none;
+    }
+    .touch-control-mode-buttons #mobile-controls .mobile-stick {
+      display: none;
+    }
     @media (max-width: 520px) {
       #mobile-controls .mobile-dpad {
         grid-template-columns: repeat(3, 50px);
         grid-template-rows: repeat(3, 50px);
         gap: 7px;
+      }
+      #mobile-controls .mobile-stick {
+        width: 128px;
+        height: 128px;
+        left: calc(20px + env(safe-area-inset-left));
+        bottom: calc(20px + env(safe-area-inset-bottom));
+      }
+      #mobile-controls .mobile-stick-knob {
+        width: 52px;
+        height: 52px;
       }
       #mobile-controls .mobile-button {
         width: 50px;
@@ -192,6 +234,9 @@
     <button class="mobile-button right" type="button" data-key-code="KeyD" data-key="d" data-key-number="68" aria-label="Move right"></button>
     <button class="mobile-button back" type="button" data-key-code="KeyS" data-key="s" data-key-number="83" aria-label="Move backward"></button>
   </div>
+  <div class="mobile-stick" aria-label="Movement stick">
+    <div class="mobile-stick-knob"></div>
+  </div>
   <div class="mobile-actions">
     <button class="mobile-button fire" type="button" data-key-code="Space" data-key=" " data-key-number="32" aria-label="Fire">A</button>
   </div>
@@ -203,6 +248,8 @@
   var canvasElement = document.getElementById("canvas");
   var touchControlParams = new URLSearchParams(window.location.search);
   var touchControlOverride = touchControlParams.get("touchControls");
+  var touchControlMode =
+          touchControlParams.get("touchControlMode") === "stick" ? "stick" : "buttons";
   var shouldEnableTouchControls =
           touchControlOverride === "1" ||
           (touchControlOverride !== "0" &&
@@ -211,6 +258,14 @@
   document.documentElement.classList.toggle(
           "touch-controls-enabled",
           shouldEnableTouchControls
+  );
+  document.documentElement.classList.toggle(
+          "touch-control-mode-stick",
+          touchControlMode === "stick"
+  );
+  document.documentElement.classList.toggle(
+          "touch-control-mode-buttons",
+          touchControlMode === "buttons"
   );
 
   var Module = {
@@ -296,56 +351,106 @@
   Module.setStatus("Downloading...");
   (function () {
     var buttons = document.querySelectorAll("#mobile-controls [data-key-code]");
+    var stick = document.querySelector("#mobile-controls .mobile-stick");
+    var stickKnob = document.querySelector("#mobile-controls .mobile-stick-knob");
     var pressedKeys = new Set();
 
-    function makeKeyboardEvent(type, button) {
-      var keyNumber = Number(button.getAttribute("data-key-number"));
+    function makeKeyboardEvent(type, keyInfo) {
       var event = new KeyboardEvent(type, {
         bubbles: true,
         cancelable: true,
-        key: button.getAttribute("data-key"),
-        code: button.getAttribute("data-key-code"),
+        key: keyInfo.key,
+        code: keyInfo.code,
         location: 0,
         repeat: false,
       });
 
-      Object.defineProperty(event, "keyCode", { get: function () { return keyNumber; } });
-      Object.defineProperty(event, "which", { get: function () { return keyNumber; } });
+      Object.defineProperty(event, "keyCode", { get: function () { return keyInfo.keyNumber; } });
+      Object.defineProperty(event, "which", { get: function () { return keyInfo.keyNumber; } });
       return event;
     }
 
-    function dispatchKeyboardEvent(type, button) {
+    function dispatchKeyboardEvent(type, keyInfo) {
       var targets = [canvasElement, document, window];
       for (var i = 0; i < targets.length; ++i) {
-        targets[i].dispatchEvent(makeKeyboardEvent(type, button));
+        targets[i].dispatchEvent(makeKeyboardEvent(type, keyInfo));
       }
     }
 
-    function press(button) {
-      var code = button.getAttribute("data-key-code");
+    function pressKey(code, keyInfo) {
       if (pressedKeys.has(code)) {
         return;
       }
       pressedKeys.add(code);
-      button.classList.add("is-held");
       canvasElement.focus();
-      dispatchKeyboardEvent("keydown", button);
+      dispatchKeyboardEvent("keydown", keyInfo);
     }
 
-    function release(button) {
-      var code = button.getAttribute("data-key-code");
+    function releaseKey(code, keyInfo) {
       if (!pressedKeys.has(code)) {
         return;
       }
       pressedKeys.delete(code);
+      dispatchKeyboardEvent("keyup", keyInfo);
+    }
+
+    function keyInfoForButton(button) {
+      return {
+        code: button.getAttribute("data-key-code"),
+        key: button.getAttribute("data-key"),
+        keyNumber: Number(button.getAttribute("data-key-number")),
+      };
+    }
+
+    function pressButton(button) {
+      var keyInfo = keyInfoForButton(button);
+      pressKey(keyInfo.code, keyInfo);
+      button.classList.add("is-held");
+    }
+
+    function releaseButton(button) {
+      var keyInfo = keyInfoForButton(button);
+      releaseKey(keyInfo.code, keyInfo);
       button.classList.remove("is-held");
-      dispatchKeyboardEvent("keyup", button);
     }
 
     function releaseAll() {
       for (var i = 0; i < buttons.length; ++i) {
-        release(buttons[i]);
+        releaseButton(buttons[i]);
       }
+      resetStick();
+    }
+
+    function setTouchMoveAxis(axisX, axisY) {
+      if (typeof Module._tiny_set_touch_move_axis === "function") {
+        Module._tiny_set_touch_move_axis(axisX, axisY);
+      }
+    }
+
+    function resetStick() {
+      if (stickKnob) {
+        stickKnob.style.transform = "translate(-50%, -50%)";
+      }
+      setTouchMoveAxis(0.0, 0.0);
+    }
+
+    function updateStick(event) {
+      var rect = stick.getBoundingClientRect();
+      var radius = Math.min(rect.width, rect.height) * 0.5;
+      var maxDistance = radius - 29.0;
+      var localX = event.clientX - rect.left - radius;
+      var localY = event.clientY - rect.top - radius;
+      var distance = Math.hypot(localX, localY);
+      if (distance > maxDistance && distance > 0.0) {
+        localX = localX / distance * maxDistance;
+        localY = localY / distance * maxDistance;
+      }
+
+      var axisX = maxDistance > 0.0 ? localX / maxDistance : 0.0;
+      var axisY = maxDistance > 0.0 ? localY / maxDistance : 0.0;
+      stickKnob.style.transform =
+              "translate(calc(-50% + " + localX + "px), calc(-50% + " + localY + "px))";
+      setTouchMoveAxis(axisX, -axisY);
     }
 
     for (var i = 0; i < buttons.length; ++i) {
@@ -353,22 +458,46 @@
         button.addEventListener("pointerdown", function (event) {
           event.preventDefault();
           button.setPointerCapture(event.pointerId);
-          press(button);
+          pressButton(button);
         });
         button.addEventListener("pointerup", function (event) {
           event.preventDefault();
-          release(button);
+          releaseButton(button);
         });
         button.addEventListener("pointercancel", function (event) {
           event.preventDefault();
-          release(button);
+          releaseButton(button);
         });
         button.addEventListener("pointerleave", function (event) {
           if (event.buttons === 0) {
-            release(button);
+            releaseButton(button);
           }
         });
       })(buttons[i]);
+    }
+
+    if (stick) {
+      stick.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        stick.setPointerCapture(event.pointerId);
+        canvasElement.focus();
+        updateStick(event);
+      });
+      stick.addEventListener("pointermove", function (event) {
+        if (event.buttons === 0) {
+          return;
+        }
+        event.preventDefault();
+        updateStick(event);
+      });
+      stick.addEventListener("pointerup", function (event) {
+        event.preventDefault();
+        resetStick();
+      });
+      stick.addEventListener("pointercancel", function (event) {
+        event.preventDefault();
+        resetStick();
+      });
     }
 
     window.addEventListener("blur", releaseAll);

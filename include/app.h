@@ -27,6 +27,7 @@ public:
   void update();
   void render();
   void processInput(GLFWwindow *window);
+  void setTouchMoveAxis(glm::vec2 axis);
   void onClick(int button, int action, int mod);
   void onKey(int key, int scancode, int action, int mod);
   void onScreenSizeChanged(int width, int height);
@@ -150,6 +151,7 @@ private:
   RenderQueueStats lastRenderQueueStats_;
   ActionMap actionMap_;
   InputState inputState_;
+  glm::vec2 touchMoveAxis_{0.0f};
   glm::vec2 lastMousePosition_{0.0f};
 
   bool hasLastMousePosition_ = false;

@@ -199,6 +199,9 @@ Invariant:
 - App callbacks call `ImGui_ImplGlfw_*Callback(...)` first, then app input handlers.
 - Default actions are `MoveForward`, `MoveBackward`, `MoveLeft`, `MoveRight`,
   and `Fire`, bound to `W`, `S`, `A`, `D`, and `Space`.
+- `InputState::moveAxis` is the preferred directional input for movement:
+  `x` is right, `y` is forward/up in the input plane. Keyboard fills it from
+  `WASD`; the web virtual stick writes it directly.
 
 This avoids brittle callback chaining and is the expected integration for this repo.
 

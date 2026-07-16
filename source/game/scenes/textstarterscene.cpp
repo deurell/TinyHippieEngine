@@ -177,17 +177,10 @@ void TextStarterScene::updateCameraController(const DL::FrameContext &ctx) {
   activeCameraNode_->lookAtWorld(camera->getPosition() + forward);
 
   const float movementStep = kCameraMoveSpeed * ctx.delta_time;
-  if (ctx.input.isActionDown(DL::Action::MoveForward)) {
-    activeCameraNode_->translateLocal({0.0f, 0.0f, -movementStep});
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveBackward)) {
-    activeCameraNode_->translateLocal({0.0f, 0.0f, movementStep});
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveRight)) {
-    activeCameraNode_->translateLocal({movementStep, 0.0f, 0.0f});
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveLeft)) {
-    activeCameraNode_->translateLocal({-movementStep, 0.0f, 0.0f});
+  if (glm::length(ctx.input.moveAxis) > 0.001f) {
+    activeCameraNode_->translateLocal({ctx.input.moveAxis.x * movementStep,
+                                       0.0f,
+                                       -ctx.input.moveAxis.y * movementStep});
   }
 }
 

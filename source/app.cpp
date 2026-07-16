@@ -24,6 +24,7 @@ constexpr char kCrtEffectName[] = "CRT";
 constexpr char kCrtCurvatureUniform[] = "crtCurvature";
 constexpr float kCrtCurveScale = 0.92f;
 constexpr float kCrtCurveOffset = 0.04f;
+DL::App *gActiveApp = nullptr;
 
 glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
   // Keep in sync with Shaders/crt.frag curve().
@@ -35,6 +36,16 @@ glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
   return uv;
 }
 } // namespace
+
+#ifdef __EMSCRIPTEN__
+extern "C" EMSCRIPTEN_KEEPALIVE void tiny_set_touch_move_axis(float x,
+                                                              float y) {
+  if (gActiveApp == nullptr) {
+    return;
+  }
+  gActiveApp->setTouchMoveAxis({x, y});
+}
+#endif
 
 void renderloop_callback(void *arg) {
   auto app = static_cast<DL::App *>(arg);
@@ -357,6 +368,7 @@ int DL::App::run() {
     shutdown();
     return EXIT_FAILURE;
   }
+  gActiveApp = this;
 
 #ifdef __APPLE__
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
@@ -438,6 +450,9 @@ int DL::App::run() {
 }
 
 void DL::App::shutdown() {
+  if (gActiveApp == this) {
+    gActiveApp = nullptr;
+  }
   scene_.reset();
   renderResourceCache_.reset();
   meshAssetCache_.reset();
@@ -574,6 +589,15 @@ void DL::App::processInput(GLFWwindow *window) {
       glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
   inputState_.keysDown[static_cast<std::size_t>(Key::Space)] =
       glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+  const glm::vec2 keyboardMoveAxis{
+      (inputState_.isKeyDown(Key::D) ? 1.0f : 0.0f) -
+          (inputState_.isKeyDown(Key::A) ? 1.0f : 0.0f),
+      (inputState_.isKeyDown(Key::W) ? 1.0f : 0.0f) -
+          (inputState_.isKeyDown(Key::S) ? 1.0f : 0.0f)};
+  inputState_.moveAxis = keyboardMoveAxis + touchMoveAxis_;
+  if (glm::length(inputState_.moveAxis) > 1.0f) {
+    inputState_.moveAxis = glm::normalize(inputState_.moveAxis);
+  }
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Left)] =
       !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;
@@ -598,6 +622,13 @@ void DL::App::processInput(GLFWwindow *window) {
   lastMousePosition_ = mousePosition;
   hasLastMousePosition_ = true;
   actionMap_.apply(inputState_, inputState_);
+}
+
+void DL::App::setTouchMoveAxis(glm::vec2 axis) {
+  if (glm::length(axis) > 1.0f) {
+    axis = glm::normalize(axis);
+  }
+  touchMoveAxis_ = axis;
 }
 
 glm::vec2 DL::App::mapMousePositionToScene(glm::vec2 mousePosition,

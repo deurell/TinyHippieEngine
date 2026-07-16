@@ -377,19 +377,7 @@ void PhysicsTestScene::updateCameraController(const DL::FrameContext &ctx) {
   const glm::vec3 forward = cameraForward(cameraYaw_, cameraPitch_);
   camera_.lookAt(camera_.getPosition() + forward);
 
-  glm::vec3 movement{0.0f};
-  if (ctx.input.isActionDown(DL::Action::MoveForward)) {
-    movement.z -= 1.0f;
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveBackward)) {
-    movement.z += 1.0f;
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveRight)) {
-    movement.x += 1.0f;
-  }
-  if (ctx.input.isActionDown(DL::Action::MoveLeft)) {
-    movement.x -= 1.0f;
-  }
+  glm::vec3 movement{ctx.input.moveAxis.x, 0.0f, -ctx.input.moveAxis.y};
   if (glm::length(movement) > 0.001f) {
     camera_.translate(glm::normalize(movement) * kCameraMoveSpeed *
                       static_cast<float>(ctx.delta_time));

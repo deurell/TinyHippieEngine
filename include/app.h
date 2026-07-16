@@ -114,6 +114,7 @@ private:
   void renderPostProcessPass(const FrameContext &ctx,
                              std::uint32_t framebufferWidth,
                              std::uint32_t framebufferHeight);
+  void syncObservedWindowSizes();
   bool hasEnabledPostProcessEffects() const;
   PostProcessEffect *findPostProcessEffect(std::string_view name);
   const PostProcessEffect *findPostProcessEffect(std::string_view name) const;
@@ -153,6 +154,8 @@ private:
   InputState inputState_;
   glm::vec2 touchMoveAxis_{0.0f};
   glm::vec2 lastMousePosition_{0.0f};
+  glm::ivec2 lastObservedWindowSize_{0, 0};
+  glm::ivec2 lastObservedFramebufferSize_{0, 0};
 
   bool hasLastMousePosition_ = false;
   glm::vec2 getWindowSize() const;

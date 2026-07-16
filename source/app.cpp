@@ -494,6 +494,7 @@ void DL::App::update() {
   audioSystem_.update();
   if (window_) {
     processInput(window_);
+    syncObservedWindowSizes();
   }
   if (!scene_)
     return;
@@ -985,18 +986,42 @@ void DL::App::basisInit() {
 }
 
 void DL::App::onScreenSizeChanged(int width, int height) {
+  lastObservedWindowSize_ = {width, height};
   if (scene_) {
     scene_->onScreenSizeChanged({width, height});
   }
 }
 
 void DL::App::onFramebufferSizeChanged(int width, int height) {
+  lastObservedFramebufferSize_ = {width, height};
   if (renderDevice_) {
     renderDevice_->setViewport(static_cast<std::uint32_t>(width),
                                static_cast<std::uint32_t>(height));
   }
   if (scene_) {
     scene_->onFramebufferSizeChanged({width, height});
+  }
+}
+
+void DL::App::syncObservedWindowSizes() {
+  if (window_ == nullptr) {
+    return;
+  }
+
+  int windowWidth = 0;
+  int windowHeight = 0;
+  glfwGetWindowSize(window_, &windowWidth, &windowHeight);
+  const glm::ivec2 windowSize{windowWidth, windowHeight};
+  if (windowSize != lastObservedWindowSize_) {
+    onScreenSizeChanged(windowWidth, windowHeight);
+  }
+
+  int framebufferWidth = 0;
+  int framebufferHeight = 0;
+  glfwGetFramebufferSize(window_, &framebufferWidth, &framebufferHeight);
+  const glm::ivec2 framebufferSize{framebufferWidth, framebufferHeight};
+  if (framebufferSize != lastObservedFramebufferSize_) {
+    onFramebufferSizeChanged(framebufferWidth, framebufferHeight);
   }
 }
 

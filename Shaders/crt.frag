@@ -18,18 +18,22 @@ uniform float iTime;
 out vec4 FragColor;
 
 vec2 curve(vec2 uv) {
-    uv = (uv - 0.5) * 2.0;
+    float aspect = screenSize.x / max(screenSize.y, 1.0);
+    vec2 p = (uv - 0.5) * 2.0;
+    p.x *= aspect;
 
     // Changed: curvature is now an amount, not a multiplier.
     // 0.0 = flat, 1.0 = original-ish curve.
     float c = crtCurvature;
 
-    uv.x *= 1.0 + c * pow(abs(uv.y) / 5.0, 2.0);
-    uv.y *= 1.0 + c * pow(abs(uv.x) / 4.0, 2.0);
+    vec2 q = p;
+    q.x *= 1.0 + c * pow(abs(p.y), 2.0) * 0.04;
+    q.y *= 1.0 + c * pow(abs(p.x), 2.0) * 0.04;
 
-    uv = uv * 0.5 + 0.5;
-    uv = uv * 0.92 + 0.04;
-    return uv;
+    q.x /= aspect;
+    q = q * 0.5 + 0.5;
+    q = q * 0.92 + 0.04;
+    return q;
 }
 
 void main() {

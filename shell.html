@@ -5,10 +5,65 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Particles</title>
   <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100svh;
+      overflow: hidden;
+      background: #0b0f12;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+    body {
+      position: fixed;
+      inset: 0;
+    }
     .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
     textarea.emscripten { font-family: monospace; width: 80%; }
     div.emscripten { text-align: center; }
-    div.emscripten_border { }
+    div.emscripten_border {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #0b0f12;
+    }
+    #canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+    }
+    #spinner {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      z-index: 30;
+      margin: 0;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+      transform: translateX(-50%);
+    }
+    #status {
+      position: fixed;
+      top: 96px;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    }
+    #progress {
+      position: fixed;
+      top: 124px;
+      left: 50%;
+      z-index: 30;
+      transform: translateX(-50%);
+    }
     .spinner {
       height: 50px;
       width: 50px;
@@ -250,6 +305,11 @@
   var touchControlOverride = touchControlParams.get("touchControls");
   var touchControlMode =
           touchControlParams.get("touchControlMode") === "stick" ? "stick" : "buttons";
+  var webScaleMode =
+          touchControlParams.get("webScaleMode") === "fit" ? "fit" : "resize";
+  var webLogicalWidth = 1280;
+  var webLogicalHeight = 720;
+  var webResizeFrame = 0;
   var shouldEnableTouchControls =
           touchControlOverride === "1" ||
           (touchControlOverride !== "0" &&
@@ -268,9 +328,72 @@
           touchControlMode === "buttons"
   );
 
+  function getViewportSize() {
+    if (window.visualViewport) {
+      return {
+        width: window.visualViewport.width,
+        height: window.visualViewport.height,
+      };
+    }
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  function resizeCanvasToViewport() {
+    var viewport = getViewportSize();
+    var cssWidth = Math.max(1, Math.floor(viewport.width));
+    var cssHeight = Math.max(1, Math.floor(viewport.height));
+    var cssLeft = 0;
+    var cssTop = 0;
+
+    if (webScaleMode === "fit") {
+      var scale = Math.min(cssWidth / webLogicalWidth, cssHeight / webLogicalHeight);
+      cssWidth = Math.max(1, Math.floor(webLogicalWidth * scale));
+      cssHeight = Math.max(1, Math.floor(webLogicalHeight * scale));
+      cssLeft = Math.floor((viewport.width - cssWidth) * 0.5);
+      cssTop = Math.floor((viewport.height - cssHeight) * 0.5);
+    }
+
+    canvasElement.style.left = cssLeft + "px";
+    canvasElement.style.top = cssTop + "px";
+    canvasElement.style.width = cssWidth + "px";
+    canvasElement.style.height = cssHeight + "px";
+
+    if (typeof Browser !== "undefined" && Browser.setCanvasSize) {
+      Browser.setCanvasSize(cssWidth, cssHeight);
+      return;
+    }
+
+    if (canvasElement.width !== cssWidth) {
+      canvasElement.width = cssWidth;
+    }
+    if (canvasElement.height !== cssHeight) {
+      canvasElement.height = cssHeight;
+    }
+  }
+
+  function scheduleCanvasResize() {
+    if (webResizeFrame !== 0) {
+      return;
+    }
+    webResizeFrame = requestAnimationFrame(function () {
+      webResizeFrame = 0;
+      resizeCanvasToViewport();
+    });
+  }
+
+  resizeCanvasToViewport();
+  window.addEventListener("resize", scheduleCanvasResize);
+  window.addEventListener("orientationchange", scheduleCanvasResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleCanvasResize);
+  }
+
   var Module = {
-    preRun: [],
-    postRun: [],
+    preRun: [resizeCanvasToViewport],
+    postRun: [resizeCanvasToViewport],
     print: (function () {
       var element = document.getElementById("output");
       if (element) element.value = ""; // clear browser cache

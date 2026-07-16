@@ -856,9 +856,14 @@ void drawEngineDebugWindows(App &app, double frameTimeSeconds,
         app.setCrtWobble(crtWobble);
       }
       float crtGrilleStrength = app.crtGrilleStrength();
-      if (ImGui::SliderFloat("CRT grille", &crtGrilleStrength, 0.0f, 0.4f,
+      if (ImGui::SliderFloat("CRT grille", &crtGrilleStrength, 0.0f, 1.0f,
                              "%.3f")) {
         app.setCrtGrilleStrength(crtGrilleStrength);
+      }
+      float crtChromaticStrength = app.crtChromaticStrength();
+      if (ImGui::SliderFloat("CRT chromatic", &crtChromaticStrength, 0.0f,
+                             2.0f, "%.3f px")) {
+        app.setCrtChromaticStrength(crtChromaticStrength);
       }
       float crtBrightness = app.crtBrightness();
       if (ImGui::SliderFloat("CRT brightness", &crtBrightness, 0.5f, 3.0f,

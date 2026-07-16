@@ -73,6 +73,8 @@ public:
   void setCrtWobble(float strength);
   float crtGrilleStrength() const;
   void setCrtGrilleStrength(float strength);
+  float crtChromaticStrength() const;
+  void setCrtChromaticStrength(float strength);
   float crtBrightness() const;
   void setCrtBrightness(float strength);
   bool renderCullingEnabled() const { return renderCullingEnabled_; }

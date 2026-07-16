@@ -16,6 +16,7 @@
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
 #include "game/scenes/physicstestscene.h"
 #endif
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <thread>
@@ -23,18 +24,28 @@
 namespace {
 constexpr char kCrtEffectName[] = "CRT";
 constexpr char kCrtCurvatureUniform[] = "crtCurvature";
-constexpr float kCrtCurveScale = 0.92f;
-constexpr float kCrtCurveOffset = 0.04f;
+constexpr float kCrtCurveScale = 0.94f;
+constexpr float kCrtCurveOffset = 0.03f;
 DL::App *gActiveApp = nullptr;
 
-glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature) {
+glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature, glm::vec2 screenSize) {
   // Keep in sync with Shaders/crt.frag curve().
-  uv = (uv - glm::vec2(0.5f)) * 2.0f;
-  uv.x *= 1.0f + curvature * std::pow(std::abs(uv.y) / 5.0f, 2.0f);
-  uv.y *= 1.0f + curvature * std::pow(std::abs(uv.x) / 4.0f, 2.0f);
-  uv = uv * 0.5f + glm::vec2(0.5f);
-  uv = uv * kCrtCurveScale + glm::vec2(kCrtCurveOffset);
-  return uv;
+  const float c = std::clamp(curvature, 0.0f, 1.0f);
+  if (c <= 0.0f) {
+    return uv;
+  }
+
+  const float aspect = screenSize.x / std::max(screenSize.y, 1.0f);
+  glm::vec2 p = (uv - glm::vec2(0.5f)) * 2.0f;
+  p.x *= aspect;
+
+  glm::vec2 curved = p;
+  curved.x *= 1.0f + std::pow(std::abs(p.y), 2.0f) * 0.045f;
+  curved.y *= 1.0f + std::pow(std::abs(p.x), 2.0f) * 0.045f;
+  curved.x /= aspect;
+  curved = curved * 0.5f + glm::vec2(0.5f);
+  curved = curved * kCrtCurveScale + glm::vec2(kCrtCurveOffset);
+  return glm::mix(uv, curved, c);
 }
 } // namespace
 
@@ -314,6 +325,22 @@ float DL::App::crtGrilleStrength() const {
 void DL::App::setCrtGrilleStrength(float strength) {
   if (auto *effect = findPostProcessEffect("CRT")) {
     if (auto *uniform = findEffectUniform(*effect, "crtGrilleStrength")) {
+      uniform->float_value = strength;
+    }
+  }
+}
+
+float DL::App::crtChromaticStrength() const {
+  const auto *effect = findPostProcessEffect("CRT");
+  const auto *uniform =
+      effect != nullptr ? findEffectUniform(*effect, "crtChromaticStrength")
+                        : nullptr;
+  return uniform != nullptr ? uniform->float_value : 0.0f;
+}
+
+void DL::App::setCrtChromaticStrength(float strength) {
+  if (auto *effect = findPostProcessEffect("CRT")) {
+    if (auto *uniform = findEffectUniform(*effect, "crtChromaticStrength")) {
       uniform->float_value = strength;
     }
   }
@@ -650,7 +677,8 @@ glm::vec2 DL::App::mapMousePositionToScene(glm::vec2 mousePosition,
   const float curvature =
       curvatureUniform != nullptr ? curvatureUniform->float_value : 1.0f;
 
-  return applyCrtCurve(mousePosition / windowSize, curvature) * windowSize;
+  return applyCrtCurve(mousePosition / windowSize, curvature, windowSize) *
+         windowSize;
 }
 
 void DL::App::loadCurrentScene() {
@@ -732,21 +760,41 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.name = "CRT";
   crtEffect.fragmentShaderPath = "Shaders/crt.frag";
 #ifdef __EMSCRIPTEN__
-  constexpr float kDefaultCrtScanlineStrength = 0.06f;
+  constexpr float kDefaultCrtScanlineStrength = 0.191f;
+  constexpr float kDefaultCrtVignetteStrength = 0.114f;
+  constexpr float kDefaultCrtCurvature = 0.250f;
+  constexpr float kDefaultCrtWobbleStrength = 0.0002f;
+  constexpr float kDefaultCrtGrilleStrength = 0.135f;
+  constexpr float kDefaultCrtChromaticStrength = 0.156f;
+  constexpr float kDefaultCrtBrightness = 1.03f;
 #else
-  constexpr float kDefaultCrtScanlineStrength = 0.555f;
+  constexpr float kDefaultCrtScanlineStrength = 0.312f;
+  constexpr float kDefaultCrtVignetteStrength = 0.040f;
+  constexpr float kDefaultCrtCurvature = 0.316f;
+  constexpr float kDefaultCrtWobbleStrength = 0.0003f;
+  constexpr float kDefaultCrtGrilleStrength = 0.096f;
+  constexpr float kDefaultCrtChromaticStrength = 0.221f;
+  constexpr float kDefaultCrtBrightness = 1.05f;
 #endif
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtScanlineStrength",
                               kDefaultCrtScanlineStrength));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtVignetteStrength", 0.035f));
-  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtCurvature", 1.00f));
+      UniformValue::makeFloat("crtVignetteStrength",
+                              kDefaultCrtVignetteStrength));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtWobbleStrength", 0.0007f));
+      UniformValue::makeFloat("crtCurvature", kDefaultCrtCurvature));
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtGrilleStrength", 0.292f));
-  crtEffect.uniforms.push_back(UniformValue::makeFloat("crtBrightness", 1.68f));
+      UniformValue::makeFloat("crtWobbleStrength",
+                              kDefaultCrtWobbleStrength));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtGrilleStrength",
+                              kDefaultCrtGrilleStrength));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtChromaticStrength",
+                              kDefaultCrtChromaticStrength));
+  crtEffect.uniforms.push_back(
+      UniformValue::makeFloat("crtBrightness", kDefaultCrtBrightness));
   postProcessStack_.effects.push_back(std::move(crtEffect));
 }
 

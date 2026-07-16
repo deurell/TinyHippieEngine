@@ -760,7 +760,7 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.name = "CRT";
   crtEffect.fragmentShaderPath = "Shaders/crt.frag";
 #ifdef __EMSCRIPTEN__
-  constexpr float kDefaultCrtScanlineStrength = 0.191f;
+  constexpr float kDefaultCrtScanlineStrength = 0.450f;
   constexpr float kDefaultCrtVignetteStrength = 0.114f;
   constexpr float kDefaultCrtCurvature = 0.250f;
   constexpr float kDefaultCrtWobbleStrength = 0.0002f;

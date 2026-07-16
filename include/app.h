@@ -27,6 +27,7 @@ public:
   void update();
   void render();
   void processInput(GLFWwindow *window);
+  void setTouchMoveAxis(glm::vec2 axis);
   void onClick(int button, int action, int mod);
   void onKey(int key, int scancode, int action, int mod);
   void onScreenSizeChanged(int width, int height);
@@ -72,6 +73,8 @@ public:
   void setCrtWobble(float strength);
   float crtGrilleStrength() const;
   void setCrtGrilleStrength(float strength);
+  float crtChromaticStrength() const;
+  void setCrtChromaticStrength(float strength);
   float crtBrightness() const;
   void setCrtBrightness(float strength);
   bool renderCullingEnabled() const { return renderCullingEnabled_; }
@@ -113,6 +116,7 @@ private:
   void renderPostProcessPass(const FrameContext &ctx,
                              std::uint32_t framebufferWidth,
                              std::uint32_t framebufferHeight);
+  void syncObservedWindowSizes();
   bool hasEnabledPostProcessEffects() const;
   PostProcessEffect *findPostProcessEffect(std::string_view name);
   const PostProcessEffect *findPostProcessEffect(std::string_view name) const;
@@ -150,7 +154,10 @@ private:
   RenderQueueStats lastRenderQueueStats_;
   ActionMap actionMap_;
   InputState inputState_;
+  glm::vec2 touchMoveAxis_{0.0f};
   glm::vec2 lastMousePosition_{0.0f};
+  glm::ivec2 lastObservedWindowSize_{0, 0};
+  glm::ivec2 lastObservedFramebufferSize_{0, 0};
 
   bool hasLastMousePosition_ = false;
   glm::vec2 getWindowSize() const;

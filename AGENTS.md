@@ -17,13 +17,16 @@ Precedence:
 - Inspector edits node transforms and supports per-node transform override.
 - Main stats panel is `Engine` (old frame-stats overlay is not used in app flow).
 - Input integration: app-owned GLFW callbacks explicitly forward to ImGui callbacks.
+- Default actions are movement on `WASD` and `Fire` on `Space`.
+- `InputState::moveAxis` is the preferred directional movement input; web
+  virtual stick input writes it directly.
 - Fixed timestep: `1/60` in `App`.
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
 - Starter app registers the generic sample `TextStarterScene` first, then
-  the Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
-  then `SkeletalAnimationBlendScene`;
+  `InputDebugScene`, then the Tiny Dungeon atlas `TextStarterScene`, then the
+  Kenney GLB `TextStarterScene`, then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,

@@ -5,10 +5,65 @@
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <title>Particles</title>
   <style>
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      min-height: 100svh;
+      overflow: hidden;
+      background: #0b0f12;
+      overscroll-behavior: none;
+      touch-action: none;
+    }
+    body {
+      position: fixed;
+      inset: 0;
+    }
     .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
     textarea.emscripten { font-family: monospace; width: 80%; }
     div.emscripten { text-align: center; }
-    div.emscripten_border { }
+    div.emscripten_border {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: #0b0f12;
+    }
+    #canvas {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100dvh;
+      max-width: none;
+      max-height: none;
+    }
+    #spinner {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      z-index: 30;
+      margin: 0;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+      transform: translateX(-50%);
+    }
+    #status {
+      position: fixed;
+      top: 96px;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      color: white;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
+    }
+    #progress {
+      position: fixed;
+      top: 124px;
+      left: 50%;
+      z-index: 30;
+      transform: translateX(-50%);
+    }
     .spinner {
       height: 50px;
       width: 50px;
@@ -56,6 +111,158 @@
         transform: rotate(360deg);
       }
     }
+    #mobile-controls {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    #mobile-controls .mobile-dpad {
+      position: absolute;
+      left: calc(18px + env(safe-area-inset-left));
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      grid-template-rows: repeat(3, 58px);
+      gap: 8px;
+    }
+    #mobile-controls .mobile-stick {
+      position: absolute;
+      left: calc(24px + env(safe-area-inset-left));
+      bottom: calc(24px + env(safe-area-inset-bottom));
+      width: 148px;
+      height: 148px;
+      border: 2px solid rgba(255, 255, 255, 0.48);
+      border-radius: 999px;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.10), rgba(12, 18, 24, 0.42));
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 0 22px rgba(255, 255, 255, 0.08);
+      pointer-events: auto;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #mobile-controls .mobile-stick-knob {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 58px;
+      height: 58px;
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      background: rgba(72, 142, 255, 0.46);
+      transform: translate(-50%, -50%);
+      box-shadow: inset 0 0 16px rgba(255, 255, 255, 0.10);
+    }
+    #mobile-controls .mobile-actions {
+      position: absolute;
+      right: calc(24px + env(safe-area-inset-right));
+      bottom: calc(42px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    #mobile-controls .mobile-button {
+      width: 58px;
+      height: 58px;
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      border-radius: 999px;
+      background: rgba(12, 18, 24, 0.52);
+      color: rgba(255, 255, 255, 0.9);
+      font: 700 18px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      pointer-events: auto;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 0 18px rgba(255, 255, 255, 0.08);
+    }
+    #mobile-controls .mobile-button:active,
+    #mobile-controls .mobile-button.is-held {
+      background: rgba(72, 142, 255, 0.72);
+      border-color: rgba(255, 255, 255, 0.95);
+      transform: translateY(1px);
+    }
+    #mobile-controls .mobile-button.forward { grid-column: 2; grid-row: 1; }
+    #mobile-controls .mobile-button.left { grid-column: 1; grid-row: 2; }
+    #mobile-controls .mobile-button.back { grid-column: 2; grid-row: 3; }
+    #mobile-controls .mobile-button.right { grid-column: 3; grid-row: 2; }
+    #mobile-controls .mobile-button::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      margin: auto;
+      border-style: solid;
+    }
+    #mobile-controls .mobile-button.forward::before {
+      border-width: 0 9px 14px 9px;
+      border-color: transparent transparent currentColor transparent;
+    }
+    #mobile-controls .mobile-button.left::before {
+      border-width: 9px 14px 9px 0;
+      border-color: transparent currentColor transparent transparent;
+    }
+    #mobile-controls .mobile-button.right::before {
+      border-width: 9px 0 9px 14px;
+      border-color: transparent transparent transparent currentColor;
+    }
+    #mobile-controls .mobile-button.back::before {
+      border-width: 14px 9px 0 9px;
+      border-color: currentColor transparent transparent transparent;
+    }
+    #mobile-controls .mobile-button.fire {
+      width: 72px;
+      height: 72px;
+      background: rgba(210, 54, 64, 0.62);
+      font-size: 16px;
+    }
+    #mobile-controls .mobile-button.fire::before {
+      content: none;
+    }
+    #canvas:focus {
+      outline: none;
+    }
+    .touch-controls-enabled #mobile-controls {
+      display: block;
+    }
+    .touch-control-mode-stick #mobile-controls .mobile-dpad {
+      display: none;
+    }
+    .touch-control-mode-buttons #mobile-controls .mobile-stick {
+      display: none;
+    }
+    @media (max-width: 520px) {
+      #mobile-controls .mobile-dpad {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+        gap: 7px;
+      }
+      #mobile-controls .mobile-stick {
+        width: 128px;
+        height: 128px;
+        left: calc(20px + env(safe-area-inset-left));
+        bottom: calc(20px + env(safe-area-inset-bottom));
+      }
+      #mobile-controls .mobile-stick-knob {
+        width: 52px;
+        height: 52px;
+      }
+      #mobile-controls .mobile-button {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+      }
+      #mobile-controls .mobile-actions {
+        right: calc(18px + env(safe-area-inset-right));
+        bottom: calc(36px + env(safe-area-inset-bottom));
+      }
+      #mobile-controls .mobile-button.fire {
+        width: 64px;
+        height: 64px;
+        font-size: 15px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -72,17 +279,121 @@
           class="emscripten"
           id="canvas"
           oncontextmenu="event.preventDefault()"
-          tabindex="-1"
+          tabindex="0"
   ></canvas>
+</div>
+<div id="mobile-controls" aria-label="Touch movement controls">
+  <div class="mobile-dpad">
+    <button class="mobile-button forward" type="button" data-key-code="KeyW" data-key="w" data-key-number="87" aria-label="Move forward"></button>
+    <button class="mobile-button left" type="button" data-key-code="KeyA" data-key="a" data-key-number="65" aria-label="Move left"></button>
+    <button class="mobile-button right" type="button" data-key-code="KeyD" data-key="d" data-key-number="68" aria-label="Move right"></button>
+    <button class="mobile-button back" type="button" data-key-code="KeyS" data-key="s" data-key-number="83" aria-label="Move backward"></button>
+  </div>
+  <div class="mobile-stick" aria-label="Movement stick">
+    <div class="mobile-stick-knob"></div>
+  </div>
+  <div class="mobile-actions">
+    <button class="mobile-button fire" type="button" data-key-code="Space" data-key=" " data-key-number="32" aria-label="Fire">A</button>
+  </div>
 </div>
 <script type="text/javascript">
   var statusElement = document.getElementById("status");
   var progressElement = document.getElementById("progress");
   var spinnerElement = document.getElementById("spinner");
+  var canvasElement = document.getElementById("canvas");
+  var touchControlParams = new URLSearchParams(window.location.search);
+  var touchControlOverride = touchControlParams.get("touchControls");
+  var touchControlMode =
+          touchControlParams.get("touchControlMode") === "stick" ? "stick" : "buttons";
+  var webScaleMode =
+          touchControlParams.get("webScaleMode") === "fit" ? "fit" : "resize";
+  var webLogicalWidth = 1280;
+  var webLogicalHeight = 720;
+  var webResizeFrame = 0;
+  var shouldEnableTouchControls =
+          touchControlOverride === "1" ||
+          (touchControlOverride !== "0" &&
+                  (window.matchMedia("(pointer: coarse)").matches ||
+                          window.matchMedia("(hover: none)").matches));
+  document.documentElement.classList.toggle(
+          "touch-controls-enabled",
+          shouldEnableTouchControls
+  );
+  document.documentElement.classList.toggle(
+          "touch-control-mode-stick",
+          touchControlMode === "stick"
+  );
+  document.documentElement.classList.toggle(
+          "touch-control-mode-buttons",
+          touchControlMode === "buttons"
+  );
+
+  function getViewportSize() {
+    if (window.visualViewport) {
+      return {
+        width: window.visualViewport.width,
+        height: window.visualViewport.height,
+      };
+    }
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  function resizeCanvasToViewport() {
+    var viewport = getViewportSize();
+    var cssWidth = Math.max(1, Math.floor(viewport.width));
+    var cssHeight = Math.max(1, Math.floor(viewport.height));
+    var cssLeft = 0;
+    var cssTop = 0;
+
+    if (webScaleMode === "fit") {
+      var scale = Math.min(cssWidth / webLogicalWidth, cssHeight / webLogicalHeight);
+      cssWidth = Math.max(1, Math.floor(webLogicalWidth * scale));
+      cssHeight = Math.max(1, Math.floor(webLogicalHeight * scale));
+      cssLeft = Math.floor((viewport.width - cssWidth) * 0.5);
+      cssTop = Math.floor((viewport.height - cssHeight) * 0.5);
+    }
+
+    canvasElement.style.left = cssLeft + "px";
+    canvasElement.style.top = cssTop + "px";
+    canvasElement.style.width = cssWidth + "px";
+    canvasElement.style.height = cssHeight + "px";
+
+    if (typeof Browser !== "undefined" && Browser.setCanvasSize) {
+      Browser.setCanvasSize(cssWidth, cssHeight);
+      return;
+    }
+
+    if (canvasElement.width !== cssWidth) {
+      canvasElement.width = cssWidth;
+    }
+    if (canvasElement.height !== cssHeight) {
+      canvasElement.height = cssHeight;
+    }
+  }
+
+  function scheduleCanvasResize() {
+    if (webResizeFrame !== 0) {
+      return;
+    }
+    webResizeFrame = requestAnimationFrame(function () {
+      webResizeFrame = 0;
+      resizeCanvasToViewport();
+    });
+  }
+
+  resizeCanvasToViewport();
+  window.addEventListener("resize", scheduleCanvasResize);
+  window.addEventListener("orientationchange", scheduleCanvasResize);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", scheduleCanvasResize);
+  }
 
   var Module = {
-    preRun: [],
-    postRun: [],
+    preRun: [resizeCanvasToViewport],
+    postRun: [resizeCanvasToViewport],
     print: (function () {
       var element = document.getElementById("output");
       if (element) element.value = ""; // clear browser cache
@@ -107,7 +418,7 @@
       console.error(text);
     },
     canvas: (function () {
-      var canvas = document.getElementById("canvas");
+      var canvas = canvasElement;
 
       // As a default initial behavior, pop up an alert when webgl context is lost. To make your
       // application robust, you may want to override this behavior before shipping!
@@ -161,6 +472,164 @@
     },
   };
   Module.setStatus("Downloading...");
+  (function () {
+    var buttons = document.querySelectorAll("#mobile-controls [data-key-code]");
+    var stick = document.querySelector("#mobile-controls .mobile-stick");
+    var stickKnob = document.querySelector("#mobile-controls .mobile-stick-knob");
+    var pressedKeys = new Set();
+
+    function makeKeyboardEvent(type, keyInfo) {
+      var event = new KeyboardEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        key: keyInfo.key,
+        code: keyInfo.code,
+        location: 0,
+        repeat: false,
+      });
+
+      Object.defineProperty(event, "keyCode", { get: function () { return keyInfo.keyNumber; } });
+      Object.defineProperty(event, "which", { get: function () { return keyInfo.keyNumber; } });
+      return event;
+    }
+
+    function dispatchKeyboardEvent(type, keyInfo) {
+      var targets = [canvasElement, document, window];
+      for (var i = 0; i < targets.length; ++i) {
+        targets[i].dispatchEvent(makeKeyboardEvent(type, keyInfo));
+      }
+    }
+
+    function pressKey(code, keyInfo) {
+      if (pressedKeys.has(code)) {
+        return;
+      }
+      pressedKeys.add(code);
+      canvasElement.focus();
+      dispatchKeyboardEvent("keydown", keyInfo);
+    }
+
+    function releaseKey(code, keyInfo) {
+      if (!pressedKeys.has(code)) {
+        return;
+      }
+      pressedKeys.delete(code);
+      dispatchKeyboardEvent("keyup", keyInfo);
+    }
+
+    function keyInfoForButton(button) {
+      return {
+        code: button.getAttribute("data-key-code"),
+        key: button.getAttribute("data-key"),
+        keyNumber: Number(button.getAttribute("data-key-number")),
+      };
+    }
+
+    function pressButton(button) {
+      var keyInfo = keyInfoForButton(button);
+      pressKey(keyInfo.code, keyInfo);
+      button.classList.add("is-held");
+    }
+
+    function releaseButton(button) {
+      var keyInfo = keyInfoForButton(button);
+      releaseKey(keyInfo.code, keyInfo);
+      button.classList.remove("is-held");
+    }
+
+    function releaseAll() {
+      for (var i = 0; i < buttons.length; ++i) {
+        releaseButton(buttons[i]);
+      }
+      resetStick();
+    }
+
+    function setTouchMoveAxis(axisX, axisY) {
+      if (typeof Module._tiny_set_touch_move_axis === "function") {
+        Module._tiny_set_touch_move_axis(axisX, axisY);
+      }
+    }
+
+    function resetStick() {
+      if (stickKnob) {
+        stickKnob.style.transform = "translate(-50%, -50%)";
+      }
+      setTouchMoveAxis(0.0, 0.0);
+    }
+
+    function updateStick(event) {
+      var rect = stick.getBoundingClientRect();
+      var radius = Math.min(rect.width, rect.height) * 0.5;
+      var maxDistance = radius - 29.0;
+      var localX = event.clientX - rect.left - radius;
+      var localY = event.clientY - rect.top - radius;
+      var distance = Math.hypot(localX, localY);
+      if (distance > maxDistance && distance > 0.0) {
+        localX = localX / distance * maxDistance;
+        localY = localY / distance * maxDistance;
+      }
+
+      var axisX = maxDistance > 0.0 ? localX / maxDistance : 0.0;
+      var axisY = maxDistance > 0.0 ? localY / maxDistance : 0.0;
+      stickKnob.style.transform =
+              "translate(calc(-50% + " + localX + "px), calc(-50% + " + localY + "px))";
+      setTouchMoveAxis(axisX, -axisY);
+    }
+
+    for (var i = 0; i < buttons.length; ++i) {
+      (function (button) {
+        button.addEventListener("pointerdown", function (event) {
+          event.preventDefault();
+          button.setPointerCapture(event.pointerId);
+          pressButton(button);
+        });
+        button.addEventListener("pointerup", function (event) {
+          event.preventDefault();
+          releaseButton(button);
+        });
+        button.addEventListener("pointercancel", function (event) {
+          event.preventDefault();
+          releaseButton(button);
+        });
+        button.addEventListener("pointerleave", function (event) {
+          if (event.buttons === 0) {
+            releaseButton(button);
+          }
+        });
+      })(buttons[i]);
+    }
+
+    if (stick) {
+      stick.addEventListener("pointerdown", function (event) {
+        event.preventDefault();
+        stick.setPointerCapture(event.pointerId);
+        canvasElement.focus();
+        updateStick(event);
+      });
+      stick.addEventListener("pointermove", function (event) {
+        if (event.buttons === 0) {
+          return;
+        }
+        event.preventDefault();
+        updateStick(event);
+      });
+      stick.addEventListener("pointerup", function (event) {
+        event.preventDefault();
+        resetStick();
+      });
+      stick.addEventListener("pointercancel", function (event) {
+        event.preventDefault();
+        resetStick();
+      });
+    }
+
+    window.addEventListener("blur", releaseAll);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        releaseAll();
+      }
+    });
+  })();
   window.onerror = function () {
     Module.setStatus("Exception thrown, see JavaScript console");
     spinnerElement.style.display = "none";

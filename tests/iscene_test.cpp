@@ -23,4 +23,10 @@ TEST(ISceneTest, FramebufferSizeDefaultsToScreenSizeCallback) {
   EXPECT_EQ(scene.lastScreenSize, glm::vec2(1920.0f, 1080.0f));
 }
 
+TEST(ISceneTest, InputStateDefaultsMoveAxisToZero) {
+  const DL::InputState input;
+
+  EXPECT_EQ(input.moveAxis, glm::vec2(0.0f, 0.0f));
+}
+
 } // namespace

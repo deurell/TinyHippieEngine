@@ -28,6 +28,7 @@ public:
   DL::Camera &getCamera() { return *camera_; }
   DL::TextRenderComponent *getTextRenderComponent() const { return textRenderComponent_; }
   [[nodiscard]] std::string_view text() const { return text_; }
+  void setText(std::string text);
   void setBillboardEnabled(bool enabled) { billboardEnabled_ = enabled; }
   [[nodiscard]] bool billboardEnabled() const { return billboardEnabled_; }
   void setTextAlignment(DL::TextAlignment alignment);

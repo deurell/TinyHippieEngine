@@ -13,6 +13,7 @@ enum class Key {
   A,
   S,
   D,
+  Space,
   Count,
 };
 
@@ -21,6 +22,7 @@ enum class Action {
   MoveBackward,
   MoveLeft,
   MoveRight,
+  Fire,
   Count,
 };
 
@@ -40,6 +42,8 @@ struct InputState {
   // Mouse coordinates mapped into the rendered scene after screen-space effects.
   glm::vec2 sceneMousePosition{0.0f};
   glm::vec2 mouseDelta{0.0f};
+  // Directional input where x is right and y is forward/up in the input plane.
+  glm::vec2 moveAxis{0.0f};
 
   [[nodiscard]] bool isKeyDown(Key key) const {
     return keysDown[static_cast<std::size_t>(key)];

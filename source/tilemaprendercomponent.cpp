@@ -19,10 +19,10 @@ std::array<glm::vec2, 4> transformedTileUvs(std::uint32_t tileIndex,
                                             bool flipDiagonal) {
   const std::uint32_t col = columns > 0 ? tileIndex % columns : 0u;
   const std::uint32_t row = columns > 0 ? tileIndex / columns : 0u;
-  const glm::vec2 origin{static_cast<float>(col * tileWidth),
-                         static_cast<float>(row * tileHeight)};
-  const glm::vec2 size{static_cast<float>(tileWidth),
-                       static_cast<float>(tileHeight)};
+  const glm::vec2 origin{static_cast<float>(col * tileWidth) + 0.5f,
+                         static_cast<float>(row * tileHeight) + 0.5f};
+  const glm::vec2 size{static_cast<float>(tileWidth) - 1.0f,
+                       static_cast<float>(tileHeight) - 1.0f};
 
   std::array<glm::vec2, 4> local = {
       glm::vec2{1.0f, 0.0f}, glm::vec2{1.0f, 1.0f},

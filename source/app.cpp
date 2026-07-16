@@ -731,8 +731,14 @@ void DL::App::configureDefaultPostProcessStack() {
   PostProcessEffect crtEffect;
   crtEffect.name = "CRT";
   crtEffect.fragmentShaderPath = "Shaders/crt.frag";
+#ifdef __EMSCRIPTEN__
+  constexpr float kDefaultCrtScanlineStrength = 0.06f;
+#else
+  constexpr float kDefaultCrtScanlineStrength = 0.555f;
+#endif
   crtEffect.uniforms.push_back(
-      UniformValue::makeFloat("crtScanlineStrength", 0.555f));
+      UniformValue::makeFloat("crtScanlineStrength",
+                              kDefaultCrtScanlineStrength));
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtVignetteStrength", 0.035f));
   crtEffect.uniforms.push_back(UniformValue::makeFloat("crtCurvature", 1.00f));

@@ -56,6 +56,116 @@
         transform: rotate(360deg);
       }
     }
+    #mobile-controls {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+    #mobile-controls .mobile-dpad {
+      position: absolute;
+      left: calc(18px + env(safe-area-inset-left));
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      display: grid;
+      grid-template-columns: repeat(3, 58px);
+      grid-template-rows: repeat(3, 58px);
+      gap: 8px;
+    }
+    #mobile-controls .mobile-actions {
+      position: absolute;
+      right: calc(24px + env(safe-area-inset-right));
+      bottom: calc(42px + env(safe-area-inset-bottom));
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+    }
+    #mobile-controls .mobile-button {
+      width: 58px;
+      height: 58px;
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      border-radius: 999px;
+      background: rgba(12, 18, 24, 0.52);
+      color: rgba(255, 255, 255, 0.9);
+      font: 700 18px/1 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      pointer-events: auto;
+      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.25), inset 0 0 18px rgba(255, 255, 255, 0.08);
+    }
+    #mobile-controls .mobile-button:active,
+    #mobile-controls .mobile-button.is-held {
+      background: rgba(72, 142, 255, 0.72);
+      border-color: rgba(255, 255, 255, 0.95);
+      transform: translateY(1px);
+    }
+    #mobile-controls .mobile-button.forward { grid-column: 2; grid-row: 1; }
+    #mobile-controls .mobile-button.left { grid-column: 1; grid-row: 2; }
+    #mobile-controls .mobile-button.back { grid-column: 2; grid-row: 3; }
+    #mobile-controls .mobile-button.right { grid-column: 3; grid-row: 2; }
+    #mobile-controls .mobile-button::before {
+      content: "";
+      display: block;
+      width: 0;
+      height: 0;
+      margin: auto;
+      border-style: solid;
+    }
+    #mobile-controls .mobile-button.forward::before {
+      border-width: 0 9px 14px 9px;
+      border-color: transparent transparent currentColor transparent;
+    }
+    #mobile-controls .mobile-button.left::before {
+      border-width: 9px 14px 9px 0;
+      border-color: transparent currentColor transparent transparent;
+    }
+    #mobile-controls .mobile-button.right::before {
+      border-width: 9px 0 9px 14px;
+      border-color: transparent transparent transparent currentColor;
+    }
+    #mobile-controls .mobile-button.back::before {
+      border-width: 14px 9px 0 9px;
+      border-color: currentColor transparent transparent transparent;
+    }
+    #mobile-controls .mobile-button.fire {
+      width: 72px;
+      height: 72px;
+      background: rgba(210, 54, 64, 0.62);
+      font-size: 16px;
+    }
+    #mobile-controls .mobile-button.fire::before {
+      content: none;
+    }
+    #canvas:focus {
+      outline: none;
+    }
+    .touch-controls-enabled #mobile-controls {
+      display: block;
+    }
+    @media (max-width: 520px) {
+      #mobile-controls .mobile-dpad {
+        grid-template-columns: repeat(3, 50px);
+        grid-template-rows: repeat(3, 50px);
+        gap: 7px;
+      }
+      #mobile-controls .mobile-button {
+        width: 50px;
+        height: 50px;
+        font-size: 16px;
+      }
+      #mobile-controls .mobile-actions {
+        right: calc(18px + env(safe-area-inset-right));
+        bottom: calc(36px + env(safe-area-inset-bottom));
+      }
+      #mobile-controls .mobile-button.fire {
+        width: 64px;
+        height: 64px;
+        font-size: 15px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -72,13 +182,36 @@
           class="emscripten"
           id="canvas"
           oncontextmenu="event.preventDefault()"
-          tabindex="-1"
+          tabindex="0"
   ></canvas>
+</div>
+<div id="mobile-controls" aria-label="Touch movement controls">
+  <div class="mobile-dpad">
+    <button class="mobile-button forward" type="button" data-key-code="KeyW" data-key="w" data-key-number="87" aria-label="Move forward"></button>
+    <button class="mobile-button left" type="button" data-key-code="KeyA" data-key="a" data-key-number="65" aria-label="Move left"></button>
+    <button class="mobile-button right" type="button" data-key-code="KeyD" data-key="d" data-key-number="68" aria-label="Move right"></button>
+    <button class="mobile-button back" type="button" data-key-code="KeyS" data-key="s" data-key-number="83" aria-label="Move backward"></button>
+  </div>
+  <div class="mobile-actions">
+    <button class="mobile-button fire" type="button" data-key-code="Space" data-key=" " data-key-number="32" aria-label="Fire">A</button>
+  </div>
 </div>
 <script type="text/javascript">
   var statusElement = document.getElementById("status");
   var progressElement = document.getElementById("progress");
   var spinnerElement = document.getElementById("spinner");
+  var canvasElement = document.getElementById("canvas");
+  var touchControlParams = new URLSearchParams(window.location.search);
+  var touchControlOverride = touchControlParams.get("touchControls");
+  var shouldEnableTouchControls =
+          touchControlOverride === "1" ||
+          (touchControlOverride !== "0" &&
+                  (window.matchMedia("(pointer: coarse)").matches ||
+                          window.matchMedia("(hover: none)").matches));
+  document.documentElement.classList.toggle(
+          "touch-controls-enabled",
+          shouldEnableTouchControls
+  );
 
   var Module = {
     preRun: [],
@@ -107,7 +240,7 @@
       console.error(text);
     },
     canvas: (function () {
-      var canvas = document.getElementById("canvas");
+      var canvas = canvasElement;
 
       // As a default initial behavior, pop up an alert when webgl context is lost. To make your
       // application robust, you may want to override this behavior before shipping!
@@ -161,6 +294,90 @@
     },
   };
   Module.setStatus("Downloading...");
+  (function () {
+    var buttons = document.querySelectorAll("#mobile-controls [data-key-code]");
+    var pressedKeys = new Set();
+
+    function makeKeyboardEvent(type, button) {
+      var keyNumber = Number(button.getAttribute("data-key-number"));
+      var event = new KeyboardEvent(type, {
+        bubbles: true,
+        cancelable: true,
+        key: button.getAttribute("data-key"),
+        code: button.getAttribute("data-key-code"),
+        location: 0,
+        repeat: false,
+      });
+
+      Object.defineProperty(event, "keyCode", { get: function () { return keyNumber; } });
+      Object.defineProperty(event, "which", { get: function () { return keyNumber; } });
+      return event;
+    }
+
+    function dispatchKeyboardEvent(type, button) {
+      var targets = [canvasElement, document, window];
+      for (var i = 0; i < targets.length; ++i) {
+        targets[i].dispatchEvent(makeKeyboardEvent(type, button));
+      }
+    }
+
+    function press(button) {
+      var code = button.getAttribute("data-key-code");
+      if (pressedKeys.has(code)) {
+        return;
+      }
+      pressedKeys.add(code);
+      button.classList.add("is-held");
+      canvasElement.focus();
+      dispatchKeyboardEvent("keydown", button);
+    }
+
+    function release(button) {
+      var code = button.getAttribute("data-key-code");
+      if (!pressedKeys.has(code)) {
+        return;
+      }
+      pressedKeys.delete(code);
+      button.classList.remove("is-held");
+      dispatchKeyboardEvent("keyup", button);
+    }
+
+    function releaseAll() {
+      for (var i = 0; i < buttons.length; ++i) {
+        release(buttons[i]);
+      }
+    }
+
+    for (var i = 0; i < buttons.length; ++i) {
+      (function (button) {
+        button.addEventListener("pointerdown", function (event) {
+          event.preventDefault();
+          button.setPointerCapture(event.pointerId);
+          press(button);
+        });
+        button.addEventListener("pointerup", function (event) {
+          event.preventDefault();
+          release(button);
+        });
+        button.addEventListener("pointercancel", function (event) {
+          event.preventDefault();
+          release(button);
+        });
+        button.addEventListener("pointerleave", function (event) {
+          if (event.buttons === 0) {
+            release(button);
+          }
+        });
+      })(buttons[i]);
+    }
+
+    window.addEventListener("blur", releaseAll);
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden) {
+        releaseAll();
+      }
+    });
+  })();
   window.onerror = function () {
     Module.setStatus("Exception thrown, see JavaScript console");
     spinnerElement.style.display = "none";

@@ -13,6 +13,7 @@ enum class Key {
   A,
   S,
   D,
+  Space,
   Count,
 };
 
@@ -21,6 +22,7 @@ enum class Action {
   MoveBackward,
   MoveLeft,
   MoveRight,
+  Fire,
   Count,
 };
 

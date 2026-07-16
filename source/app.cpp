@@ -349,6 +349,7 @@ void DL::App::initActionMap() {
   actionMap_.bind(Action::MoveBackward, Key::S);
   actionMap_.bind(Action::MoveLeft, Key::A);
   actionMap_.bind(Action::MoveRight, Key::D);
+  actionMap_.bind(Action::Fire, Key::Space);
 }
 
 int DL::App::run() {
@@ -571,6 +572,8 @@ void DL::App::processInput(GLFWwindow *window) {
       glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
   inputState_.keysDown[static_cast<std::size_t>(Key::D)] =
       glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+  inputState_.keysDown[static_cast<std::size_t>(Key::Space)] =
+      glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
   inputState_.mouseButtonsDown[static_cast<std::size_t>(MouseButton::Left)] =
       !imguiWantsMouse &&
       glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS;

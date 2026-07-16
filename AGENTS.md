@@ -17,6 +17,7 @@ Precedence:
 - Inspector edits node transforms and supports per-node transform override.
 - Main stats panel is `Engine` (old frame-stats overlay is not used in app flow).
 - Input integration: app-owned GLFW callbacks explicitly forward to ImGui callbacks.
+- Default actions are movement on `WASD` and `Fire` on `Space`.
 - Fixed timestep: `1/60` in `App`.
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.

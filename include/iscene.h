@@ -14,6 +14,7 @@ enum class Key {
   S,
   D,
   Space,
+  Tab,
   Count,
 };
 
@@ -23,6 +24,7 @@ enum class Action {
   MoveLeft,
   MoveRight,
   Fire,
+  SelectNext,
   Count,
 };
 

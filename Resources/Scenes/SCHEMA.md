@@ -328,7 +328,11 @@ avoid a single obvious sliding pattern.
 }
 ```
 
-`plane` may be `Simple` or `Spinner`.
+`plane` may be `Simple`, `Spinner`, or one of the Deflektorish procedural
+styles: `DeflektorBeam`, `DeflektorSource`, `DeflektorTarget`,
+`DeflektorBlocker`, `DeflektorReflectiveBlock`,
+`DeflektorReflectorManual`, `DeflektorReflectorAuto`, and
+`DeflektorSelection`, and `DeflektorExplosion`.
 
 ## PhongShapeNode Material
 

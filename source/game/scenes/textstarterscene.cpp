@@ -6,7 +6,6 @@
 #include <cmath>
 #include <glm/geometric.hpp>
 #include <glm/gtc/quaternion.hpp>
-#include <stdexcept>
 
 namespace {
 
@@ -151,10 +150,6 @@ void TextStarterScene::loadTextScene() {
 
 void TextStarterScene::bindRuntimeNodes() {
   hero_ = DL::findSceneNodeByName(*this, "hero");
-  if (hero_ == nullptr) {
-    throw std::runtime_error(
-        "TextStarterScene requires a node named 'hero' for C++ behavior");
-  }
   hierarchyPlanetOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_planet_orbit");
   hierarchyMoonOrbit_ = DL::findSceneNodeByName(*this, "hierarchy_moon_orbit");
   hierarchyMoon_ = DL::findSceneNodeByName(*this, "hierarchy_moon");

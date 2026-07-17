@@ -13,7 +13,19 @@
 
 class PlaneNode : public DL::SceneNode {
 public:
-  enum class PlaneType { Simple, Spinner };
+  enum class PlaneType {
+    Simple,
+    Spinner,
+    DeflektorBeam,
+    DeflektorSource,
+    DeflektorTarget,
+    DeflektorBlocker,
+    DeflektorReflectiveBlock,
+    DeflektorReflectorManual,
+    DeflektorReflectorAuto,
+    DeflektorSelection,
+    DeflektorExplosion
+  };
 
   explicit PlaneNode(DL::SceneNode *parentNode = nullptr,
                      DL::Camera *camera = nullptr,
@@ -30,6 +42,7 @@ public:
   }
   PlaneType planeType = PlaneType::Simple;
   glm::vec4 color{0.9f, 0.9f, 0.9f, 1.0f};
+  glm::vec4 proceduralParams{0.0f, 0.0f, 0.0f, 0.0f};
 
 private:
   void initCamera();

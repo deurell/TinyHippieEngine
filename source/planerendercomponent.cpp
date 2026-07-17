@@ -63,9 +63,20 @@ void DL::PlaneRenderComponent::render(const glm::mat4 &worldTransform,
   item.mesh = mesh_;
   item.pipeline = pipeline_;
   item.pass = pass;
+  if (proceduralStyle > 0) {
+    item.blendMode =
+        (proceduralStyle == 1 || proceduralStyle == 2 || proceduralStyle == 9)
+            ? DL::BlendMode::Additive
+            : DL::BlendMode::Alpha;
+    item.depthTest = false;
+  }
   item.uniforms.push_back(
       DL::UniformValue::makeFloat("iTime", static_cast<float>(ctx.total_time)));
   item.uniforms.push_back(DL::UniformValue::makeVec4("baseColor", baseColor));
+  item.uniforms.push_back(
+      DL::UniformValue::makeInt("proceduralStyle", proceduralStyle));
+  item.uniforms.push_back(
+      DL::UniformValue::makeVec4("proceduralParams", proceduralParams));
   item.uniforms.push_back(DL::UniformValue::makeMat4("model", model));
   item.uniforms.push_back(DL::UniformValue::makeMat4("view", view));
   item.uniforms.push_back(

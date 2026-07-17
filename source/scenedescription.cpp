@@ -761,6 +761,33 @@ PlaneNode::PlaneType parsePlaneType(std::string_view value) {
   if (value == "Spinner") {
     return PlaneNode::PlaneType::Spinner;
   }
+  if (value == "DeflektorBeam") {
+    return PlaneNode::PlaneType::DeflektorBeam;
+  }
+  if (value == "DeflektorSource") {
+    return PlaneNode::PlaneType::DeflektorSource;
+  }
+  if (value == "DeflektorTarget") {
+    return PlaneNode::PlaneType::DeflektorTarget;
+  }
+  if (value == "DeflektorBlocker") {
+    return PlaneNode::PlaneType::DeflektorBlocker;
+  }
+  if (value == "DeflektorReflectiveBlock") {
+    return PlaneNode::PlaneType::DeflektorReflectiveBlock;
+  }
+  if (value == "DeflektorReflectorManual") {
+    return PlaneNode::PlaneType::DeflektorReflectorManual;
+  }
+  if (value == "DeflektorReflectorAuto") {
+    return PlaneNode::PlaneType::DeflektorReflectorAuto;
+  }
+  if (value == "DeflektorSelection") {
+    return PlaneNode::PlaneType::DeflektorSelection;
+  }
+  if (value == "DeflektorExplosion") {
+    return PlaneNode::PlaneType::DeflektorExplosion;
+  }
   throw std::runtime_error("unknown PlaneNode plane value: " +
                            std::string(value));
 }

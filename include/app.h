@@ -80,6 +80,7 @@ public:
   bool renderCullingEnabled() const { return renderCullingEnabled_; }
   void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
   RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
+  void submitDeflektorPostBump(glm::vec2 gamePosition, float strength);
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
@@ -98,6 +99,12 @@ private:
   struct PostProcessStack {
     bool enabled = true;
     std::vector<PostProcessEffect> effects;
+  };
+
+  struct DeflektorPostBump {
+    glm::vec2 uv{0.0f};
+    float age = 0.0f;
+    float strength = 0.0f;
   };
 
   bool init();
@@ -124,6 +131,8 @@ private:
                                   std::string_view name);
   const UniformValue *findEffectUniform(const PostProcessEffect &effect,
                                         std::string_view name) const;
+  void updateDeflektorPostBumps(float dt);
+  void syncDeflektorPostBumpUniforms();
   glm::vec2 mapMousePositionToScene(glm::vec2 mousePosition,
                                     glm::vec2 windowSize) const;
 
@@ -152,6 +161,7 @@ private:
   bool simulationPaused_ = false;
   bool renderCullingEnabled_ = true;
   RenderQueueStats lastRenderQueueStats_;
+  std::vector<DeflektorPostBump> deflektorPostBumps_;
   ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 touchMoveAxis_{0.0f};

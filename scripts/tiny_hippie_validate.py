@@ -145,7 +145,19 @@ ANCHORS = {
 }
 PROJECTIONS = {"Perspective", "Orthographic"}
 LIGHT_KINDS = {"Directional"}
-PLANE_TYPES = {"Simple", "Spinner"}
+PLANE_TYPES = {
+    "Simple",
+    "Spinner",
+    "DeflektorBeam",
+    "DeflektorSource",
+    "DeflektorTarget",
+    "DeflektorBlocker",
+    "DeflektorReflectiveBlock",
+    "DeflektorReflectorManual",
+    "DeflektorReflectorAuto",
+    "DeflektorSelection",
+    "DeflektorExplosion",
+}
 SHAPE_TYPES = {"Cube", "Sphere", "Cylinder"}
 PARTICLE_PRESETS = {"Default", "SoftGlowBurst", "WaterFountain"}
 

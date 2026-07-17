@@ -159,6 +159,24 @@ const char *planeTypeLabel(PlaneNode::PlaneType type) {
     return "Simple";
   case PlaneNode::PlaneType::Spinner:
     return "Spinner";
+  case PlaneNode::PlaneType::DeflektorBeam:
+    return "DeflektorBeam";
+  case PlaneNode::PlaneType::DeflektorSource:
+    return "DeflektorSource";
+  case PlaneNode::PlaneType::DeflektorTarget:
+    return "DeflektorTarget";
+  case PlaneNode::PlaneType::DeflektorBlocker:
+    return "DeflektorBlocker";
+  case PlaneNode::PlaneType::DeflektorReflectiveBlock:
+    return "DeflektorReflectiveBlock";
+  case PlaneNode::PlaneType::DeflektorReflectorManual:
+    return "DeflektorReflectorManual";
+  case PlaneNode::PlaneType::DeflektorReflectorAuto:
+    return "DeflektorReflectorAuto";
+  case PlaneNode::PlaneType::DeflektorSelection:
+    return "DeflektorSelection";
+  case PlaneNode::PlaneType::DeflektorExplosion:
+    return "DeflektorExplosion";
   }
   return "Simple";
 }
@@ -411,12 +429,7 @@ void drawTextNodeInspector(TextNode &node) {
 
 void drawPlaneNodeInspector(PlaneNode &node) {
   ImGui::Text("PlaneNode %s", planeTypeLabel(node.planeType));
-  int planeIndex = node.planeType == PlaneNode::PlaneType::Spinner ? 1 : 0;
-  const char *planeItems[] = {"Simple", "Spinner"};
-  if (ImGui::Combo("Plane type", &planeIndex, planeItems, 2)) {
-    node.planeType = planeIndex == 1 ? PlaneNode::PlaneType::Spinner
-                                     : PlaneNode::PlaneType::Simple;
-  }
+  ImGui::TextDisabled("Plane shader is created when the node initializes.");
   glm::vec4 color = node.color;
   if (ImGui::ColorEdit4("Color", glm::value_ptr(color))) {
     node.color = color;

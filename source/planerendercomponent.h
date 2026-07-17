@@ -26,6 +26,8 @@ public:
   glm::vec4 baseColor = {1.0f, 1.0f, 1.0f, 1.0f};
   bool spinnerEnabled = false;
   float spinnerSpeed = 0.25f;
+  int proceduralStyle = 0;
+  glm::vec4 proceduralParams{0.0f, 0.0f, 0.0f, 0.0f};
 
 private:
   DL::IRenderDevice *renderDevice_ = nullptr;

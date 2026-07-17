@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #endif
 #include "game/scenes/skeletalanimationblendscene.h"
+#include "game/scenes/deflektorishscene.h"
 #include "game/scenes/inputdebugscene.h"
 #include "game/scenes/textstarterscene.h"
 #include "logger.h"
@@ -389,6 +390,7 @@ void DL::App::initActionMap() {
   actionMap_.bind(Action::MoveLeft, Key::A);
   actionMap_.bind(Action::MoveRight, Key::D);
   actionMap_.bind(Action::Fire, Key::Space);
+  actionMap_.bind(Action::SelectNext, Key::Tab);
 }
 
 int DL::App::run() {
@@ -518,6 +520,7 @@ void DL::App::shutdown() {
 
 void DL::App::update() {
   calculateDeltaTime();
+  updateDeflektorPostBumps(deltaTime_);
   audioSystem_.update();
   if (window_) {
     processInput(window_);
@@ -618,6 +621,8 @@ void DL::App::processInput(GLFWwindow *window) {
       glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
   inputState_.keysDown[static_cast<std::size_t>(Key::Space)] =
       glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+  inputState_.keysDown[static_cast<std::size_t>(Key::Tab)] =
+      glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS;
   const glm::vec2 keyboardMoveAxis{
       (inputState_.isKeyDown(Key::D) ? 1.0f : 0.0f) -
           (inputState_.isKeyDown(Key::A) ? 1.0f : 0.0f),
@@ -651,6 +656,55 @@ void DL::App::processInput(GLFWwindow *window) {
   lastMousePosition_ = mousePosition;
   hasLastMousePosition_ = true;
   actionMap_.apply(inputState_, inputState_);
+}
+
+void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
+  constexpr glm::vec2 kDeflektorGameSize{960.0f, 640.0f};
+  DeflektorPostBump bump;
+  bump.uv = glm::clamp(gamePosition / kDeflektorGameSize, glm::vec2(0.0f),
+                       glm::vec2(1.0f));
+  bump.age = 0.0f;
+  bump.strength = std::min(std::max(strength, 0.0f) * 0.026f, 0.052f);
+  deflektorPostBumps_.insert(deflektorPostBumps_.begin(), bump);
+  while (deflektorPostBumps_.size() > 2) {
+    deflektorPostBumps_.pop_back();
+  }
+}
+
+void DL::App::updateDeflektorPostBumps(float dt) {
+  constexpr float kBumpDuration = 1.05f;
+  for (auto &bump : deflektorPostBumps_) {
+    bump.age += dt;
+  }
+  deflektorPostBumps_.erase(
+      std::remove_if(deflektorPostBumps_.begin(), deflektorPostBumps_.end(),
+                     [](const DeflektorPostBump &bump) {
+                       return bump.age >= kBumpDuration;
+                     }),
+      deflektorPostBumps_.end());
+}
+
+void DL::App::syncDeflektorPostBumpUniforms() {
+  PostProcessEffect *effect = findPostProcessEffect("Deflektor Bump");
+  if (effect == nullptr) {
+    return;
+  }
+  constexpr float kBumpDuration = 1.05f;
+  for (std::size_t index = 0; index < 2; ++index) {
+    UniformValue *uniform =
+        findEffectUniform(*effect, index == 0 ? "bump1" : "bump2");
+    if (uniform == nullptr) {
+      continue;
+    }
+    uniform->type = UniformValue::Type::Vec4;
+    if (index < deflektorPostBumps_.size()) {
+      const DeflektorPostBump &bump = deflektorPostBumps_[index];
+      uniform->vec4_value = {bump.uv.x, bump.uv.y,
+                             bump.age / kBumpDuration, bump.strength};
+    } else {
+      uniform->vec4_value = {0.0f, 0.0f, 1.0f, 0.0f};
+    }
+  }
 }
 
 void DL::App::setTouchMoveAxis(glm::vec2 axis) {
@@ -715,6 +769,13 @@ void DL::App::registerScenes() {
         renderResourceCache_.get(),
         "Resources/Scenes/kenney_platformer.scene.json");
   });
+  sceneManager_.registerScene([this] {
+    return std::make_unique<DeflektorishScene>(
+        renderDevice_.get(), renderResourceCache_.get(),
+        [this](glm::vec2 position, float strength) {
+          submitDeflektorPostBump(position, strength);
+        });
+  });
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
   sceneManager_.registerScene([this] {
     return std::make_unique<PhysicsTestScene>(renderDevice_.get());
@@ -731,6 +792,15 @@ void DL::App::configureDefaultPostProcessStack() {
   if (!postProcessStack_.effects.empty()) {
     return;
   }
+
+  PostProcessEffect deflektorBumpEffect;
+  deflektorBumpEffect.name = "Deflektor Bump";
+  deflektorBumpEffect.fragmentShaderPath = "Shaders/deflektorish_post.frag";
+  deflektorBumpEffect.uniforms.push_back(
+      UniformValue::makeVec4("bump1", glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+  deflektorBumpEffect.uniforms.push_back(
+      UniformValue::makeVec4("bump2", glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
+  postProcessStack_.effects.push_back(std::move(deflektorBumpEffect));
 
   PostProcessEffect bloomColorGradeEffect;
   bloomColorGradeEffect.name = "Bloom Color Grade";
@@ -938,6 +1008,7 @@ void DL::App::renderPostProcessPass(const FrameContext &ctx,
   if (enabledEffects.empty()) {
     return;
   }
+  syncDeflektorPostBumpUniforms();
 
   TextureHandle inputTexture =
       renderDevice_->getRenderTargetColorTexture(sceneRenderTarget_);

@@ -21,6 +21,7 @@ public:
   void init() override;
   void update(const DL::FrameContext &ctx) override;
   void render(const DL::FrameContext &ctx) override;
+  void onClick(double x, double y) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   void onFramebufferSizeChanged(glm::vec2 size) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
@@ -71,6 +72,17 @@ private:
     float seed = 0.0f;
   };
 
+  struct Portal {
+    glm::vec2 entryPosition{0.0f};
+    glm::vec2 exitPosition{0.0f};
+    float phase = 0.0f;
+    float glow = 0.0f;
+    glm::vec2 entryHitPoint{0.0f};
+    glm::vec2 exitHitPoint{0.0f};
+    DL::ShaderPlaneNode *entryNode = nullptr;
+    DL::ShaderPlaneNode *exitNode = nullptr;
+  };
+
   struct BeamResult {
     std::vector<bool> activeReflektors;
     std::vector<float> reflektorEnergy;
@@ -80,6 +92,10 @@ private:
     std::vector<bool> blockerHasHit;
     std::vector<bool> hitTargets;
     std::vector<float> targetEnergy;
+    std::vector<bool> activePortals;
+    std::vector<glm::vec2> portalEntryHit;
+    std::vector<glm::vec2> portalExitHit;
+    std::vector<bool> portalHasHit;
   };
 
   DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
@@ -97,6 +113,7 @@ private:
   void updateSource(float dt, const BeamResult &result);
   void updateReflektorVisuals(float dt, const BeamResult &result);
   void updateBlockerVisuals(float dt, const BeamResult &result);
+  void updatePortalVisuals(float dt, const BeamResult &result);
   void updateTargets(float dt, const BeamResult &result);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
@@ -105,6 +122,8 @@ private:
   void layoutSegment(BeamSegment &segment, glm::vec2 start, glm::vec2 end,
                      float energy);
   void hideSegment(BeamSegment &segment);
+  glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
+  bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;
 
   static glm::vec2 grid(int x, int y);
@@ -122,10 +141,11 @@ private:
   std::vector<Target> targets_;
   std::vector<Blocker> blockers_;
   std::vector<Explosion> explosions_;
+  std::vector<Portal> portals_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   int selectedReflektor_ = -1;
-  bool previousFireDown_ = false;
+  bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
   float rotateInput_ = 0.0f;
   float sourcePulse_ = 0.0f;

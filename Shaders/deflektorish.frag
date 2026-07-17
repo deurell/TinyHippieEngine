@@ -6,6 +6,7 @@ in vec2 TexCoord;
 uniform float iTime;
 uniform vec4 baseColor;
 uniform vec4 proceduralParams;
+uniform vec4 proceduralParams2;
 uniform int proceduralStyle;
 
 out vec4 FragColor;
@@ -205,6 +206,59 @@ vec4 shadeSelection(vec2 uv) {
     return vec4(color * alpha, clamp(alpha, 0.0, 1.0));
 }
 
+vec4 shadePortal(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    float d = length(p);
+    float t = proceduralParams.x;
+    float phase = proceduralParams.y;
+    float portalActive = clamp(proceduralParams.z, 0.0, 1.0);
+    float side = clamp(proceduralParams.w, 0.0, 1.0);
+    vec2 hitPoint = proceduralParams2.xy;
+    float spin = t * mix(0.62, -0.58, side) + phase * 6.28318;
+    vec2 axis = vec2(cos(spin), sin(spin));
+    vec2 dir = normalize(p + vec2(0.0001));
+    float pulse = 0.5 + 0.5 * sin(t * (1.65 + portalActive * 1.5) + phase * 6.28318);
+    float outer = ring(d, 0.63 + pulse * 0.026 + portalActive * 0.035,
+                       0.105 + portalActive * 0.030);
+    float inner = ring(d, 0.36 - pulse * 0.018, 0.085 + portalActive * 0.020);
+    float aperture = 1.0 - smoothstep(0.0, 0.34 + portalActive * 0.10, d);
+    float halo = 1.0 - smoothstep(0.0, 0.92 + portalActive * 0.10, d);
+    float crescent = smoothstep(0.16, 0.95, dot(dir, axis)) *
+                     (1.0 - smoothstep(0.25, 0.78, d)) *
+                     (0.35 + portalActive * 0.65);
+    float softMouth = 1.0 - smoothstep(0.0, 0.58 + portalActive * 0.08,
+                                       length(p * vec2(0.82, 1.10)));
+    vec2 hitDir = normalize(hitPoint + vec2(0.0001));
+    float sideLight = pow(max(dot(dir, hitDir), 0.0), 5.0) * portalActive;
+    float sideGlow = pow(max(dot(dir, hitDir), 0.0), 2.2) * portalActive;
+    float rimBand = ring(d, 0.62, 0.22);
+    float innerSide = (1.0 - smoothstep(0.18, 0.68, d)) * sideGlow;
+    float circularMask = 1.0 - smoothstep(0.82, 0.98, d);
+    float rimImpact = sideLight * rimBand * circularMask;
+    float sideWash = sideGlow * halo * circularMask;
+    vec3 entryColor = vec3(0.38, 0.94, 1.0);
+    vec3 exitColor = vec3(1.0, 0.42, 0.90);
+    vec3 colorBase = mix(entryColor, exitColor, side);
+    vec3 hotColor = mix(colorBase, vec3(1.0, 0.97, 1.0), 0.44);
+    vec3 color = colorBase * halo * (0.18 + portalActive * 0.24);
+    color += colorBase * outer * (0.88 + portalActive * 0.62);
+    color += mix(colorBase, hotColor, 0.55) * inner * (0.50 + portalActive * 0.42);
+    color += hotColor * aperture * portalActive * (0.30 + pulse * 0.28);
+    color += colorBase * crescent * 0.30;
+    color += hotColor * softMouth * portalActive * 0.18;
+    color += colorBase * sideWash * 0.42;
+    color += hotColor * rimImpact * 1.25;
+    color += vec3(1.0, 0.98, 1.0) * innerSide * 0.55;
+    float alpha = clamp(halo * (0.17 + portalActive * 0.08) +
+                        outer * (0.62 + portalActive * 0.22) +
+                        inner * (0.34 + portalActive * 0.20) +
+                        aperture * portalActive * 0.30 +
+                        crescent * 0.12 + sideWash * 0.14 +
+                        rimImpact * 0.34 + innerSide * 0.16,
+                        0.0, 1.0);
+    return vec4(color, alpha);
+}
+
 float hash11(float n) {
     return fract(sin(n) * 43758.5453123);
 }
@@ -288,6 +342,8 @@ void main() {
         color = shadeSelection(TexCoord);
     } else if (proceduralStyle == 9) {
         color = shadeExplosion(TexCoord);
+    } else if (proceduralStyle == 10) {
+        color = shadePortal(TexCoord);
     }
 
     color *= vec4(baseColor.rgb, 1.0);

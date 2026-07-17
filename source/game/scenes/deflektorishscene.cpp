@@ -22,6 +22,7 @@ constexpr float kBeamRange = 2000.0f;
 constexpr float kEpsilon = 0.001f;
 constexpr float kHitGap = 6.0f;
 constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
+constexpr float kReflektorPickRadius = 0.36f;
 constexpr float kTargetPrepopDuration = 0.26f;
 constexpr float kBlockerGlowSpeed = 8.0f;
 constexpr float kReflektorGlowSpeed = 14.0f;
@@ -39,6 +40,7 @@ constexpr int kStyleManualReflector = 6;
 constexpr int kStyleAutoReflector = 7;
 constexpr int kStyleSelection = 8;
 constexpr int kStyleExplosion = 9;
+constexpr int kStylePortal = 10;
 
 float cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
@@ -93,6 +95,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
   updateBlockerVisuals(ctx.delta_time, result);
+  updatePortalVisuals(ctx.delta_time, result);
   updateTargets(ctx.delta_time, result);
   updateExplosions(ctx.delta_time);
 
@@ -103,6 +106,11 @@ void DeflektorishScene::render(const DL::FrameContext &ctx) {
   SceneNode::render(ctx);
 }
 
+void DeflektorishScene::onClick(double x, double y) {
+  selectReflektorAtWorld(
+      screenToWorld({static_cast<float>(x), static_cast<float>(y)}));
+}
+
 void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
   screenSize_ = size;
@@ -110,7 +118,6 @@ void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
 
 void DeflektorishScene::onFramebufferSizeChanged(glm::vec2 size) {
   framebufferSize_ = size;
-  onScreenSizeChanged(size);
 }
 
 glm::vec2 DeflektorishScene::grid(int x, int y) {
@@ -257,6 +264,18 @@ void DeflektorishScene::spawnLevel() {
     explosions_.push_back(explosion);
   }
 
+  Portal portal;
+  portal.entryPosition = grid(16, 3);
+  portal.exitPosition = grid(22, 11);
+  portal.phase = 0.2f;
+  portal.entryNode =
+      addShaderPlane("portal_entry", kStylePortal, DL::BlendMode::Additive,
+                     portal.entryPosition, {27.0f, 27.0f}, 10, 0.11f);
+  portal.exitNode =
+      addShaderPlane("portal_exit", kStylePortal, DL::BlendMode::Additive,
+                     portal.exitPosition, {27.0f, 27.0f}, 10, 0.11f);
+  portals_.push_back(portal);
+
   auto addBlocker = [&](glm::ivec2 coord, bool reflective) {
     Blocker blocker;
     blocker.position = grid(coord.x, coord.y);
@@ -278,17 +297,20 @@ void DeflektorishScene::spawnLevel() {
 
 void DeflektorishScene::updateInput(const DL::FrameContext &ctx) {
   rotateInput_ = -std::clamp(ctx.input.moveAxis.x, -1.0f, 1.0f);
-  const bool fireDown = ctx.input.isActionDown(DL::Action::Fire);
+  const bool leftMouseDown = ctx.input.isMouseButtonDown(DL::MouseButton::Left);
+  if (leftMouseDown && !previousLeftMouseDown_) {
+    selectReflektorAtWorld(screenToWorld(ctx.input.sceneMousePosition));
+  }
+  previousLeftMouseDown_ = leftMouseDown;
+
   const bool selectNextDown = ctx.input.isActionDown(DL::Action::SelectNext);
-  if ((fireDown && !previousFireDown_) ||
-      (selectNextDown && !previousSelectNextDown_)) {
+  if (selectNextDown && !previousSelectNextDown_) {
     const int next = findNextManualReflektor(selectedReflektor_);
     if (next >= 0) {
       selectedReflektor_ = next;
       selectionFlash_ = 1.0f;
     }
   }
-  previousFireDown_ = fireDown;
   previousSelectNextDown_ = selectNextDown;
 }
 
@@ -320,7 +342,7 @@ void DeflektorishScene::updateSelection(float dt) {
 namespace {
 
 struct Hit {
-  enum class Type { None, Reflektor, Target, Blocker };
+  enum class Type { None, Reflektor, Target, Blocker, Portal };
   Type type = Type::None;
   float distance = std::numeric_limits<float>::max();
   glm::vec2 point{0.0f};
@@ -345,12 +367,17 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   result.blockerHasHit.assign(blockers_.size(), false);
   result.hitTargets.assign(targets_.size(), false);
   result.targetEnergy.assign(targets_.size(), 0.0f);
+  result.activePortals.assign(portals_.size(), false);
+  result.portalEntryHit.assign(portals_.size(), glm::vec2(0.0f));
+  result.portalExitHit.assign(portals_.size(), glm::vec2(0.0f));
+  result.portalHasHit.assign(portals_.size(), false);
 
   glm::vec2 origin = grid(3, 7);
   glm::vec2 visualOrigin = origin;
   glm::vec2 rayDir = direction(0.0f);
   int ignoreReflektor = -1;
   int ignoreBlocker = -1;
+  int ignorePortal = -1;
   float energy = 0.0f;
 
   for (BeamSegment &segment : segments_) {
@@ -410,6 +437,39 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       }
       Hit hit;
       hit.type = Hit::Type::Target;
+      hit.distance = hitDistance;
+      hit.point = origin + rayDir * hitDistance;
+      hit.index = static_cast<int>(i);
+      if (closer(hit, nearest)) {
+        nearest = hit;
+      }
+    }
+
+    for (std::size_t i = 0; i < portals_.size(); ++i) {
+      if (static_cast<int>(i) == ignorePortal) {
+        continue;
+      }
+      const Portal &portal = portals_[i];
+      const glm::vec2 toPortal = portal.entryPosition - origin;
+      const float projected = glm::dot(toPortal, rayDir);
+      if (projected <= kEpsilon) {
+        continue;
+      }
+      const glm::vec2 closest = origin + rayDir * projected;
+      const float distanceToRay = glm::length(portal.entryPosition - closest);
+      const float portalRadius = 20.0f;
+      if (distanceToRay > portalRadius) {
+        continue;
+      }
+      const float hitDistance =
+          projected -
+          std::sqrt(portalRadius * portalRadius -
+                    distanceToRay * distanceToRay);
+      if (hitDistance <= kEpsilon) {
+        continue;
+      }
+      Hit hit;
+      hit.type = Hit::Type::Portal;
       hit.distance = hitDistance;
       hit.point = origin + rayDir * hitDistance;
       hit.index = static_cast<int>(i);
@@ -489,6 +549,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       rayDir = glm::normalize(reflected);
       ignoreReflektor = nearest.index;
       ignoreBlocker = -1;
+      ignorePortal = -1;
       energy = std::min(energy + 1.0f, 3.0f);
     } else if (nearest.type == Hit::Type::Target) {
       layoutSegment(segment, visualOrigin, nearest.point, energy);
@@ -515,6 +576,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
         rayDir = glm::normalize(reflected);
         ignoreReflektor = -1;
         ignoreBlocker = nearest.index;
+        ignorePortal = -1;
       } else {
         for (BeamSegment &remaining : segments_) {
           if (&remaining > &segment) {
@@ -523,6 +585,19 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
         }
         return result;
       }
+    } else if (nearest.type == Hit::Type::Portal) {
+      Portal &portal = portals_[nearest.index];
+      layoutSegment(segment, visualOrigin, nearest.point, energy);
+      result.activePortals[nearest.index] = true;
+      result.portalEntryHit[nearest.index] =
+          (nearest.point - portal.entryPosition) / 20.0f;
+      result.portalExitHit[nearest.index] = rayDir;
+      result.portalHasHit[nearest.index] = true;
+      origin = portal.exitPosition + rayDir * kHitGap;
+      visualOrigin = portal.exitPosition;
+      ignoreReflektor = -1;
+      ignoreBlocker = -1;
+      ignorePortal = nearest.index;
     } else {
       layoutSegment(segment, visualOrigin, visualOrigin + rayDir * kBeamRange,
                     energy);
@@ -571,6 +646,50 @@ void DeflektorishScene::hideSegment(BeamSegment &segment) {
   segment.node->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
+glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
+  if (screenSize_.x <= 0.0f || screenSize_.y <= 0.0f) {
+    return {0.0f, 0.0f};
+  }
+
+  const float aspect = screenSize_.x / screenSize_.y;
+  const float halfHeight = kOrthographicHeight * 0.5f;
+  const float halfWidth = halfHeight * aspect;
+  const glm::vec2 normalized{
+      screenPosition.x / screenSize_.x,
+      screenPosition.y / screenSize_.y,
+  };
+  const glm::vec2 cameraOffset =
+      cameraNode_ != nullptr ? glm::vec2(cameraNode_->getLocalPosition())
+                             : glm::vec2(0.0f);
+  return {cameraOffset.x + (normalized.x - 0.5f) * halfWidth * 2.0f,
+          cameraOffset.y + (0.5f - normalized.y) * halfHeight * 2.0f};
+}
+
+bool DeflektorishScene::selectReflektorAtWorld(glm::vec2 worldPosition) {
+  int nearestIndex = -1;
+  float nearestDistance = kReflektorPickRadius;
+
+  for (std::size_t i = 0; i < reflektors_.size(); ++i) {
+    const Reflektor &reflektor = reflektors_[i];
+    if (reflektor.automatic) {
+      continue;
+    }
+    const float distance =
+        glm::length(toWorld(reflektor.position) - worldPosition);
+    if (distance <= nearestDistance) {
+      nearestDistance = distance;
+      nearestIndex = static_cast<int>(i);
+    }
+  }
+
+  if (nearestIndex < 0) {
+    return false;
+  }
+  selectedReflektor_ = nearestIndex;
+  selectionFlash_ = 1.0f;
+  return true;
+}
+
 void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
   sourcePulse_ = std::max(sourcePulse_ - dt * 4.8f, 0.0f);
   float load = 0.0f;
@@ -615,6 +734,32 @@ void DeflektorishScene::updateBlockerVisuals(float dt,
     if (blocker.node != nullptr) {
       blocker.node->config.params0 = {blocker.glow, blocker.energy,
                                         blocker.hitPoint.x, blocker.hitPoint.y};
+    }
+  }
+}
+
+void DeflektorishScene::updatePortalVisuals(float dt,
+                                            const BeamResult &result) {
+  for (std::size_t i = 0; i < portals_.size(); ++i) {
+    Portal &portal = portals_[i];
+    const float target = result.activePortals[i] ? 1.0f : 0.0f;
+    portal.glow = approach(portal.glow, target, dt * 12.0f);
+    if (result.portalHasHit[i]) {
+      portal.entryHitPoint = result.portalEntryHit[i];
+      portal.exitHitPoint = result.portalExitHit[i];
+    }
+    const glm::vec4 entryParams{elapsed_, portal.phase, portal.glow, 0.0f};
+    const glm::vec4 exitParams{elapsed_, portal.phase + 0.5f, portal.glow,
+                               1.0f};
+    if (portal.entryNode != nullptr) {
+      portal.entryNode->config.params0 = entryParams;
+      portal.entryNode->config.params1 = {portal.entryHitPoint.x,
+                                          portal.entryHitPoint.y, 0.0f, 0.0f};
+    }
+    if (portal.exitNode != nullptr) {
+      portal.exitNode->config.params0 = exitParams;
+      portal.exitNode->config.params1 = {portal.exitHitPoint.x,
+                                         portal.exitHitPoint.y, 0.0f, 0.0f};
     }
   }
 }

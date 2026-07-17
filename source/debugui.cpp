@@ -159,24 +159,6 @@ const char *planeTypeLabel(PlaneNode::PlaneType type) {
     return "Simple";
   case PlaneNode::PlaneType::Spinner:
     return "Spinner";
-  case PlaneNode::PlaneType::DeflektorBeam:
-    return "DeflektorBeam";
-  case PlaneNode::PlaneType::DeflektorSource:
-    return "DeflektorSource";
-  case PlaneNode::PlaneType::DeflektorTarget:
-    return "DeflektorTarget";
-  case PlaneNode::PlaneType::DeflektorBlocker:
-    return "DeflektorBlocker";
-  case PlaneNode::PlaneType::DeflektorReflectiveBlock:
-    return "DeflektorReflectiveBlock";
-  case PlaneNode::PlaneType::DeflektorReflectorManual:
-    return "DeflektorReflectorManual";
-  case PlaneNode::PlaneType::DeflektorReflectorAuto:
-    return "DeflektorReflectorAuto";
-  case PlaneNode::PlaneType::DeflektorSelection:
-    return "DeflektorSelection";
-  case PlaneNode::PlaneType::DeflektorExplosion:
-    return "DeflektorExplosion";
   }
   return "Simple";
 }

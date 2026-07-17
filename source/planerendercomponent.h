@@ -28,6 +28,9 @@ public:
   float spinnerSpeed = 0.25f;
   int proceduralStyle = 0;
   glm::vec4 proceduralParams{0.0f, 0.0f, 0.0f, 0.0f};
+  glm::vec4 proceduralParams2{0.0f, 0.0f, 0.0f, 0.0f};
+  DL::BlendMode blendMode = DL::BlendMode::Opaque;
+  bool depthTest = true;
 
 private:
   DL::IRenderDevice *renderDevice_ = nullptr;

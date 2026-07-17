@@ -79,6 +79,8 @@ far-to-near.
   as one static mesh. Layer `data` values use Tiled global tile IDs, including
   horizontal, vertical, and diagonal flip flags.
 - `PlaneNode`: uses `plane` (`Simple` or `Spinner`) and optional `color`.
+- `ShaderPlaneNode`: uses `shaderPlane` to render a quad with authored shader
+  paths, blend mode, depth test, and two vec4 parameter buckets.
 - `PhongShapeNode`: uses `shape` (`Cube`, `Sphere`, or `Cylinder`) and optional
   `material`.
 - `ParticleSystemNode`: uses `particle` (`Default`, `SoftGlowBurst`, or
@@ -328,11 +330,30 @@ avoid a single obvious sliding pattern.
 }
 ```
 
-`plane` may be `Simple`, `Spinner`, or one of the Deflektorish procedural
-styles: `DeflektorBeam`, `DeflektorSource`, `DeflektorTarget`,
-`DeflektorBlocker`, `DeflektorReflectiveBlock`,
-`DeflektorReflectorManual`, `DeflektorReflectorAuto`, and
-`DeflektorSelection`, and `DeflektorExplosion`.
+`plane` may be `Simple` or `Spinner`. Use `ShaderPlaneNode` for custom
+shader-driven quads.
+
+## ShaderPlaneNode
+
+```json
+{
+  "type": "ShaderPlaneNode",
+  "color": [1.0, 1.0, 1.0, 1.0],
+  "shaderPlane": {
+    "vertexShader": "Shaders/simple.vert",
+    "fragmentShader": "Shaders/deflektorish.frag",
+    "blendMode": "Additive",
+    "depthTest": false,
+    "proceduralStyle": 1,
+    "params0": [0.0, 0.0, 0.0, 0.0],
+    "params1": [0.0, 0.0, 0.0, 0.0]
+  }
+}
+```
+
+`blendMode` may be `Opaque`, `Alpha`, or `Additive`. Shaders receive standard
+`iTime`, `baseColor`, `model`, `view`, and `projection` uniforms, plus
+`proceduralStyle`, `proceduralParams`, and `proceduralParams2`.
 
 ## PhongShapeNode Material
 

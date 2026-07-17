@@ -26,37 +26,39 @@ float electroNoise(vec2 p, float t) {
 vec4 shadeBeam(vec2 uv) {
     vec2 p = uv * 2.0 - 1.0;
     float energy = clamp(proceduralParams.x, 0.0, 3.0);
+    float energy01 = clamp(energy / 3.0, 0.0, 1.0);
     float beamTime = iTime * 4.0;
     float lengthScale = max(abs(proceduralParams.y), 0.0001);
     float referenceLength = max(abs(proceduralParams.z), 0.0001);
     float beamX = p.x * lengthScale / referenceLength;
     float edgeMatch = smoothstep(0.0, 0.045, uv.x) *
                       smoothstep(0.0, 0.045, 1.0 - uv.x);
-    float width = 0.18 + energy * 0.018;
+    float width = 0.18 + energy * 0.026;
     float center = electroNoise(vec2(beamX, p.y), beamTime) * width * edgeMatch;
     float y = abs(p.y - center);
     float glow = clamp(1.0 - pow(max(y, 0.0001), 0.20 + energy * 0.010), 0.0, 1.0);
-    float halo = 1.0 - smoothstep(0.0, 0.85 + energy * 0.055, y);
-    float core = smoothstep(0.050 + energy * 0.008, 0.000, y);
-    float innerCore = smoothstep(0.022 + energy * 0.004, 0.000, y);
-    float filament = smoothstep(0.030, 0.000, abs(p.y - center + sin(beamX * 13.0 + beamTime * 1.7) * 0.028));
+    float halo = 1.0 - smoothstep(0.0, 0.85 + energy * 0.065, y);
+    float core = smoothstep(0.052 + energy * 0.012, 0.000, y);
+    float innerCore = smoothstep(0.022 + energy * 0.006, 0.000, y);
+    float filament = smoothstep(0.032 + energy * 0.003, 0.000, abs(p.y - center + sin(beamX * 13.0 + beamTime * 1.7) * (0.028 + energy * 0.003)));
     float sparks = pow(max(0.0, sin(beamX * 37.0 - beamTime * 2.4)), 18.0) *
                    smoothstep(0.18, 0.0, y);
     vec3 electric = vec3(0.55, 0.92, 1.0);
     vec3 plasma = vec3(1.0, 0.45, 0.92);
-    vec3 beamColor = mix(electric, plasma, clamp(energy / 3.0, 0.0, 1.0) * 0.32) * baseColor.rgb;
-    float intensity = 1.0 + energy * 0.15;
-    vec3 color = beamColor * glow * 1.18 * intensity + beamColor * halo * 0.34 * intensity;
-    color *= color;
-    color += vec3(1.0, 0.96, 1.0) * core * 1.43;
-    color += vec3(1.0) * innerCore * (1.35 + energy * 0.20);
-    color += beamColor * filament * (0.40 + energy * 0.12);
+    vec3 hot = vec3(1.0, 0.92, 1.0);
+    vec3 beamColor = mix(electric, plasma, energy01 * 0.42) * baseColor.rgb;
+    float intensity = 1.0 + energy * 0.19;
+    vec3 color = beamColor * glow * 1.20 * intensity + beamColor * halo * (0.34 + energy * 0.035) * intensity;
+    color *= mix(vec3(1.0), color, 0.68);
+    color += mix(vec3(1.0, 0.96, 1.0), hot, energy01 * 0.65) * core * (1.44 + energy * 0.18);
+    color += vec3(1.0) * innerCore * (1.36 + energy * 0.24);
+    color += beamColor * filament * (0.40 + energy * 0.14);
     color += vec3(1.0, 0.86, 1.0) * sparks * (0.55 + energy * 0.18);
-    float alpha = clamp(glow * (0.55 + energy * 0.025) +
-                        halo * (0.10 + energy * 0.012) +
-                        core * (0.65 + energy * 0.035) +
-                        filament * 0.20 + sparks * 0.26,
-                        0.0, 0.75 + energy * 0.025);
+    float alpha = clamp(glow * (0.55 + energy * 0.035) +
+                        halo * (0.10 + energy * 0.018) +
+                        core * (0.65 + energy * 0.044) +
+                        filament * (0.20 + energy * 0.02) + sparks * 0.27,
+                        0.0, 0.76 + energy * 0.035);
     return vec4(color, alpha);
 }
 

@@ -72,6 +72,7 @@ add_executable(tiny_hippie_engine
         source/renderqueue.h source/renderqueue.cpp
         source/shapegeometry.h source/shapegeometry.cpp
         source/shaperendercomponent.h source/shaperendercomponent.cpp
+        source/shaderplanenode.h source/shaderplanenode.cpp
         source/spriteanimationnode.h source/spriteanimationnode.cpp
         source/spritebatchnode.h source/spritebatchnode.cpp
         source/spritebatchrendercomponent.h source/spritebatchrendercomponent.cpp
@@ -301,6 +302,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/scenelifecycle.cpp
             source/scenenode.cpp
             source/shapegeometry.cpp
+            source/shaderplanenode.cpp
             source/shaperendercomponent.cpp
             source/spriteanimationnode.cpp
             source/spritebatchnode.cpp

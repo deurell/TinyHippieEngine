@@ -1,8 +1,6 @@
 #include "deflektorishscene.h"
 
 #include "iscene.h"
-#include "light2dnode.h"
-#include "planenode.h"
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -15,6 +13,7 @@ namespace {
 constexpr float kPixelToWorld = 0.01f;
 constexpr glm::vec2 kScreenCenter{480.0f, 320.0f};
 constexpr float kThickness = 48.0f;
+constexpr float kBeamThicknessPerReflect = 6.0f;
 constexpr float kMirrorLength = 44.0f;
 constexpr float kTargetRadius = 14.0f;
 constexpr float kBlockerHalfSize = 16.0f;
@@ -30,6 +29,15 @@ constexpr float kShakeStrength = 6.0f;
 constexpr float kShakeMaxStrength = 18.0f;
 constexpr float kShakeDecay = 1.65f;
 constexpr float kShakeKickDecay = 28.0f;
+constexpr int kStyleBeam = 1;
+constexpr int kStyleSource = 2;
+constexpr int kStyleTarget = 3;
+constexpr int kStyleBlocker = 4;
+constexpr int kStyleReflectiveBlocker = 5;
+constexpr int kStyleManualReflector = 6;
+constexpr int kStyleAutoReflector = 7;
+constexpr int kStyleSelection = 8;
+constexpr int kStyleExplosion = 9;
 
 float cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
@@ -112,24 +120,26 @@ glm::vec2 DeflektorishScene::toWorld(glm::vec2 pixels) {
   return (pixels - kScreenCenter) * kPixelToWorld;
 }
 
-PlaneNode *DeflektorishScene::addPlane(std::string name,
-                                       PlaneNode::PlaneType type,
-                                       glm::vec2 position,
-                                       glm::vec2 halfSize, int renderLayer,
-                                       float z, float rotationRadians) {
-  auto node =
-      std::make_unique<PlaneNode>(this, &cameraNode_->camera(), renderDevice_,
-                                  renderResourceCache_);
+DL::ShaderPlaneNode *DeflektorishScene::addShaderPlane(
+    std::string name, int proceduralStyle, DL::BlendMode blendMode,
+    glm::vec2 position, glm::vec2 halfSize, int renderLayer, float z,
+    float rotationRadians) {
+  DL::ShaderPlaneNode::Config config;
+  config.fragmentShader = "Shaders/deflektorish.frag";
+  config.blendMode = blendMode;
+  config.depthTest = false;
+  config.proceduralStyle = proceduralStyle;
+  auto node = std::make_unique<DL::ShaderPlaneNode>(
+      std::move(config), this, &cameraNode_->camera(), renderDevice_,
+      renderResourceCache_);
   node->setDebugName(std::move(name));
-  node->planeType = type;
-  node->color = {1.0f, 1.0f, 1.0f, 1.0f};
   node->setRenderLayer(renderLayer);
   const glm::vec2 world = toWorld(position);
   node->setLocalPosition({world.x, world.y, z});
   node->setLocalScale({halfSize.x * kPixelToWorld, halfSize.y * kPixelToWorld,
                        1.0f});
   node->setLocalRotation(glm::quat(glm::vec3(0.0f, 0.0f, rotationRadians)));
-  PlaneNode *raw = node.get();
+  DL::ShaderPlaneNode *raw = node.get();
   addChild(std::move(node));
   return raw;
 }
@@ -147,21 +157,25 @@ void DeflektorishScene::createCameraNode() {
 }
 
 void DeflektorishScene::addBackground() {
-  auto back =
-      std::make_unique<PlaneNode>(this, &cameraNode_->camera(), renderDevice_,
-                                  renderResourceCache_);
+  DL::ShaderPlaneNode::Config backgroundConfig;
+  backgroundConfig.blendMode = DL::BlendMode::Opaque;
+  backgroundConfig.depthTest = true;
+
+  auto back = std::make_unique<DL::ShaderPlaneNode>(
+      backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
+      renderResourceCache_);
   back->setDebugName("deflektorish_backplate");
-  back->color = {0.025f, 0.030f, 0.047f, 1.0f};
+  back->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
   back->setRenderLayer(-30);
   back->setLocalPosition({0.0f, 0.0f, -0.08f});
   back->setLocalScale({4.96f, 3.36f, 1.0f});
   addChild(std::move(back));
 
-  auto field =
-      std::make_unique<PlaneNode>(this, &cameraNode_->camera(), renderDevice_,
-                                  renderResourceCache_);
+  auto field = std::make_unique<DL::ShaderPlaneNode>(
+      backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
+      renderResourceCache_);
   field->setDebugName("deflektorish_playfield");
-  field->color = {0.038f, 0.047f, 0.071f, 1.0f};
+  field->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
   field->setRenderLayer(-25);
   field->setLocalPosition({0.0f, 0.0f, -0.07f});
   field->setLocalScale({4.8f, 3.2f, 1.0f});
@@ -188,15 +202,15 @@ void DeflektorishScene::spawnLevel() {
       {28, 14},{28, 15},{11, 16},{12, 16},{13, 16},{16, 19},{17, 19},
       {18, 19},{19, 19},{20, 19}};
 
-  source_ = addPlane("source", PlaneNode::PlaneType::DeflektorSource,
-                     grid(3, 7), {41.0f, 41.0f}, 11, 0.10f);
+  source_ = addShaderPlane("source", kStyleSource, DL::BlendMode::Additive,
+                           grid(3, 7), {41.0f, 41.0f}, 11, 0.10f);
 
   for (int i = 0; i < kMaxBeamSegments; ++i) {
     BeamSegment segment;
-    segment.node = addPlane("beam_segment_" + std::to_string(i + 1),
-                            PlaneNode::PlaneType::DeflektorBeam,
-                            {-10000.0f, -10000.0f},
-                            {1.0f, 1.0f}, 9, 0.07f);
+    segment.node = addShaderPlane("beam_segment_" + std::to_string(i + 1),
+                                  kStyleBeam, DL::BlendMode::Additive,
+                                  {-10000.0f, -10000.0f}, {1.0f, 1.0f}, 9,
+                                  0.07f);
     segments_.push_back(segment);
   }
 
@@ -207,37 +221,38 @@ void DeflektorishScene::spawnLevel() {
     reflektor.angle = glm::radians(degrees);
     reflektor.automatic = automatic;
     reflektor.speed = speed;
-    reflektor.node = addPlane(
+    reflektor.node = addShaderPlane(
         automatic ? "reflektor_auto" : "reflektor_manual",
-        automatic ? PlaneNode::PlaneType::DeflektorReflectorAuto
-                  : PlaneNode::PlaneType::DeflektorReflectorManual,
-        reflektor.position, {22.0f, 5.0f}, 13, 0.12f, reflektor.angle);
+        automatic ? kStyleAutoReflector : kStyleManualReflector,
+        DL::BlendMode::Alpha, reflektor.position, {22.0f, 5.0f}, 13, 0.12f,
+        reflektor.angle);
     reflektors_.push_back(reflektor);
   };
   addReflektor(12, 7, 45.0f, false, 0.0f);
   addReflektor(8, 12, 45.0f, true, 0.4f);
   addReflektor(18, 12, -45.0f, false, 0.0f);
   selectedReflektor_ = 0;
-  selection_ = addPlane("selection", PlaneNode::PlaneType::DeflektorSelection,
-                        reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
-                        12, 0.10f);
+  selection_ =
+      addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
+                     reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
+                     12, 0.10f);
 
   for (std::size_t i = 0; i < targets.size(); ++i) {
     Target target;
     target.position = grid(targets[i].x, targets[i].y);
     target.phase = target.position.x * 0.071f + target.position.y * 0.113f;
-    target.node = addPlane("target_" + std::to_string(i + 1),
-                           PlaneNode::PlaneType::DeflektorTarget,
-                           target.position, {13.0f, 13.0f}, 8, 0.04f);
+    target.node = addShaderPlane("target_" + std::to_string(i + 1),
+                                 kStyleTarget, DL::BlendMode::Alpha,
+                                 target.position, {13.0f, 13.0f}, 8, 0.04f);
     targets_.push_back(target);
   }
 
   for (int i = 0; i < 12; ++i) {
     Explosion explosion;
-    explosion.node = addPlane("explosion_" + std::to_string(i + 1),
-                              PlaneNode::PlaneType::DeflektorExplosion,
-                              {-10000.0f, -10000.0f}, {1.0f, 1.0f}, 18,
-                              0.16f);
+    explosion.node = addShaderPlane("explosion_" + std::to_string(i + 1),
+                                    kStyleExplosion, DL::BlendMode::Additive,
+                                    {-10000.0f, -10000.0f}, {1.0f, 1.0f}, 18,
+                                    0.16f);
     explosions_.push_back(explosion);
   }
 
@@ -245,11 +260,10 @@ void DeflektorishScene::spawnLevel() {
     Blocker blocker;
     blocker.position = grid(coord.x, coord.y);
     blocker.reflective = reflective;
-    blocker.node = addPlane(
+    blocker.node = addShaderPlane(
         reflective ? "reflective_blocker" : "solid_blocker",
-        reflective ? PlaneNode::PlaneType::DeflektorReflectiveBlock
-                   : PlaneNode::PlaneType::DeflektorBlocker,
-        blocker.position, {16.0f, 16.0f}, reflective ? 6 : 5,
+        reflective ? kStyleReflectiveBlocker : kStyleBlocker,
+        DL::BlendMode::Alpha, blocker.position, {16.0f, 16.0f}, reflective ? 6 : 5,
         reflective ? 0.025f : 0.02f);
     blockers_.push_back(blocker);
   };
@@ -299,7 +313,7 @@ void DeflektorishScene::updateSelection(float dt) {
   }
   const glm::vec2 world = toWorld(reflektors_[selectedReflektor_].position);
   selection_->setLocalPosition({world.x, world.y, 0.10f});
-  selection_->proceduralParams = {elapsed_, selectionFlash_, 0.0f, 0.0f};
+  selection_->config.params0 = {elapsed_, selectionFlash_, 0.0f, 0.0f};
 }
 
 namespace {
@@ -500,7 +514,6 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
         rayDir = glm::normalize(reflected);
         ignoreReflektor = -1;
         ignoreBlocker = nearest.index;
-        energy = std::min(energy + 1.0f, 3.0f);
       } else {
         for (BeamSegment &remaining : segments_) {
           if (&remaining > &segment) {
@@ -537,11 +550,14 @@ void DeflektorishScene::layoutSegment(BeamSegment &segment, glm::vec2 start,
   const glm::vec2 center = start + delta * 0.5f;
   const glm::vec2 world = toWorld(center);
   segment.node->setLocalPosition({world.x, world.y, 0.07f});
-  segment.node->setLocalRotation(glm::quat(glm::vec3(0.0f, 0.0f, atan2Vec(delta))));
+  segment.node->setLocalRotation(
+      glm::quat(glm::vec3(0.0f, 0.0f, atan2Vec(delta))));
+  const float energizedThickness = kThickness + energy * kBeamThicknessPerReflect;
   segment.node->setLocalScale({length * 0.5f * kPixelToWorld,
-                               kThickness * 0.5f * kPixelToWorld, 1.0f});
+                               energizedThickness * 0.5f * kPixelToWorld,
+                               1.0f});
   segment.energy = energy;
-  segment.node->proceduralParams = {energy, length, 160.0f, 0.0f};
+  segment.node->config.params0 = {energy, length, 160.0f, 0.0f};
 }
 
 void DeflektorishScene::hideSegment(BeamSegment &segment) {
@@ -551,7 +567,7 @@ void DeflektorishScene::hideSegment(BeamSegment &segment) {
   segment.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
   segment.node->setLocalScale({0.001f, 0.001f, 1.0f});
   segment.energy = 0.0f;
-  segment.node->proceduralParams = {0.0f, 0.0f, 0.0f, 0.0f};
+  segment.node->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
 }
 
 void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
@@ -566,7 +582,7 @@ void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
   sourceLoadTarget_ = load / 3.0f;
   sourceLoad_ = approach(sourceLoad_, sourceLoadTarget_, dt * 8.0f);
   if (source_ != nullptr) {
-    source_->proceduralParams = {elapsed_, sourcePulse_, sourceLoad_, 0.0f};
+    source_->config.params0 = {elapsed_, sourcePulse_, sourceLoad_, 0.0f};
   }
 }
 
@@ -577,7 +593,7 @@ void DeflektorishScene::updateReflektorVisuals(float dt,
     const float target = result.activeReflektors[i] ? 1.0f : 0.0f;
     reflektor.glow = approach(reflektor.glow, target, dt * kReflektorGlowSpeed);
     if (reflektor.node != nullptr) {
-      reflektor.node->proceduralParams = {
+      reflektor.node->config.params0 = {
           reflektor.glow, reflektor.automatic ? 1.0f : 0.0f,
           selectedReflektor_ == static_cast<int>(i) ? 1.0f : 0.0f,
           result.reflektorEnergy[i] / 3.0f};
@@ -596,7 +612,7 @@ void DeflektorishScene::updateBlockerVisuals(float dt,
       blocker.hitPoint = result.blockerHit[i];
     }
     if (blocker.node != nullptr) {
-      blocker.node->proceduralParams = {blocker.glow, blocker.energy,
+      blocker.node->config.params0 = {blocker.glow, blocker.energy,
                                         blocker.hitPoint.x, blocker.hitPoint.y};
     }
   }
@@ -633,7 +649,7 @@ void DeflektorishScene::updateTargets(float dt, const BeamResult &result) {
       target.node->setLocalScale({13.0f * kPixelToWorld * (1.0f + swell),
                                   13.0f * kPixelToWorld * (1.0f + swell),
                                   1.0f});
-      target.node->proceduralParams = {elapsed_ * 1.8f, target.phase,
+      target.node->config.params0 = {elapsed_ * 1.8f, target.phase,
                                        target.hitFlash, 0.0f};
     }
   }
@@ -672,10 +688,10 @@ void DeflektorishScene::updateExplosions(float dt) {
       explosion.active = false;
       explosion.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
       explosion.node->setLocalScale({0.001f, 0.001f, 1.0f});
-      explosion.node->proceduralParams = {1.0f, 0.0f, explosion.seed, 1.55f};
+      explosion.node->config.params0 = {1.0f, 0.0f, explosion.seed, 1.55f};
       continue;
     }
-    explosion.node->proceduralParams = {
+    explosion.node->config.params0 = {
         amount, explosion.energy / 3.0f, explosion.seed, 1.55f};
   }
 }

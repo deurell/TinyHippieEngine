@@ -1,10 +1,10 @@
 #pragma once
 
 #include "cameranode.h"
-#include "planenode.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
+#include "shaderplanenode.h"
 #include <functional>
 #include <glm/glm.hpp>
 #include <string_view>
@@ -29,7 +29,7 @@ public:
 
 private:
   struct BeamSegment {
-    PlaneNode *node = nullptr;
+    DL::ShaderPlaneNode *node = nullptr;
     float energy = 0.0f;
   };
 
@@ -39,7 +39,7 @@ private:
     bool automatic = false;
     float speed = 0.0f;
     float glow = 0.0f;
-    PlaneNode *node = nullptr;
+    DL::ShaderPlaneNode *node = nullptr;
   };
 
   struct Target {
@@ -49,7 +49,7 @@ private:
     float hitEnergy = 0.0f;
     float hitFlash = 0.0f;
     float phase = 0.0f;
-    PlaneNode *node = nullptr;
+    DL::ShaderPlaneNode *node = nullptr;
   };
 
   struct Blocker {
@@ -58,11 +58,11 @@ private:
     float glow = 0.0f;
     float energy = 0.0f;
     glm::vec2 hitPoint{0.0f};
-    PlaneNode *node = nullptr;
+    DL::ShaderPlaneNode *node = nullptr;
   };
 
   struct Explosion {
-    PlaneNode *node = nullptr;
+    DL::ShaderPlaneNode *node = nullptr;
     bool active = false;
     glm::vec2 position{0.0f};
     float time = 0.0f;
@@ -82,9 +82,11 @@ private:
     std::vector<float> targetEnergy;
   };
 
-  PlaneNode *addPlane(std::string name, PlaneNode::PlaneType type,
-                      glm::vec2 position, glm::vec2 halfSize, int renderLayer,
-                      float z = 0.0f, float rotationRadians = 0.0f);
+  DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
+                                      DL::BlendMode blendMode,
+                                      glm::vec2 position, glm::vec2 halfSize,
+                                      int renderLayer, float z = 0.0f,
+                                      float rotationRadians = 0.0f);
   void createCameraNode();
   void addBackground();
   void spawnLevel();
@@ -120,8 +122,8 @@ private:
   std::vector<Target> targets_;
   std::vector<Blocker> blockers_;
   std::vector<Explosion> explosions_;
-  PlaneNode *source_ = nullptr;
-  PlaneNode *selection_ = nullptr;
+  DL::ShaderPlaneNode *source_ = nullptr;
+  DL::ShaderPlaneNode *selection_ = nullptr;
   int selectedReflektor_ = -1;
   bool previousFireDown_ = false;
   bool previousSelectNextDown_ = false;

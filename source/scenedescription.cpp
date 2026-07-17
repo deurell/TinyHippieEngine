@@ -8,6 +8,7 @@
 #include "particlesystemnode.h"
 #include "phongshapenode.h"
 #include "planenode.h"
+#include "shaderplanenode.h"
 #include "spriteanimationnode.h"
 #include "spritebatchnode.h"
 #include "spritenode.h"
@@ -636,6 +637,21 @@ parseSpriteAnimation(const JsonValue::Object &object) {
   return animation;
 }
 
+SceneShaderPlaneDescription parseShaderPlane(const JsonValue::Object &object) {
+  SceneShaderPlaneDescription description;
+  description.vertexShader =
+      stringOr(object, "vertexShader", description.vertexShader);
+  description.fragmentShader =
+      stringOr(object, "fragmentShader", description.fragmentShader);
+  description.blendMode = stringOr(object, "blendMode", description.blendMode);
+  description.depthTest = boolOr(object, "depthTest", description.depthTest);
+  description.proceduralStyle =
+      intOr(object, "proceduralStyle", description.proceduralStyle);
+  description.params0 = vec4Or(object, "params0", description.params0);
+  description.params1 = vec4Or(object, "params1", description.params1);
+  return description;
+}
+
 SceneNodeDescription parseNodeDescription(const JsonValue &value) {
   const auto &object = asObject(value, "node");
 
@@ -728,6 +744,11 @@ SceneNodeDescription parseNodeDescription(const JsonValue &value) {
         parseSpriteAnimation(asObject(*spriteAnimation, "spriteAnimation"));
   }
 
+  if (const auto *shaderPlane = find(object, "shaderPlane")) {
+    description.shaderPlane =
+        parseShaderPlane(asObject(*shaderPlane, "shaderPlane"));
+  }
+
   if (const auto *children = find(object, "children")) {
     for (const auto &child : asArray(*children, "children")) {
       description.children.push_back(parseNodeDescription(child));
@@ -760,33 +781,6 @@ PlaneNode::PlaneType parsePlaneType(std::string_view value) {
   }
   if (value == "Spinner") {
     return PlaneNode::PlaneType::Spinner;
-  }
-  if (value == "DeflektorBeam") {
-    return PlaneNode::PlaneType::DeflektorBeam;
-  }
-  if (value == "DeflektorSource") {
-    return PlaneNode::PlaneType::DeflektorSource;
-  }
-  if (value == "DeflektorTarget") {
-    return PlaneNode::PlaneType::DeflektorTarget;
-  }
-  if (value == "DeflektorBlocker") {
-    return PlaneNode::PlaneType::DeflektorBlocker;
-  }
-  if (value == "DeflektorReflectiveBlock") {
-    return PlaneNode::PlaneType::DeflektorReflectiveBlock;
-  }
-  if (value == "DeflektorReflectorManual") {
-    return PlaneNode::PlaneType::DeflektorReflectorManual;
-  }
-  if (value == "DeflektorReflectorAuto") {
-    return PlaneNode::PlaneType::DeflektorReflectorAuto;
-  }
-  if (value == "DeflektorSelection") {
-    return PlaneNode::PlaneType::DeflektorSelection;
-  }
-  if (value == "DeflektorExplosion") {
-    return PlaneNode::PlaneType::DeflektorExplosion;
   }
   throw std::runtime_error("unknown PlaneNode plane value: " +
                            std::string(value));
@@ -864,6 +858,19 @@ TextAnchor parseTextAnchor(std::string_view value) {
   }
   throw std::runtime_error("unknown TextNode anchor value: " +
                            std::string(value));
+}
+
+BlendMode parseBlendMode(std::string_view value) {
+  if (value == "Opaque") {
+    return BlendMode::Opaque;
+  }
+  if (value == "Alpha") {
+    return BlendMode::Alpha;
+  }
+  if (value == "Additive") {
+    return BlendMode::Additive;
+  }
+  throw std::runtime_error("unknown blend mode value: " + std::string(value));
 }
 
 std::unique_ptr<SceneNode> buildPlainNode(
@@ -1041,6 +1048,23 @@ std::unique_ptr<SceneNode> buildPlaneNode(
   return node;
 }
 
+std::unique_ptr<SceneNode> buildShaderPlaneNode(
+    const SceneNodeDescription &description, SceneBuilderContext context,
+    SceneNode *parent) {
+  ShaderPlaneNode::Config config;
+  config.vertexShader = description.shaderPlane.vertexShader;
+  config.fragmentShader = description.shaderPlane.fragmentShader;
+  config.blendMode = parseBlendMode(description.shaderPlane.blendMode);
+  config.depthTest = description.shaderPlane.depthTest;
+  config.proceduralStyle = description.shaderPlane.proceduralStyle;
+  config.color = description.color;
+  config.params0 = description.shaderPlane.params0;
+  config.params1 = description.shaderPlane.params1;
+  return std::make_unique<ShaderPlaneNode>(
+      std::move(config), parent, context.camera, context.renderDevice,
+      context.renderResourceCache);
+}
+
 std::unique_ptr<SceneNode> buildPhongShapeNode(
     const SceneNodeDescription &description, SceneBuilderContext context,
     SceneNode *parent) {
@@ -1095,6 +1119,7 @@ SceneNodeFactory createDefaultSceneNodeFactory() {
   factory.registerNodeType("TextNode", buildTextNode);
   factory.registerNodeType("TileMapNode", buildTileMapNode);
   factory.registerNodeType("PlaneNode", buildPlaneNode);
+  factory.registerNodeType("ShaderPlaneNode", buildShaderPlaneNode);
   factory.registerNodeType("PhongShapeNode", buildPhongShapeNode);
   factory.registerNodeType("ParticleSystemNode", buildParticleSystemNode);
   return factory;

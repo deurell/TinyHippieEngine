@@ -24,6 +24,7 @@ NODE_TYPES = {
     "TextNode",
     "TileMapNode",
     "PlaneNode",
+    "ShaderPlaneNode",
     "PhongShapeNode",
     "ParticleSystemNode",
 }
@@ -67,6 +68,7 @@ NODE_FIELDS = {
     "tileMap",
     "spriteBatch",
     "spriteAnimation",
+    "shaderPlane",
 }
 
 TRANSFORM_FIELDS = {"position", "rotationEuler", "scale"}
@@ -130,6 +132,15 @@ SPRITE_BATCH_ITEM_FIELDS = {
     "flipDiagonal",
 }
 SPRITE_ANIMATION_FIELDS = {"fps", "playing", "looping", "frames"}
+SHADER_PLANE_FIELDS = {
+    "vertexShader",
+    "fragmentShader",
+    "blendMode",
+    "depthTest",
+    "proceduralStyle",
+    "params0",
+    "params1",
+}
 
 ALIGNMENTS = {"Left", "Center", "Right"}
 ANCHORS = {
@@ -148,18 +159,10 @@ LIGHT_KINDS = {"Directional"}
 PLANE_TYPES = {
     "Simple",
     "Spinner",
-    "DeflektorBeam",
-    "DeflektorSource",
-    "DeflektorTarget",
-    "DeflektorBlocker",
-    "DeflektorReflectiveBlock",
-    "DeflektorReflectorManual",
-    "DeflektorReflectorAuto",
-    "DeflektorSelection",
-    "DeflektorExplosion",
 }
 SHAPE_TYPES = {"Cube", "Sphere", "Cylinder"}
 PARTICLE_PRESETS = {"Default", "SoftGlowBurst", "WaterFountain"}
+BLEND_MODES = {"Opaque", "Alpha", "Additive"}
 
 FLIP_MASK = 0x80000000 | 0x40000000 | 0x20000000
 
@@ -283,6 +286,7 @@ class Validator:
         self.validate_tile_map(node, path)
         self.validate_sprite_batch(node, path)
         self.validate_sprite_animation(node, path)
+        self.validate_shader_plane(node, path)
 
     def validate_payload_for_type(self, node: dict[str, Any], node_type: str, path: str) -> None:
         if node_type == "MeshNode":
@@ -310,6 +314,9 @@ class Validator:
         elif node_type == "Light2DNode":
             if "light2D" not in node:
                 self.error(f"{path}.light2D", "Light2DNode requires light2D")
+        elif node_type == "ShaderPlaneNode":
+            if "shaderPlane" not in node:
+                self.error(f"{path}.shaderPlane", "ShaderPlaneNode requires shaderPlane")
 
     def validate_named_object(
         self, node: dict[str, Any], key: str, allowed: set[str], path: str
@@ -450,6 +457,20 @@ class Validator:
         for index, frame in enumerate(frames):
             self.check_vec_value(frame, 4, f"{path}.spriteAnimation.frames[{index}]")
             self.check_source_rect(frame, f"{path}.spriteAnimation.frames[{index}]")
+
+    def validate_shader_plane(self, node: dict[str, Any], path: str) -> None:
+        shader_plane = self.validate_named_object(
+            node, "shaderPlane", SHADER_PLANE_FIELDS, path
+        )
+        if shader_plane is None:
+            return
+        self.require_asset_string(shader_plane, "vertexShader", f"{path}.shaderPlane.vertexShader")
+        self.require_asset_string(shader_plane, "fragmentShader", f"{path}.shaderPlane.fragmentShader")
+        self.check_enum(shader_plane, "blendMode", BLEND_MODES, f"{path}.shaderPlane.blendMode")
+        self.check_bool(shader_plane, "depthTest", f"{path}.shaderPlane.depthTest")
+        self.check_int(shader_plane, "proceduralStyle", f"{path}.shaderPlane.proceduralStyle")
+        self.check_vec(shader_plane, "params0", 4, f"{path}.shaderPlane.params0")
+        self.check_vec(shader_plane, "params1", 4, f"{path}.shaderPlane.params1")
 
     def check_unknown(self, path: str, obj: dict[str, Any], allowed: set[str]) -> None:
         for key in sorted(obj.keys() - allowed):

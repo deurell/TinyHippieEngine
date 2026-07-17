@@ -32,14 +32,16 @@ Precedence:
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
   `LightNode`, `Light2DNode`, `SpriteNode`, `SpriteAnimationNode`,
   `SpriteBatchNode`, `FogOverlayNode`, `TextNode`, `TileMapNode`,
-  `PlaneNode`, `PhongShapeNode`, and
+  `PlaneNode`, `ShaderPlaneNode`, `PhongShapeNode`, and
   `ParticleSystemNode`; `CameraNode` supports authored perspective or
   orthographic projection, `LightNode` provides one forward directional light
   for lit render components, `Light2DNode` provides additive 2D glows, `SpriteNode`
   supports atlas `sourceRect`, `flipX`, `flipY`, and `flipDiagonal`,
   `SpriteAnimationNode` advances atlas frames in `fixedUpdate()`,
   `SpriteBatchNode` batches many static atlas sprites from one image, and
-  `FogOverlayNode` renders scrolling transparent mist/cloud overlays.
+  `FogOverlayNode` renders scrolling transparent mist/cloud overlays, and
+  `ShaderPlaneNode` renders authored shader-driven quads with explicit blend,
+  depth, and vec4 parameter buckets.
 - Scene JSON authoring is validated with `scripts/tiny_hippie_validate.py`;
   it checks known fields, node types, required node payloads, enum values,
   tilemap/atlas invariants, and referenced asset paths.

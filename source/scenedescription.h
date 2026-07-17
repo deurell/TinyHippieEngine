@@ -70,6 +70,16 @@ struct SceneSpriteAnimationDescription {
   bool looping = true;
 };
 
+struct SceneShaderPlaneDescription {
+  std::string vertexShader = "Shaders/simple.vert";
+  std::string fragmentShader = "Shaders/simple.frag";
+  std::string blendMode = "Alpha";
+  bool depthTest = false;
+  int proceduralStyle = 0;
+  glm::vec4 params0{0.0f};
+  glm::vec4 params1{0.0f};
+};
+
 struct SceneNodeDescription {
   std::string name = "node";
   std::string type = "SceneNode";
@@ -108,6 +118,7 @@ struct SceneNodeDescription {
   SpriteBatchConfig spriteBatch;
   TileMapConfig tileMap;
   SceneSpriteAnimationDescription spriteAnimation;
+  SceneShaderPlaneDescription shaderPlane;
   std::optional<SceneAnimationDescription> animation;
   std::vector<SceneNodeDescription> children;
 };

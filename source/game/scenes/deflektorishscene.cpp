@@ -29,6 +29,7 @@ constexpr float kShakeStrength = 6.0f;
 constexpr float kShakeMaxStrength = 18.0f;
 constexpr float kShakeDecay = 1.65f;
 constexpr float kShakeKickDecay = 28.0f;
+constexpr float kOrthographicHeight = 7.1f;
 constexpr int kStyleBeam = 1;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
@@ -149,7 +150,7 @@ void DeflektorishScene::createCameraNode() {
   node->setDebugName("main_camera");
   node->setActive(true);
   node->setProjection(DL::CameraProjection::Orthographic);
-  node->setOrthographicHeight(7.1f);
+  node->setOrthographicHeight(kOrthographicHeight);
   node->setLocalPosition({0.0f, 0.0f, 10.5f});
   node->setLookAtTarget({0.0f, 0.0f, 0.0f});
   cameraNode_ = node.get();
@@ -168,7 +169,7 @@ void DeflektorishScene::addBackground() {
   back->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
   back->setRenderLayer(-30);
   back->setLocalPosition({0.0f, 0.0f, -0.08f});
-  back->setLocalScale({4.96f, 3.36f, 1.0f});
+  back->setLocalScale({6.8f, 4.8f, 1.0f});
   addChild(std::move(back));
 
   auto field = std::make_unique<DL::ShaderPlaneNode>(
@@ -178,7 +179,7 @@ void DeflektorishScene::addBackground() {
   field->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
   field->setRenderLayer(-25);
   field->setLocalPosition({0.0f, 0.0f, -0.07f});
-  field->setLocalScale({4.8f, 3.2f, 1.0f});
+  field->setLocalScale({5.4f, 3.8f, 1.0f});
   addChild(std::move(field));
 }
 

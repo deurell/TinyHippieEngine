@@ -41,8 +41,8 @@ vec2 curveUv(vec2 uv, vec2 textureSizePixels) {
     p.x *= aspect;
 
     vec2 curved = p;
-    curved.x *= 1.0 + pow(abs(p.y), 2.0) * 0.045;
-    curved.y *= 1.0 + pow(abs(p.x), 2.0) * 0.045;
+    curved.x *= 1.0 + p.y * p.y * 0.045;
+    curved.y *= 1.0 + p.x * p.x * 0.045;
     curved.x /= aspect;
     curved = curved * 0.5 + 0.5;
 
@@ -99,11 +99,14 @@ void main() {
         return;
     }
 
-    float wobble =
-        sin(0.3 * iTime + uv.y * 21.0) *
-        sin(0.7 * iTime + uv.y * 29.0) *
-        sin(0.3 + 0.33 * iTime + uv.y * 31.0) *
-        crtWobbleStrength;
+    float wobble = 0.0;
+    if (abs(crtWobbleStrength) > 0.000001) {
+        wobble =
+            sin(0.3 * iTime + uv.y * 21.0) *
+            sin(0.7 * iTime + uv.y * 29.0) *
+            sin(0.3 + 0.33 * iTime + uv.y * 31.0) *
+            crtWobbleStrength;
+    }
 
     vec2 sampleUv = saturate(vec2(uv.x + wobble, uv.y));
     float chromaticPixels = min(max(crtChromaticStrength, 0.0), 2.0);

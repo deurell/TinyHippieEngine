@@ -11,36 +11,35 @@ uniform vec4 bump2;
 
 out vec4 FragColor;
 
-vec2 bumpOffset(vec2 uv, vec4 bump) {
+vec3 bumpSample(vec2 uv, vec4 bump) {
     vec2 center = bump.xy;
     float age = clamp(bump.z, 0.0, 1.0);
     float strength = bump.w;
+    if (strength <= 0.0 || age >= 1.0) {
+        return vec3(0.0);
+    }
+
     vec2 delta = uv - center;
-    float dist = length(delta);
+    float distSq = dot(delta, delta);
+    float dist = sqrt(max(distSq, 0.00000001));
     float radius = mix(0.03, 0.88, age);
     float softWidth = mix(0.31, 0.23, age);
-    float wave = 1.0 - smoothstep(0.0, softWidth, abs(dist - radius));
-    wave = wave * wave * (3.0 - 2.0 * wave);
+    float ringWave = 1.0 - smoothstep(0.0, softWidth, abs(dist - radius));
+    ringWave = ringWave * ringWave * (3.0 - 2.0 * ringWave);
     float fade = (1.0 - age) * (1.0 - age) * (1.0 - age * 0.35);
-    vec2 dir = delta / max(dist, 0.0001);
-    return dir * wave * fade * strength * 0.52;
-}
-
-float bumpWave(vec2 uv, vec4 bump) {
-    vec2 center = bump.xy;
-    float age = clamp(bump.z, 0.0, 1.0);
-    float dist = length(uv - center);
-    float radius = mix(0.03, 0.88, age);
     float glow = 1.0 - smoothstep(0.0, mix(0.36, 0.25, age), abs(dist - radius));
     float centerFlash = 1.0 - smoothstep(0.0, mix(0.34, 0.12, age), dist);
-    float fade = (1.0 - age) * (1.0 - age) * (1.0 - age * 0.35);
-    return (glow * 1.10 + centerFlash * 0.20) * fade * bump.w;
+    float wave = (glow * 1.10 + centerFlash * 0.20) * fade * strength;
+    vec2 dir = delta / dist;
+    return vec3(dir * ringWave * fade * strength * 0.52, wave);
 }
 
 void main() {
     vec2 uv = TexCoord;
-    vec2 offset = bumpOffset(uv, bump1) + bumpOffset(uv, bump2);
-    float wave = bumpWave(uv, bump1) + bumpWave(uv, bump2);
+    vec3 bumpA = bumpSample(uv, bump1);
+    vec3 bumpB = bumpSample(uv, bump2);
+    vec2 offset = bumpA.xy + bumpB.xy;
+    float wave = bumpA.z + bumpB.z;
 
     vec2 sampleUv = clamp(uv - offset, vec2(0.001), vec2(0.999));
     vec4 color = texture(texture0, sampleUv);

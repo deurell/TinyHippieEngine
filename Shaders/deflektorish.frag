@@ -15,6 +15,10 @@ float ring(float d, float radius, float width) {
     return 1.0 - smoothstep(0.0, width, abs(d - radius));
 }
 
+float softDiskSq(vec2 p, float radius) {
+    return 1.0 - smoothstep(0.0, radius * radius, dot(p, p));
+}
+
 float electroNoise(vec2 p, float t) {
     float n = 0.0;
     n += sin(p.x * 11.0 + t * 1.4) * 0.50;
@@ -134,13 +138,13 @@ vec4 shadeBlocker(vec2 uv, bool reflective) {
     float energy = clamp(proceduralParams.y, 0.0, 1.0);
     vec2 hitPoint = proceduralParams.zw;
     vec3 beamColor = mix(vec3(0.55, 0.92, 1.0), vec3(1.0, 0.45, 0.92), energy * 0.65);
-    float hitDistance = length(p - hitPoint);
+    vec2 hitDelta = p - hitPoint;
+    float hitDistanceSq = dot(hitDelta, hitDelta);
     vec2 hitDir = normalize(hitPoint + vec2(0.0001));
-    vec2 fromHit = p - hitPoint;
-    float alongHit = max(dot(fromHit, -hitDir), 0.0);
-    float acrossHit = abs(fromHit.x * hitDir.y - fromHit.y * hitDir.x);
-    float localBloom = (1.0 - smoothstep(0.0, 1.72, hitDistance)) * glow * box;
-    float localCore = (1.0 - smoothstep(0.0, 0.48, hitDistance)) * glow * inner;
+    float alongHit = max(dot(hitDelta, -hitDir), 0.0);
+    float acrossHit = abs(hitDelta.x * hitDir.y - hitDelta.y * hitDir.x);
+    float localBloom = (1.0 - smoothstep(0.0, 1.72 * 1.72, hitDistanceSq)) * glow * box;
+    float localCore = (1.0 - smoothstep(0.0, 0.48 * 0.48, hitDistanceSq)) * glow * inner;
     float impactStreak = (1.0 - smoothstep(0.0, 1.45, alongHit)) *
                          (1.0 - smoothstep(0.0, 0.38, acrossHit)) * glow * inner;
     color += beamColor * glow * box * (0.34 + energy * 0.22);
@@ -221,16 +225,18 @@ vec4 shadePortal(vec2 uv) {
     float outer = ring(d, 0.63 + pulse * 0.026 + portalActive * 0.035,
                        0.105 + portalActive * 0.030);
     float inner = ring(d, 0.36 - pulse * 0.018, 0.085 + portalActive * 0.020);
-    float aperture = 1.0 - smoothstep(0.0, 0.34 + portalActive * 0.10, d);
-    float halo = 1.0 - smoothstep(0.0, 0.92 + portalActive * 0.10, d);
+    float aperture = softDiskSq(p, 0.34 + portalActive * 0.10);
+    float halo = softDiskSq(p, 0.92 + portalActive * 0.10);
     float crescent = smoothstep(0.16, 0.95, dot(dir, axis)) *
                      (1.0 - smoothstep(0.25, 0.78, d)) *
                      (0.35 + portalActive * 0.65);
     float softMouth = 1.0 - smoothstep(0.0, 0.58 + portalActive * 0.08,
                                        length(p * vec2(0.82, 1.10)));
     vec2 hitDir = normalize(hitPoint + vec2(0.0001));
-    float sideLight = pow(max(dot(dir, hitDir), 0.0), 5.0) * portalActive;
-    float sideGlow = pow(max(dot(dir, hitDir), 0.0), 2.2) * portalActive;
+    float sideDot = max(dot(dir, hitDir), 0.0);
+    float sideDot2 = sideDot * sideDot;
+    float sideLight = sideDot2 * sideDot2 * sideDot * portalActive;
+    float sideGlow = sideDot2 * portalActive;
     float rimBand = ring(d, 0.62, 0.22);
     float innerSide = (1.0 - smoothstep(0.18, 0.68, d)) * sideGlow;
     float circularMask = 1.0 - smoothstep(0.82, 0.98, d);
@@ -255,6 +261,48 @@ vec4 shadePortal(vec2 uv) {
                         aperture * portalActive * 0.30 +
                         crescent * 0.12 + sideWash * 0.14 +
                         rimImpact * 0.34 + innerSide * 0.16,
+                        0.0, 1.0);
+    return vec4(color, alpha);
+}
+
+vec4 shadeFilter(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    vec2 ap = abs(p);
+    float passGlow = clamp(proceduralParams.x, 0.0, 1.0);
+    float blockGlow = clamp(proceduralParams.y, 0.0, 1.0);
+    vec2 hitPoint = proceduralParams.zw;
+    float box = 1.0 - smoothstep(0.86, 0.96, max(ap.x, ap.y));
+    float frame = max(smoothstep(0.70, 0.82, ap.x),
+                      smoothstep(0.70, 0.82, ap.y)) * box;
+    float depth = (1.0 - smoothstep(0.0, 1.05, length(p * vec2(0.95, 1.10)))) * box;
+    float gateLineA = 1.0 - smoothstep(0.018, 0.055, abs(p.y - 0.44));
+    float gateLineB = 1.0 - smoothstep(0.018, 0.055, abs(p.y - 0.22));
+    float gateLineC = 1.0 - smoothstep(0.018, 0.055, abs(p.y));
+    float gateLineD = 1.0 - smoothstep(0.018, 0.055, abs(p.y + 0.22));
+    float gateLineE = 1.0 - smoothstep(0.018, 0.055, abs(p.y + 0.44));
+    float lines = max(gateLineA, max(gateLineB, max(gateLineC, max(gateLineD, gateLineE)))) *
+                  (1.0 - smoothstep(0.78, 0.92, abs(p.x))) * box;
+    float slit = (1.0 - smoothstep(0.0, 0.20 + passGlow * 0.12, abs(p.y))) *
+                 (1.0 - smoothstep(0.78, 0.96, abs(p.x))) * passGlow;
+    vec2 hitDelta = p - hitPoint;
+    float hitDistanceSq = dot(hitDelta, hitDelta);
+    float hitBloom = (1.0 - smoothstep(0.0, 1.42 * 1.42, hitDistanceSq)) * blockGlow * box;
+    float hitCore = (1.0 - smoothstep(0.0, 0.40 * 0.40, hitDistanceSq)) * blockGlow * box;
+    vec3 frameColor = vec3(0.12, 0.16, 0.20);
+    vec3 lineColor = vec3(0.54, 0.74, 0.82);
+    vec3 passColor = vec3(0.50, 0.94, 1.0);
+    vec3 blockColor = vec3(1.0, 0.45, 0.22);
+    vec3 color = frameColor * box * (0.52 + depth * 0.28);
+    color += vec3(0.36, 0.46, 0.54) * frame;
+    color += lineColor * lines * (0.56 + passGlow * 0.46);
+    color += passColor * slit * (0.55 + passGlow * 0.72);
+    color += passColor * lines * passGlow * 0.48;
+    color += blockColor * hitBloom * 1.05;
+    color += vec3(1.0, 0.74, 0.36) * hitBloom * 0.42;
+    color += vec3(1.0, 0.92, 0.78) * hitCore * 1.72;
+    color += vec3(1.0) * frame * (passGlow * 0.14 + blockGlow * 0.28);
+    float alpha = clamp(box * 0.82 + lines * 0.18 + passGlow * slit * 0.22 +
+                        hitBloom * 0.38 + hitCore * 0.46,
                         0.0, 1.0);
     return vec4(color, alpha);
 }
@@ -344,6 +392,8 @@ void main() {
         color = shadeExplosion(TexCoord);
     } else if (proceduralStyle == 10) {
         color = shadePortal(TexCoord);
+    } else if (proceduralStyle == 11) {
+        color = shadeFilter(TexCoord);
     }
 
     color *= vec4(baseColor.rgb, 1.0);

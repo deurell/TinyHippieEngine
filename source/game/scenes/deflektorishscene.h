@@ -83,6 +83,17 @@ private:
     DL::ShaderPlaneNode *exitNode = nullptr;
   };
 
+  struct Filter {
+    glm::vec2 position{0.0f};
+    float angle = 0.0f;
+    bool automatic = false;
+    float speed = 0.0f;
+    float passGlow = 0.0f;
+    float blockGlow = 0.0f;
+    glm::vec2 hitPoint{0.0f};
+    DL::ShaderPlaneNode *node = nullptr;
+  };
+
   struct BeamResult {
     std::vector<bool> activeReflektors;
     std::vector<float> reflektorEnergy;
@@ -96,6 +107,10 @@ private:
     std::vector<glm::vec2> portalEntryHit;
     std::vector<glm::vec2> portalExitHit;
     std::vector<bool> portalHasHit;
+    std::vector<bool> passingFilters;
+    std::vector<bool> blockedFilters;
+    std::vector<glm::vec2> filterHit;
+    std::vector<bool> filterHasHit;
   };
 
   DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
@@ -108,12 +123,14 @@ private:
   void spawnLevel();
   void updateInput(const DL::FrameContext &ctx);
   void updateReflektors(float dt);
+  void updateFilters(float dt);
   void updateSelection(float dt);
   BeamResult solveBeam();
   void updateSource(float dt, const BeamResult &result);
   void updateReflektorVisuals(float dt, const BeamResult &result);
   void updateBlockerVisuals(float dt, const BeamResult &result);
   void updatePortalVisuals(float dt, const BeamResult &result);
+  void updateFilterVisuals(float dt, const BeamResult &result);
   void updateTargets(float dt, const BeamResult &result);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
@@ -142,6 +159,7 @@ private:
   std::vector<Blocker> blockers_;
   std::vector<Explosion> explosions_;
   std::vector<Portal> portals_;
+  std::vector<Filter> filters_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   int selectedReflektor_ = -1;

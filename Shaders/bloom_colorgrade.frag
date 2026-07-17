@@ -21,8 +21,8 @@ vec3 brightPart(vec3 color) {
   return color * weight;
 }
 
-vec3 sampleBloom(vec2 texel) {
-  vec3 bloom = brightPart(texture(texture0, TexCoord).rgb) * 0.18;
+vec3 sampleBloom(vec2 texel, vec3 centerColor) {
+  vec3 bloom = brightPart(centerColor) * 0.18;
 
   bloom += brightPart(texture(texture0, TexCoord + texel * vec2(1.5, 0.0)).rgb) * 0.11;
   bloom += brightPart(texture(texture0, TexCoord + texel * vec2(-1.5, 0.0)).rgb) * 0.11;
@@ -47,7 +47,10 @@ void main() {
                    ? vec2(1.0) / screenSize
                    : vec2(0.0);
   vec4 source = texture(texture0, TexCoord);
-  vec3 color = source.rgb + sampleBloom(texel) * bloomIntensity;
+  vec3 color = source.rgb;
+  if (bloomIntensity > 0.001) {
+    color += sampleBloom(texel, source.rgb) * bloomIntensity;
+  }
 
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
   color = mix(vec3(luma), color, colorGradeSaturation);

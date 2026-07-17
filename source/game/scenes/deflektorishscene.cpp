@@ -17,6 +17,8 @@ constexpr float kBeamThicknessPerReflect = 6.0f;
 constexpr float kMirrorLength = 44.0f;
 constexpr float kTargetRadius = 14.0f;
 constexpr float kBlockerHalfSize = 16.0f;
+constexpr float kFilterHalfSize = 17.0f;
+constexpr float kFilterPassHalfAngle = 14.0f * 3.1415926535f / 180.0f;
 constexpr int kMaxBeamSegments = 16;
 constexpr float kBeamRange = 2000.0f;
 constexpr float kEpsilon = 0.001f;
@@ -41,11 +43,18 @@ constexpr int kStyleAutoReflector = 7;
 constexpr int kStyleSelection = 8;
 constexpr int kStyleExplosion = 9;
 constexpr int kStylePortal = 10;
+constexpr int kStyleFilter = 11;
 
 float cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
 glm::vec2 direction(float angle) {
   return {std::cos(angle), std::sin(angle)};
+}
+
+glm::vec2 rotateVec(glm::vec2 value, float angle) {
+  const float c = std::cos(angle);
+  const float s = std::sin(angle);
+  return {value.x * c - value.y * s, value.x * s + value.y * c};
 }
 
 float atan2Vec(glm::vec2 v) { return std::atan2(v.y, v.x); }
@@ -89,6 +98,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateInput(ctx);
   updateCameraShake(ctx.delta_time);
   updateReflektors(ctx.delta_time);
+  updateFilters(ctx.delta_time);
   updateSelection(ctx.delta_time);
 
   BeamResult result = solveBeam();
@@ -96,6 +106,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateReflektorVisuals(ctx.delta_time, result);
   updateBlockerVisuals(ctx.delta_time, result);
   updatePortalVisuals(ctx.delta_time, result);
+  updateFilterVisuals(ctx.delta_time, result);
   updateTargets(ctx.delta_time, result);
   updateExplosions(ctx.delta_time);
 
@@ -276,6 +287,22 @@ void DeflektorishScene::spawnLevel() {
                      portal.exitPosition, {27.0f, 27.0f}, 10, 0.11f);
   portals_.push_back(portal);
 
+  auto addFilter = [&](int x, int y, float degrees, bool automatic,
+                       float speed) {
+    Filter filter;
+    filter.position = grid(x, y);
+    filter.angle = glm::radians(degrees);
+    filter.automatic = automatic;
+    filter.speed = speed;
+    filter.node =
+        addShaderPlane(automatic ? "angle_filter_auto" : "angle_filter",
+                       kStyleFilter, DL::BlendMode::Alpha, filter.position,
+                       {17.0f, 17.0f}, 7, 0.05f, filter.angle);
+    filters_.push_back(filter);
+  };
+  addFilter(12, 10, 90.0f, false, 0.0f);
+  addFilter(12, 13, 90.0f, true, 0.42f);
+
   auto addBlocker = [&](glm::ivec2 coord, bool reflective) {
     Blocker blocker;
     blocker.position = grid(coord.x, coord.y);
@@ -329,9 +356,25 @@ void DeflektorishScene::updateReflektors(float dt) {
   }
 }
 
+void DeflektorishScene::updateFilters(float dt) {
+  for (std::size_t i = 0; i < filters_.size(); ++i) {
+    Filter &filter = filters_[i];
+    if (filter.automatic) {
+      filter.angle += filter.speed * dt;
+    }
+    if (filter.node != nullptr) {
+      filter.node->setLocalRotation(
+          glm::quat(glm::vec3(0.0f, 0.0f, filter.angle)));
+    }
+  }
+}
+
 void DeflektorishScene::updateSelection(float dt) {
   selectionFlash_ = std::max(selectionFlash_ - dt * 4.5f, 0.0f);
-  if (selection_ == nullptr || selectedReflektor_ < 0) {
+  if (selection_ == nullptr) {
+    return;
+  }
+  if (selectedReflektor_ < 0) {
     return;
   }
   const glm::vec2 world = toWorld(reflektors_[selectedReflektor_].position);
@@ -342,13 +385,15 @@ void DeflektorishScene::updateSelection(float dt) {
 namespace {
 
 struct Hit {
-  enum class Type { None, Reflektor, Target, Blocker, Portal };
+  enum class Type { None, Reflektor, Target, Blocker, Portal, Filter };
   Type type = Type::None;
   float distance = std::numeric_limits<float>::max();
+  float exitDistance = std::numeric_limits<float>::max();
   glm::vec2 point{0.0f};
   int index = -1;
   glm::vec2 mirrorDir{0.0f};
   glm::vec2 normal{0.0f};
+  bool passesFilter = false;
 };
 
 bool closer(const Hit &hit, const Hit &nearest) {
@@ -371,6 +416,10 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   result.portalEntryHit.assign(portals_.size(), glm::vec2(0.0f));
   result.portalExitHit.assign(portals_.size(), glm::vec2(0.0f));
   result.portalHasHit.assign(portals_.size(), false);
+  result.passingFilters.assign(filters_.size(), false);
+  result.blockedFilters.assign(filters_.size(), false);
+  result.filterHit.assign(filters_.size(), glm::vec2(0.0f));
+  result.filterHasHit.assign(filters_.size(), false);
 
   glm::vec2 origin = grid(3, 7);
   glm::vec2 visualOrigin = origin;
@@ -378,6 +427,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   int ignoreReflektor = -1;
   int ignoreBlocker = -1;
   int ignorePortal = -1;
+  int ignoreFilter = -1;
   float energy = 0.0f;
 
   for (BeamSegment &segment : segments_) {
@@ -478,6 +528,58 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       }
     }
 
+    for (std::size_t i = 0; i < filters_.size(); ++i) {
+      if (static_cast<int>(i) == ignoreFilter) {
+        continue;
+      }
+      const Filter &filter = filters_[i];
+      const float minX = filter.position.x - kFilterHalfSize;
+      const float maxX = filter.position.x + kFilterHalfSize;
+      const float minY = filter.position.y - kFilterHalfSize;
+      const float maxY = filter.position.y + kFilterHalfSize;
+      float tMin = -1000000.0f;
+      float tMax = 1000000.0f;
+
+      if (std::abs(rayDir.x) < kEpsilon) {
+        if (origin.x < minX || origin.x > maxX) {
+          continue;
+        }
+      } else {
+        const float tx1 = (minX - origin.x) / rayDir.x;
+        const float tx2 = (maxX - origin.x) / rayDir.x;
+        tMin = std::max(tMin, std::min(tx1, tx2));
+        tMax = std::min(tMax, std::max(tx1, tx2));
+      }
+
+      if (std::abs(rayDir.y) < kEpsilon) {
+        if (origin.y < minY || origin.y > maxY) {
+          continue;
+        }
+      } else {
+        const float ty1 = (minY - origin.y) / rayDir.y;
+        const float ty2 = (maxY - origin.y) / rayDir.y;
+        tMin = std::max(tMin, std::min(ty1, ty2));
+        tMax = std::min(tMax, std::max(ty1, ty2));
+      }
+
+      if (tMax < tMin || tMax <= kEpsilon) {
+        continue;
+      }
+
+      const glm::vec2 filterDir = direction(filter.angle);
+      const float alignment = std::abs(glm::dot(rayDir, filterDir));
+      Hit hit;
+      hit.type = Hit::Type::Filter;
+      hit.distance = std::max(tMin, kEpsilon);
+      hit.exitDistance = std::max(tMax, hit.distance);
+      hit.point = origin + rayDir * hit.distance;
+      hit.index = static_cast<int>(i);
+      hit.passesFilter = alignment >= std::cos(kFilterPassHalfAngle);
+      if (closer(hit, nearest)) {
+        nearest = hit;
+      }
+    }
+
     for (std::size_t i = 0; i < blockers_.size(); ++i) {
       if (static_cast<int>(i) == ignoreBlocker) {
         continue;
@@ -550,6 +652,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       ignoreReflektor = nearest.index;
       ignoreBlocker = -1;
       ignorePortal = -1;
+      ignoreFilter = -1;
       energy = std::min(energy + 1.0f, 3.0f);
     } else if (nearest.type == Hit::Type::Target) {
       layoutSegment(segment, visualOrigin, nearest.point, energy);
@@ -577,6 +680,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
         ignoreReflektor = -1;
         ignoreBlocker = nearest.index;
         ignorePortal = -1;
+        ignoreFilter = -1;
       } else {
         for (BeamSegment &remaining : segments_) {
           if (&remaining > &segment) {
@@ -598,6 +702,34 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       ignoreReflektor = -1;
       ignoreBlocker = -1;
       ignorePortal = nearest.index;
+      ignoreFilter = -1;
+    } else if (nearest.type == Hit::Type::Filter) {
+      Filter &filter = filters_[nearest.index];
+      const glm::vec2 localHit =
+          rotateVec(nearest.point - filter.position, -filter.angle);
+      result.filterHit[nearest.index] =
+          localHit / kFilterHalfSize;
+      result.filterHasHit[nearest.index] = true;
+      if (nearest.passesFilter) {
+        const glm::vec2 exitPoint = origin + rayDir * nearest.exitDistance;
+        layoutSegment(segment, visualOrigin, exitPoint, energy);
+        result.passingFilters[nearest.index] = true;
+        origin = exitPoint + rayDir * kHitGap;
+        visualOrigin = exitPoint;
+        ignoreReflektor = -1;
+        ignoreBlocker = -1;
+        ignorePortal = -1;
+        ignoreFilter = nearest.index;
+      } else {
+        layoutSegment(segment, visualOrigin, nearest.point, energy);
+        result.blockedFilters[nearest.index] = true;
+        for (BeamSegment &remaining : segments_) {
+          if (&remaining > &segment) {
+            hideSegment(remaining);
+          }
+        }
+        return result;
+      }
     } else {
       layoutSegment(segment, visualOrigin, visualOrigin + rayDir * kBeamRange,
                     energy);
@@ -760,6 +892,24 @@ void DeflektorishScene::updatePortalVisuals(float dt,
       portal.exitNode->config.params0 = exitParams;
       portal.exitNode->config.params1 = {portal.exitHitPoint.x,
                                          portal.exitHitPoint.y, 0.0f, 0.0f};
+    }
+  }
+}
+
+void DeflektorishScene::updateFilterVisuals(float dt,
+                                            const BeamResult &result) {
+  for (std::size_t i = 0; i < filters_.size(); ++i) {
+    Filter &filter = filters_[i];
+    const float passTarget = result.passingFilters[i] ? 1.0f : 0.0f;
+    const float blockTarget = result.blockedFilters[i] ? 1.0f : 0.0f;
+    filter.passGlow = approach(filter.passGlow, passTarget, dt * 12.0f);
+    filter.blockGlow = approach(filter.blockGlow, blockTarget, dt * 14.0f);
+    if (result.filterHasHit[i]) {
+      filter.hitPoint = result.filterHit[i];
+    }
+    if (filter.node != nullptr) {
+      filter.node->config.params0 = {filter.passGlow, filter.blockGlow,
+                                     filter.hitPoint.x, filter.hitPoint.y};
     }
   }
 }

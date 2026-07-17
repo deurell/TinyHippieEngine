@@ -307,6 +307,48 @@ vec4 shadeFilter(vec2 uv) {
     return vec4(color, alpha);
 }
 
+vec4 shadeSplitter(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    vec2 ap = abs(p);
+    float glow = clamp(proceduralParams.x, 0.0, 1.0);
+    vec2 hitPoint = proceduralParams.yz;
+    float diamondDistance = ap.x + ap.y;
+    float diamond = 1.0 - smoothstep(0.72, 0.96, diamondDistance);
+    float core = softDiskSq(p, 0.38);
+    float rim = smoothstep(0.50, 0.72, diamondDistance) *
+                (1.0 - smoothstep(0.72, 0.98, diamondDistance));
+    float verticalFacet = (1.0 - smoothstep(0.0, 0.060, abs(p.x))) *
+                          (1.0 - smoothstep(0.30, 0.78, abs(p.y)));
+    float diagonalFacetA = (1.0 - smoothstep(0.0, 0.070, abs(p.y - p.x))) *
+                           (1.0 - smoothstep(0.18, 0.82, length(p)));
+    float diagonalFacetB = (1.0 - smoothstep(0.0, 0.070, abs(p.y + p.x))) *
+                           (1.0 - smoothstep(0.18, 0.82, length(p)));
+    float facets = max(verticalFacet, max(diagonalFacetA, diagonalFacetB)) * diamond;
+    float innerGlass = (1.0 - smoothstep(0.0, 0.68, diamondDistance)) * diamond;
+    vec2 hitDelta = p - hitPoint;
+    float hitDistanceSq = dot(hitDelta, hitDelta);
+    float hitBloom = (1.0 - smoothstep(0.0, 1.18 * 1.18, hitDistanceSq)) * glow * diamond;
+    float hitCore = (1.0 - smoothstep(0.0, 0.34 * 0.34, hitDistanceSq)) * glow * diamond;
+    vec3 base = vec3(0.08, 0.14, 0.18) * diamond;
+    vec3 cyan = vec3(0.50, 0.94, 1.0);
+    vec3 magenta = vec3(1.0, 0.45, 0.92);
+    vec3 amber = vec3(1.0, 0.76, 0.32);
+    vec3 color = base;
+    color += vec3(0.28, 0.48, 0.58) * rim;
+    color += cyan * innerGlass * 0.22;
+    color += magenta * innerGlass * max(p.y, 0.0) * 0.26;
+    color += amber * innerGlass * max(-p.y, 0.0) * 0.24;
+    color += mix(cyan, magenta, 0.42) * facets * (0.44 + glow * 0.42);
+    color += amber * facets * glow * 0.18;
+    color += cyan * hitBloom * 0.84;
+    color += vec3(1.0, 0.95, 1.0) * hitCore * 1.55;
+    color += vec3(1.0) * rim * glow * 0.26;
+    float alpha = clamp(diamond * 0.78 + facets * 0.18 + hitBloom * 0.30 +
+                        hitCore * 0.40,
+                        0.0, 1.0);
+    return vec4(color, alpha);
+}
+
 float hash11(float n) {
     return fract(sin(n) * 43758.5453123);
 }
@@ -394,6 +436,8 @@ void main() {
         color = shadePortal(TexCoord);
     } else if (proceduralStyle == 11) {
         color = shadeFilter(TexCoord);
+    } else if (proceduralStyle == 12) {
+        color = shadeSplitter(TexCoord);
     }
 
     color *= vec4(baseColor.rgb, 1.0);

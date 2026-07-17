@@ -94,6 +94,14 @@ private:
     DL::ShaderPlaneNode *node = nullptr;
   };
 
+  struct Splitter {
+    glm::vec2 position{0.0f};
+    float angle = 0.0f;
+    float glow = 0.0f;
+    glm::vec2 hitPoint{0.0f};
+    DL::ShaderPlaneNode *node = nullptr;
+  };
+
   struct BeamResult {
     std::vector<bool> activeReflektors;
     std::vector<float> reflektorEnergy;
@@ -111,6 +119,9 @@ private:
     std::vector<bool> blockedFilters;
     std::vector<glm::vec2> filterHit;
     std::vector<bool> filterHasHit;
+    std::vector<bool> activeSplitters;
+    std::vector<glm::vec2> splitterHit;
+    std::vector<bool> splitterHasHit;
   };
 
   DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
@@ -131,6 +142,7 @@ private:
   void updateBlockerVisuals(float dt, const BeamResult &result);
   void updatePortalVisuals(float dt, const BeamResult &result);
   void updateFilterVisuals(float dt, const BeamResult &result);
+  void updateSplitterVisuals(float dt, const BeamResult &result);
   void updateTargets(float dt, const BeamResult &result);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
@@ -160,6 +172,7 @@ private:
   std::vector<Explosion> explosions_;
   std::vector<Portal> portals_;
   std::vector<Filter> filters_;
+  std::vector<Splitter> splitters_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   int selectedReflektor_ = -1;

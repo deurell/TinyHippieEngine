@@ -19,7 +19,9 @@ constexpr float kTargetRadius = 14.0f;
 constexpr float kBlockerHalfSize = 16.0f;
 constexpr float kFilterHalfSize = 17.0f;
 constexpr float kFilterPassHalfAngle = 14.0f * 3.1415926535f / 180.0f;
-constexpr int kMaxBeamSegments = 16;
+constexpr float kSplitterRadius = 18.0f;
+constexpr float kSplitterBranchAngle = 35.0f * 3.1415926535f / 180.0f;
+constexpr int kMaxBeamSegments = 28;
 constexpr float kBeamRange = 2000.0f;
 constexpr float kEpsilon = 0.001f;
 constexpr float kHitGap = 6.0f;
@@ -44,6 +46,7 @@ constexpr int kStyleSelection = 8;
 constexpr int kStyleExplosion = 9;
 constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
+constexpr int kStyleSplitter = 12;
 
 float cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
 
@@ -107,6 +110,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateBlockerVisuals(ctx.delta_time, result);
   updatePortalVisuals(ctx.delta_time, result);
   updateFilterVisuals(ctx.delta_time, result);
+  updateSplitterVisuals(ctx.delta_time, result);
   updateTargets(ctx.delta_time, result);
   updateExplosions(ctx.delta_time);
 
@@ -303,6 +307,14 @@ void DeflektorishScene::spawnLevel() {
   addFilter(12, 10, 90.0f, false, 0.0f);
   addFilter(12, 13, 90.0f, true, 0.42f);
 
+  Splitter splitter;
+  splitter.position = grid(16, 7);
+  splitter.angle = glm::radians(0.0f);
+  splitter.node = addShaderPlane("beam_splitter", kStyleSplitter,
+                                 DL::BlendMode::Alpha, splitter.position,
+                                 {20.0f, 20.0f}, 8, 0.06f, splitter.angle);
+  splitters_.push_back(splitter);
+
   auto addBlocker = [&](glm::ivec2 coord, bool reflective) {
     Blocker blocker;
     blocker.position = grid(coord.x, coord.y);
@@ -385,7 +397,7 @@ void DeflektorishScene::updateSelection(float dt) {
 namespace {
 
 struct Hit {
-  enum class Type { None, Reflektor, Target, Blocker, Portal, Filter };
+  enum class Type { None, Reflektor, Target, Blocker, Portal, Filter, Splitter };
   Type type = Type::None;
   float distance = std::numeric_limits<float>::max();
   float exitDistance = std::numeric_limits<float>::max();
@@ -420,20 +432,40 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   result.blockedFilters.assign(filters_.size(), false);
   result.filterHit.assign(filters_.size(), glm::vec2(0.0f));
   result.filterHasHit.assign(filters_.size(), false);
-
-  glm::vec2 origin = grid(3, 7);
-  glm::vec2 visualOrigin = origin;
-  glm::vec2 rayDir = direction(0.0f);
-  int ignoreReflektor = -1;
-  int ignoreBlocker = -1;
-  int ignorePortal = -1;
-  int ignoreFilter = -1;
-  float energy = 0.0f;
+  result.activeSplitters.assign(splitters_.size(), false);
+  result.splitterHit.assign(splitters_.size(), glm::vec2(0.0f));
+  result.splitterHasHit.assign(splitters_.size(), false);
 
   for (BeamSegment &segment : segments_) {
+    hideSegment(segment);
+  }
+
+  struct BeamRay {
+    glm::vec2 origin{0.0f};
+    glm::vec2 visualOrigin{0.0f};
+    glm::vec2 rayDir{1.0f, 0.0f};
+    int ignoreReflektor = -1;
+    int ignoreBlocker = -1;
+    int ignorePortal = -1;
+    int ignoreFilter = -1;
+    int ignoreSplitter = -1;
+    float energy = 0.0f;
+    int depth = 0;
+  };
+
+  std::vector<BeamRay> rays;
+  rays.push_back({grid(3, 7), grid(3, 7), direction(0.0f)});
+  std::size_t segmentIndex = 0;
+
+  while (!rays.empty() && segmentIndex < segments_.size()) {
+    BeamRay ray = rays.back();
+    rays.pop_back();
+
+    while (segmentIndex < segments_.size()) {
+      BeamSegment &segment = segments_[segmentIndex++];
     Hit nearest;
     for (std::size_t i = 0; i < reflektors_.size(); ++i) {
-      if (static_cast<int>(i) == ignoreReflektor) {
+      if (static_cast<int>(i) == ray.ignoreReflektor) {
         continue;
       }
       const Reflektor &reflektor = reflektors_[i];
@@ -442,13 +474,13 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       const glm::vec2 a = reflektor.position - half;
       const glm::vec2 b = reflektor.position + half;
       const glm::vec2 seg = b - a;
-      const float denominator = cross(rayDir, seg);
+      const float denominator = cross(ray.rayDir, seg);
       if (std::abs(denominator) < kEpsilon) {
         continue;
       }
-      const glm::vec2 toSegment = a - origin;
+      const glm::vec2 toSegment = a - ray.origin;
       const float rayDistance = cross(toSegment, seg) / denominator;
-      const float segmentAmount = cross(toSegment, rayDir) / denominator;
+      const float segmentAmount = cross(toSegment, ray.rayDir) / denominator;
       if (rayDistance <= kEpsilon || segmentAmount < 0.0f ||
           segmentAmount > 1.0f) {
         continue;
@@ -456,7 +488,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       Hit hit;
       hit.type = Hit::Type::Reflektor;
       hit.distance = rayDistance;
-      hit.point = origin + rayDir * rayDistance;
+      hit.point = ray.origin + ray.rayDir * rayDistance;
       hit.mirrorDir = mirrorDir;
       hit.index = static_cast<int>(i);
       if (closer(hit, nearest)) {
@@ -469,12 +501,12 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       if (!target.alive) {
         continue;
       }
-      const glm::vec2 toTarget = target.position - origin;
-      const float projected = glm::dot(toTarget, rayDir);
+      const glm::vec2 toTarget = target.position - ray.origin;
+      const float projected = glm::dot(toTarget, ray.rayDir);
       if (projected <= kEpsilon) {
         continue;
       }
-      const glm::vec2 closest = origin + rayDir * projected;
+      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
       const float distanceToRay = glm::length(target.position - closest);
       if (distanceToRay > kTargetRadius) {
         continue;
@@ -488,7 +520,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       Hit hit;
       hit.type = Hit::Type::Target;
       hit.distance = hitDistance;
-      hit.point = origin + rayDir * hitDistance;
+      hit.point = ray.origin + ray.rayDir * hitDistance;
       hit.index = static_cast<int>(i);
       if (closer(hit, nearest)) {
         nearest = hit;
@@ -496,16 +528,16 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
     }
 
     for (std::size_t i = 0; i < portals_.size(); ++i) {
-      if (static_cast<int>(i) == ignorePortal) {
+      if (static_cast<int>(i) == ray.ignorePortal) {
         continue;
       }
       const Portal &portal = portals_[i];
-      const glm::vec2 toPortal = portal.entryPosition - origin;
-      const float projected = glm::dot(toPortal, rayDir);
+      const glm::vec2 toPortal = portal.entryPosition - ray.origin;
+      const float projected = glm::dot(toPortal, ray.rayDir);
       if (projected <= kEpsilon) {
         continue;
       }
-      const glm::vec2 closest = origin + rayDir * projected;
+      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
       const float distanceToRay = glm::length(portal.entryPosition - closest);
       const float portalRadius = 20.0f;
       if (distanceToRay > portalRadius) {
@@ -521,7 +553,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       Hit hit;
       hit.type = Hit::Type::Portal;
       hit.distance = hitDistance;
-      hit.point = origin + rayDir * hitDistance;
+      hit.point = ray.origin + ray.rayDir * hitDistance;
       hit.index = static_cast<int>(i);
       if (closer(hit, nearest)) {
         nearest = hit;
@@ -529,7 +561,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
     }
 
     for (std::size_t i = 0; i < filters_.size(); ++i) {
-      if (static_cast<int>(i) == ignoreFilter) {
+      if (static_cast<int>(i) == ray.ignoreFilter) {
         continue;
       }
       const Filter &filter = filters_[i];
@@ -540,24 +572,24 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       float tMin = -1000000.0f;
       float tMax = 1000000.0f;
 
-      if (std::abs(rayDir.x) < kEpsilon) {
-        if (origin.x < minX || origin.x > maxX) {
+      if (std::abs(ray.rayDir.x) < kEpsilon) {
+        if (ray.origin.x < minX || ray.origin.x > maxX) {
           continue;
         }
       } else {
-        const float tx1 = (minX - origin.x) / rayDir.x;
-        const float tx2 = (maxX - origin.x) / rayDir.x;
+        const float tx1 = (minX - ray.origin.x) / ray.rayDir.x;
+        const float tx2 = (maxX - ray.origin.x) / ray.rayDir.x;
         tMin = std::max(tMin, std::min(tx1, tx2));
         tMax = std::min(tMax, std::max(tx1, tx2));
       }
 
-      if (std::abs(rayDir.y) < kEpsilon) {
-        if (origin.y < minY || origin.y > maxY) {
+      if (std::abs(ray.rayDir.y) < kEpsilon) {
+        if (ray.origin.y < minY || ray.origin.y > maxY) {
           continue;
         }
       } else {
-        const float ty1 = (minY - origin.y) / rayDir.y;
-        const float ty2 = (maxY - origin.y) / rayDir.y;
+        const float ty1 = (minY - ray.origin.y) / ray.rayDir.y;
+        const float ty2 = (maxY - ray.origin.y) / ray.rayDir.y;
         tMin = std::max(tMin, std::min(ty1, ty2));
         tMax = std::min(tMax, std::max(ty1, ty2));
       }
@@ -567,12 +599,12 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       }
 
       const glm::vec2 filterDir = direction(filter.angle);
-      const float alignment = std::abs(glm::dot(rayDir, filterDir));
+      const float alignment = std::abs(glm::dot(ray.rayDir, filterDir));
       Hit hit;
       hit.type = Hit::Type::Filter;
       hit.distance = std::max(tMin, kEpsilon);
       hit.exitDistance = std::max(tMax, hit.distance);
-      hit.point = origin + rayDir * hit.distance;
+      hit.point = ray.origin + ray.rayDir * hit.distance;
       hit.index = static_cast<int>(i);
       hit.passesFilter = alignment >= std::cos(kFilterPassHalfAngle);
       if (closer(hit, nearest)) {
@@ -580,8 +612,40 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       }
     }
 
+    for (std::size_t i = 0; i < splitters_.size(); ++i) {
+      if (static_cast<int>(i) == ray.ignoreSplitter) {
+        continue;
+      }
+      const Splitter &splitter = splitters_[i];
+      const glm::vec2 toSplitter = splitter.position - ray.origin;
+      const float projected = glm::dot(toSplitter, ray.rayDir);
+      if (projected <= kEpsilon) {
+        continue;
+      }
+      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
+      const float distanceToRay = glm::length(splitter.position - closest);
+      if (distanceToRay > kSplitterRadius) {
+        continue;
+      }
+      const float hitDistance =
+          projected -
+          std::sqrt(kSplitterRadius * kSplitterRadius -
+                    distanceToRay * distanceToRay);
+      if (hitDistance <= kEpsilon) {
+        continue;
+      }
+      Hit hit;
+      hit.type = Hit::Type::Splitter;
+      hit.distance = hitDistance;
+      hit.point = ray.origin + ray.rayDir * hitDistance;
+      hit.index = static_cast<int>(i);
+      if (closer(hit, nearest)) {
+        nearest = hit;
+      }
+    }
+
     for (std::size_t i = 0; i < blockers_.size(); ++i) {
-      if (static_cast<int>(i) == ignoreBlocker) {
+      if (static_cast<int>(i) == ray.ignoreBlocker) {
         continue;
       }
       const Blocker &blocker = blockers_[i];
@@ -593,13 +657,13 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       float tMax = 1000000.0f;
       bool hitAxisX = true;
 
-      if (std::abs(rayDir.x) < kEpsilon) {
-        if (origin.x < minX || origin.x > maxX) {
+      if (std::abs(ray.rayDir.x) < kEpsilon) {
+        if (ray.origin.x < minX || ray.origin.x > maxX) {
           continue;
         }
       } else {
-        const float tx1 = (minX - origin.x) / rayDir.x;
-        const float tx2 = (maxX - origin.x) / rayDir.x;
+        const float tx1 = (minX - ray.origin.x) / ray.rayDir.x;
+        const float tx2 = (maxX - ray.origin.x) / ray.rayDir.x;
         const float txMin = std::min(tx1, tx2);
         if (txMin > tMin) {
           tMin = txMin;
@@ -608,13 +672,13 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
         tMax = std::min(tMax, std::max(tx1, tx2));
       }
 
-      if (std::abs(rayDir.y) < kEpsilon) {
-        if (origin.y < minY || origin.y > maxY) {
+      if (std::abs(ray.rayDir.y) < kEpsilon) {
+        if (ray.origin.y < minY || ray.origin.y > maxY) {
           continue;
         }
       } else {
-        const float ty1 = (minY - origin.y) / rayDir.y;
-        const float ty2 = (maxY - origin.y) / rayDir.y;
+        const float ty1 = (minY - ray.origin.y) / ray.rayDir.y;
+        const float ty2 = (maxY - ray.origin.y) / ray.rayDir.y;
         const float tyMin = std::min(ty1, ty2);
         if (tyMin > tMin) {
           tMin = tyMin;
@@ -629,11 +693,11 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
       Hit hit;
       hit.type = Hit::Type::Blocker;
       hit.distance = std::max(tMin, kEpsilon);
-      hit.point = origin + rayDir * hit.distance;
+      hit.point = ray.origin + ray.rayDir * hit.distance;
       hit.index = static_cast<int>(i);
       hit.normal = hitAxisX
-                       ? glm::vec2(rayDir.x > 0.0f ? -1.0f : 1.0f, 0.0f)
-                       : glm::vec2(0.0f, rayDir.y > 0.0f ? -1.0f : 1.0f);
+                       ? glm::vec2(ray.rayDir.x > 0.0f ? -1.0f : 1.0f, 0.0f)
+                       : glm::vec2(0.0f, ray.rayDir.y > 0.0f ? -1.0f : 1.0f);
       if (closer(hit, nearest)) {
         nearest = hit;
       }
@@ -641,68 +705,62 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
 
     if (nearest.type == Hit::Type::Reflektor) {
       const float stopGap = std::min(kHitGap, nearest.distance * 0.5f);
-      const glm::vec2 reflected = reflectAcrossMirror(rayDir, nearest.mirrorDir);
+      const glm::vec2 reflected =
+          reflectAcrossMirror(ray.rayDir, nearest.mirrorDir);
       result.activeReflektors[nearest.index] = true;
-      result.reflektorEnergy[nearest.index] = energy;
-      layoutSegment(segment, visualOrigin, nearest.point - rayDir * stopGap,
-                    energy);
-      origin = nearest.point + reflected * kHitGap;
-      visualOrigin = nearest.point;
-      rayDir = glm::normalize(reflected);
-      ignoreReflektor = nearest.index;
-      ignoreBlocker = -1;
-      ignorePortal = -1;
-      ignoreFilter = -1;
-      energy = std::min(energy + 1.0f, 3.0f);
+      result.reflektorEnergy[nearest.index] = ray.energy;
+      layoutSegment(segment, ray.visualOrigin,
+                    nearest.point - ray.rayDir * stopGap, ray.energy);
+      ray.origin = nearest.point + reflected * kHitGap;
+      ray.visualOrigin = nearest.point;
+      ray.rayDir = glm::normalize(reflected);
+      ray.ignoreReflektor = nearest.index;
+      ray.ignoreBlocker = -1;
+      ray.ignorePortal = -1;
+      ray.ignoreFilter = -1;
+      ray.ignoreSplitter = -1;
+      ray.energy = std::min(ray.energy + 1.0f, 3.0f);
     } else if (nearest.type == Hit::Type::Target) {
-      layoutSegment(segment, visualOrigin, nearest.point, energy);
+      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
       result.hitTargets[nearest.index] = true;
-      result.targetEnergy[nearest.index] = energy;
-      for (BeamSegment &remaining : segments_) {
-        if (&remaining > &segment) {
-          hideSegment(remaining);
-        }
-      }
-      return result;
+      result.targetEnergy[nearest.index] = ray.energy;
+      break;
     } else if (nearest.type == Hit::Type::Blocker) {
       Blocker &blocker = blockers_[nearest.index];
-      layoutSegment(segment, visualOrigin, nearest.point, energy);
+      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
       result.activeBlockers[nearest.index] = true;
-      result.blockerEnergy[nearest.index] = energy;
+      result.blockerEnergy[nearest.index] = ray.energy;
       result.blockerHit[nearest.index] =
           (nearest.point - blocker.position) / kBlockerHalfSize;
       result.blockerHasHit[nearest.index] = true;
       if (blocker.reflective) {
-        const glm::vec2 reflected = reflectFromNormal(rayDir, nearest.normal);
-        origin = nearest.point + reflected * kHitGap;
-        visualOrigin = nearest.point;
-        rayDir = glm::normalize(reflected);
-        ignoreReflektor = -1;
-        ignoreBlocker = nearest.index;
-        ignorePortal = -1;
-        ignoreFilter = -1;
+        const glm::vec2 reflected = reflectFromNormal(ray.rayDir, nearest.normal);
+        ray.origin = nearest.point + reflected * kHitGap;
+        ray.visualOrigin = nearest.point;
+        ray.rayDir = glm::normalize(reflected);
+        ray.ignoreReflektor = -1;
+        ray.ignoreBlocker = nearest.index;
+        ray.ignorePortal = -1;
+        ray.ignoreFilter = -1;
+        ray.ignoreSplitter = -1;
       } else {
-        for (BeamSegment &remaining : segments_) {
-          if (&remaining > &segment) {
-            hideSegment(remaining);
-          }
-        }
-        return result;
+        break;
       }
     } else if (nearest.type == Hit::Type::Portal) {
       Portal &portal = portals_[nearest.index];
-      layoutSegment(segment, visualOrigin, nearest.point, energy);
+      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
       result.activePortals[nearest.index] = true;
       result.portalEntryHit[nearest.index] =
           (nearest.point - portal.entryPosition) / 20.0f;
-      result.portalExitHit[nearest.index] = rayDir;
+      result.portalExitHit[nearest.index] = ray.rayDir;
       result.portalHasHit[nearest.index] = true;
-      origin = portal.exitPosition + rayDir * kHitGap;
-      visualOrigin = portal.exitPosition;
-      ignoreReflektor = -1;
-      ignoreBlocker = -1;
-      ignorePortal = nearest.index;
-      ignoreFilter = -1;
+      ray.origin = portal.exitPosition + ray.rayDir * kHitGap;
+      ray.visualOrigin = portal.exitPosition;
+      ray.ignoreReflektor = -1;
+      ray.ignoreBlocker = -1;
+      ray.ignorePortal = nearest.index;
+      ray.ignoreFilter = -1;
+      ray.ignoreSplitter = -1;
     } else if (nearest.type == Hit::Type::Filter) {
       Filter &filter = filters_[nearest.index];
       const glm::vec2 localHit =
@@ -711,34 +769,65 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
           localHit / kFilterHalfSize;
       result.filterHasHit[nearest.index] = true;
       if (nearest.passesFilter) {
-        const glm::vec2 exitPoint = origin + rayDir * nearest.exitDistance;
-        layoutSegment(segment, visualOrigin, exitPoint, energy);
+        const glm::vec2 exitPoint =
+            ray.origin + ray.rayDir * nearest.exitDistance;
+        layoutSegment(segment, ray.visualOrigin, exitPoint, ray.energy);
         result.passingFilters[nearest.index] = true;
-        origin = exitPoint + rayDir * kHitGap;
-        visualOrigin = exitPoint;
-        ignoreReflektor = -1;
-        ignoreBlocker = -1;
-        ignorePortal = -1;
-        ignoreFilter = nearest.index;
+        ray.origin = exitPoint + ray.rayDir * kHitGap;
+        ray.visualOrigin = exitPoint;
+        ray.ignoreReflektor = -1;
+        ray.ignoreBlocker = -1;
+        ray.ignorePortal = -1;
+        ray.ignoreFilter = nearest.index;
+        ray.ignoreSplitter = -1;
       } else {
-        layoutSegment(segment, visualOrigin, nearest.point, energy);
+        layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
         result.blockedFilters[nearest.index] = true;
-        for (BeamSegment &remaining : segments_) {
-          if (&remaining > &segment) {
-            hideSegment(remaining);
-          }
-        }
-        return result;
+        break;
       }
+    } else if (nearest.type == Hit::Type::Splitter) {
+      Splitter &splitter = splitters_[nearest.index];
+      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
+      result.activeSplitters[nearest.index] = true;
+      result.splitterHit[nearest.index] =
+          rotateVec(nearest.point - splitter.position, -splitter.angle) /
+          kSplitterRadius;
+      result.splitterHasHit[nearest.index] = true;
+      if (ray.depth < 3) {
+        const float nextEnergy = std::min(ray.energy + 0.5f, 3.0f);
+        const glm::vec2 branchA =
+            glm::normalize(rotateVec(ray.rayDir, kSplitterBranchAngle));
+        const glm::vec2 branchB =
+            glm::normalize(rotateVec(ray.rayDir, -kSplitterBranchAngle));
+        BeamRay a{nearest.point + branchA * kHitGap,
+                  nearest.point,
+                  branchA,
+                  -1,
+                  -1,
+                  -1,
+                  -1,
+                  nearest.index,
+                  nextEnergy,
+                  ray.depth + 1};
+        BeamRay b{nearest.point + branchB * kHitGap,
+                  nearest.point,
+                  branchB,
+                  -1,
+                  -1,
+                  -1,
+                  -1,
+                  nearest.index,
+                  nextEnergy,
+                  ray.depth + 1};
+        rays.push_back(b);
+        rays.push_back(a);
+      }
+      break;
     } else {
-      layoutSegment(segment, visualOrigin, visualOrigin + rayDir * kBeamRange,
-                    energy);
-      for (BeamSegment &remaining : segments_) {
-        if (&remaining > &segment) {
-          hideSegment(remaining);
-        }
-      }
-      return result;
+      layoutSegment(segment, ray.visualOrigin,
+                    ray.visualOrigin + ray.rayDir * kBeamRange, ray.energy);
+      break;
+    }
     }
   }
   return result;
@@ -910,6 +999,22 @@ void DeflektorishScene::updateFilterVisuals(float dt,
     if (filter.node != nullptr) {
       filter.node->config.params0 = {filter.passGlow, filter.blockGlow,
                                      filter.hitPoint.x, filter.hitPoint.y};
+    }
+  }
+}
+
+void DeflektorishScene::updateSplitterVisuals(float dt,
+                                              const BeamResult &result) {
+  for (std::size_t i = 0; i < splitters_.size(); ++i) {
+    Splitter &splitter = splitters_[i];
+    const float target = result.activeSplitters[i] ? 1.0f : 0.0f;
+    splitter.glow = approach(splitter.glow, target, dt * 12.0f);
+    if (result.splitterHasHit[i]) {
+      splitter.hitPoint = result.splitterHit[i];
+    }
+    if (splitter.node != nullptr) {
+      splitter.node->config.params0 = {splitter.glow, splitter.hitPoint.x,
+                                       splitter.hitPoint.y, 0.0f};
     }
   }
 }

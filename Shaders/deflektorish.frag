@@ -467,6 +467,55 @@ vec4 shadeEnergyBar(vec2 uv) {
     return vec4(color, alpha);
 }
 
+vec4 shadeCompletionOverlay(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    float t = proceduralParams.x;
+    float alphaControl = clamp(proceduralParams.y, 0.0, 1.0);
+    float progress = clamp(proceduralParams.z, 0.0, 1.0);
+    float intro = clamp(proceduralParams.w, 0.0, 1.0);
+    float detailFade = clamp(proceduralParams2.x, 0.0, 1.0);
+    float backdrop = clamp(proceduralParams2.y, 0.0, 1.0);
+    float ambientFade = max(detailFade, backdrop);
+    float d = length(p * vec2(0.72, 1.0));
+
+    float dim = 1.0 - smoothstep(0.16, 1.16, d);
+    float vignette = smoothstep(1.28, 0.18, length(p * vec2(0.82, 1.05)));
+    float sweepX = fract(t * 0.42);
+    float sweep = 1.0 - smoothstep(0.0, 0.18, abs(uv.x - sweepX));
+    sweep *= smoothstep(0.08, 0.42, uv.y) * smoothstep(0.92, 0.58, uv.y);
+    float bandA = 1.0 - smoothstep(0.018, 0.075, abs(p.y - 0.26));
+    float bandB = 1.0 - smoothstep(0.018, 0.065, abs(p.y + 0.10));
+    float centerGlow = 1.0 - smoothstep(0.0, 0.78, length(p * vec2(1.0, 1.85)));
+    float tick = step(0.72, fract((uv.x + progress * 0.65) * 18.0));
+    float tickMask = tick * (bandA * 0.28 + bandB * 0.18) * progress;
+    float pulse = 0.5 + 0.5 * sin(t * 8.0);
+    float ringA = ring(d, mix(0.22, 0.92, progress), 0.18);
+    float ringB = ring(d, mix(0.46, 1.12, progress), 0.24);
+
+    vec3 deep = vec3(0.02, 0.025, 0.04);
+    vec3 cyan = vec3(0.42, 0.92, 1.0);
+    vec3 amber = vec3(1.0, 0.70, 0.24);
+    vec3 magenta = vec3(1.0, 0.42, 0.92);
+    vec3 color = deep * dim * 0.52;
+    color += cyan * centerGlow * (0.18 + pulse * 0.06) * intro * ambientFade;
+    color += cyan * bandA * (0.22 + pulse * 0.08) * intro * detailFade;
+    color += amber * bandB * (0.18 + pulse * 0.07) * intro * detailFade;
+    color += mix(cyan, magenta, 0.38) * sweep * 0.24 * intro * detailFade;
+    color += amber * tickMask * 0.24 * detailFade;
+    color += cyan * ringA * (0.11 + progress * 0.08) * ambientFade;
+    color += magenta * ringB * (0.05 + progress * 0.06) * ambientFade;
+
+    float detailAlpha = (bandA * 0.20 + bandB * 0.15 + sweep * 0.14 +
+                         tickMask * 0.12) *
+                        detailFade;
+    float ambientAlpha =
+        (dim * 0.18 + centerGlow * 0.12 + ringA * 0.08 + ringB * 0.04) *
+        ambientFade;
+    float alpha = clamp((detailAlpha + ambientAlpha) * alphaControl * vignette,
+                        0.0, 0.72);
+    return vec4(color, alpha);
+}
+
 void main() {
     vec4 color = baseColor;
     if (proceduralStyle == 1) {
@@ -495,6 +544,8 @@ void main() {
         color = shadeSplitter(TexCoord);
     } else if (proceduralStyle == 13) {
         color = shadeEnergyBar(TexCoord);
+    } else if (proceduralStyle == 14) {
+        color = shadeCompletionOverlay(TexCoord);
     }
 
     color *= vec4(baseColor.rgb, 1.0);

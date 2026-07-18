@@ -688,7 +688,8 @@ void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
                                    glm::vec2 /*gamePosition*/, float energy) {
   switch (sound) {
   case Deflektorish::Sound::TargetFirstHit:
-  case Deflektorish::Sound::TargetDestroyed: {
+  case Deflektorish::Sound::TargetDestroyed:
+  case Deflektorish::Sound::ScoreTick: {
     const Deflektorish::SoundEventConfig *event =
         deflektorSoundMap_.find(sound);
     if (event == nullptr) {

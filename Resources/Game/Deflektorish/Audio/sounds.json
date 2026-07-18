@@ -20,6 +20,16 @@
       "pitchMax": 1.03,
       "poolSize": 12,
       "maxConcurrent": 6
+    },
+    "score_tick": {
+      "clip": "tone1.ogg",
+      "volume": 0.11,
+      "volumePerEnergy": 0.0,
+      "maxVolume": 0.16,
+      "pitchMin": 1.0,
+      "pitchMax": 1.0,
+      "poolSize": 10,
+      "maxConcurrent": 4
     }
   }
 }

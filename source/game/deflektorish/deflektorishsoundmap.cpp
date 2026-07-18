@@ -323,6 +323,9 @@ Sound soundFromEventKey(std::string_view key) {
   if (key == "target_destroyed") {
     return Sound::TargetDestroyed;
   }
+  if (key == "score_tick") {
+    return Sound::ScoreTick;
+  }
   throw std::runtime_error("unknown Deflektorish sound event '" +
                            std::string(key) + "'");
 }
@@ -382,6 +385,8 @@ const char *soundEventKey(Sound sound) {
     return "target_first_hit";
   case Sound::TargetDestroyed:
     return "target_destroyed";
+  case Sound::ScoreTick:
+    return "score_tick";
   }
   return "unknown";
 }

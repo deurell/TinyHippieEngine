@@ -10,8 +10,10 @@
 #include "renderresourcecache.h"
 #include "scenenode.h"
 #include "shaderplanenode.h"
+#include "textnode.h"
 #include <functional>
 #include <glm/glm.hpp>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -29,6 +31,7 @@ public:
   void update(const DL::FrameContext &ctx) override;
   void render(const DL::FrameContext &ctx) override;
   void onClick(double x, double y) override;
+  void onKey(int key) override;
   void onScreenSizeChanged(glm::vec2 size) override;
   void onFramebufferSizeChanged(glm::vec2 size) override;
   [[nodiscard]] std::string_view debugTypeName() const override {
@@ -36,6 +39,23 @@ public:
   }
 
 private:
+  enum class CompletionPhase {
+    Playing,
+    Celebration,
+    FadeOut,
+    BonusPending,
+  };
+
+  enum class BonusTallyPhase {
+    Hidden,
+    Energy,
+    Time,
+    Total,
+    Hold,
+    FadeOut,
+    Done,
+  };
+
   struct Reflektor {
     glm::vec2 position{0.0f};
     float angle = 0.0f;
@@ -149,6 +169,19 @@ private:
   void applyTargetDestroyed(const GameEvent &event);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
+  bool allTargetsDestroyed() const;
+  bool anyExplosionActive() const;
+  float victoryNoise(int index, float salt) const;
+  glm::vec2 victoryBlastPosition(int index) const;
+  void createCompletionOverlay();
+  void startVictoryCelebration();
+  void resetBonusTally();
+  void updateVictoryCelebration(float dt);
+  void updateCompletionOverlay();
+  void startBonusTally();
+  void updateBonusTally(float dt);
+  void updateBonusText();
+  int advanceDisplayedScore(int current, int target, bool total) const;
   void updateCameraShake(float dt);
   void startCameraShake(glm::vec2 position, float strength, float duration);
   glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
@@ -180,6 +213,13 @@ private:
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   DL::ShaderPlaneNode *energyBar_ = nullptr;
+  DL::ShaderPlaneNode *completionOverlay_ = nullptr;
+  TextNode *completionTitle_ = nullptr;
+  TextNode *completionSubtitle_ = nullptr;
+  TextNode *bonusHeading_ = nullptr;
+  TextNode *bonusEnergy_ = nullptr;
+  TextNode *bonusTime_ = nullptr;
+  TextNode *bonusTotal_ = nullptr;
   int selectedReflektor_ = -1;
   bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
@@ -196,5 +236,32 @@ private:
   float shakeKickTime_ = 0.0f;
   float shakeSeed_ = 1.7f;
   glm::vec2 shakeKickDirection_{1.0f, 0.0f};
+  bool victoryCelebrationStarted_ = false;
+  bool victoryCelebrationComplete_ = false;
+  int victoryBlastIndex_ = 0;
+  float victoryBlastTimer_ = 0.0f;
+  float victoryTime_ = 0.0f;
+  float victoryPostWaveTimer_ = 0.0f;
+  float completionFadeTime_ = 0.0f;
+  CompletionPhase completionPhase_ = CompletionPhase::Playing;
+  BonusTallyPhase bonusTallyPhase_ = BonusTallyPhase::Hidden;
+  float levelElapsed_ = 0.0f;
+  float clearTime_ = 0.0f;
+  float bonusPhaseTime_ = 0.0f;
+  float bonusFadeTime_ = 0.0f;
+  float bonusScoreTickTimer_ = 0.0f;
+  float bonusEnergyFlash_ = 0.0f;
+  float bonusTimeFlash_ = 0.0f;
+  float bonusTotalFlash_ = 0.0f;
+  int energyBonus_ = 0;
+  int timeBonus_ = 0;
+  int totalBonus_ = 0;
+  int displayedEnergyBonus_ = 0;
+  int displayedTimeBonus_ = 0;
+  int displayedTotalBonus_ = 0;
+  std::string lastBonusHeadingText_;
+  std::string lastBonusEnergyText_;
+  std::string lastBonusTimeText_;
+  std::string lastBonusTotalText_;
   float elapsed_ = 0.0f;
 };

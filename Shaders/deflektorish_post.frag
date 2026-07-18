@@ -27,8 +27,8 @@ vec3 bumpSample(vec2 uv, vec4 bump) {
     float safeDist = max(dist, 0.00000001);
 
     float easedAge = age * age * (3.0 - 2.0 * age);
-    float radius = mix(0.025, 0.96, easedAge);
-    float softWidth = mix(0.33, 0.25, age);
+    float radius = mix(0.055, 0.94, easedAge);
+    float softWidth = mix(0.38, 0.29, age);
     float shell = 1.0 - smoothstep(0.0, softWidth, abs(dist - radius));
     shell = shell * shell * (3.0 - 2.0 * shell);
 
@@ -38,7 +38,7 @@ vec3 bumpSample(vec2 uv, vec4 bump) {
 
     vec2 direction = radialDelta / safeDist;
     vec2 uvDirection = vec2(direction.x / aspect, direction.y);
-    float displacement = shell * fade * strength * 0.60;
+    float displacement = shell * fade * strength * 0.50;
     return vec3(uvDirection * displacement, wave);
 }
 
@@ -52,8 +52,8 @@ void main() {
     vec2 sampleUv = clamp(uv - offset, vec2(0.001), vec2(0.999));
     vec4 color = texture(texture0, sampleUv);
 
-    float bloom = min(wave * 6.8 + length(offset) * 3.5, 0.33);
-    float contrast = min(wave * 0.92, 0.11);
+    float bloom = min(wave * 5.8 + length(offset) * 2.8, 0.285);
+    float contrast = min(wave * 0.74, 0.09);
     float edge = 1.0 - smoothstep(
         0.0,
         0.075,

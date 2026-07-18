@@ -19,6 +19,21 @@ constexpr float kShakeStrength = 5.2f;
 constexpr float kShakeMaxStrength = 16.0f;
 constexpr float kShakeDecay = 2.1f;
 constexpr float kShakeKickDecay = 5.8f;
+constexpr int kVictoryBlastCount = 10;
+constexpr float kVictoryBlastInterval = 0.14f;
+constexpr float kVictoryBlastStartDelay = 0.18f;
+constexpr float kVictoryTextFadeDuration = 0.62f;
+constexpr float kVictoryPostWaveDelay = 0.12f;
+constexpr int kMinExplosionPoolSize = 28;
+constexpr int kDebugVictoryKey = 86;
+constexpr float kLevelParTimeSeconds = 90.0f;
+constexpr int kMaxEnergyBonus = 5000;
+constexpr float kTimeBonusPerSecond = 100.0f;
+constexpr float kBonusLineDelay = 0.18f;
+constexpr float kBonusScoreTickInterval = 0.17f;
+constexpr float kBonusDoneHold = 3.0f;
+constexpr float kBonusFadeDuration = 0.42f;
+constexpr float kBonusFlashDecay = 4.2f;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
 constexpr int kStyleBlocker = 4;
@@ -31,11 +46,20 @@ constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
 constexpr int kStyleEnergyBar = 13;
+constexpr int kStyleCompletionOverlay = 14;
 constexpr char kDefaultLevelPath[] =
     "Resources/Game/Deflektorish/Levels/level_01.json";
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
+}
+
+std::string scoreLine(std::string_view label, int score) {
+  std::string value = std::to_string(std::max(score, 0));
+  while (value.size() < 6) {
+    value.insert(value.begin(), '0');
+  }
+  return std::string(label) + "  " + value;
 }
 
 } // namespace
@@ -64,6 +88,9 @@ void DeflektorishScene::init() {
 
 void DeflektorishScene::update(const DL::FrameContext &ctx) {
   elapsed_ += ctx.delta_time;
+  if (completionPhase_ == CompletionPhase::Playing) {
+    levelElapsed_ += ctx.delta_time;
+  }
   updateInput(ctx);
   updateCameraShake(ctx.delta_time);
   updateReflektors(ctx.delta_time);
@@ -95,6 +122,14 @@ void DeflektorishScene::render(const DL::FrameContext &ctx) {
 void DeflektorishScene::onClick(double x, double y) {
   selectReflektorAtWorld(
       screenToWorld({static_cast<float>(x), static_cast<float>(y)}));
+}
+
+void DeflektorishScene::onKey(int key) {
+  if (key == kDebugVictoryKey &&
+      completionPhase_ != CompletionPhase::Celebration &&
+      completionPhase_ != CompletionPhase::FadeOut) {
+    startVictoryCelebration();
+  }
 }
 
 void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
@@ -206,6 +241,7 @@ void DeflektorishScene::spawnLevel() {
   energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
                               DL::BlendMode::Alpha, {480.0f, 34.0f},
                               {176.0f, 10.0f}, 20, 0.20f);
+  createCompletionOverlay();
 
   for (std::size_t i = 0; i < level.targets.size(); ++i) {
     Target target;
@@ -217,7 +253,9 @@ void DeflektorishScene::spawnLevel() {
     targets_.push_back(target);
   }
 
-  for (int i = 0; i < level.explosionPoolSize; ++i) {
+  const int explosionPoolSize =
+      std::max(level.explosionPoolSize, kMinExplosionPoolSize);
+  for (int i = 0; i < explosionPoolSize; ++i) {
     Explosion explosion;
     explosion.node = addShaderPlane("explosion_" + std::to_string(i + 1),
                                     kStyleExplosion, DL::BlendMode::Additive,
@@ -601,6 +639,9 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
       static_cast<std::size_t>(event.index) < targets_.size()) {
     renderer_.hideNode(targets_[static_cast<std::size_t>(event.index)].node);
   }
+  if (!victoryCelebrationStarted_ && allTargetsDestroyed()) {
+    startVictoryCelebration();
+  }
 }
 
 void DeflektorishScene::spawnExplosion(glm::vec2 position, float energy) {
@@ -609,18 +650,19 @@ void DeflektorishScene::spawnExplosion(glm::vec2 position, float energy) {
                            return !explosion.active;
                          });
   if (it == explosions_.end()) {
-    it = explosions_.begin();
+    return;
   }
   it->active = true;
   it->position = position;
   it->time = 0.0f;
-  it->duration = 0.92f + energy * 0.08f;
+  it->duration = 1.34f + energy * 0.14f;
   it->energy = energy;
   it->seed = position.x * 0.037f + position.y * 0.071f + elapsed_ * 1.37f;
   renderer_.showExplosion(it->node, position, energy);
 }
 
 void DeflektorishScene::updateExplosions(float dt) {
+  updateVictoryCelebration(dt);
   for (Explosion &explosion : explosions_) {
     if (!explosion.active || explosion.node == nullptr) {
       continue;
@@ -636,6 +678,506 @@ void DeflektorishScene::updateExplosions(float dt) {
     renderer_.updateExplosion(explosion.node, amount, explosion.energy,
                               explosion.seed, true);
   }
+}
+
+bool DeflektorishScene::allTargetsDestroyed() const {
+  return !targets_.empty() &&
+         std::all_of(targets_.begin(), targets_.end(),
+                     [](const Target &target) { return !target.alive; });
+}
+
+bool DeflektorishScene::anyExplosionActive() const {
+  return std::any_of(explosions_.begin(), explosions_.end(),
+                     [](const Explosion &explosion) {
+                       return explosion.active;
+                     });
+}
+
+float DeflektorishScene::victoryNoise(int index, float salt) const {
+  const float value =
+      std::sin((static_cast<float>(index) + 1.0f) * 37.719f +
+               elapsed_ * 2.173f + salt * 19.113f) *
+      43758.5453f;
+  return value - std::floor(value);
+}
+
+glm::vec2 DeflektorishScene::victoryBlastPosition(int index) const {
+  const float x = 105.0f + victoryNoise(index, 0.13f) * 750.0f;
+  const float y = 95.0f + victoryNoise(index, 0.71f) * 470.0f;
+  return {x, y};
+}
+
+void DeflektorishScene::createCompletionOverlay() {
+  completionOverlay_ = addShaderPlane(
+      "level_complete_overlay", kStyleCompletionOverlay, DL::BlendMode::Alpha,
+      Deflektorish::kScreenCenter, {520.0f, 350.0f}, 21, 0.24f);
+  if (completionOverlay_ != nullptr) {
+    completionOverlay_->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
+  }
+
+  auto title = std::make_unique<TextNode>(
+      this, "LEVEL COMPLETE", renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  title->setDebugName("level_complete_title");
+  title->setRenderLayer(22);
+  title->setFontPixelHeight(44.0f);
+  title->setTextAlignment(DL::TextAlignment::CENTER);
+  title->setTextAnchor(DL::TextAnchor::CENTER);
+  title->setTextColor({0.64f, 0.96f, 1.0f, 0.0f});
+  title->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  title->setShadowOffset({2.0f, -2.0f});
+  title->setLocalPosition({0.0f, 0.48f, 0.34f});
+  title->setLocalScale({Deflektorish::kPixelToWorld,
+                        Deflektorish::kPixelToWorld, 1.0f});
+  completionTitle_ = title.get();
+  addChild(std::move(title));
+
+  auto subtitle = std::make_unique<TextNode>(
+      this, "ALL TARGETS CLEARED", renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  subtitle->setDebugName("level_complete_subtitle");
+  subtitle->setRenderLayer(22);
+  subtitle->setFontPixelHeight(20.0f);
+  subtitle->setTextAlignment(DL::TextAlignment::CENTER);
+  subtitle->setTextAnchor(DL::TextAnchor::CENTER);
+  subtitle->setTextColor({1.0f, 0.72f, 0.28f, 0.0f});
+  subtitle->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  subtitle->setShadowOffset({1.4f, -1.4f});
+  subtitle->setLocalPosition({0.0f, 0.08f, 0.34f});
+  subtitle->setLocalScale({Deflektorish::kPixelToWorld,
+                           Deflektorish::kPixelToWorld, 1.0f});
+  completionSubtitle_ = subtitle.get();
+  addChild(std::move(subtitle));
+
+  auto bonusHeading = std::make_unique<TextNode>(
+      this, "BONUS", renderDevice_, renderResourceCache_, &cameraNode_->camera());
+  bonusHeading->setDebugName("bonus_heading");
+  bonusHeading->setRenderLayer(22);
+  bonusHeading->setFontPixelHeight(30.0f);
+  bonusHeading->setTextAlignment(DL::TextAlignment::CENTER);
+  bonusHeading->setTextAnchor(DL::TextAnchor::CENTER);
+  bonusHeading->setTextColor({0.64f, 0.96f, 1.0f, 0.0f});
+  bonusHeading->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  bonusHeading->setShadowOffset({1.8f, -1.8f});
+  bonusHeading->setLocalPosition({0.0f, 0.48f, 0.35f});
+  bonusHeading->setLocalScale({Deflektorish::kPixelToWorld,
+                               Deflektorish::kPixelToWorld, 1.0f});
+  bonusHeading_ = bonusHeading.get();
+  addChild(std::move(bonusHeading));
+
+  auto energy = std::make_unique<TextNode>(
+      this, scoreLine("ENERGY BONUS", 0), renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  energy->setDebugName("bonus_energy");
+  energy->setRenderLayer(22);
+  energy->setFontPixelHeight(21.0f);
+  energy->setTextAlignment(DL::TextAlignment::CENTER);
+  energy->setTextAnchor(DL::TextAnchor::CENTER);
+  energy->setTextColor({1.0f, 0.72f, 0.28f, 0.0f});
+  energy->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  energy->setShadowOffset({1.4f, -1.4f});
+  energy->setLocalPosition({0.0f, 0.14f, 0.35f});
+  energy->setLocalScale({Deflektorish::kPixelToWorld,
+                         Deflektorish::kPixelToWorld, 1.0f});
+  bonusEnergy_ = energy.get();
+  addChild(std::move(energy));
+
+  auto time = std::make_unique<TextNode>(
+      this, scoreLine("TIME BONUS", 0), renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  time->setDebugName("bonus_time");
+  time->setRenderLayer(22);
+  time->setFontPixelHeight(21.0f);
+  time->setTextAlignment(DL::TextAlignment::CENTER);
+  time->setTextAnchor(DL::TextAnchor::CENTER);
+  time->setTextColor({1.0f, 0.72f, 0.28f, 0.0f});
+  time->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  time->setShadowOffset({1.4f, -1.4f});
+  time->setLocalPosition({0.0f, -0.12f, 0.35f});
+  time->setLocalScale({Deflektorish::kPixelToWorld,
+                       Deflektorish::kPixelToWorld, 1.0f});
+  bonusTime_ = time.get();
+  addChild(std::move(time));
+
+  auto total = std::make_unique<TextNode>(
+      this, scoreLine("TOTAL SCORE", 0), renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  total->setDebugName("bonus_total");
+  total->setRenderLayer(22);
+  total->setFontPixelHeight(25.0f);
+  total->setTextAlignment(DL::TextAlignment::CENTER);
+  total->setTextAnchor(DL::TextAnchor::CENTER);
+  total->setTextColor({0.64f, 0.96f, 1.0f, 0.0f});
+  total->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  total->setShadowOffset({1.7f, -1.7f});
+  total->setLocalPosition({0.0f, -0.48f, 0.35f});
+  total->setLocalScale({Deflektorish::kPixelToWorld,
+                        Deflektorish::kPixelToWorld, 1.0f});
+  bonusTotal_ = total.get();
+  addChild(std::move(total));
+}
+
+void DeflektorishScene::startVictoryCelebration() {
+  resetBonusTally();
+  victoryCelebrationStarted_ = true;
+  victoryCelebrationComplete_ = false;
+  victoryBlastTimer_ = kVictoryBlastStartDelay;
+  victoryBlastIndex_ = 0;
+  victoryTime_ = 0.0f;
+  victoryPostWaveTimer_ = kVictoryPostWaveDelay;
+  completionFadeTime_ = 0.0f;
+  completionPhase_ = CompletionPhase::Celebration;
+  sourcePulse_ = 1.0f;
+  startCameraShake(Deflektorish::kScreenCenter, kShakeStrength * 1.15f,
+                   0.42f);
+}
+
+void DeflektorishScene::resetBonusTally() {
+  bonusTallyPhase_ = BonusTallyPhase::Hidden;
+  clearTime_ = 0.0f;
+  bonusPhaseTime_ = 0.0f;
+  bonusFadeTime_ = 0.0f;
+  bonusScoreTickTimer_ = 0.0f;
+  bonusEnergyFlash_ = 0.0f;
+  bonusTimeFlash_ = 0.0f;
+  bonusTotalFlash_ = 0.0f;
+  energyBonus_ = 0;
+  timeBonus_ = 0;
+  totalBonus_ = 0;
+  displayedEnergyBonus_ = 0;
+  displayedTimeBonus_ = 0;
+  displayedTotalBonus_ = 0;
+  lastBonusHeadingText_.clear();
+  lastBonusEnergyText_.clear();
+  lastBonusTimeText_.clear();
+  lastBonusTotalText_.clear();
+  updateBonusText();
+}
+
+void DeflektorishScene::updateVictoryCelebration(float dt) {
+  if (!victoryCelebrationStarted_ ||
+      completionPhase_ == CompletionPhase::Playing) {
+    return;
+  }
+
+  victoryTime_ += dt;
+  if (completionPhase_ == CompletionPhase::Celebration) {
+    if (victoryPostWaveTimer_ > 0.0f) {
+      victoryPostWaveTimer_ -= dt;
+      if (victoryPostWaveTimer_ <= 0.0f && postBumpCallback_) {
+        postBumpCallback_(Deflektorish::kScreenCenter, 1.85f);
+      }
+    }
+
+    victoryBlastTimer_ -= dt;
+    while (victoryBlastIndex_ < kVictoryBlastCount &&
+           victoryBlastTimer_ <= 0.0f) {
+      const glm::vec2 position = victoryBlastPosition(victoryBlastIndex_);
+      const float energy =
+          2.35f + victoryNoise(victoryBlastIndex_, 1.31f) * 1.0f;
+      spawnExplosion(position, energy);
+      if (soundCallback_) {
+        soundCallback_(Deflektorish::Sound::TargetDestroyed, position, energy);
+      }
+      startCameraShake(position, kShakeStrength * 0.34f + energy * 0.22f,
+                       0.18f);
+      ++victoryBlastIndex_;
+      victoryBlastTimer_ += kVictoryBlastInterval;
+    }
+    if (victoryBlastIndex_ >= kVictoryBlastCount && !anyExplosionActive()) {
+      completionPhase_ = CompletionPhase::FadeOut;
+      completionFadeTime_ = 0.0f;
+    }
+  } else if (completionPhase_ == CompletionPhase::FadeOut) {
+    completionFadeTime_ += dt;
+    if (completionFadeTime_ >= kVictoryTextFadeDuration) {
+      completionPhase_ = CompletionPhase::BonusPending;
+      victoryCelebrationComplete_ = true;
+      startBonusTally();
+    }
+  } else if (completionPhase_ == CompletionPhase::BonusPending) {
+    updateBonusTally(dt);
+  }
+
+  updateCompletionOverlay();
+}
+
+void DeflektorishScene::updateCompletionOverlay() {
+  if (!victoryCelebrationStarted_) {
+    return;
+  }
+
+  const float intro = std::clamp(victoryTime_ / 0.44f, 0.0f, 1.0f);
+  const float easedIntro = intro * intro * (3.0f - 2.0f * intro);
+  const float blastProgress =
+      std::clamp(static_cast<float>(victoryBlastIndex_) /
+                     static_cast<float>(kVictoryBlastCount),
+                 0.0f, 1.0f);
+  const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 8.0f);
+  float fade = 1.0f;
+  if (completionPhase_ == CompletionPhase::FadeOut) {
+    fade = 1.0f - std::clamp(completionFadeTime_ / kVictoryTextFadeDuration,
+                             0.0f, 1.0f);
+  } else if (completionPhase_ == CompletionPhase::BonusPending) {
+    fade = 0.0f;
+  }
+  const float bonusBackdrop =
+      completionPhase_ == CompletionPhase::BonusPending ? 0.34f : 1.0f;
+  const float overlayAlpha =
+      easedIntro * (0.58f + pulse * 0.08f) *
+      std::max(fade, bonusBackdrop);
+
+  if (completionOverlay_ != nullptr) {
+    completionOverlay_->config.params0 = {victoryTime_, overlayAlpha,
+                                          blastProgress, easedIntro};
+    completionOverlay_->config.params1 = {fade, bonusBackdrop, 0.0f, 0.0f};
+  }
+  if (completionTitle_ != nullptr) {
+    const float titleAlpha = std::clamp((victoryTime_ - 0.12f) / 0.36f,
+                                        0.0f, 1.0f);
+    completionTitle_->setTextColor(
+        {0.64f + pulse * 0.12f, 0.96f, 1.0f, titleAlpha * fade});
+    completionTitle_->setShadowColor(
+        {0.0f, 0.02f, 0.05f, titleAlpha * fade * 0.72f});
+  }
+  if (completionSubtitle_ != nullptr) {
+    const float subtitleAlpha = std::clamp((victoryTime_ - 0.46f) / 0.36f,
+                                           0.0f, 1.0f);
+    completionSubtitle_->setTextColor(
+        {1.0f, 0.72f + pulse * 0.08f, 0.28f, subtitleAlpha * fade});
+    completionSubtitle_->setShadowColor(
+        {0.0f, 0.02f, 0.05f, subtitleAlpha * fade * 0.68f});
+  }
+}
+
+void DeflektorishScene::startBonusTally() {
+  if (bonusTallyPhase_ != BonusTallyPhase::Hidden) {
+    return;
+  }
+
+  clearTime_ = levelElapsed_;
+  const float energyRatio =
+      beamEnergyConfig_.maxEnergy > 0.0f
+          ? std::clamp(beamEnergy_.current / beamEnergyConfig_.maxEnergy,
+                       0.0f, 1.0f)
+          : 0.0f;
+  energyBonus_ = static_cast<int>(
+      std::round(energyRatio * static_cast<float>(kMaxEnergyBonus)));
+  timeBonus_ = static_cast<int>(
+      std::round(std::max(kLevelParTimeSeconds - clearTime_, 0.0f) *
+                 kTimeBonusPerSecond));
+  totalBonus_ = energyBonus_ + timeBonus_;
+  displayedEnergyBonus_ = 0;
+  displayedTimeBonus_ = 0;
+  displayedTotalBonus_ = 0;
+  bonusPhaseTime_ = 0.0f;
+  bonusFadeTime_ = 0.0f;
+  bonusScoreTickTimer_ = 0.0f;
+  bonusTallyPhase_ = BonusTallyPhase::Energy;
+  updateBonusText();
+}
+
+void DeflektorishScene::updateBonusTally(float dt) {
+  if (bonusTallyPhase_ == BonusTallyPhase::Hidden ||
+      bonusTallyPhase_ == BonusTallyPhase::Done) {
+    updateBonusText();
+    return;
+  }
+
+  bonusPhaseTime_ += dt;
+  bonusScoreTickTimer_ = std::max(bonusScoreTickTimer_ - dt, 0.0f);
+  bonusEnergyFlash_ = std::max(bonusEnergyFlash_ - dt * kBonusFlashDecay, 0.0f);
+  bonusTimeFlash_ = std::max(bonusTimeFlash_ - dt * kBonusFlashDecay, 0.0f);
+  bonusTotalFlash_ = std::max(bonusTotalFlash_ - dt * kBonusFlashDecay, 0.0f);
+  if (bonusPhaseTime_ < kBonusLineDelay) {
+    updateBonusText();
+    return;
+  }
+
+  bool scoreAdvanced = false;
+  const bool canScoreTick = bonusScoreTickTimer_ <= 0.0f;
+  switch (bonusTallyPhase_) {
+  case BonusTallyPhase::Hidden:
+  case BonusTallyPhase::Done:
+    break;
+  case BonusTallyPhase::Hold:
+    if (bonusPhaseTime_ >= kBonusDoneHold) {
+      bonusTallyPhase_ = BonusTallyPhase::FadeOut;
+      bonusFadeTime_ = 0.0f;
+    }
+    break;
+  case BonusTallyPhase::FadeOut:
+    bonusFadeTime_ += dt;
+    if (bonusFadeTime_ >= kBonusFadeDuration) {
+      bonusTallyPhase_ = BonusTallyPhase::Done;
+    }
+    break;
+  case BonusTallyPhase::Energy: {
+    const int previous = displayedEnergyBonus_;
+    if (canScoreTick) {
+      displayedEnergyBonus_ =
+          advanceDisplayedScore(displayedEnergyBonus_, energyBonus_, false);
+    }
+    scoreAdvanced = displayedEnergyBonus_ != previous;
+    if (displayedEnergyBonus_ >= energyBonus_ &&
+        bonusPhaseTime_ >= kBonusLineDelay + 0.24f) {
+      bonusTallyPhase_ = BonusTallyPhase::Time;
+      bonusPhaseTime_ = 0.0f;
+      bonusEnergyFlash_ = 1.0f;
+    }
+    break;
+  }
+  case BonusTallyPhase::Time: {
+    const int previous = displayedTimeBonus_;
+    if (canScoreTick) {
+      displayedTimeBonus_ =
+          advanceDisplayedScore(displayedTimeBonus_, timeBonus_, false);
+    }
+    scoreAdvanced = displayedTimeBonus_ != previous;
+    if (displayedTimeBonus_ >= timeBonus_ &&
+        bonusPhaseTime_ >= kBonusLineDelay + 0.24f) {
+      bonusTallyPhase_ = BonusTallyPhase::Total;
+      bonusPhaseTime_ = 0.0f;
+      bonusTimeFlash_ = 1.0f;
+    }
+    break;
+  }
+  case BonusTallyPhase::Total: {
+    const int previous = displayedTotalBonus_;
+    if (canScoreTick) {
+      displayedTotalBonus_ =
+          advanceDisplayedScore(displayedTotalBonus_, totalBonus_, true);
+    }
+    scoreAdvanced = displayedTotalBonus_ != previous;
+    if (displayedTotalBonus_ >= totalBonus_) {
+      bonusTallyPhase_ = BonusTallyPhase::Hold;
+      bonusPhaseTime_ = 0.0f;
+      bonusTotalFlash_ = 1.0f;
+    }
+    break;
+  }
+  }
+
+  if (scoreAdvanced && soundCallback_) {
+    soundCallback_(Deflektorish::Sound::ScoreTick, Deflektorish::kScreenCenter,
+                   0.0f);
+    bonusScoreTickTimer_ = kBonusScoreTickInterval;
+  }
+  updateBonusText();
+}
+
+void DeflektorishScene::updateBonusText() {
+  const bool visible = bonusTallyPhase_ != BonusTallyPhase::Hidden;
+  const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 10.0f);
+  float alpha = visible ? 1.0f : 0.0f;
+  if (bonusTallyPhase_ == BonusTallyPhase::FadeOut) {
+    alpha = 1.0f - std::clamp(bonusFadeTime_ / kBonusFadeDuration, 0.0f, 1.0f);
+  } else if (bonusTallyPhase_ == BonusTallyPhase::Done) {
+    alpha = 0.0f;
+  }
+
+  if (bonusHeading_ != nullptr) {
+    bonusHeading_->setTextColor({0.64f + pulse * 0.12f, 0.96f, 1.0f, alpha});
+    bonusHeading_->setShadowColor({0.0f, 0.02f, 0.05f, alpha * 0.72f});
+  }
+
+  const bool showEnergy = visible;
+  const bool showTime = bonusTallyPhase_ == BonusTallyPhase::Time ||
+                        bonusTallyPhase_ == BonusTallyPhase::Total ||
+                        bonusTallyPhase_ == BonusTallyPhase::Hold ||
+                        bonusTallyPhase_ == BonusTallyPhase::FadeOut ||
+                        bonusTallyPhase_ == BonusTallyPhase::Done;
+  const bool showTotal = bonusTallyPhase_ == BonusTallyPhase::Total ||
+                         bonusTallyPhase_ == BonusTallyPhase::Hold ||
+                         bonusTallyPhase_ == BonusTallyPhase::FadeOut ||
+                         bonusTallyPhase_ == BonusTallyPhase::Done;
+
+  const std::string energyText =
+      scoreLine("ENERGY BONUS", displayedEnergyBonus_);
+  const std::string timeText = scoreLine("TIME BONUS", displayedTimeBonus_);
+  const std::string totalText = scoreLine("TOTAL SCORE", displayedTotalBonus_);
+
+  if (bonusEnergy_ != nullptr) {
+    if (lastBonusEnergyText_ != energyText) {
+      bonusEnergy_->setText(energyText);
+      lastBonusEnergyText_ = energyText;
+    }
+    const bool active = bonusTallyPhase_ == BonusTallyPhase::Energy;
+    const float flash = std::max(active ? 0.55f + pulse * 0.35f : 0.0f,
+                                 bonusEnergyFlash_);
+    const glm::vec3 energyColor =
+        glm::mix(glm::vec3(1.0f, 0.72f + pulse * 0.08f, 0.28f),
+                 glm::vec3(0.64f + pulse * 0.18f, 0.96f, 1.0f),
+                 std::clamp(flash, 0.0f, 1.0f));
+    bonusEnergy_->setTextColor(
+        {energyColor.r, energyColor.g, energyColor.b, showEnergy ? alpha : 0.0f});
+    bonusEnergy_->setShadowColor(
+        {0.0f, 0.02f, 0.05f, showEnergy ? alpha * 0.68f : 0.0f});
+  }
+  if (bonusTime_ != nullptr) {
+    if (lastBonusTimeText_ != timeText) {
+      bonusTime_->setText(timeText);
+      lastBonusTimeText_ = timeText;
+    }
+    const bool active = bonusTallyPhase_ == BonusTallyPhase::Time;
+    const float flash = std::max(active ? 0.55f + pulse * 0.35f : 0.0f,
+                                 bonusTimeFlash_);
+    const glm::vec3 timeColor =
+        glm::mix(glm::vec3(1.0f, 0.72f + pulse * 0.08f, 0.28f),
+                 glm::vec3(0.64f + pulse * 0.18f, 0.96f, 1.0f),
+                 std::clamp(flash, 0.0f, 1.0f));
+    bonusTime_->setTextColor(
+        {timeColor.r, timeColor.g, timeColor.b, showTime ? alpha : 0.0f});
+    bonusTime_->setShadowColor(
+        {0.0f, 0.02f, 0.05f, showTime ? alpha * 0.68f : 0.0f});
+  }
+  if (bonusTotal_ != nullptr) {
+    if (lastBonusTotalText_ != totalText) {
+      bonusTotal_->setText(totalText);
+      lastBonusTotalText_ = totalText;
+    }
+    const bool active = bonusTallyPhase_ == BonusTallyPhase::Total;
+    const float flash = std::max(active ? 0.40f + pulse * 0.45f : 0.0f,
+                                 bonusTotalFlash_);
+    const glm::vec3 totalColor =
+        glm::mix(glm::vec3(0.64f, 0.96f, 1.0f),
+                 glm::vec3(1.0f, 0.82f + pulse * 0.14f, 0.32f),
+                 std::clamp(flash, 0.0f, 1.0f));
+    bonusTotal_->setTextColor(
+        {totalColor.r, totalColor.g, totalColor.b, showTotal ? alpha : 0.0f});
+    bonusTotal_->setShadowColor(
+        {0.0f, 0.02f, 0.05f, showTotal ? alpha * 0.72f : 0.0f});
+  }
+}
+
+int DeflektorishScene::advanceDisplayedScore(int current, int target,
+                                             bool total) const {
+  if (current >= target) {
+    return target;
+  }
+  const int remaining = target - current;
+  if (remaining <= 0) {
+    return target;
+  }
+
+  const float progress =
+      target > 0 ? std::clamp(static_cast<float>(current) /
+                                  static_cast<float>(target),
+                              0.0f, 1.0f)
+                 : 1.0f;
+  const float arcadeEnvelope =
+      0.55f + std::sin(progress * 3.1415926535f) * (total ? 1.35f : 1.05f);
+  const float desiredTicks = total ? 18.0f : 12.0f;
+  const float rawStep =
+      static_cast<float>(target) / desiredTicks * arcadeEnvelope;
+  const int quantum = total ? 100 : 50;
+  int step = static_cast<int>(std::round(rawStep / static_cast<float>(quantum))) *
+             quantum;
+  step = std::clamp(step, quantum, total ? 1400 : 700);
+  if (remaining <= step + quantum) {
+    return target;
+  }
+  return std::min(current + step, target);
 }
 
 void DeflektorishScene::updateCameraShake(float dt) {

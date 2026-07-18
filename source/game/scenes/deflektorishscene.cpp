@@ -204,7 +204,7 @@ void DeflektorishScene::spawnLevel() {
                      reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
                      12, 0.10f);
   energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
-                              DL::BlendMode::Alpha, {480.0f, 52.0f},
+                              DL::BlendMode::Alpha, {480.0f, 34.0f},
                               {176.0f, 10.0f}, 20, 0.20f);
 
   for (std::size_t i = 0; i < level.targets.size(); ++i) {

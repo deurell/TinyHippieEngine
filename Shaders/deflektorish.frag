@@ -421,6 +421,9 @@ vec4 shadeEnergyBar(vec2 uv) {
     vec2 p = uv * 2.0 - 1.0;
     float energy = clamp(proceduralParams.x, 0.0, 1.0);
     float danger = clamp(proceduralParams.y, 0.0, 1.0);
+    float drain = clamp(proceduralParams.z, 0.0, 1.0);
+    float drainSignal = smoothstep(0.004, 0.045, drain);
+    float drainPower = max(drainSignal * 0.55, drain);
     float t = proceduralParams.w;
 
     vec2 halfPixels = vec2(176.0, 10.0);
@@ -437,14 +440,30 @@ vec4 shadeEnergyBar(vec2 uv) {
                  step(-154.0, px.x) * step(px.x, 154.0);
     float marker = 1.0 - smoothstep(1.0, 3.5, abs(px.x - fillLimit));
     marker *= 1.0 - smoothstep(3.8, 5.0, abs(px.y));
-    float pulse = 0.5 + 0.5 * sin(t * 9.0);
-    vec3 safeColor = vec3(0.42, 0.96, 0.86);
-    vec3 dangerColor = vec3(1.0, 0.18, 0.10);
-    vec3 fillColor = mix(safeColor, dangerColor, danger);
-    vec3 color = vec3(0.16, 0.30, 0.36) * frame;
-    color += fillColor * fill * (0.74 + danger * pulse * 0.24);
-    color += vec3(1.0, 0.94, 0.82) * marker * (0.36 + danger * 0.28);
-    float alpha = clamp(frame * 0.82 + fill * 0.74 + marker * 0.44, 0.0, 1.0);
+    float drainHead = 1.0 - smoothstep(4.0, 18.0, abs(px.x - fillLimit));
+    drainHead *= 1.0 - smoothstep(3.0, 5.6, abs(px.y));
+    float drainStripe = drainSignal *
+                        (0.45 + 0.55 * step(0.0, sin(px.x * 0.42 + t * 18.0)));
+    drainStripe *= fill * (1.0 - smoothstep(2.0, 3.2, abs(px.y)));
+    float lowEnergy = 1.0 - energy;
+    float pulse = 0.5 + 0.5 * sin(t * mix(7.0, 15.0, max(lowEnergy, drainSignal)));
+    float pulseStrength = smoothstep(0.30, 0.82, lowEnergy) + drainPower * 0.55;
+    vec3 green = vec3(0.18, 0.92, 0.24);
+    vec3 yellow = vec3(1.00, 0.66, 0.10);
+    vec3 red = vec3(0.95, 0.08, 0.06);
+    vec3 fillColor = energy > 0.50
+                         ? mix(yellow, green, smoothstep(0.50, 1.0, energy))
+                         : mix(red, yellow, smoothstep(0.0, 0.50, energy));
+    vec3 color = vec3(0.34, 0.38, 0.34) * frame;
+    color += fillColor * fill * (0.74 + pulse * pulseStrength * 0.42);
+    color += fillColor * fill * pulse * drainPower * 0.22;
+    color += vec3(1.0, 0.30, 0.08) * drainStripe * (0.14 + drainPower * 0.44) * (0.22 + pulse * 0.35);
+    color += vec3(1.0, 0.72, 0.20) * drainHead * drainSignal * (0.30 + pulse * 0.55);
+    color += vec3(1.0, 0.72, 0.34) * marker * (0.28 + pulseStrength * 0.24);
+    color += fillColor * frame * pulse * pulseStrength * 0.12;
+    float alpha = clamp(frame * 0.82 + fill * (0.74 + pulseStrength * 0.10) +
+                            marker * 0.44 + drainHead * drainSignal * 0.18,
+                        0.0, 1.0);
     return vec4(color, alpha);
 }
 

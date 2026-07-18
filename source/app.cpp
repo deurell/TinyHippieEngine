@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <random>
 #include <thread>
 
 namespace {
@@ -30,6 +31,12 @@ constexpr float kCrtCurveScale = 0.94f;
 constexpr float kCrtCurveOffset = 0.03f;
 constexpr float kDeflektorPostBumpDuration = 1.35f;
 DL::App *gActiveApp = nullptr;
+
+float randomRange(float minValue, float maxValue) {
+  static std::mt19937 rng{std::random_device{}()};
+  std::uniform_real_distribution<float> distribution(minValue, maxValue);
+  return distribution(rng);
+}
 
 glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature, glm::vec2 screenSize) {
   // Keep in sync with Shaders/crt.frag curve().
@@ -682,14 +689,16 @@ void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
   switch (sound) {
   case Deflektorish::Sound::TargetFirstHit: {
     const float volume = std::clamp(0.28f + energy * 0.035f, 0.0f, 0.58f);
+    const float pitch = randomRange(0.94f, 1.08f);
     audioSystem_.playOneShot("deflektorish_target_first_hit",
-                             DL::AudioGroup::SFX, volume);
+                             DL::AudioGroup::SFX, volume, pitch);
     break;
   }
   case Deflektorish::Sound::TargetDestroyed: {
     const float volume = std::clamp(0.82f + energy * 0.055f, 0.0f, 1.0f);
+    const float pitch = randomRange(0.92f, 1.03f);
     audioSystem_.playOneShot("deflektorish_low_frequency_explosion",
-                             DL::AudioGroup::SFX, volume);
+                             DL::AudioGroup::SFX, volume, pitch);
     break;
   }
   }

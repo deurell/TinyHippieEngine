@@ -141,7 +141,8 @@ bool AudioSystem::hasClip(const std::string &name) const {
 }
 
 AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
-                                              AudioGroup group, float volume) {
+                                              AudioGroup group, float volume,
+                                              float pitch) {
   if (!initialized_ && !init()) {
     return kInvalidSoundId;
   }
@@ -154,14 +155,15 @@ AudioSystem::SoundId AudioSystem::playOneShot(const std::string &name,
 
   cleanupFinishedSounds();
   if (group == AudioGroup::SFX) {
-    return playPooledSfxOneShot(name, clipIt->second, volume);
+    return playPooledSfxOneShot(name, clipIt->second, volume, pitch);
   }
-  return playInternal(name, group, false, volume);
+  return playInternal(name, group, false, volume, pitch);
 }
 
 AudioSystem::SoundId AudioSystem::playLoop(const std::string &name,
-                                           AudioGroup group, float volume) {
-  return playInternal(name, group, true, volume);
+                                           AudioGroup group, float volume,
+                                           float pitch) {
+  return playInternal(name, group, true, volume, pitch);
 }
 
 void AudioSystem::stop(SoundId id) { removeActiveSound(id); }
@@ -260,9 +262,9 @@ std::size_t AudioSystem::activeSoundCount(AudioGroup group) const {
 
 AudioSystem::SoundId
 AudioSystem::playPooledSfxOneShot(const std::string &clipName, ClipData &clip,
-                                  float volume) {
+                                  float volume, float pitch) {
   if (clip.sfxPool.empty()) {
-    return playInternal(clipName, AudioGroup::SFX, false, volume);
+    return playInternal(clipName, AudioGroup::SFX, false, volume, pitch);
   }
 
   if (!enforceGroupVoiceLimit(AudioGroup::SFX)) {
@@ -307,6 +309,7 @@ AudioSystem::playPooledSfxOneShot(const std::string &clipName, ClipData &clip,
   ma_sound_seek_to_pcm_frame(voice.sound.get(), 0);
   ma_sound_set_looping(voice.sound.get(), MA_FALSE);
   ma_sound_set_volume(voice.sound.get(), std::max(0.0f, volume));
+  ma_sound_set_pitch(voice.sound.get(), std::max(0.01f, pitch));
   if (ma_sound_start(voice.sound.get()) != MA_SUCCESS) {
     LogError("Unable to start pooled sound", clip.fileName);
     return kInvalidSoundId;
@@ -322,6 +325,7 @@ AudioSystem::playPooledSfxOneShot(const std::string &clipName, ClipData &clip,
   active.clipName = clipName;
   active.clipVoiceIndex = selected;
   active.volume = std::max(0.0f, volume);
+  active.pitch = std::max(0.01f, pitch);
   active.startOrdinal = soundOrdinalCounter_++;
   activeSounds_[soundId] = std::move(active);
   return soundId;
@@ -329,7 +333,7 @@ AudioSystem::playPooledSfxOneShot(const std::string &clipName, ClipData &clip,
 
 AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
                                                AudioGroup group, bool loop,
-                                               float volume) {
+                                               float volume, float pitch) {
   if (!initialized_ && !init()) {
     return kInvalidSoundId;
   }
@@ -362,6 +366,7 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
 
   ma_sound_set_looping(sound.get(), loop ? MA_TRUE : MA_FALSE);
   ma_sound_set_volume(sound.get(), std::max(0.0f, volume));
+  ma_sound_set_pitch(sound.get(), std::max(0.01f, pitch));
   if (ma_sound_start(sound.get()) != MA_SUCCESS) {
     LogError("Unable to start sound", clipIt->second.fileName);
     ma_sound_uninit(sound.get());
@@ -376,6 +381,7 @@ AudioSystem::SoundId AudioSystem::playInternal(const std::string &name,
   active.group = group;
   active.clipName = name;
   active.volume = std::max(0.0f, volume);
+  active.pitch = std::max(0.01f, pitch);
   active.startOrdinal = soundOrdinalCounter_++;
   activeSounds_[soundId] = std::move(active);
   return soundId;

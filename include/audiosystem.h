@@ -41,10 +41,10 @@ public:
 
   SoundId playOneShot(const std::string &name,
                       AudioGroup group = AudioGroup::SFX,
-                      float volume = 1.0f);
+                      float volume = 1.0f, float pitch = 1.0f);
   SoundId playLoop(const std::string &name,
                    AudioGroup group = AudioGroup::SFX,
-                   float volume = 1.0f);
+                   float volume = 1.0f, float pitch = 1.0f);
   void stop(SoundId id);
   void stopAll();
 
@@ -102,14 +102,15 @@ private:
     std::string clipName;
     std::size_t clipVoiceIndex = kInvalidClipVoiceIndex;
     float volume = 1.0f;
+    float pitch = 1.0f;
     std::uint64_t startOrdinal = 0;
   };
 
   SoundId playPooledSfxOneShot(const std::string &clipName,
                                ClipData &clip,
-                               float volume);
+                               float volume, float pitch);
   SoundId playInternal(const std::string &name, AudioGroup group, bool loop,
-                       float volume);
+                       float volume, float pitch);
   bool initGroups();
   void uninitGroups();
   void applyGroupGain(AudioGroup group);

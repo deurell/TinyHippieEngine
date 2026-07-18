@@ -74,7 +74,10 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updatePortalVisuals(ctx.delta_time, result);
   updateFilterVisuals(ctx.delta_time, result);
   updateSplitterVisuals(ctx.delta_time, result);
-  updateTargets(ctx.delta_time, result);
+  gameEvents_.clear();
+  updateTargetState(ctx.delta_time, result);
+  applyGameEvents();
+  updateTargetVisuals();
   updateExplosions(ctx.delta_time);
 
   SceneNode::update(ctx);
@@ -483,7 +486,7 @@ void DeflektorishScene::updateSplitterVisuals(float dt,
   }
 }
 
-void DeflektorishScene::updateTargets(float dt, const BeamResult &result) {
+void DeflektorishScene::updateTargetState(float dt, const BeamResult &result) {
   for (std::size_t i = 0; i < targets_.size(); ++i) {
     Target &target = targets_[i];
     if (result.hitTargets[i] && target.alive && target.dying <= 0.0f) {
@@ -496,19 +499,50 @@ void DeflektorishScene::updateTargets(float dt, const BeamResult &result) {
       target.dying -= dt;
       if (target.dying <= 0.0f) {
         target.alive = false;
-        sourcePulse_ = std::min(sourcePulse_ + 0.35f + target.hitEnergy * 0.08f,
-                                1.0f);
-        if (postBumpCallback_) {
-          postBumpCallback_(target.position, 1.0f + target.hitEnergy * 0.22f);
-        }
-        spawnExplosion(target.position, target.hitEnergy);
-        startCameraShake(kShakeStrength + target.hitEnergy * 0.9f,
-                         0.34f + target.hitEnergy * 0.025f);
-        renderer_.hideNode(target.node);
+        emitTargetDestroyed(i, target.position, target.hitEnergy);
       }
     }
+  }
+}
+
+void DeflektorishScene::updateTargetVisuals() {
+  for (Target &target : targets_) {
     renderer_.updateTarget(target.node, target.alive, target.hitFlash,
                            elapsed_, target.phase);
+  }
+}
+
+void DeflektorishScene::emitTargetDestroyed(std::size_t targetIndex,
+                                            glm::vec2 position, float energy) {
+  gameEvents_.push_back(
+      {.type = GameEvent::Type::TargetDestroyed,
+       .position = position,
+       .energy = energy,
+       .index = static_cast<int>(targetIndex)});
+}
+
+void DeflektorishScene::applyGameEvents() {
+  for (const GameEvent &event : gameEvents_) {
+    switch (event.type) {
+    case GameEvent::Type::TargetDestroyed:
+      applyTargetDestroyed(event);
+      break;
+    }
+  }
+}
+
+void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
+  sourcePulse_ =
+      std::min(sourcePulse_ + 0.35f + event.energy * 0.08f, 1.0f);
+  if (postBumpCallback_) {
+    postBumpCallback_(event.position, 1.0f + event.energy * 0.22f);
+  }
+  spawnExplosion(event.position, event.energy);
+  startCameraShake(kShakeStrength + event.energy * 0.9f,
+                   0.34f + event.energy * 0.025f);
+  if (event.index >= 0 &&
+      static_cast<std::size_t>(event.index) < targets_.size()) {
+    renderer_.hideNode(targets_[static_cast<std::size_t>(event.index)].node);
   }
 }
 

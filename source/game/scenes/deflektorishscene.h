@@ -100,6 +100,17 @@ private:
     DL::ShaderPlaneNode *node = nullptr;
   };
 
+  struct GameEvent {
+    enum class Type {
+      TargetDestroyed,
+    };
+
+    Type type = Type::TargetDestroyed;
+    glm::vec2 position{0.0f};
+    float energy = 0.0f;
+    int index = -1;
+  };
+
   using BeamResult = Deflektorish::BeamSolveResult;
 
   DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
@@ -121,7 +132,12 @@ private:
   void updatePortalVisuals(float dt, const BeamResult &result);
   void updateFilterVisuals(float dt, const BeamResult &result);
   void updateSplitterVisuals(float dt, const BeamResult &result);
-  void updateTargets(float dt, const BeamResult &result);
+  void updateTargetState(float dt, const BeamResult &result);
+  void updateTargetVisuals();
+  void emitTargetDestroyed(std::size_t targetIndex, glm::vec2 position,
+                           float energy);
+  void applyGameEvents();
+  void applyTargetDestroyed(const GameEvent &event);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
   void updateCameraShake(float dt);
@@ -150,6 +166,7 @@ private:
   std::vector<Portal> portals_;
   std::vector<Filter> filters_;
   std::vector<Splitter> splitters_;
+  std::vector<GameEvent> gameEvents_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   int selectedReflektor_ = -1;

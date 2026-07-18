@@ -1,5 +1,6 @@
 #include "deflektorishscene.h"
 
+#include "game/deflektorish/deflektorishconfig.h"
 #include "iscene.h"
 #include <algorithm>
 #include <cmath>
@@ -9,8 +10,6 @@
 
 namespace {
 
-constexpr float kPixelToWorld = 0.01f;
-constexpr glm::vec2 kScreenCenter{480.0f, 320.0f};
 constexpr int kMaxBeamSegments = 28;
 constexpr float kEpsilon = 0.001f;
 constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
@@ -20,7 +19,6 @@ constexpr float kShakeStrength = 6.0f;
 constexpr float kShakeMaxStrength = 18.0f;
 constexpr float kShakeDecay = 1.65f;
 constexpr float kShakeKickDecay = 28.0f;
-constexpr float kOrthographicHeight = 7.1f;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
 constexpr int kStyleBlocker = 4;
@@ -103,7 +101,7 @@ glm::vec2 DeflektorishScene::grid(int x, int y) {
 }
 
 glm::vec2 DeflektorishScene::toWorld(glm::vec2 pixels) {
-  return (pixels - kScreenCenter) * kPixelToWorld;
+  return Deflektorish::gameToWorld(pixels);
 }
 
 DL::ShaderPlaneNode *DeflektorishScene::addShaderPlane(
@@ -122,8 +120,8 @@ DL::ShaderPlaneNode *DeflektorishScene::addShaderPlane(
   node->setRenderLayer(renderLayer);
   const glm::vec2 world = toWorld(position);
   node->setLocalPosition({world.x, world.y, z});
-  node->setLocalScale({halfSize.x * kPixelToWorld, halfSize.y * kPixelToWorld,
-                       1.0f});
+  node->setLocalScale({halfSize.x * Deflektorish::kPixelToWorld,
+                       halfSize.y * Deflektorish::kPixelToWorld, 1.0f});
   node->setLocalRotation(glm::quat(glm::vec3(0.0f, 0.0f, rotationRadians)));
   DL::ShaderPlaneNode *raw = node.get();
   addChild(std::move(node));
@@ -135,7 +133,7 @@ void DeflektorishScene::createCameraNode() {
   node->setDebugName("main_camera");
   node->setActive(true);
   node->setProjection(DL::CameraProjection::Orthographic);
-  node->setOrthographicHeight(kOrthographicHeight);
+  node->setOrthographicHeight(Deflektorish::kOrthographicHeight);
   node->setLocalPosition({0.0f, 0.0f, 10.5f});
   node->setLookAtTarget({0.0f, 0.0f, 0.0f});
   cameraNode_ = node.get();
@@ -394,7 +392,7 @@ glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
   }
 
   const float aspect = screenSize_.x / screenSize_.y;
-  const float halfHeight = kOrthographicHeight * 0.5f;
+  const float halfHeight = Deflektorish::kOrthographicHeight * 0.5f;
   const float halfWidth = halfHeight * aspect;
   const glm::vec2 normalized{
       screenPosition.x / screenSize_.x,
@@ -584,7 +582,7 @@ void DeflektorishScene::updateCameraShake(float dt) {
           std::cos(shakeKickAngle_) * shakeKick_,
       std::sin(elapsed_ * 71.0f + shakeSeed_ * 1.7f) * traumaAmount +
           std::sin(shakeKickAngle_) * shakeKick_};
-  const glm::vec2 offset = offsetPixels * kPixelToWorld;
+  const glm::vec2 offset = offsetPixels * Deflektorish::kPixelToWorld;
   cameraNode_->setLocalPosition({offset.x, offset.y, 10.5f});
   cameraNode_->lookAtWorld({offset.x, offset.y, 0.0f});
 }

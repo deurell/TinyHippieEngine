@@ -7,6 +7,7 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
+#include "game/deflektorish/deflektorishconfig.h"
 #include "game/scenes/skeletalanimationblendscene.h"
 #include "game/scenes/deflektorishscene.h"
 #include "game/scenes/inputdebugscene.h"
@@ -659,10 +660,13 @@ void DL::App::processInput(GLFWwindow *window) {
 }
 
 void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
-  constexpr glm::vec2 kDeflektorGameSize{960.0f, 640.0f};
+  const glm::vec2 framebufferSize = getFramebufferSize();
+  const float aspect = framebufferSize.y > 0.0f
+                           ? framebufferSize.x / framebufferSize.y
+                           : 16.0f / 9.0f;
   DeflektorPostBump bump;
-  bump.uv = glm::clamp(gamePosition / kDeflektorGameSize, glm::vec2(0.0f),
-                       glm::vec2(1.0f));
+  bump.uv = glm::clamp(Deflektorish::gameToPostUv(gamePosition, aspect),
+                       glm::vec2(0.0f), glm::vec2(1.0f));
   bump.age = 0.0f;
   bump.strength = std::min(std::max(strength, 0.0f) * 0.026f, 0.052f);
   deflektorPostBumps_.insert(deflektorPostBumps_.begin(), bump);

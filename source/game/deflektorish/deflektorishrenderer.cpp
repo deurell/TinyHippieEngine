@@ -1,6 +1,7 @@
 #include "deflektorishrenderer.h"
 
 #include "camera.h"
+#include "game/deflektorish/deflektorishconfig.h"
 #include "scenenode.h"
 #include "shaderplanenode.h"
 #include <algorithm>
@@ -11,8 +12,6 @@
 namespace Deflektorish {
 namespace {
 
-constexpr float kPixelToWorld = 0.01f;
-constexpr glm::vec2 kScreenCenter{480.0f, 320.0f};
 constexpr float kThickness = 48.0f;
 constexpr float kBeamThicknessPerReflect = 6.0f;
 constexpr float kEpsilon = 0.001f;
@@ -163,8 +162,9 @@ void Renderer::updateTarget(DL::ShaderPlaneNode *node, bool alive,
     return;
   }
   const float swell = hitFlash * hitFlash * 0.32f;
-  node->setLocalScale({13.0f * kPixelToWorld * (1.0f + swell),
-                       13.0f * kPixelToWorld * (1.0f + swell), 1.0f});
+  node->setLocalScale(
+      {13.0f * kPixelToWorld * (1.0f + swell),
+       13.0f * kPixelToWorld * (1.0f + swell), 1.0f});
   node->config.params0 = {elapsed * 1.8f, phase, hitFlash, 0.0f};
 }
 
@@ -251,7 +251,7 @@ float Renderer::approach(float current, float target, float blend) {
 }
 
 glm::vec2 Renderer::toWorld(glm::vec2 pixels) {
-  return (pixels - kScreenCenter) * kPixelToWorld;
+  return gameToWorld(pixels);
 }
 
 } // namespace Deflektorish

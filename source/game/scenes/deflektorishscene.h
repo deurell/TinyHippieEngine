@@ -141,7 +141,7 @@ private:
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
   void updateCameraShake(float dt);
-  void startCameraShake(float strength, float duration);
+  void startCameraShake(glm::vec2 position, float strength, float duration);
   glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
   bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;
@@ -179,7 +179,9 @@ private:
   float selectionFlash_ = 0.0f;
   float shakeTrauma_ = 0.0f;
   float shakeKick_ = 0.0f;
+  float shakeKickDuration_ = 0.0f;
+  float shakeKickTime_ = 0.0f;
   float shakeSeed_ = 1.7f;
-  float shakeKickAngle_ = 0.0f;
+  glm::vec2 shakeKickDirection_{1.0f, 0.0f};
   float elapsed_ = 0.0f;
 };

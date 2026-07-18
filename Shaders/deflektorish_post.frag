@@ -8,6 +8,7 @@ in vec2 TexCoord;
 uniform sampler2D texture0;
 uniform vec4 bump1;
 uniform vec4 bump2;
+uniform vec2 screenSize;
 
 out vec4 FragColor;
 
@@ -19,19 +20,26 @@ vec3 bumpSample(vec2 uv, vec4 bump) {
         return vec3(0.0);
     }
 
+    float aspect = screenSize.x / max(screenSize.y, 1.0);
     vec2 delta = uv - center;
-    float distSq = dot(delta, delta);
-    float dist = sqrt(max(distSq, 0.00000001));
-    float radius = mix(0.03, 0.88, age);
-    float softWidth = mix(0.31, 0.23, age);
-    float ringWave = 1.0 - smoothstep(0.0, softWidth, abs(dist - radius));
-    ringWave = ringWave * ringWave * (3.0 - 2.0 * ringWave);
-    float fade = (1.0 - age) * (1.0 - age) * (1.0 - age * 0.35);
-    float glow = 1.0 - smoothstep(0.0, mix(0.36, 0.25, age), abs(dist - radius));
-    float centerFlash = 1.0 - smoothstep(0.0, mix(0.34, 0.12, age), dist);
-    float wave = (glow * 1.10 + centerFlash * 0.20) * fade * strength;
-    vec2 dir = delta / dist;
-    return vec3(dir * ringWave * fade * strength * 0.52, wave);
+    vec2 radialDelta = vec2(delta.x * aspect, delta.y);
+    float dist = length(radialDelta);
+    float safeDist = max(dist, 0.00000001);
+
+    float easedAge = age * age * (3.0 - 2.0 * age);
+    float radius = mix(0.025, 0.96, easedAge);
+    float softWidth = mix(0.33, 0.25, age);
+    float shell = 1.0 - smoothstep(0.0, softWidth, abs(dist - radius));
+    shell = shell * shell * (3.0 - 2.0 * shell);
+
+    float fade = pow(1.0 - age, 2.35);
+    float innerGlow = 1.0 - smoothstep(0.0, mix(0.38, 0.15, age), dist);
+    float wave = (shell * 0.94 + innerGlow * 0.14) * fade * strength;
+
+    vec2 direction = radialDelta / safeDist;
+    vec2 uvDirection = vec2(direction.x / aspect, direction.y);
+    float displacement = shell * fade * strength * 0.60;
+    return vec3(uvDirection * displacement, wave);
 }
 
 void main() {
@@ -44,8 +52,8 @@ void main() {
     vec2 sampleUv = clamp(uv - offset, vec2(0.001), vec2(0.999));
     vec4 color = texture(texture0, sampleUv);
 
-    float bloom = min(wave * 8.0 + length(offset) * 4.0, 0.34);
-    float contrast = min(wave * 1.10, 0.12);
+    float bloom = min(wave * 6.8 + length(offset) * 3.5, 0.33);
+    float contrast = min(wave * 0.92, 0.11);
     float edge = 1.0 - smoothstep(
         0.0,
         0.075,
@@ -55,8 +63,8 @@ void main() {
     color.rgb = (color.rgb - vec3(0.5)) * (1.0 + contrast) + vec3(0.5);
     color.rgb += vec3(0.42, 0.88, 1.0) * bloom;
     color.rgb += mix(vec3(0.92, 0.42, 0.92), vec3(1.0, 0.74, 0.40), heat) *
-                 min(wave * 1.05, 0.09 + heat * 0.05);
-    color.rgb += vec3(0.32, 0.84, 1.0) * edge * min(wave * 4.0, 0.16);
+                 min(wave * 0.98, 0.085 + heat * 0.045);
+    color.rgb += vec3(0.32, 0.84, 1.0) * edge * min(wave * 3.2, 0.14);
 
     FragColor = vec4(color.rgb, 1.0);
 }

@@ -15,10 +15,10 @@ constexpr float kEpsilon = 0.001f;
 constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
 constexpr float kReflektorPickRadius = 0.36f;
 constexpr float kTargetPrepopDuration = 0.26f;
-constexpr float kShakeStrength = 6.0f;
-constexpr float kShakeMaxStrength = 18.0f;
-constexpr float kShakeDecay = 1.65f;
-constexpr float kShakeKickDecay = 28.0f;
+constexpr float kShakeStrength = 5.2f;
+constexpr float kShakeMaxStrength = 16.0f;
+constexpr float kShakeDecay = 2.1f;
+constexpr float kShakeKickDecay = 5.8f;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
 constexpr int kStyleBlocker = 4;
@@ -538,7 +538,7 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
     postBumpCallback_(event.position, 1.0f + event.energy * 0.22f);
   }
   spawnExplosion(event.position, event.energy);
-  startCameraShake(kShakeStrength + event.energy * 0.9f,
+  startCameraShake(event.position, kShakeStrength + event.energy * 0.85f,
                    0.34f + event.energy * 0.025f);
   if (event.index >= 0 &&
       static_cast<std::size_t>(event.index) < targets_.size()) {
@@ -592,23 +592,51 @@ void DeflektorishScene::updateCameraShake(float dt) {
   }
   shakeTrauma_ = std::max(shakeTrauma_ - dt * kShakeDecay, 0.0f);
   shakeKick_ = std::max(shakeKick_ - dt * kShakeKickDecay, 0.0f);
+  if (shakeKickDuration_ > 0.0f) {
+    shakeKickTime_ = std::min(shakeKickTime_ + dt, shakeKickDuration_);
+  }
+
   const float traumaAmount = kShakeMaxStrength * shakeTrauma_ * shakeTrauma_;
-  const glm::vec2 offsetPixels{
-      std::sin(elapsed_ * 86.0f + shakeSeed_) * traumaAmount +
-          std::cos(shakeKickAngle_) * shakeKick_,
-      std::sin(elapsed_ * 71.0f + shakeSeed_ * 1.7f) * traumaAmount +
-          std::sin(shakeKickAngle_) * shakeKick_};
+  const float rumbleX =
+      std::sin(elapsed_ * 53.0f + shakeSeed_) * 0.65f +
+      std::sin(elapsed_ * 31.0f + shakeSeed_ * 2.1f) * 0.35f;
+  const float rumbleY =
+      std::sin(elapsed_ * 47.0f + shakeSeed_ * 1.7f) * 0.65f +
+      std::sin(elapsed_ * 29.0f + shakeSeed_ * 3.3f) * 0.35f;
+  const float kickProgress =
+      shakeKickDuration_ > 0.0f ? shakeKickTime_ / shakeKickDuration_ : 1.0f;
+  const float kickEnvelope =
+      (1.0f - std::clamp(kickProgress, 0.0f, 1.0f)) *
+      (1.0f - std::clamp(kickProgress, 0.0f, 1.0f));
+  const float kickPulse =
+      std::sin(std::clamp(kickProgress, 0.0f, 1.0f) * 3.1415926535f);
+  const glm::vec2 offsetPixels =
+      glm::vec2(rumbleX, rumbleY) * traumaAmount +
+      shakeKickDirection_ * shakeKick_ * kickEnvelope +
+      glm::vec2(-shakeKickDirection_.y, shakeKickDirection_.x) * shakeKick_ *
+          kickPulse * 0.24f;
   const glm::vec2 offset = offsetPixels * Deflektorish::kPixelToWorld;
   cameraNode_->setLocalPosition({offset.x, offset.y, 10.5f});
   cameraNode_->lookAtWorld({offset.x, offset.y, 0.0f});
 }
 
-void DeflektorishScene::startCameraShake(float strength, float /*duration*/) {
+void DeflektorishScene::startCameraShake(glm::vec2 position, float strength,
+                                         float duration) {
   shakeTrauma_ =
-      std::min(shakeTrauma_ + strength / kShakeMaxStrength, 1.0f);
+      std::min(shakeTrauma_ + strength / (kShakeMaxStrength * 1.45f), 1.0f);
   shakeKick_ =
-      std::min(shakeKick_ + strength * 0.28f, kShakeMaxStrength * 0.45f);
-  shakeKickAngle_ = elapsed_ * 12.9898f;
+      std::min(shakeKick_ + strength * 0.52f, kShakeMaxStrength * 0.62f);
+  shakeKickDuration_ = std::max(duration, 0.12f);
+  shakeKickTime_ = 0.0f;
+  const glm::vec2 fromCenter = position - Deflektorish::kScreenCenter;
+  if (glm::length(fromCenter) > kEpsilon) {
+    shakeKickDirection_ = -glm::normalize(fromCenter);
+  } else {
+    shakeKickDirection_ =
+        glm::normalize(glm::vec2(std::cos(elapsed_ * 7.31f),
+                                 std::sin(elapsed_ * 9.17f)));
+  }
+  shakeSeed_ = position.x * 0.017f + position.y * 0.031f + elapsed_ * 5.13f;
 }
 
 int DeflektorishScene::findNextManualReflektor(int startIndex) const {

@@ -28,6 +28,7 @@ constexpr char kCrtEffectName[] = "CRT";
 constexpr char kCrtCurvatureUniform[] = "crtCurvature";
 constexpr float kCrtCurveScale = 0.94f;
 constexpr float kCrtCurveOffset = 0.03f;
+constexpr float kDeflektorPostBumpDuration = 1.35f;
 DL::App *gActiveApp = nullptr;
 
 glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature, glm::vec2 screenSize) {
@@ -676,14 +677,13 @@ void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
 }
 
 void DL::App::updateDeflektorPostBumps(float dt) {
-  constexpr float kBumpDuration = 1.05f;
   for (auto &bump : deflektorPostBumps_) {
     bump.age += dt;
   }
   deflektorPostBumps_.erase(
       std::remove_if(deflektorPostBumps_.begin(), deflektorPostBumps_.end(),
                      [](const DeflektorPostBump &bump) {
-                       return bump.age >= kBumpDuration;
+                       return bump.age >= kDeflektorPostBumpDuration;
                      }),
       deflektorPostBumps_.end());
 }
@@ -693,7 +693,6 @@ void DL::App::syncDeflektorPostBumpUniforms() {
   if (effect == nullptr) {
     return;
   }
-  constexpr float kBumpDuration = 1.05f;
   for (std::size_t index = 0; index < 2; ++index) {
     UniformValue *uniform =
         findEffectUniform(*effect, index == 0 ? "bump1" : "bump2");
@@ -704,7 +703,8 @@ void DL::App::syncDeflektorPostBumpUniforms() {
     if (index < deflektorPostBumps_.size()) {
       const DeflektorPostBump &bump = deflektorPostBumps_[index];
       uniform->vec4_value = {bump.uv.x, bump.uv.y,
-                             bump.age / kBumpDuration, bump.strength};
+                             bump.age / kDeflektorPostBumpDuration,
+                             bump.strength};
     } else {
       uniform->vec4_value = {0.0f, 0.0f, 1.0f, 0.0f};
     }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cameranode.h"
+#include "game/deflektorish/beamworld.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -102,27 +103,7 @@ private:
     DL::ShaderPlaneNode *node = nullptr;
   };
 
-  struct BeamResult {
-    std::vector<bool> activeReflektors;
-    std::vector<float> reflektorEnergy;
-    std::vector<bool> activeBlockers;
-    std::vector<float> blockerEnergy;
-    std::vector<glm::vec2> blockerHit;
-    std::vector<bool> blockerHasHit;
-    std::vector<bool> hitTargets;
-    std::vector<float> targetEnergy;
-    std::vector<bool> activePortals;
-    std::vector<glm::vec2> portalEntryHit;
-    std::vector<glm::vec2> portalExitHit;
-    std::vector<bool> portalHasHit;
-    std::vector<bool> passingFilters;
-    std::vector<bool> blockedFilters;
-    std::vector<glm::vec2> filterHit;
-    std::vector<bool> filterHasHit;
-    std::vector<bool> activeSplitters;
-    std::vector<glm::vec2> splitterHit;
-    std::vector<bool> splitterHasHit;
-  };
+  using BeamResult = Deflektorish::BeamSolveResult;
 
   DL::ShaderPlaneNode *addShaderPlane(std::string name, int proceduralStyle,
                                       DL::BlendMode blendMode,

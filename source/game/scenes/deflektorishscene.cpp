@@ -3,7 +3,6 @@
 #include "iscene.h"
 #include <algorithm>
 #include <cmath>
-#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -14,17 +13,8 @@ constexpr float kPixelToWorld = 0.01f;
 constexpr glm::vec2 kScreenCenter{480.0f, 320.0f};
 constexpr float kThickness = 48.0f;
 constexpr float kBeamThicknessPerReflect = 6.0f;
-constexpr float kMirrorLength = 44.0f;
-constexpr float kTargetRadius = 14.0f;
-constexpr float kBlockerHalfSize = 16.0f;
-constexpr float kFilterHalfSize = 17.0f;
-constexpr float kFilterPassHalfAngle = 14.0f * 3.1415926535f / 180.0f;
-constexpr float kSplitterRadius = 18.0f;
-constexpr float kSplitterBranchAngle = 35.0f * 3.1415926535f / 180.0f;
 constexpr int kMaxBeamSegments = 28;
-constexpr float kBeamRange = 2000.0f;
 constexpr float kEpsilon = 0.001f;
-constexpr float kHitGap = 6.0f;
 constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
 constexpr float kReflektorPickRadius = 0.36f;
 constexpr float kTargetPrepopDuration = 0.26f;
@@ -48,28 +38,7 @@ constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
 
-float cross(glm::vec2 a, glm::vec2 b) { return a.x * b.y - a.y * b.x; }
-
-glm::vec2 direction(float angle) {
-  return {std::cos(angle), std::sin(angle)};
-}
-
-glm::vec2 rotateVec(glm::vec2 value, float angle) {
-  const float c = std::cos(angle);
-  const float s = std::sin(angle);
-  return {value.x * c - value.y * s, value.x * s + value.y * c};
-}
-
 float atan2Vec(glm::vec2 v) { return std::atan2(v.y, v.x); }
-
-glm::vec2 reflectAcrossMirror(glm::vec2 ray, glm::vec2 mirrorDir) {
-  const glm::vec2 normal = glm::normalize(glm::vec2{-mirrorDir.y, mirrorDir.x});
-  return ray - normal * (2.0f * glm::dot(ray, normal));
-}
-
-glm::vec2 reflectFromNormal(glm::vec2 ray, glm::vec2 normal) {
-  return ray - normal * (2.0f * glm::dot(ray, normal));
-}
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
@@ -394,442 +363,53 @@ void DeflektorishScene::updateSelection(float dt) {
   selection_->config.params0 = {elapsed_, selectionFlash_, 0.0f, 0.0f};
 }
 
-namespace {
-
-struct Hit {
-  enum class Type { None, Reflektor, Target, Blocker, Portal, Filter, Splitter };
-  Type type = Type::None;
-  float distance = std::numeric_limits<float>::max();
-  float exitDistance = std::numeric_limits<float>::max();
-  glm::vec2 point{0.0f};
-  int index = -1;
-  glm::vec2 mirrorDir{0.0f};
-  glm::vec2 normal{0.0f};
-  bool passesFilter = false;
-};
-
-bool closer(const Hit &hit, const Hit &nearest) {
-  return hit.type != Hit::Type::None && hit.distance < nearest.distance;
-}
-
-} // namespace
-
 DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
-  BeamResult result;
-  result.activeReflektors.assign(reflektors_.size(), false);
-  result.reflektorEnergy.assign(reflektors_.size(), 0.0f);
-  result.activeBlockers.assign(blockers_.size(), false);
-  result.blockerEnergy.assign(blockers_.size(), 0.0f);
-  result.blockerHit.assign(blockers_.size(), glm::vec2(0.0f));
-  result.blockerHasHit.assign(blockers_.size(), false);
-  result.hitTargets.assign(targets_.size(), false);
-  result.targetEnergy.assign(targets_.size(), 0.0f);
-  result.activePortals.assign(portals_.size(), false);
-  result.portalEntryHit.assign(portals_.size(), glm::vec2(0.0f));
-  result.portalExitHit.assign(portals_.size(), glm::vec2(0.0f));
-  result.portalHasHit.assign(portals_.size(), false);
-  result.passingFilters.assign(filters_.size(), false);
-  result.blockedFilters.assign(filters_.size(), false);
-  result.filterHit.assign(filters_.size(), glm::vec2(0.0f));
-  result.filterHasHit.assign(filters_.size(), false);
-  result.activeSplitters.assign(splitters_.size(), false);
-  result.splitterHit.assign(splitters_.size(), glm::vec2(0.0f));
-  result.splitterHasHit.assign(splitters_.size(), false);
+  Deflektorish::BeamWorld world;
+  world.sourcePosition = grid(3, 7);
+  world.sourceAngle = 0.0f;
+
+  world.reflektors.reserve(reflektors_.size());
+  for (const Reflektor &reflektor : reflektors_) {
+    world.reflektors.push_back({reflektor.position, reflektor.angle});
+  }
+
+  world.targets.reserve(targets_.size());
+  for (const Target &target : targets_) {
+    world.targets.push_back({target.position, target.alive});
+  }
+
+  world.blockers.reserve(blockers_.size());
+  for (const Blocker &blocker : blockers_) {
+    world.blockers.push_back({blocker.position, blocker.reflective});
+  }
+
+  world.portals.reserve(portals_.size());
+  for (const Portal &portal : portals_) {
+    world.portals.push_back({portal.entryPosition, portal.exitPosition});
+  }
+
+  world.filters.reserve(filters_.size());
+  for (const Filter &filter : filters_) {
+    world.filters.push_back({filter.position, filter.angle});
+  }
+
+  world.splitters.reserve(splitters_.size());
+  for (const Splitter &splitter : splitters_) {
+    world.splitters.push_back({splitter.position, splitter.angle});
+  }
+
+  BeamResult result =
+      Deflektorish::solveBeamWorld(world, segments_.size());
 
   for (BeamSegment &segment : segments_) {
     hideSegment(segment);
   }
-
-  struct BeamRay {
-    glm::vec2 origin{0.0f};
-    glm::vec2 visualOrigin{0.0f};
-    glm::vec2 rayDir{1.0f, 0.0f};
-    int ignoreReflektor = -1;
-    int ignoreBlocker = -1;
-    int ignorePortal = -1;
-    int ignoreFilter = -1;
-    int ignoreSplitter = -1;
-    float energy = 0.0f;
-    int depth = 0;
-  };
-
-  std::vector<BeamRay> rays;
-  rays.push_back({grid(3, 7), grid(3, 7), direction(0.0f)});
-  std::size_t segmentIndex = 0;
-
-  while (!rays.empty() && segmentIndex < segments_.size()) {
-    BeamRay ray = rays.back();
-    rays.pop_back();
-
-    while (segmentIndex < segments_.size()) {
-      BeamSegment &segment = segments_[segmentIndex++];
-    Hit nearest;
-    for (std::size_t i = 0; i < reflektors_.size(); ++i) {
-      if (static_cast<int>(i) == ray.ignoreReflektor) {
-        continue;
-      }
-      const Reflektor &reflektor = reflektors_[i];
-      const glm::vec2 mirrorDir = direction(reflektor.angle);
-      const glm::vec2 half = mirrorDir * (kMirrorLength * 0.5f);
-      const glm::vec2 a = reflektor.position - half;
-      const glm::vec2 b = reflektor.position + half;
-      const glm::vec2 seg = b - a;
-      const float denominator = cross(ray.rayDir, seg);
-      if (std::abs(denominator) < kEpsilon) {
-        continue;
-      }
-      const glm::vec2 toSegment = a - ray.origin;
-      const float rayDistance = cross(toSegment, seg) / denominator;
-      const float segmentAmount = cross(toSegment, ray.rayDir) / denominator;
-      if (rayDistance <= kEpsilon || segmentAmount < 0.0f ||
-          segmentAmount > 1.0f) {
-        continue;
-      }
-      Hit hit;
-      hit.type = Hit::Type::Reflektor;
-      hit.distance = rayDistance;
-      hit.point = ray.origin + ray.rayDir * rayDistance;
-      hit.mirrorDir = mirrorDir;
-      hit.index = static_cast<int>(i);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    for (std::size_t i = 0; i < targets_.size(); ++i) {
-      const Target &target = targets_[i];
-      if (!target.alive) {
-        continue;
-      }
-      const glm::vec2 toTarget = target.position - ray.origin;
-      const float projected = glm::dot(toTarget, ray.rayDir);
-      if (projected <= kEpsilon) {
-        continue;
-      }
-      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
-      const float distanceToRay = glm::length(target.position - closest);
-      if (distanceToRay > kTargetRadius) {
-        continue;
-      }
-      const float hitDistance =
-          projected - std::sqrt(kTargetRadius * kTargetRadius -
-                                distanceToRay * distanceToRay);
-      if (hitDistance <= kEpsilon) {
-        continue;
-      }
-      Hit hit;
-      hit.type = Hit::Type::Target;
-      hit.distance = hitDistance;
-      hit.point = ray.origin + ray.rayDir * hitDistance;
-      hit.index = static_cast<int>(i);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    for (std::size_t i = 0; i < portals_.size(); ++i) {
-      if (static_cast<int>(i) == ray.ignorePortal) {
-        continue;
-      }
-      const Portal &portal = portals_[i];
-      const glm::vec2 toPortal = portal.entryPosition - ray.origin;
-      const float projected = glm::dot(toPortal, ray.rayDir);
-      if (projected <= kEpsilon) {
-        continue;
-      }
-      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
-      const float distanceToRay = glm::length(portal.entryPosition - closest);
-      const float portalRadius = 20.0f;
-      if (distanceToRay > portalRadius) {
-        continue;
-      }
-      const float hitDistance =
-          projected -
-          std::sqrt(portalRadius * portalRadius -
-                    distanceToRay * distanceToRay);
-      if (hitDistance <= kEpsilon) {
-        continue;
-      }
-      Hit hit;
-      hit.type = Hit::Type::Portal;
-      hit.distance = hitDistance;
-      hit.point = ray.origin + ray.rayDir * hitDistance;
-      hit.index = static_cast<int>(i);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    for (std::size_t i = 0; i < filters_.size(); ++i) {
-      if (static_cast<int>(i) == ray.ignoreFilter) {
-        continue;
-      }
-      const Filter &filter = filters_[i];
-      const float minX = filter.position.x - kFilterHalfSize;
-      const float maxX = filter.position.x + kFilterHalfSize;
-      const float minY = filter.position.y - kFilterHalfSize;
-      const float maxY = filter.position.y + kFilterHalfSize;
-      float tMin = -1000000.0f;
-      float tMax = 1000000.0f;
-
-      if (std::abs(ray.rayDir.x) < kEpsilon) {
-        if (ray.origin.x < minX || ray.origin.x > maxX) {
-          continue;
-        }
-      } else {
-        const float tx1 = (minX - ray.origin.x) / ray.rayDir.x;
-        const float tx2 = (maxX - ray.origin.x) / ray.rayDir.x;
-        tMin = std::max(tMin, std::min(tx1, tx2));
-        tMax = std::min(tMax, std::max(tx1, tx2));
-      }
-
-      if (std::abs(ray.rayDir.y) < kEpsilon) {
-        if (ray.origin.y < minY || ray.origin.y > maxY) {
-          continue;
-        }
-      } else {
-        const float ty1 = (minY - ray.origin.y) / ray.rayDir.y;
-        const float ty2 = (maxY - ray.origin.y) / ray.rayDir.y;
-        tMin = std::max(tMin, std::min(ty1, ty2));
-        tMax = std::min(tMax, std::max(ty1, ty2));
-      }
-
-      if (tMax < tMin || tMax <= kEpsilon) {
-        continue;
-      }
-
-      const glm::vec2 filterDir = direction(filter.angle);
-      const float alignment = std::abs(glm::dot(ray.rayDir, filterDir));
-      Hit hit;
-      hit.type = Hit::Type::Filter;
-      hit.distance = std::max(tMin, kEpsilon);
-      hit.exitDistance = std::max(tMax, hit.distance);
-      hit.point = ray.origin + ray.rayDir * hit.distance;
-      hit.index = static_cast<int>(i);
-      hit.passesFilter = alignment >= std::cos(kFilterPassHalfAngle);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    for (std::size_t i = 0; i < splitters_.size(); ++i) {
-      if (static_cast<int>(i) == ray.ignoreSplitter) {
-        continue;
-      }
-      const Splitter &splitter = splitters_[i];
-      const glm::vec2 toSplitter = splitter.position - ray.origin;
-      const float projected = glm::dot(toSplitter, ray.rayDir);
-      if (projected <= kEpsilon) {
-        continue;
-      }
-      const glm::vec2 closest = ray.origin + ray.rayDir * projected;
-      const float distanceToRay = glm::length(splitter.position - closest);
-      if (distanceToRay > kSplitterRadius) {
-        continue;
-      }
-      const float hitDistance =
-          projected -
-          std::sqrt(kSplitterRadius * kSplitterRadius -
-                    distanceToRay * distanceToRay);
-      if (hitDistance <= kEpsilon) {
-        continue;
-      }
-      Hit hit;
-      hit.type = Hit::Type::Splitter;
-      hit.distance = hitDistance;
-      hit.point = ray.origin + ray.rayDir * hitDistance;
-      hit.index = static_cast<int>(i);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    for (std::size_t i = 0; i < blockers_.size(); ++i) {
-      if (static_cast<int>(i) == ray.ignoreBlocker) {
-        continue;
-      }
-      const Blocker &blocker = blockers_[i];
-      const float minX = blocker.position.x - kBlockerHalfSize;
-      const float maxX = blocker.position.x + kBlockerHalfSize;
-      const float minY = blocker.position.y - kBlockerHalfSize;
-      const float maxY = blocker.position.y + kBlockerHalfSize;
-      float tMin = -1000000.0f;
-      float tMax = 1000000.0f;
-      bool hitAxisX = true;
-
-      if (std::abs(ray.rayDir.x) < kEpsilon) {
-        if (ray.origin.x < minX || ray.origin.x > maxX) {
-          continue;
-        }
-      } else {
-        const float tx1 = (minX - ray.origin.x) / ray.rayDir.x;
-        const float tx2 = (maxX - ray.origin.x) / ray.rayDir.x;
-        const float txMin = std::min(tx1, tx2);
-        if (txMin > tMin) {
-          tMin = txMin;
-          hitAxisX = true;
-        }
-        tMax = std::min(tMax, std::max(tx1, tx2));
-      }
-
-      if (std::abs(ray.rayDir.y) < kEpsilon) {
-        if (ray.origin.y < minY || ray.origin.y > maxY) {
-          continue;
-        }
-      } else {
-        const float ty1 = (minY - ray.origin.y) / ray.rayDir.y;
-        const float ty2 = (maxY - ray.origin.y) / ray.rayDir.y;
-        const float tyMin = std::min(ty1, ty2);
-        if (tyMin > tMin) {
-          tMin = tyMin;
-          hitAxisX = false;
-        }
-        tMax = std::min(tMax, std::max(ty1, ty2));
-      }
-
-      if (tMax < tMin || tMax <= kEpsilon) {
-        continue;
-      }
-      Hit hit;
-      hit.type = Hit::Type::Blocker;
-      hit.distance = std::max(tMin, kEpsilon);
-      hit.point = ray.origin + ray.rayDir * hit.distance;
-      hit.index = static_cast<int>(i);
-      hit.normal = hitAxisX
-                       ? glm::vec2(ray.rayDir.x > 0.0f ? -1.0f : 1.0f, 0.0f)
-                       : glm::vec2(0.0f, ray.rayDir.y > 0.0f ? -1.0f : 1.0f);
-      if (closer(hit, nearest)) {
-        nearest = hit;
-      }
-    }
-
-    if (nearest.type == Hit::Type::Reflektor) {
-      const float stopGap = std::min(kHitGap, nearest.distance * 0.5f);
-      const glm::vec2 reflected =
-          reflectAcrossMirror(ray.rayDir, nearest.mirrorDir);
-      result.activeReflektors[nearest.index] = true;
-      result.reflektorEnergy[nearest.index] = ray.energy;
-      layoutSegment(segment, ray.visualOrigin,
-                    nearest.point - ray.rayDir * stopGap, ray.energy);
-      ray.origin = nearest.point + reflected * kHitGap;
-      ray.visualOrigin = nearest.point;
-      ray.rayDir = glm::normalize(reflected);
-      ray.ignoreReflektor = nearest.index;
-      ray.ignoreBlocker = -1;
-      ray.ignorePortal = -1;
-      ray.ignoreFilter = -1;
-      ray.ignoreSplitter = -1;
-      ray.energy = std::min(ray.energy + 1.0f, 3.0f);
-    } else if (nearest.type == Hit::Type::Target) {
-      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
-      result.hitTargets[nearest.index] = true;
-      result.targetEnergy[nearest.index] = ray.energy;
-      break;
-    } else if (nearest.type == Hit::Type::Blocker) {
-      Blocker &blocker = blockers_[nearest.index];
-      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
-      result.activeBlockers[nearest.index] = true;
-      result.blockerEnergy[nearest.index] = ray.energy;
-      result.blockerHit[nearest.index] =
-          (nearest.point - blocker.position) / kBlockerHalfSize;
-      result.blockerHasHit[nearest.index] = true;
-      if (blocker.reflective) {
-        const glm::vec2 reflected = reflectFromNormal(ray.rayDir, nearest.normal);
-        ray.origin = nearest.point + reflected * kHitGap;
-        ray.visualOrigin = nearest.point;
-        ray.rayDir = glm::normalize(reflected);
-        ray.ignoreReflektor = -1;
-        ray.ignoreBlocker = nearest.index;
-        ray.ignorePortal = -1;
-        ray.ignoreFilter = -1;
-        ray.ignoreSplitter = -1;
-      } else {
-        break;
-      }
-    } else if (nearest.type == Hit::Type::Portal) {
-      Portal &portal = portals_[nearest.index];
-      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
-      result.activePortals[nearest.index] = true;
-      result.portalEntryHit[nearest.index] =
-          (nearest.point - portal.entryPosition) / 20.0f;
-      result.portalExitHit[nearest.index] = ray.rayDir;
-      result.portalHasHit[nearest.index] = true;
-      ray.origin = portal.exitPosition + ray.rayDir * kHitGap;
-      ray.visualOrigin = portal.exitPosition;
-      ray.ignoreReflektor = -1;
-      ray.ignoreBlocker = -1;
-      ray.ignorePortal = nearest.index;
-      ray.ignoreFilter = -1;
-      ray.ignoreSplitter = -1;
-    } else if (nearest.type == Hit::Type::Filter) {
-      Filter &filter = filters_[nearest.index];
-      const glm::vec2 localHit =
-          rotateVec(nearest.point - filter.position, -filter.angle);
-      result.filterHit[nearest.index] =
-          localHit / kFilterHalfSize;
-      result.filterHasHit[nearest.index] = true;
-      if (nearest.passesFilter) {
-        const glm::vec2 exitPoint =
-            ray.origin + ray.rayDir * nearest.exitDistance;
-        layoutSegment(segment, ray.visualOrigin, exitPoint, ray.energy);
-        result.passingFilters[nearest.index] = true;
-        ray.origin = exitPoint + ray.rayDir * kHitGap;
-        ray.visualOrigin = exitPoint;
-        ray.ignoreReflektor = -1;
-        ray.ignoreBlocker = -1;
-        ray.ignorePortal = -1;
-        ray.ignoreFilter = nearest.index;
-        ray.ignoreSplitter = -1;
-      } else {
-        layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
-        result.blockedFilters[nearest.index] = true;
-        break;
-      }
-    } else if (nearest.type == Hit::Type::Splitter) {
-      Splitter &splitter = splitters_[nearest.index];
-      layoutSegment(segment, ray.visualOrigin, nearest.point, ray.energy);
-      result.activeSplitters[nearest.index] = true;
-      result.splitterHit[nearest.index] =
-          rotateVec(nearest.point - splitter.position, -splitter.angle) /
-          kSplitterRadius;
-      result.splitterHasHit[nearest.index] = true;
-      if (ray.depth < 3) {
-        const float nextEnergy = std::min(ray.energy + 0.5f, 3.0f);
-        const glm::vec2 branchA =
-            glm::normalize(rotateVec(ray.rayDir, kSplitterBranchAngle));
-        const glm::vec2 branchB =
-            glm::normalize(rotateVec(ray.rayDir, -kSplitterBranchAngle));
-        BeamRay a{nearest.point + branchA * kHitGap,
-                  nearest.point,
-                  branchA,
-                  -1,
-                  -1,
-                  -1,
-                  -1,
-                  nearest.index,
-                  nextEnergy,
-                  ray.depth + 1};
-        BeamRay b{nearest.point + branchB * kHitGap,
-                  nearest.point,
-                  branchB,
-                  -1,
-                  -1,
-                  -1,
-                  -1,
-                  nearest.index,
-                  nextEnergy,
-                  ray.depth + 1};
-        rays.push_back(b);
-        rays.push_back(a);
-      }
-      break;
-    } else {
-      layoutSegment(segment, ray.visualOrigin,
-                    ray.visualOrigin + ray.rayDir * kBeamRange, ray.energy);
-      break;
-    }
-    }
+  for (std::size_t i = 0; i < result.segments.size() && i < segments_.size();
+       ++i) {
+    const Deflektorish::BeamSegment &solved = result.segments[i];
+    layoutSegment(segments_[i], solved.start, solved.end, solved.energy);
   }
+
   return result;
 }
 

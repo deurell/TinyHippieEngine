@@ -69,11 +69,12 @@ struct BeamRay {
 };
 
 void addSegment(BeamSolveResult &result, glm::vec2 start, glm::vec2 end,
-                float energy, std::size_t maxSegments) {
+                float energy, std::size_t maxSegments,
+                BeamSegmentEnd segmentEnd = BeamSegmentEnd::None) {
   if (result.segments.size() >= maxSegments) {
     return;
   }
-  result.segments.push_back({start, end, energy});
+  result.segments.push_back({start, end, energy, segmentEnd});
 }
 
 } // namespace
@@ -359,7 +360,7 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
         result.reflektorEnergy[nearest.index] = ray.energy;
         addSegment(result, ray.visualOrigin,
                    nearest.point - ray.rayDir * stopGap, ray.energy,
-                   maxSegments);
+                   maxSegments, BeamSegmentEnd::Reflektor);
         ray.origin = nearest.point + reflected * kHitGap;
         ray.visualOrigin = nearest.point;
         ray.rayDir = glm::normalize(reflected);
@@ -371,14 +372,14 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
         ray.energy = std::min(ray.energy + 1.0f, 3.0f);
       } else if (nearest.type == Hit::Type::Target) {
         addSegment(result, ray.visualOrigin, nearest.point, ray.energy,
-                   maxSegments);
+                   maxSegments, BeamSegmentEnd::Target);
         result.hitTargets[nearest.index] = true;
         result.targetEnergy[nearest.index] = ray.energy;
         break;
       } else if (nearest.type == Hit::Type::Blocker) {
         const Blocker &blocker = world.blockers[nearest.index];
         addSegment(result, ray.visualOrigin, nearest.point, ray.energy,
-                   maxSegments);
+                   maxSegments, BeamSegmentEnd::Blocker);
         result.activeBlockers[nearest.index] = true;
         result.blockerEnergy[nearest.index] = ray.energy;
         result.blockerHit[nearest.index] =
@@ -401,7 +402,7 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
       } else if (nearest.type == Hit::Type::Portal) {
         const Portal &portal = world.portals[nearest.index];
         addSegment(result, ray.visualOrigin, nearest.point, ray.energy,
-                   maxSegments);
+                   maxSegments, BeamSegmentEnd::Portal);
         result.activePortals[nearest.index] = true;
         result.portalEntryHit[nearest.index] =
             (nearest.point - portal.entryPosition) / 20.0f;
@@ -424,7 +425,7 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
           const glm::vec2 exitPoint =
               ray.origin + ray.rayDir * nearest.exitDistance;
           addSegment(result, ray.visualOrigin, exitPoint, ray.energy,
-                     maxSegments);
+                     maxSegments, BeamSegmentEnd::Filter);
           result.passingFilters[nearest.index] = true;
           ray.origin = exitPoint + ray.rayDir * kHitGap;
           ray.visualOrigin = exitPoint;
@@ -435,14 +436,14 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
           ray.ignoreSplitter = -1;
         } else {
           addSegment(result, ray.visualOrigin, nearest.point, ray.energy,
-                     maxSegments);
+                     maxSegments, BeamSegmentEnd::Filter);
           result.blockedFilters[nearest.index] = true;
           break;
         }
       } else if (nearest.type == Hit::Type::Splitter) {
         const Splitter &splitter = world.splitters[nearest.index];
         addSegment(result, ray.visualOrigin, nearest.point, ray.energy,
-                   maxSegments);
+                   maxSegments, BeamSegmentEnd::Splitter);
         result.activeSplitters[nearest.index] = true;
         result.splitterHit[nearest.index] =
             rotateVec(nearest.point - splitter.position, -splitter.angle) /

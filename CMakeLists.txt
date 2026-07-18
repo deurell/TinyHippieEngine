@@ -88,6 +88,8 @@ add_executable(tiny_hippie_engine
         source/debugui.h source/debugui.cpp
         source/game/scenes/deflektorishscene.h
         source/game/scenes/deflektorishscene.cpp
+        source/game/deflektorish/beamenergy.h
+        source/game/deflektorish/beamenergy.cpp
         source/game/deflektorish/beamworld.h
         source/game/deflektorish/beamworld.cpp
         source/game/deflektorish/deflektorishconfig.h
@@ -277,6 +279,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/animationplayer_test.cpp
             tests/cameranode_test.cpp
             tests/camera_test.cpp
+            tests/deflektorish_beamenergy_test.cpp
             tests/deflektorish_beamworld_test.cpp
             tests/deflektorish_level_test.cpp
             tests/deflektorish_soundmap_test.cpp
@@ -297,6 +300,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/logger.cpp
             source/cameranode.cpp
             source/game/scenes/deflektorishscene.cpp
+            source/game/deflektorish/beamenergy.cpp
             source/game/deflektorish/beamworld.cpp
             source/game/deflektorish/deflektorishlevel.cpp
             source/game/deflektorish/deflektorishsoundmap.cpp

@@ -35,10 +35,21 @@ struct Splitter {
   float angle = 0.0f;
 };
 
+enum class BeamSegmentEnd {
+  None,
+  Reflektor,
+  Target,
+  Blocker,
+  Portal,
+  Filter,
+  Splitter,
+};
+
 struct BeamSegment {
   glm::vec2 start{0.0f};
   glm::vec2 end{0.0f};
   float energy = 0.0f;
+  BeamSegmentEnd endType = BeamSegmentEnd::None;
 };
 
 struct BeamSolveResult {

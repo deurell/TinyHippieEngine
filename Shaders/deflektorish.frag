@@ -19,6 +19,11 @@ float softDiskSq(vec2 p, float radius) {
     return 1.0 - smoothstep(0.0, radius * radius, dot(p, p));
 }
 
+float sdBox(vec2 p, vec2 halfSize) {
+    vec2 d = abs(p) - halfSize;
+    return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0);
+}
+
 float electroNoise(vec2 p, float t) {
     float n = 0.0;
     n += sin(p.x * 11.0 + t * 1.4) * 0.50;
@@ -412,6 +417,37 @@ vec4 shadeExplosion(vec2 uv) {
     return vec4(color, alpha);
 }
 
+vec4 shadeEnergyBar(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    float energy = clamp(proceduralParams.x, 0.0, 1.0);
+    float danger = clamp(proceduralParams.y, 0.0, 1.0);
+    float t = proceduralParams.w;
+
+    vec2 halfPixels = vec2(176.0, 10.0);
+    vec2 px = p * halfPixels;
+    vec2 outerHalf = vec2(165.0, 6.2);
+    vec2 innerHalf = outerHalf - vec2(1.4);
+    float outer = 1.0 - smoothstep(0.0, 1.1, sdBox(px, outerHalf));
+    float inner = 1.0 - smoothstep(0.0, 0.9, sdBox(px, innerHalf));
+    float frame = clamp(outer - inner, 0.0, 1.0);
+
+    float fillLimit = mix(-154.0, 154.0, energy);
+    float fill = step(px.x, fillLimit) *
+                 (1.0 - smoothstep(2.1, 2.9, abs(px.y))) *
+                 step(-154.0, px.x) * step(px.x, 154.0);
+    float marker = 1.0 - smoothstep(1.0, 3.5, abs(px.x - fillLimit));
+    marker *= 1.0 - smoothstep(3.8, 5.0, abs(px.y));
+    float pulse = 0.5 + 0.5 * sin(t * 9.0);
+    vec3 safeColor = vec3(0.42, 0.96, 0.86);
+    vec3 dangerColor = vec3(1.0, 0.18, 0.10);
+    vec3 fillColor = mix(safeColor, dangerColor, danger);
+    vec3 color = vec3(0.16, 0.30, 0.36) * frame;
+    color += fillColor * fill * (0.74 + danger * pulse * 0.24);
+    color += vec3(1.0, 0.94, 0.82) * marker * (0.36 + danger * 0.28);
+    float alpha = clamp(frame * 0.82 + fill * 0.74 + marker * 0.44, 0.0, 1.0);
+    return vec4(color, alpha);
+}
+
 void main() {
     vec4 color = baseColor;
     if (proceduralStyle == 1) {
@@ -438,6 +474,8 @@ void main() {
         color = shadeFilter(TexCoord);
     } else if (proceduralStyle == 12) {
         color = shadeSplitter(TexCoord);
+    } else if (proceduralStyle == 13) {
+        color = shadeEnergyBar(TexCoord);
     }
 
     color *= vec4(baseColor.rgb, 1.0);

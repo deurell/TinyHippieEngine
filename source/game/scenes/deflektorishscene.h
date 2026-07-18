@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cameranode.h"
+#include "game/deflektorish/beamenergy.h"
 #include "game/deflektorish/beamworld.h"
 #include "game/deflektorish/deflektorishrenderer.h"
 #include "game/deflektorish/deflektorishlevel.h"
@@ -130,6 +131,7 @@ private:
   void updateFilters(float dt);
   void updateSelection(float dt);
   BeamResult solveBeam();
+  void updateBeamEnergy(float dt, const BeamResult &result);
   void updateSource(float dt, const BeamResult &result);
   void updateReflektorVisuals(float dt, const BeamResult &result);
   void updateBlockerVisuals(float dt, const BeamResult &result);
@@ -177,6 +179,7 @@ private:
   std::vector<GameEvent> gameEvents_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
+  DL::ShaderPlaneNode *energyBar_ = nullptr;
   int selectedReflektor_ = -1;
   bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
@@ -184,6 +187,8 @@ private:
   float sourcePulse_ = 0.0f;
   float sourceLoad_ = 0.0f;
   float sourceLoadTarget_ = 0.0f;
+  Deflektorish::BeamEnergyConfig beamEnergyConfig_;
+  Deflektorish::BeamEnergyState beamEnergy_;
   float selectionFlash_ = 0.0f;
   float shakeTrauma_ = 0.0f;
   float shakeKick_ = 0.0f;

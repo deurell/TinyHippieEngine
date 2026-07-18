@@ -30,6 +30,7 @@ constexpr int kStyleExplosion = 9;
 constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
+constexpr int kStyleEnergyBar = 13;
 constexpr char kDefaultLevelPath[] =
     "Resources/Game/Deflektorish/Levels/level_01.json";
 
@@ -49,6 +50,7 @@ DeflektorishScene::DeflektorishScene(
 
 void DeflektorishScene::init() {
   setDebugName("deflektorish_scene");
+  beamEnergy_.current = beamEnergyConfig_.maxEnergy;
 
   createCameraNode();
   addBackground();
@@ -69,6 +71,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateSelection(ctx.delta_time);
 
   BeamResult result = solveBeam();
+  updateBeamEnergy(ctx.delta_time, result);
   renderer_.updateBeamSegments(result);
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
@@ -200,6 +203,9 @@ void DeflektorishScene::spawnLevel() {
       addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
                      reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
                      12, 0.10f);
+  energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
+                              DL::BlendMode::Alpha, {480.0f, 52.0f},
+                              {176.0f, 10.0f}, 20, 0.20f);
 
   for (std::size_t i = 0; i < level.targets.size(); ++i) {
     Target target;
@@ -373,6 +379,24 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   return Deflektorish::solveBeamWorld(world, renderer_.beamSegmentCapacity());
 }
 
+void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
+  const Deflektorish::BeamHazards hazards =
+      Deflektorish::analyzeBeamHazards(result, beamEnergyConfig_);
+  Deflektorish::updateBeamEnergy(beamEnergy_, hazards, beamEnergyConfig_, dt);
+  if (energyBar_ != nullptr) {
+    const float ratio =
+        beamEnergyConfig_.maxEnergy > 0.0f
+            ? std::clamp(beamEnergy_.current / beamEnergyConfig_.maxEnergy,
+                         0.0f, 1.0f)
+            : 0.0f;
+    energyBar_->config.params0 = {ratio, beamEnergy_.danger,
+                                  beamEnergy_.drainPerSecond /
+                                      std::max(beamEnergyConfig_.maxDrainPerSecond,
+                                               0.001f),
+                                  elapsed_};
+  }
+}
+
 glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
   if (screenSize_.x <= 0.0f || screenSize_.y <= 0.0f) {
     return {0.0f, 0.0f};
@@ -426,7 +450,12 @@ void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
   for (float energy : result.blockerEnergy) {
     load = std::max(load, energy);
   }
-  sourceLoadTarget_ = load / 3.0f;
+  const float lowEnergyLoad =
+      beamEnergyConfig_.maxEnergy > 0.0f
+          ? 1.0f - std::clamp(beamEnergy_.current / beamEnergyConfig_.maxEnergy,
+                              0.0f, 1.0f)
+          : 0.0f;
+  sourceLoadTarget_ = std::max(load / 3.0f, lowEnergyLoad * 0.65f);
   sourceLoad_ = approach(sourceLoad_, sourceLoadTarget_, dt * 8.0f);
   renderer_.updateSource(source_, elapsed_, sourcePulse_, sourceLoad_);
 }

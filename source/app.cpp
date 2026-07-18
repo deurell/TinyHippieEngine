@@ -687,21 +687,42 @@ void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
 void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
                                    glm::vec2 /*gamePosition*/, float energy) {
   switch (sound) {
-  case Deflektorish::Sound::TargetFirstHit: {
-    const float volume = std::clamp(0.28f + energy * 0.035f, 0.0f, 0.58f);
-    const float pitch = randomRange(0.94f, 1.08f);
-    audioSystem_.playOneShot("deflektorish_target_first_hit",
-                             DL::AudioGroup::SFX, volume, pitch);
-    break;
-  }
+  case Deflektorish::Sound::TargetFirstHit:
   case Deflektorish::Sound::TargetDestroyed: {
-    const float volume = std::clamp(0.82f + energy * 0.055f, 0.0f, 1.0f);
-    const float pitch = randomRange(0.92f, 1.03f);
-    audioSystem_.playOneShot("deflektorish_low_frequency_explosion",
-                             DL::AudioGroup::SFX, volume, pitch);
+    const Deflektorish::SoundEventConfig *event =
+        deflektorSoundMap_.find(sound);
+    if (event == nullptr) {
+      return;
+    }
+    if (!canPlayDeflektorSound(sound, *event)) {
+      return;
+    }
+    const float volume =
+        std::clamp(event->volume + energy * event->volumePerEnergy, 0.0f,
+                   event->maxVolume);
+    const float pitch = randomRange(event->pitchMin, event->pitchMax);
+    const AudioSystem::SoundId soundId =
+        audioSystem_.playOneShot(Deflektorish::soundEventKey(sound),
+                                 DL::AudioGroup::SFX, volume, pitch);
+    if (soundId != AudioSystem::kInvalidSoundId) {
+      deflektorActiveSounds_[sound].push_back(soundId);
+    }
     break;
   }
   }
+}
+
+bool DL::App::canPlayDeflektorSound(
+    Deflektorish::Sound sound, const Deflektorish::SoundEventConfig &event) {
+  auto &activeSounds = deflektorActiveSounds_[sound];
+  activeSounds.erase(
+      std::remove_if(activeSounds.begin(), activeSounds.end(),
+                     [this](AudioSystem::SoundId id) {
+                       return !audioSystem_.isPlaying(id);
+                     }),
+      activeSounds.end());
+  return activeSounds.size() <
+         static_cast<std::size_t>(std::max(event.maxConcurrent, 1));
 }
 
 void DL::App::updateDeflektorPostBumps(float dt) {
@@ -780,12 +801,13 @@ void DL::App::loadCurrentScene() {
 }
 
 void DL::App::loadAudioClips() {
-  audioSystem_.loadClip(
-      "deflektorish_target_first_hit",
-      "Resources/Game/Deflektorish/Audio/impactGeneric_light_001.ogg", 12);
-  audioSystem_.loadClip(
-      "deflektorish_low_frequency_explosion",
-      "Resources/Game/Deflektorish/Audio/lowFrequency_explosion_001.ogg", 12);
+  deflektorSoundMap_ = Deflektorish::loadSoundMap(
+      "Resources/Game/Deflektorish/Audio/sounds.json");
+  for (const auto &[sound, event] : deflektorSoundMap_.events) {
+    audioSystem_.loadClip(Deflektorish::soundEventKey(sound),
+                          deflektorSoundMap_.audioRoot + "/" + event.clip,
+                          static_cast<std::size_t>(event.poolSize));
+  }
 }
 
 void DL::App::registerScenes() {

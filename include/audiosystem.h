@@ -45,6 +45,7 @@ public:
   SoundId playLoop(const std::string &name,
                    AudioGroup group = AudioGroup::SFX,
                    float volume = 1.0f, float pitch = 1.0f);
+  [[nodiscard]] bool isPlaying(SoundId id) const;
   void stop(SoundId id);
   void stopAll();
 

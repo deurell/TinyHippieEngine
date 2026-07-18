@@ -11,6 +11,7 @@
 namespace DL {
 namespace {
 constexpr float kPi = 3.14159265358979323846f;
+constexpr ma_uint32 kPooledSfxSoundFlags = MA_SOUND_FLAG_DECODE;
 
 float bandCenterFrequency(std::size_t bandIndex, std::size_t bandCount,
                           float minFrequency, float maxFrequency) {
@@ -164,6 +165,12 @@ AudioSystem::SoundId AudioSystem::playLoop(const std::string &name,
                                            AudioGroup group, float volume,
                                            float pitch) {
   return playInternal(name, group, true, volume, pitch);
+}
+
+bool AudioSystem::isPlaying(SoundId id) const {
+  const auto it = activeSounds_.find(id);
+  return it != activeSounds_.end() && it->second.sound != nullptr &&
+         ma_sound_is_playing(it->second.sound) == MA_TRUE;
 }
 
 void AudioSystem::stop(SoundId id) { removeActiveSound(id); }
@@ -446,7 +453,8 @@ bool AudioSystem::ensureSfxPool(ClipData &clip, std::size_t desiredSize) {
   for (std::size_t i = oldSize; i < desiredSize; ++i) {
     ClipVoice voice;
     voice.sound = std::make_unique<ma_sound>();
-    if (ma_sound_init_from_file(&engine_, clip.fileName.c_str(), 0,
+    if (ma_sound_init_from_file(&engine_, clip.fileName.c_str(),
+                                kPooledSfxSoundFlags,
                                 &groupStates_[sfxIndex].soundGroup, nullptr,
                                 voice.sound.get()) != MA_SUCCESS) {
       LogError("Unable to initialize pooled SFX voice", clip.fileName);

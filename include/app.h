@@ -2,6 +2,7 @@
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
 #include "game/deflektorish/deflektorishsound.h"
+#include "game/deflektorish/deflektorishsoundmap.h"
 #include "iscene.h"
 #include "meshassetcache.h"
 #include "renderqueue.h"
@@ -11,6 +12,7 @@
 #include "renderdevice.h"
 #include <array>
 #include <GLFW/glfw3.h>
+#include <map>
 #include <memory>
 #include <vector>
 
@@ -116,6 +118,8 @@ private:
   void calculateDeltaTime();
   void initActionMap();
   void loadAudioClips();
+  bool canPlayDeflektorSound(Deflektorish::Sound sound,
+                             const Deflektorish::SoundEventConfig &event);
   void loadCurrentScene();
   void registerScenes();
   void configureDefaultPostProcessStack();
@@ -166,6 +170,9 @@ private:
   bool renderCullingEnabled_ = true;
   RenderQueueStats lastRenderQueueStats_;
   std::vector<DeflektorPostBump> deflektorPostBumps_;
+  Deflektorish::SoundMapConfig deflektorSoundMap_;
+  std::map<Deflektorish::Sound, std::vector<AudioSystem::SoundId>>
+      deflektorActiveSounds_;
   ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 touchMoveAxis_{0.0f};

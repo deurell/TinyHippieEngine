@@ -1,0 +1,25 @@
+{
+  "audioRoot": "Resources/Game/Deflektorish/Audio",
+  "events": {
+    "target_first_hit": {
+      "clip": "impactMetal_001.ogg",
+      "volume": 0.16,
+      "volumePerEnergy": 0.015,
+      "maxVolume": 0.32,
+      "pitchMin": 1.0,
+      "pitchMax": 1.0,
+      "poolSize": 8,
+      "maxConcurrent": 4
+    },
+    "target_destroyed": {
+      "clip": "lowFrequency_explosion_001.ogg",
+      "volume": 0.82,
+      "volumePerEnergy": 0.055,
+      "maxVolume": 1.0,
+      "pitchMin": 0.92,
+      "pitchMax": 1.03,
+      "poolSize": 12,
+      "maxConcurrent": 6
+    }
+  }
+}

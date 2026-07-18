@@ -749,6 +749,13 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
+    return std::make_unique<DeflektorishScene>(
+        renderDevice_.get(), renderResourceCache_.get(),
+        [this](glm::vec2 position, float strength) {
+          submitDeflektorPostBump(position, strength);
+        });
+  });
+  sceneManager_.registerScene([this] {
     return std::make_unique<TextStarterScene>(
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get());
@@ -768,13 +775,6 @@ void DL::App::registerScenes() {
         renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
         renderResourceCache_.get(),
         "Resources/Scenes/kenney_platformer.scene.json");
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DeflektorishScene>(
-        renderDevice_.get(), renderResourceCache_.get(),
-        [this](glm::vec2 position, float strength) {
-          submitDeflektorPostBump(position, strength);
-        });
   });
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
   sceneManager_.registerScene([this] {

@@ -11,21 +11,16 @@ namespace {
 
 constexpr float kPixelToWorld = 0.01f;
 constexpr glm::vec2 kScreenCenter{480.0f, 320.0f};
-constexpr float kThickness = 48.0f;
-constexpr float kBeamThicknessPerReflect = 6.0f;
 constexpr int kMaxBeamSegments = 28;
 constexpr float kEpsilon = 0.001f;
 constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
 constexpr float kReflektorPickRadius = 0.36f;
 constexpr float kTargetPrepopDuration = 0.26f;
-constexpr float kBlockerGlowSpeed = 8.0f;
-constexpr float kReflektorGlowSpeed = 14.0f;
 constexpr float kShakeStrength = 6.0f;
 constexpr float kShakeMaxStrength = 18.0f;
 constexpr float kShakeDecay = 1.65f;
 constexpr float kShakeKickDecay = 28.0f;
 constexpr float kOrthographicHeight = 7.1f;
-constexpr int kStyleBeam = 1;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
 constexpr int kStyleBlocker = 4;
@@ -37,8 +32,6 @@ constexpr int kStyleExplosion = 9;
 constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
-
-float atan2Vec(glm::vec2 v) { return std::atan2(v.y, v.x); }
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
@@ -74,6 +67,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateSelection(ctx.delta_time);
 
   BeamResult result = solveBeam();
+  renderer_.updateBeamSegments(result);
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
   updateBlockerVisuals(ctx.delta_time, result);
@@ -197,14 +191,8 @@ void DeflektorishScene::spawnLevel() {
   source_ = addShaderPlane("source", kStyleSource, DL::BlendMode::Additive,
                            grid(3, 7), {41.0f, 41.0f}, 11, 0.10f);
 
-  for (int i = 0; i < kMaxBeamSegments; ++i) {
-    BeamSegment segment;
-    segment.node = addShaderPlane("beam_segment_" + std::to_string(i + 1),
-                                  kStyleBeam, DL::BlendMode::Additive,
-                                  {-10000.0f, -10000.0f}, {1.0f, 1.0f}, 9,
-                                  0.07f);
-    segments_.push_back(segment);
-  }
+  renderer_.createBeamSegments(this, &cameraNode_->camera(), renderDevice_,
+                               renderResourceCache_, kMaxBeamSegments);
 
   auto addReflektor = [&](int x, int y, float degrees, bool automatic,
                           float speed) {
@@ -359,8 +347,7 @@ void DeflektorishScene::updateSelection(float dt) {
     return;
   }
   const glm::vec2 world = toWorld(reflektors_[selectedReflektor_].position);
-  selection_->setLocalPosition({world.x, world.y, 0.10f});
-  selection_->config.params0 = {elapsed_, selectionFlash_, 0.0f, 0.0f};
+  renderer_.updateSelection(selection_, world, elapsed_, selectionFlash_);
 }
 
 DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
@@ -398,53 +385,7 @@ DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
     world.splitters.push_back({splitter.position, splitter.angle});
   }
 
-  BeamResult result =
-      Deflektorish::solveBeamWorld(world, segments_.size());
-
-  for (BeamSegment &segment : segments_) {
-    hideSegment(segment);
-  }
-  for (std::size_t i = 0; i < result.segments.size() && i < segments_.size();
-       ++i) {
-    const Deflektorish::BeamSegment &solved = result.segments[i];
-    layoutSegment(segments_[i], solved.start, solved.end, solved.energy);
-  }
-
-  return result;
-}
-
-void DeflektorishScene::layoutSegment(BeamSegment &segment, glm::vec2 start,
-                                      glm::vec2 end, float energy) {
-  if (segment.node == nullptr) {
-    return;
-  }
-  const glm::vec2 delta = end - start;
-  const float length = glm::length(delta);
-  if (length <= kEpsilon) {
-    hideSegment(segment);
-    return;
-  }
-  const glm::vec2 center = start + delta * 0.5f;
-  const glm::vec2 world = toWorld(center);
-  segment.node->setLocalPosition({world.x, world.y, 0.07f});
-  segment.node->setLocalRotation(
-      glm::quat(glm::vec3(0.0f, 0.0f, atan2Vec(delta))));
-  const float energizedThickness = kThickness + energy * kBeamThicknessPerReflect;
-  segment.node->setLocalScale({length * 0.5f * kPixelToWorld,
-                               energizedThickness * 0.5f * kPixelToWorld,
-                               1.0f});
-  segment.energy = energy;
-  segment.node->config.params0 = {energy, length, 160.0f, 0.0f};
-}
-
-void DeflektorishScene::hideSegment(BeamSegment &segment) {
-  if (segment.node == nullptr) {
-    return;
-  }
-  segment.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
-  segment.node->setLocalScale({0.001f, 0.001f, 1.0f});
-  segment.energy = 0.0f;
-  segment.node->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
+  return Deflektorish::solveBeamWorld(world, renderer_.beamSegmentCapacity());
 }
 
 glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
@@ -502,23 +443,17 @@ void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
   }
   sourceLoadTarget_ = load / 3.0f;
   sourceLoad_ = approach(sourceLoad_, sourceLoadTarget_, dt * 8.0f);
-  if (source_ != nullptr) {
-    source_->config.params0 = {elapsed_, sourcePulse_, sourceLoad_, 0.0f};
-  }
+  renderer_.updateSource(source_, elapsed_, sourcePulse_, sourceLoad_);
 }
 
 void DeflektorishScene::updateReflektorVisuals(float dt,
                                                const BeamResult &result) {
   for (std::size_t i = 0; i < reflektors_.size(); ++i) {
     Reflektor &reflektor = reflektors_[i];
-    const float target = result.activeReflektors[i] ? 1.0f : 0.0f;
-    reflektor.glow = approach(reflektor.glow, target, dt * kReflektorGlowSpeed);
-    if (reflektor.node != nullptr) {
-      reflektor.node->config.params0 = {
-          reflektor.glow, reflektor.automatic ? 1.0f : 0.0f,
-          selectedReflektor_ == static_cast<int>(i) ? 1.0f : 0.0f,
-          result.reflektorEnergy[i] / 3.0f};
-    }
+    renderer_.updateReflektor(
+        reflektor.node, reflektor.glow, result.activeReflektors[i],
+        reflektor.automatic, selectedReflektor_ == static_cast<int>(i),
+        result.reflektorEnergy[i], dt);
   }
 }
 
@@ -526,16 +461,11 @@ void DeflektorishScene::updateBlockerVisuals(float dt,
                                              const BeamResult &result) {
   for (std::size_t i = 0; i < blockers_.size(); ++i) {
     Blocker &blocker = blockers_[i];
-    const float target = result.activeBlockers[i] ? 1.0f : 0.0f;
-    blocker.glow = approach(blocker.glow, target, dt * kBlockerGlowSpeed);
-    blocker.energy = result.blockerEnergy[i] / 3.0f;
-    if (result.blockerHasHit[i]) {
-      blocker.hitPoint = result.blockerHit[i];
-    }
-    if (blocker.node != nullptr) {
-      blocker.node->config.params0 = {blocker.glow, blocker.energy,
-                                        blocker.hitPoint.x, blocker.hitPoint.y};
-    }
+    renderer_.updateBlocker(blocker.node, blocker.glow, blocker.energy,
+                            blocker.hitPoint, result.activeBlockers[i],
+                            result.blockerEnergy[i],
+                            result.blockerHasHit[i], result.blockerHit[i],
+                            dt);
   }
 }
 
@@ -543,25 +473,11 @@ void DeflektorishScene::updatePortalVisuals(float dt,
                                             const BeamResult &result) {
   for (std::size_t i = 0; i < portals_.size(); ++i) {
     Portal &portal = portals_[i];
-    const float target = result.activePortals[i] ? 1.0f : 0.0f;
-    portal.glow = approach(portal.glow, target, dt * 12.0f);
-    if (result.portalHasHit[i]) {
-      portal.entryHitPoint = result.portalEntryHit[i];
-      portal.exitHitPoint = result.portalExitHit[i];
-    }
-    const glm::vec4 entryParams{elapsed_, portal.phase, portal.glow, 0.0f};
-    const glm::vec4 exitParams{elapsed_, portal.phase + 0.5f, portal.glow,
-                               1.0f};
-    if (portal.entryNode != nullptr) {
-      portal.entryNode->config.params0 = entryParams;
-      portal.entryNode->config.params1 = {portal.entryHitPoint.x,
-                                          portal.entryHitPoint.y, 0.0f, 0.0f};
-    }
-    if (portal.exitNode != nullptr) {
-      portal.exitNode->config.params0 = exitParams;
-      portal.exitNode->config.params1 = {portal.exitHitPoint.x,
-                                         portal.exitHitPoint.y, 0.0f, 0.0f};
-    }
+    renderer_.updatePortal(
+        portal.entryNode, portal.exitNode, portal.glow, portal.entryHitPoint,
+        portal.exitHitPoint, portal.phase, result.activePortals[i],
+        result.portalEntryHit[i], result.portalExitHit[i],
+        result.portalHasHit[i], elapsed_, dt);
   }
 }
 
@@ -569,17 +485,10 @@ void DeflektorishScene::updateFilterVisuals(float dt,
                                             const BeamResult &result) {
   for (std::size_t i = 0; i < filters_.size(); ++i) {
     Filter &filter = filters_[i];
-    const float passTarget = result.passingFilters[i] ? 1.0f : 0.0f;
-    const float blockTarget = result.blockedFilters[i] ? 1.0f : 0.0f;
-    filter.passGlow = approach(filter.passGlow, passTarget, dt * 12.0f);
-    filter.blockGlow = approach(filter.blockGlow, blockTarget, dt * 14.0f);
-    if (result.filterHasHit[i]) {
-      filter.hitPoint = result.filterHit[i];
-    }
-    if (filter.node != nullptr) {
-      filter.node->config.params0 = {filter.passGlow, filter.blockGlow,
-                                     filter.hitPoint.x, filter.hitPoint.y};
-    }
+    renderer_.updateFilter(filter.node, filter.passGlow, filter.blockGlow,
+                           filter.hitPoint, result.passingFilters[i],
+                           result.blockedFilters[i], result.filterHasHit[i],
+                           result.filterHit[i], dt);
   }
 }
 
@@ -587,15 +496,10 @@ void DeflektorishScene::updateSplitterVisuals(float dt,
                                               const BeamResult &result) {
   for (std::size_t i = 0; i < splitters_.size(); ++i) {
     Splitter &splitter = splitters_[i];
-    const float target = result.activeSplitters[i] ? 1.0f : 0.0f;
-    splitter.glow = approach(splitter.glow, target, dt * 12.0f);
-    if (result.splitterHasHit[i]) {
-      splitter.hitPoint = result.splitterHit[i];
-    }
-    if (splitter.node != nullptr) {
-      splitter.node->config.params0 = {splitter.glow, splitter.hitPoint.x,
-                                       splitter.hitPoint.y, 0.0f};
-    }
+    renderer_.updateSplitter(splitter.node, splitter.glow, splitter.hitPoint,
+                             result.activeSplitters[i],
+                             result.splitterHasHit[i],
+                             result.splitterHit[i], dt);
   }
 }
 
@@ -620,19 +524,11 @@ void DeflektorishScene::updateTargets(float dt, const BeamResult &result) {
         spawnExplosion(target.position, target.hitEnergy);
         startCameraShake(kShakeStrength + target.hitEnergy * 0.9f,
                          0.34f + target.hitEnergy * 0.025f);
-        if (target.node != nullptr) {
-          target.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
-        }
+        renderer_.hideNode(target.node);
       }
     }
-    if (target.alive && target.node != nullptr) {
-      const float swell = target.hitFlash * target.hitFlash * 0.32f;
-      target.node->setLocalScale({13.0f * kPixelToWorld * (1.0f + swell),
-                                  13.0f * kPixelToWorld * (1.0f + swell),
-                                  1.0f});
-      target.node->config.params0 = {elapsed_ * 1.8f, target.phase,
-                                       target.hitFlash, 0.0f};
-    }
+    renderer_.updateTarget(target.node, target.alive, target.hitFlash,
+                           elapsed_, target.phase);
   }
 }
 
@@ -650,12 +546,7 @@ void DeflektorishScene::spawnExplosion(glm::vec2 position, float energy) {
   it->duration = 0.92f + energy * 0.08f;
   it->energy = energy;
   it->seed = position.x * 0.037f + position.y * 0.071f + elapsed_ * 1.37f;
-  if (it->node != nullptr) {
-    const glm::vec2 world = toWorld(position);
-    it->node->setLocalPosition({world.x, world.y, 0.16f});
-    const float size = (118.0f + energy * 12.0f) * 1.55f * 0.5f * kPixelToWorld;
-    it->node->setLocalScale({size, size, 1.0f});
-  }
+  renderer_.showExplosion(it->node, position, energy);
 }
 
 void DeflektorishScene::updateExplosions(float dt) {
@@ -667,13 +558,12 @@ void DeflektorishScene::updateExplosions(float dt) {
     const float amount = explosion.time / std::max(explosion.duration, kEpsilon);
     if (amount >= 1.0f) {
       explosion.active = false;
-      explosion.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
-      explosion.node->setLocalScale({0.001f, 0.001f, 1.0f});
-      explosion.node->config.params0 = {1.0f, 0.0f, explosion.seed, 1.55f};
+      renderer_.updateExplosion(explosion.node, 1.0f, 0.0f, explosion.seed,
+                                false);
       continue;
     }
-    explosion.node->config.params0 = {
-        amount, explosion.energy / 3.0f, explosion.seed, 1.55f};
+    renderer_.updateExplosion(explosion.node, amount, explosion.energy,
+                              explosion.seed, true);
   }
 }
 

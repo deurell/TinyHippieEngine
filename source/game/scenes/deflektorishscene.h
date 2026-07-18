@@ -2,6 +2,7 @@
 
 #include "cameranode.h"
 #include "game/deflektorish/beamworld.h"
+#include "game/deflektorish/deflektorishrenderer.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -30,11 +31,6 @@ public:
   }
 
 private:
-  struct BeamSegment {
-    DL::ShaderPlaneNode *node = nullptr;
-    float energy = 0.0f;
-  };
-
   struct Reflektor {
     glm::vec2 position{0.0f};
     float angle = 0.0f;
@@ -129,9 +125,6 @@ private:
   void updateExplosions(float dt);
   void updateCameraShake(float dt);
   void startCameraShake(float strength, float duration);
-  void layoutSegment(BeamSegment &segment, glm::vec2 start, glm::vec2 end,
-                     float energy);
-  void hideSegment(BeamSegment &segment);
   glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
   bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;
@@ -146,7 +139,7 @@ private:
   glm::vec2 screenSize_{0.0f};
   glm::vec2 framebufferSize_{0.0f};
 
-  std::vector<BeamSegment> segments_;
+  Deflektorish::Renderer renderer_;
   std::vector<Reflektor> reflektors_;
   std::vector<Target> targets_;
   std::vector<Blocker> blockers_;

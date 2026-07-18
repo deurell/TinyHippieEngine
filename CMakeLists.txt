@@ -90,6 +90,8 @@ add_executable(tiny_hippie_engine
         source/game/scenes/deflektorishscene.cpp
         source/game/deflektorish/beamworld.h
         source/game/deflektorish/beamworld.cpp
+        source/game/deflektorish/deflektorishrenderer.h
+        source/game/deflektorish/deflektorishrenderer.cpp
         source/game/scenes/inputdebugscene.h
         source/game/scenes/inputdebugscene.cpp
         source/game/scenes/textstarterscene.h
@@ -287,6 +289,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/cameranode.cpp
             source/game/scenes/deflektorishscene.cpp
             source/game/deflektorish/beamworld.cpp
+            source/game/deflektorish/deflektorishrenderer.cpp
             source/fogoverlaynode.cpp
             source/fogoverlayrendercomponent.cpp
             source/light2dnode.cpp

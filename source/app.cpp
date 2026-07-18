@@ -448,6 +448,7 @@ int DL::App::run() {
   if (!audioSystem_.init()) {
     LogWarn("Audio system initialization failed");
   }
+  loadAudioClips();
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -676,6 +677,24 @@ void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
   }
 }
 
+void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
+                                   glm::vec2 /*gamePosition*/, float energy) {
+  switch (sound) {
+  case Deflektorish::Sound::TargetFirstHit: {
+    const float volume = std::clamp(0.28f + energy * 0.035f, 0.0f, 0.58f);
+    audioSystem_.playOneShot("deflektorish_target_first_hit",
+                             DL::AudioGroup::SFX, volume);
+    break;
+  }
+  case Deflektorish::Sound::TargetDestroyed: {
+    const float volume = std::clamp(0.82f + energy * 0.055f, 0.0f, 1.0f);
+    audioSystem_.playOneShot("deflektorish_low_frequency_explosion",
+                             DL::AudioGroup::SFX, volume);
+    break;
+  }
+  }
+}
+
 void DL::App::updateDeflektorPostBumps(float dt) {
   for (auto &bump : deflektorPostBumps_) {
     bump.age += dt;
@@ -751,12 +770,25 @@ void DL::App::loadCurrentScene() {
   }
 }
 
+void DL::App::loadAudioClips() {
+  audioSystem_.loadClip(
+      "deflektorish_target_first_hit",
+      "Resources/Game/Deflektorish/Audio/impactGeneric_light_001.ogg", 12);
+  audioSystem_.loadClip(
+      "deflektorish_low_frequency_explosion",
+      "Resources/Game/Deflektorish/Audio/lowFrequency_explosion_001.ogg", 12);
+}
+
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<DeflektorishScene>(
         renderDevice_.get(), renderResourceCache_.get(),
         [this](glm::vec2 position, float strength) {
           submitDeflektorPostBump(position, strength);
+        },
+        [this](Deflektorish::Sound sound, glm::vec2 position,
+               float energy) {
+          submitDeflektorSound(sound, position, energy);
         });
   });
   sceneManager_.registerScene([this] {

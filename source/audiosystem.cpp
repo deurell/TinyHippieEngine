@@ -1,4 +1,5 @@
 #define MINIAUDIO_IMPLEMENTATION
+#include "stb_vorbis.h"
 #include "miniaudio.h"
 
 #include "audiosystem.h"

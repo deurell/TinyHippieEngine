@@ -95,6 +95,7 @@ add_executable(tiny_hippie_engine
         source/game/deflektorish/deflektorishlevel.cpp
         source/game/deflektorish/deflektorishrenderer.h
         source/game/deflektorish/deflektorishrenderer.cpp
+        source/game/deflektorish/deflektorishsound.h
         source/game/scenes/inputdebugscene.h
         source/game/scenes/inputdebugscene.cpp
         source/game/scenes/textstarterscene.h
@@ -109,6 +110,7 @@ add_executable(tiny_hippie_engine
         include/audiosystem.h source/audiosystem.cpp
         include/iscene.h
         include/miniaudio.h
+        include/stb_vorbis.h
         include/particle.h
         include/particlesystem.h
         include/plane.h source/plane.cpp

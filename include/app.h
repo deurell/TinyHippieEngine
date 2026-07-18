@@ -1,6 +1,7 @@
 #pragma once
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
+#include "game/deflektorish/deflektorishsound.h"
 #include "iscene.h"
 #include "meshassetcache.h"
 #include "renderqueue.h"
@@ -81,6 +82,8 @@ public:
   void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
   RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
   void submitDeflektorPostBump(glm::vec2 gamePosition, float strength);
+  void submitDeflektorSound(Deflektorish::Sound sound,
+                            glm::vec2 gamePosition, float energy);
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
@@ -112,6 +115,7 @@ private:
   void basisInit();
   void calculateDeltaTime();
   void initActionMap();
+  void loadAudioClips();
   void loadCurrentScene();
   void registerScenes();
   void configureDefaultPostProcessStack();

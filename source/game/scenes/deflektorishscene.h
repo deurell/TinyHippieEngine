@@ -4,6 +4,7 @@
 #include "game/deflektorish/beamworld.h"
 #include "game/deflektorish/deflektorishrenderer.h"
 #include "game/deflektorish/deflektorishlevel.h"
+#include "game/deflektorish/deflektorishsound.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -18,7 +19,9 @@ public:
   explicit DeflektorishScene(
       DL::IRenderDevice *renderDevice = nullptr,
       DL::RenderResourceCache *renderResourceCache = nullptr,
-      std::function<void(glm::vec2, float)> postBumpCallback = {});
+      std::function<void(glm::vec2, float)> postBumpCallback = {},
+      std::function<void(Deflektorish::Sound, glm::vec2, float)>
+          soundCallback = {});
   ~DeflektorishScene() override = default;
 
   void init() override;
@@ -102,10 +105,11 @@ private:
 
   struct GameEvent {
     enum class Type {
+      TargetFirstHit,
       TargetDestroyed,
     };
 
-    Type type = Type::TargetDestroyed;
+    Type type = Type::TargetFirstHit;
     glm::vec2 position{0.0f};
     float energy = 0.0f;
     int index = -1;
@@ -134,9 +138,12 @@ private:
   void updateSplitterVisuals(float dt, const BeamResult &result);
   void updateTargetState(float dt, const BeamResult &result);
   void updateTargetVisuals();
+  void emitTargetFirstHit(std::size_t targetIndex, glm::vec2 position,
+                          float energy);
   void emitTargetDestroyed(std::size_t targetIndex, glm::vec2 position,
                            float energy);
   void applyGameEvents();
+  void applyTargetFirstHit(const GameEvent &event);
   void applyTargetDestroyed(const GameEvent &event);
   void spawnExplosion(glm::vec2 position, float energy);
   void updateExplosions(float dt);
@@ -151,6 +158,7 @@ private:
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::function<void(glm::vec2, float)> postBumpCallback_;
+  std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback_;
   DL::CameraNode *cameraNode_ = nullptr;
   glm::vec2 screenSize_{0.0f};
   glm::vec2 framebufferSize_{0.0f};

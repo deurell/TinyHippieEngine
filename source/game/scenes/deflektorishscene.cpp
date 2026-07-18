@@ -41,9 +41,11 @@ float approach(float current, float target, float blend) {
 
 DeflektorishScene::DeflektorishScene(
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *renderResourceCache,
-    std::function<void(glm::vec2, float)> postBumpCallback)
+    std::function<void(glm::vec2, float)> postBumpCallback,
+    std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback)
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
-      postBumpCallback_(std::move(postBumpCallback)) {}
+      postBumpCallback_(std::move(postBumpCallback)),
+      soundCallback_(std::move(soundCallback)) {}
 
 void DeflektorishScene::init() {
   setDebugName("deflektorish_scene");
@@ -493,6 +495,7 @@ void DeflektorishScene::updateTargetState(float dt, const BeamResult &result) {
       target.dying = kTargetPrepopDuration;
       target.hitEnergy = result.targetEnergy[i];
       target.hitFlash = 1.0f;
+      emitTargetFirstHit(i, target.position, target.hitEnergy);
     }
     target.hitFlash = std::max(target.hitFlash - dt * 6.5f, 0.0f);
     if (target.dying > 0.0f) {
@@ -512,6 +515,15 @@ void DeflektorishScene::updateTargetVisuals() {
   }
 }
 
+void DeflektorishScene::emitTargetFirstHit(std::size_t targetIndex,
+                                           glm::vec2 position, float energy) {
+  gameEvents_.push_back(
+      {.type = GameEvent::Type::TargetFirstHit,
+       .position = position,
+       .energy = energy,
+       .index = static_cast<int>(targetIndex)});
+}
+
 void DeflektorishScene::emitTargetDestroyed(std::size_t targetIndex,
                                             glm::vec2 position, float energy) {
   gameEvents_.push_back(
@@ -524,10 +536,20 @@ void DeflektorishScene::emitTargetDestroyed(std::size_t targetIndex,
 void DeflektorishScene::applyGameEvents() {
   for (const GameEvent &event : gameEvents_) {
     switch (event.type) {
+    case GameEvent::Type::TargetFirstHit:
+      applyTargetFirstHit(event);
+      break;
     case GameEvent::Type::TargetDestroyed:
       applyTargetDestroyed(event);
       break;
     }
+  }
+}
+
+void DeflektorishScene::applyTargetFirstHit(const GameEvent &event) {
+  if (soundCallback_) {
+    soundCallback_(Deflektorish::Sound::TargetFirstHit, event.position,
+                   event.energy);
   }
 }
 
@@ -536,6 +558,10 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
       std::min(sourcePulse_ + 0.35f + event.energy * 0.08f, 1.0f);
   if (postBumpCallback_) {
     postBumpCallback_(event.position, 1.0f + event.energy * 0.22f);
+  }
+  if (soundCallback_) {
+    soundCallback_(Deflektorish::Sound::TargetDestroyed, event.position,
+                   event.energy);
   }
   spawnExplosion(event.position, event.energy);
   startCameraShake(event.position, kShakeStrength + event.energy * 0.85f,

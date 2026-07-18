@@ -4,6 +4,7 @@
 #include "iscene.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <memory>
 #include <string>
 #include <utility>
@@ -29,10 +30,10 @@ constexpr int kDebugVictoryKey = 86;
 constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
-constexpr float kBonusLineDelay = 0.18f;
-constexpr float kBonusScoreTickInterval = 0.17f;
-constexpr float kBonusDoneHold = 3.0f;
-constexpr float kBonusFadeDuration = 0.42f;
+constexpr float kBonusLineDelay = 0.09f;
+constexpr float kBonusScoreTickInterval = 0.085f;
+constexpr float kBonusDoneHold = 1.5f;
+constexpr float kBonusFadeDuration = 0.21f;
 constexpr float kBonusFlashDecay = 4.2f;
 constexpr int kStyleSource = 2;
 constexpr int kStyleTarget = 3;
@@ -47,8 +48,9 @@ constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
 constexpr int kStyleEnergyBar = 13;
 constexpr int kStyleCompletionOverlay = 14;
-constexpr char kDefaultLevelPath[] =
-    "Resources/Game/Deflektorish/Levels/level_01.json";
+constexpr char kLevelRoot[] = "Resources/Game/Deflektorish/Levels/";
+constexpr float kRoomSpacingPixels = 1120.0f;
+constexpr float kRoomCameraPanDuration = 0.86f;
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
@@ -70,34 +72,43 @@ DeflektorishScene::DeflektorishScene(
     std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback)
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
       postBumpCallback_(std::move(postBumpCallback)),
-      soundCallback_(std::move(soundCallback)) {}
+      soundCallback_(std::move(soundCallback)) {
+  for (int i = 1; i <= 10; ++i) {
+    std::string index = std::to_string(i);
+    if (i < 10) {
+      index.insert(index.begin(), '0');
+    }
+    levelPaths_.push_back(std::string(kLevelRoot) + "level_" + index + ".json");
+  }
+}
 
 void DeflektorishScene::init() {
   setDebugName("deflektorish_scene");
-  beamEnergy_.current = beamEnergyConfig_.maxEnergy;
-
-  createCameraNode();
-  addBackground();
-  spawnLevel();
-
-  SceneNode::init();
-  for (auto &child : children) {
-    child->init();
-  }
+  loadCampaign();
 }
 
 void DeflektorishScene::update(const DL::FrameContext &ctx) {
   elapsed_ += ctx.delta_time;
-  if (completionPhase_ == CompletionPhase::Playing) {
+  updateCameraPan(ctx.delta_time);
+  const bool gameplayActive = completionPhase_ == CompletionPhase::Playing &&
+                              cameraPanDuration_ <= 0.0f;
+  if (gameplayActive) {
     levelElapsed_ += ctx.delta_time;
+    updateInput(ctx);
+  } else {
+    rotateInput_ = 0.0f;
+    previousLeftMouseDown_ = false;
+    previousSelectNextDown_ = false;
   }
-  updateInput(ctx);
   updateCameraShake(ctx.delta_time);
-  updateReflektors(ctx.delta_time);
-  updateFilters(ctx.delta_time);
+  updateHudPositions();
+  if (gameplayActive) {
+    updateReflektors(ctx.delta_time);
+    updateFilters(ctx.delta_time);
+  }
   updateSelection(ctx.delta_time);
 
-  BeamResult result = solveBeam();
+  BeamResult result = gameplayActive ? solveBeam() : inactiveBeamResult();
   updateBeamEnergy(ctx.delta_time, result);
   renderer_.updateBeamSegments(result);
   updateSource(ctx.delta_time, result);
@@ -107,10 +118,15 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateFilterVisuals(ctx.delta_time, result);
   updateSplitterVisuals(ctx.delta_time, result);
   gameEvents_.clear();
-  updateTargetState(ctx.delta_time, result);
+  if (gameplayActive) {
+    updateTargetState(ctx.delta_time, result);
+  }
   applyGameEvents();
   updateTargetVisuals();
   updateExplosions(ctx.delta_time);
+  if (levelAdvancePending_) {
+    advanceToNextLevel();
+  }
 
   SceneNode::update(ctx);
 }
@@ -135,6 +151,18 @@ void DeflektorishScene::onKey(int key) {
 void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
   screenSize_ = size;
+  for (RoomRuntime &room : rooms_) {
+    room.orthographicHeight = fittedOrthographicHeight(room);
+  }
+  if (!rooms_.empty()) {
+    cameraPanTargetHeight_ = rooms_[currentLevelIndex_].orthographicHeight;
+    if (cameraPanDuration_ <= 0.0f) {
+      cameraBaseHeight_ = cameraPanTargetHeight_;
+      if (cameraNode_ != nullptr) {
+        cameraNode_->setOrthographicHeight(cameraBaseHeight_);
+      }
+    }
+  }
 }
 
 void DeflektorishScene::onFramebufferSizeChanged(glm::vec2 size) {
@@ -181,76 +209,287 @@ void DeflektorishScene::createCameraNode() {
   addChild(std::move(node));
 }
 
-void DeflektorishScene::addBackground() {
+void DeflektorishScene::addBackground(glm::vec2 offsetPixels,
+                                      std::size_t roomIndex) {
   DL::ShaderPlaneNode::Config backgroundConfig;
   backgroundConfig.blendMode = DL::BlendMode::Opaque;
   backgroundConfig.depthTest = true;
+  const glm::vec2 offset = offsetPixels * Deflektorish::kPixelToWorld;
 
   auto back = std::make_unique<DL::ShaderPlaneNode>(
       backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
       renderResourceCache_);
-  back->setDebugName("deflektorish_backplate");
+  back->setDebugName("deflektorish_backplate_" + std::to_string(roomIndex + 1));
   back->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
   back->setRenderLayer(-30);
-  back->setLocalPosition({0.0f, 0.0f, -0.08f});
+  back->setLocalPosition({offset.x, offset.y, -0.08f});
   back->setLocalScale({6.8f, 4.8f, 1.0f});
   addChild(std::move(back));
 
   auto field = std::make_unique<DL::ShaderPlaneNode>(
       backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
       renderResourceCache_);
-  field->setDebugName("deflektorish_playfield");
+  field->setDebugName("deflektorish_playfield_" + std::to_string(roomIndex + 1));
   field->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
   field->setRenderLayer(-25);
-  field->setLocalPosition({0.0f, 0.0f, -0.07f});
+  field->setLocalPosition({offset.x, offset.y, -0.07f});
   field->setLocalScale({5.4f, 3.8f, 1.0f});
   addChild(std::move(field));
 }
 
-void DeflektorishScene::spawnLevel() {
-  const Deflektorish::LevelConfig level =
-      Deflektorish::loadLevel(kDefaultLevelPath);
-  grid_ = level.grid;
-  sourcePosition_ = Deflektorish::cellToPosition(grid_, level.source.cell);
-  sourceAngle_ = glm::radians(level.source.angleDegrees);
-  source_ = addShaderPlane("source", kStyleSource, DL::BlendMode::Additive,
-                           sourcePosition_, {41.0f, 41.0f}, 11, 0.10f,
-                           sourceAngle_);
+void DeflektorishScene::resetLevelRuntime() {
+  children.clear();
+  cameraNode_ = nullptr;
+  source_ = nullptr;
+  selection_ = nullptr;
+  energyBar_ = nullptr;
+  completionOverlay_ = nullptr;
+  completionTitle_ = nullptr;
+  completionSubtitle_ = nullptr;
+  bonusHeading_ = nullptr;
+  bonusEnergy_ = nullptr;
+  bonusTime_ = nullptr;
+  bonusTotal_ = nullptr;
+  renderer_ = Deflektorish::Renderer{};
+  rooms_.clear();
+  activeReflektorIndices_.clear();
+  activeTargetIndices_.clear();
+  activeBlockerIndices_.clear();
+  activePortalIndices_.clear();
+  activeFilterIndices_.clear();
+  activeSplitterIndices_.clear();
+  reflektors_.clear();
+  targets_.clear();
+  blockers_.clear();
+  explosions_.clear();
+  portals_.clear();
+  filters_.clear();
+  splitters_.clear();
+  gameEvents_.clear();
+  selectedReflektor_ = -1;
+  previousLeftMouseDown_ = false;
+  previousSelectNextDown_ = false;
+  rotateInput_ = 0.0f;
+  sourcePulse_ = 0.0f;
+  sourceLoad_ = 0.0f;
+  sourceLoadTarget_ = 0.0f;
+  beamEnergy_ = Deflektorish::BeamEnergyState{};
+  beamEnergy_.current = beamEnergyConfig_.maxEnergy;
+  selectionFlash_ = 0.0f;
+  shakeTrauma_ = 0.0f;
+  shakeKick_ = 0.0f;
+  shakeKickDuration_ = 0.0f;
+  shakeKickTime_ = 0.0f;
+  shakeSeed_ = 1.7f;
+  shakeKickDirection_ = {1.0f, 0.0f};
+  victoryCelebrationStarted_ = false;
+  victoryCelebrationComplete_ = false;
+  victoryBlastIndex_ = 0;
+  victoryBlastTimer_ = 0.0f;
+  victoryTime_ = 0.0f;
+  victoryPostWaveTimer_ = 0.0f;
+  completionFadeTime_ = 0.0f;
+  completionPhase_ = CompletionPhase::Playing;
+  levelElapsed_ = 0.0f;
+  levelAdvancePending_ = false;
+  resetBonusTally();
+}
 
+void DeflektorishScene::loadCampaign() {
+  if (levelPaths_.empty()) {
+    return;
+  }
+  currentLevelIndex_ = 0;
+  resetLevelRuntime();
+  createCameraNode();
   renderer_.createBeamSegments(this, &cameraNode_->camera(), renderDevice_,
                                renderResourceCache_, kMaxBeamSegments);
+  for (std::size_t i = 0; i < levelPaths_.size(); ++i) {
+    const Deflektorish::LevelConfig level =
+        Deflektorish::loadLevel(levelPaths_[i]);
+    const glm::vec2 offsetPixels{kRoomSpacingPixels * static_cast<float>(i),
+                                 0.0f};
+    addBackground(offsetPixels, i);
+    spawnLevel(level, offsetPixels, i);
+  }
+  selection_ =
+      addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
+                     {-10000.0f, -10000.0f}, {42.0f, 42.0f}, 12, 0.10f);
+  energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
+                              DL::BlendMode::Alpha, {480.0f, 606.0f},
+                              {150.0f, 8.0f}, 20, 0.20f);
+  createCompletionOverlay();
+  activateRoom(0, false);
+  SceneNode::init();
+  for (auto &child : children) {
+    child->init();
+  }
+  if (screenSize_.x > 0.0f && screenSize_.y > 0.0f) {
+    SceneNode::onScreenSizeChanged(screenSize_);
+  }
+  if (framebufferSize_.x > 0.0f && framebufferSize_.y > 0.0f) {
+    onFramebufferSizeChanged(framebufferSize_);
+  }
+}
+
+void DeflektorishScene::queueNextLevel() {
+  levelAdvancePending_ = true;
+}
+
+void DeflektorishScene::advanceToNextLevel() {
+  levelAdvancePending_ = false;
+  activateRoom(currentLevelIndex_ + 1, true);
+}
+
+bool DeflektorishScene::isCurrentRoom(std::size_t roomIndex) const {
+  return roomIndex == currentLevelIndex_;
+}
+
+void DeflektorishScene::rebuildActiveRoomMaps() {
+  activeReflektorIndices_.clear();
+  activeTargetIndices_.clear();
+  activeBlockerIndices_.clear();
+  activePortalIndices_.clear();
+  activeFilterIndices_.clear();
+  activeSplitterIndices_.clear();
+
+  for (std::size_t i = 0; i < reflektors_.size(); ++i) {
+    if (isCurrentRoom(reflektors_[i].roomIndex)) {
+      activeReflektorIndices_.push_back(i);
+    }
+  }
+  for (std::size_t i = 0; i < targets_.size(); ++i) {
+    if (isCurrentRoom(targets_[i].roomIndex)) {
+      activeTargetIndices_.push_back(i);
+    }
+  }
+  for (std::size_t i = 0; i < blockers_.size(); ++i) {
+    if (isCurrentRoom(blockers_[i].roomIndex)) {
+      activeBlockerIndices_.push_back(i);
+    }
+  }
+  for (std::size_t i = 0; i < portals_.size(); ++i) {
+    if (isCurrentRoom(portals_[i].roomIndex)) {
+      activePortalIndices_.push_back(i);
+    }
+  }
+  for (std::size_t i = 0; i < filters_.size(); ++i) {
+    if (isCurrentRoom(filters_[i].roomIndex)) {
+      activeFilterIndices_.push_back(i);
+    }
+  }
+  for (std::size_t i = 0; i < splitters_.size(); ++i) {
+    if (isCurrentRoom(splitters_[i].roomIndex)) {
+      activeSplitterIndices_.push_back(i);
+    }
+  }
+}
+
+void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated) {
+  if (rooms_.empty()) {
+    return;
+  }
+  currentLevelIndex_ = roomIndex % rooms_.size();
+  const RoomRuntime &room = rooms_[currentLevelIndex_];
+  sourcePosition_ = room.sourcePosition;
+  sourceAngle_ = room.sourceAngle;
+  source_ = room.sourceNode;
+  rebuildActiveRoomMaps();
+  selectedReflektor_ = findNextManualReflektor(-1);
+  previousLeftMouseDown_ = false;
+  previousSelectNextDown_ = false;
+  rotateInput_ = 0.0f;
+  sourcePulse_ = 0.0f;
+  sourceLoad_ = 0.0f;
+  sourceLoadTarget_ = 0.0f;
+  beamEnergy_ = Deflektorish::BeamEnergyState{};
+  beamEnergy_.current = beamEnergyConfig_.maxEnergy;
+  selectionFlash_ = 1.0f;
+  victoryCelebrationStarted_ = false;
+  victoryCelebrationComplete_ = false;
+  completionFadeTime_ = 0.0f;
+  completionPhase_ = CompletionPhase::Playing;
+  levelElapsed_ = 0.0f;
+  resetBonusTally();
+
+  cameraPanStartWorld_ = cameraBaseWorld_;
+  cameraPanTargetWorld_ = room.cameraCenterWorld;
+  cameraPanStartHeight_ =
+      cameraBaseHeight_ > 0.0f ? cameraBaseHeight_ : room.orthographicHeight;
+  cameraPanTargetHeight_ = room.orthographicHeight;
+  cameraPanTime_ = 0.0f;
+  cameraPanDuration_ = animated ? kRoomCameraPanDuration : 0.0f;
+  if (!animated) {
+    cameraBaseWorld_ = cameraPanTargetWorld_;
+    cameraBaseHeight_ = cameraPanTargetHeight_;
+    if (cameraNode_ != nullptr) {
+      cameraNode_->setOrthographicHeight(cameraBaseHeight_);
+    }
+  }
+  updateHudPositions();
+}
+
+void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
+                                   glm::vec2 offsetPixels,
+                                   std::size_t roomIndex) {
+  grid_ = level.grid;
+  RoomRuntime room;
+  room.name = level.name;
+  room.offsetPixels = offsetPixels;
+  room.cameraCenterWorld = offsetPixels * Deflektorish::kPixelToWorld;
+  room.boundsMinPixels = {std::numeric_limits<float>::max(),
+                          std::numeric_limits<float>::max()};
+  room.boundsMaxPixels = {-std::numeric_limits<float>::max(),
+                          -std::numeric_limits<float>::max()};
+  room.sourcePosition =
+      Deflektorish::cellToPosition(grid_, level.source.cell) + offsetPixels;
+  room.sourceAngle = glm::radians(level.source.angleDegrees);
+  room.sourceNode =
+      addShaderPlane("source_" + std::to_string(roomIndex + 1), kStyleSource,
+                     DL::BlendMode::Additive, room.sourcePosition,
+                     {41.0f, 41.0f}, 11, 0.10f, room.sourceAngle);
+  rooms_.push_back(room);
+  auto includeBounds = [&](glm::vec2 positionPixels, float radiusPixels) {
+    RoomRuntime &spawnedRoom = rooms_.back();
+    const glm::vec2 local = positionPixels - offsetPixels;
+    spawnedRoom.boundsMinPixels =
+        glm::min(spawnedRoom.boundsMinPixels,
+                 local - glm::vec2(radiusPixels));
+    spawnedRoom.boundsMaxPixels =
+        glm::max(spawnedRoom.boundsMaxPixels,
+                 local + glm::vec2(radiusPixels));
+  };
+  includeBounds(room.sourcePosition, 48.0f);
 
   for (const Deflektorish::ReflektorConfig &config : level.reflektors) {
     Reflektor reflektor;
-    reflektor.position = Deflektorish::cellToPosition(grid_, config.cell);
+    reflektor.position =
+        Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     reflektor.angle = glm::radians(config.angleDegrees);
     reflektor.automatic = config.automatic;
     reflektor.speed = config.speed;
+    reflektor.roomIndex = roomIndex;
     reflektor.node = addShaderPlane(
         config.automatic ? "reflektor_auto" : "reflektor_manual",
         config.automatic ? kStyleAutoReflector : kStyleManualReflector,
         DL::BlendMode::Alpha, reflektor.position, {22.0f, 5.0f}, 13, 0.12f,
         reflektor.angle);
     reflektors_.push_back(reflektor);
+    includeBounds(reflektor.position, 48.0f);
   }
-  selectedReflektor_ = 0;
-  selection_ =
-      addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
-                     reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
-                     12, 0.10f);
-  energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
-                              DL::BlendMode::Alpha, {480.0f, 34.0f},
-                              {176.0f, 10.0f}, 20, 0.20f);
-  createCompletionOverlay();
 
   for (std::size_t i = 0; i < level.targets.size(); ++i) {
     Target target;
-    target.position = Deflektorish::cellToPosition(grid_, level.targets[i].cell);
+    target.position =
+        Deflektorish::cellToPosition(grid_, level.targets[i].cell) +
+        offsetPixels;
+    target.roomIndex = roomIndex;
     target.phase = target.position.x * 0.071f + target.position.y * 0.113f;
     target.node = addShaderPlane("target_" + std::to_string(i + 1),
                                  kStyleTarget, DL::BlendMode::Alpha,
                                  target.position, {13.0f, 13.0f}, 8, 0.04f);
     targets_.push_back(target);
+    includeBounds(target.position, 32.0f);
   }
 
   const int explosionPoolSize =
@@ -268,9 +507,11 @@ void DeflektorishScene::spawnLevel() {
     const Deflektorish::PortalConfig &config = level.portals[i];
     Portal portal;
     portal.entryPosition =
-        Deflektorish::cellToPosition(grid_, config.entryCell);
-    portal.exitPosition = Deflektorish::cellToPosition(grid_, config.exitCell);
+        Deflektorish::cellToPosition(grid_, config.entryCell) + offsetPixels;
+    portal.exitPosition =
+        Deflektorish::cellToPosition(grid_, config.exitCell) + offsetPixels;
     portal.phase = config.phase;
+    portal.roomIndex = roomIndex;
     portal.entryNode =
         addShaderPlane("portal_entry_" + std::to_string(i + 1), kStylePortal,
                        DL::BlendMode::Additive, portal.entryPosition,
@@ -280,44 +521,62 @@ void DeflektorishScene::spawnLevel() {
                        DL::BlendMode::Additive, portal.exitPosition,
                        {27.0f, 27.0f}, 10, 0.11f);
     portals_.push_back(portal);
+    includeBounds(portal.entryPosition, 42.0f);
+    includeBounds(portal.exitPosition, 42.0f);
   }
 
   for (const Deflektorish::FilterConfig &config : level.filters) {
     Filter filter;
-    filter.position = Deflektorish::cellToPosition(grid_, config.cell);
+    filter.position =
+        Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     filter.angle = glm::radians(config.angleDegrees);
     filter.automatic = config.automatic;
     filter.speed = config.speed;
+    filter.roomIndex = roomIndex;
     filter.node =
         addShaderPlane(config.automatic ? "angle_filter_auto" : "angle_filter",
                        kStyleFilter, DL::BlendMode::Alpha, filter.position,
                        {17.0f, 17.0f}, 7, 0.05f, filter.angle);
     filters_.push_back(filter);
+    includeBounds(filter.position, 36.0f);
   }
 
   for (std::size_t i = 0; i < level.splitters.size(); ++i) {
     const Deflektorish::SplitterConfig &config = level.splitters[i];
     Splitter splitter;
-    splitter.position = Deflektorish::cellToPosition(grid_, config.cell);
+    splitter.position =
+        Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     splitter.angle = glm::radians(config.angleDegrees);
+    splitter.roomIndex = roomIndex;
     splitter.node = addShaderPlane("beam_splitter_" + std::to_string(i + 1),
                                    kStyleSplitter, DL::BlendMode::Alpha,
                                    splitter.position, {20.0f, 20.0f}, 8,
                                    0.06f, splitter.angle);
     splitters_.push_back(splitter);
+    includeBounds(splitter.position, 42.0f);
   }
 
   for (const Deflektorish::BlockerConfig &config : level.blockers) {
     Blocker blocker;
-    blocker.position = Deflektorish::cellToPosition(grid_, config.cell);
+    blocker.position =
+        Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     blocker.reflective = config.reflective;
+    blocker.roomIndex = roomIndex;
     blocker.node = addShaderPlane(
         config.reflective ? "reflective_blocker" : "solid_blocker",
         config.reflective ? kStyleReflectiveBlocker : kStyleBlocker,
         DL::BlendMode::Alpha, blocker.position, {16.0f, 16.0f},
         config.reflective ? 6 : 5, config.reflective ? 0.025f : 0.02f);
     blockers_.push_back(blocker);
+    includeBounds(blocker.position, 34.0f);
   }
+  RoomRuntime &spawnedRoom = rooms_.back();
+  const glm::vec2 contentCenterPixels =
+      (spawnedRoom.boundsMinPixels + spawnedRoom.boundsMaxPixels) * 0.5f;
+  spawnedRoom.cameraCenterWorld =
+      spawnedRoom.offsetPixels * Deflektorish::kPixelToWorld +
+      Deflektorish::gameToWorld(contentCenterPixels);
+  spawnedRoom.orthographicHeight = fittedOrthographicHeight(spawnedRoom);
 }
 
 void DeflektorishScene::updateInput(const DL::FrameContext &ctx) {
@@ -342,6 +601,9 @@ void DeflektorishScene::updateInput(const DL::FrameContext &ctx) {
 void DeflektorishScene::updateReflektors(float dt) {
   for (std::size_t i = 0; i < reflektors_.size(); ++i) {
     Reflektor &reflektor = reflektors_[i];
+    if (!isCurrentRoom(reflektor.roomIndex)) {
+      continue;
+    }
     if (reflektor.automatic) {
       reflektor.angle += reflektor.speed * dt;
     } else if (selectedReflektor_ == static_cast<int>(i)) {
@@ -357,6 +619,9 @@ void DeflektorishScene::updateReflektors(float dt) {
 void DeflektorishScene::updateFilters(float dt) {
   for (std::size_t i = 0; i < filters_.size(); ++i) {
     Filter &filter = filters_[i];
+    if (!isCurrentRoom(filter.roomIndex)) {
+      continue;
+    }
     if (filter.automatic) {
       filter.angle += filter.speed * dt;
     }
@@ -379,42 +644,169 @@ void DeflektorishScene::updateSelection(float dt) {
   renderer_.updateSelection(selection_, world, elapsed_, selectionFlash_);
 }
 
+void DeflektorishScene::updateCameraPan(float dt) {
+  if (cameraNode_ == nullptr) {
+    return;
+  }
+  if (cameraPanDuration_ <= 0.0f) {
+    cameraBaseWorld_ = cameraPanTargetWorld_;
+    cameraBaseHeight_ = cameraPanTargetHeight_ > 0.0f
+                            ? cameraPanTargetHeight_
+                            : Deflektorish::kOrthographicHeight;
+    cameraNode_->setOrthographicHeight(cameraBaseHeight_);
+    return;
+  }
+  cameraPanTime_ = std::min(cameraPanTime_ + dt, cameraPanDuration_);
+  const float t = std::clamp(cameraPanTime_ / cameraPanDuration_, 0.0f, 1.0f);
+  const float travel = t * t * t * (t * (t * 6.0f - 15.0f) + 10.0f);
+  cameraBaseWorld_ =
+      glm::mix(cameraPanStartWorld_, cameraPanTargetWorld_, travel);
+  cameraBaseHeight_ =
+      glm::mix(cameraPanStartHeight_, cameraPanTargetHeight_, travel);
+  cameraNode_->setOrthographicHeight(cameraBaseHeight_);
+  if (cameraPanTime_ >= cameraPanDuration_) {
+    cameraPanDuration_ = 0.0f;
+    cameraBaseWorld_ = cameraPanTargetWorld_;
+    cameraBaseHeight_ = cameraPanTargetHeight_;
+    cameraNode_->setOrthographicHeight(cameraBaseHeight_);
+  }
+}
+
+float DeflektorishScene::fittedOrthographicHeight(
+    const RoomRuntime &room) const {
+  const glm::vec2 sizePixels =
+      glm::max(room.boundsMaxPixels - room.boundsMinPixels,
+               glm::vec2{640.0f, 360.0f});
+  const float aspect = screenSize_.y > 0.0f && screenSize_.x > 0.0f
+                           ? screenSize_.x / screenSize_.y
+                           : 16.0f / 9.0f;
+  constexpr float kPaddingPixels = 90.0f;
+  const float heightFromY =
+      (sizePixels.y + kPaddingPixels) * Deflektorish::kPixelToWorld;
+  const float heightFromX =
+      (sizePixels.x + kPaddingPixels) * Deflektorish::kPixelToWorld / aspect;
+  unsigned int hash = 2166136261u;
+  for (char c : room.name) {
+    hash ^= static_cast<unsigned int>(static_cast<unsigned char>(c));
+    hash *= 16777619u;
+  }
+  constexpr float kFramingScales[] = {0.74f, 1.12f, 0.86f, 1.26f,
+                                      0.80f, 1.18f, 0.92f};
+  const float framingScale =
+      kFramingScales[hash % (sizeof(kFramingScales) / sizeof(kFramingScales[0]))];
+  constexpr float kSafetyPaddingPixels = 36.0f;
+  const float safeHeightFromY =
+      (sizePixels.y + kSafetyPaddingPixels) * Deflektorish::kPixelToWorld;
+  const float safeHeightFromX =
+      (sizePixels.x + kSafetyPaddingPixels) * Deflektorish::kPixelToWorld /
+      aspect;
+  const float safeHeight = std::max(safeHeightFromY, safeHeightFromX);
+  const float styledHeight = std::max(heightFromY, heightFromX) * framingScale;
+  return std::clamp(std::max(styledHeight, safeHeight), 3.6f, 10.6f);
+}
+
+void DeflektorishScene::updateHudPositions() {
+  const glm::vec2 center = cameraBaseWorld_;
+  const float hudPixelToWorld =
+      (cameraBaseHeight_ > 0.0f ? cameraBaseHeight_
+                                : Deflektorish::kOrthographicHeight) /
+      (Deflektorish::kScreenCenter.y * 2.0f);
+  const auto placePlane = [&](DL::ShaderPlaneNode *node, glm::vec2 pixels,
+                              glm::vec2 halfSizePixels, float z) {
+    if (node == nullptr) {
+      return;
+    }
+    const glm::vec2 world = center + pixels * hudPixelToWorld;
+    node->setLocalPosition({world.x, world.y, z});
+    node->setLocalScale({halfSizePixels.x * hudPixelToWorld,
+                         halfSizePixels.y * hudPixelToWorld, 1.0f});
+  };
+  const auto placeText = [&](TextNode *node, glm::vec2 pixels, float z) {
+    if (node == nullptr) {
+      return;
+    }
+    const glm::vec2 world = center + pixels * hudPixelToWorld;
+    node->setLocalPosition({world.x, world.y, z});
+    node->setLocalScale({hudPixelToWorld, hudPixelToWorld, 1.0f});
+  };
+
+  placePlane(energyBar_, glm::vec2{480.0f, 606.0f} - Deflektorish::kScreenCenter,
+             {150.0f, 8.0f}, 0.20f);
+  placePlane(completionOverlay_, {0.0f, 0.0f}, {520.0f, 350.0f}, 0.24f);
+  placeText(completionTitle_, {0.0f, 48.0f}, 0.34f);
+  placeText(completionSubtitle_, {0.0f, 8.0f}, 0.34f);
+  placeText(bonusHeading_, {0.0f, 48.0f}, 0.35f);
+  placeText(bonusEnergy_, {0.0f, 14.0f}, 0.35f);
+  placeText(bonusTime_, {0.0f, -12.0f}, 0.35f);
+  placeText(bonusTotal_, {0.0f, -48.0f}, 0.35f);
+}
+
 DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   Deflektorish::BeamWorld world;
   world.sourcePosition = sourcePosition_;
   world.sourceAngle = sourceAngle_;
 
-  world.reflektors.reserve(reflektors_.size());
-  for (const Reflektor &reflektor : reflektors_) {
+  world.reflektors.reserve(activeReflektorIndices_.size());
+  for (std::size_t index : activeReflektorIndices_) {
+    const Reflektor &reflektor = reflektors_[index];
     world.reflektors.push_back({reflektor.position, reflektor.angle});
   }
 
-  world.targets.reserve(targets_.size());
-  for (const Target &target : targets_) {
+  world.targets.reserve(activeTargetIndices_.size());
+  for (std::size_t index : activeTargetIndices_) {
+    const Target &target = targets_[index];
     world.targets.push_back({target.position, target.alive});
   }
 
-  world.blockers.reserve(blockers_.size());
-  for (const Blocker &blocker : blockers_) {
+  world.blockers.reserve(activeBlockerIndices_.size());
+  for (std::size_t index : activeBlockerIndices_) {
+    const Blocker &blocker = blockers_[index];
     world.blockers.push_back({blocker.position, blocker.reflective});
   }
 
-  world.portals.reserve(portals_.size());
-  for (const Portal &portal : portals_) {
+  world.portals.reserve(activePortalIndices_.size());
+  for (std::size_t index : activePortalIndices_) {
+    const Portal &portal = portals_[index];
     world.portals.push_back({portal.entryPosition, portal.exitPosition});
   }
 
-  world.filters.reserve(filters_.size());
-  for (const Filter &filter : filters_) {
+  world.filters.reserve(activeFilterIndices_.size());
+  for (std::size_t index : activeFilterIndices_) {
+    const Filter &filter = filters_[index];
     world.filters.push_back({filter.position, filter.angle});
   }
 
-  world.splitters.reserve(splitters_.size());
-  for (const Splitter &splitter : splitters_) {
+  world.splitters.reserve(activeSplitterIndices_.size());
+  for (std::size_t index : activeSplitterIndices_) {
+    const Splitter &splitter = splitters_[index];
     world.splitters.push_back({splitter.position, splitter.angle});
   }
 
   return Deflektorish::solveBeamWorld(world, renderer_.beamSegmentCapacity());
+}
+
+DeflektorishScene::BeamResult DeflektorishScene::inactiveBeamResult() const {
+  BeamResult result;
+  result.activeReflektors.assign(activeReflektorIndices_.size(), false);
+  result.reflektorEnergy.assign(activeReflektorIndices_.size(), 0.0f);
+  result.activeBlockers.assign(activeBlockerIndices_.size(), false);
+  result.blockerEnergy.assign(activeBlockerIndices_.size(), 0.0f);
+  result.blockerHit.assign(activeBlockerIndices_.size(), glm::vec2(0.0f));
+  result.blockerHasHit.assign(activeBlockerIndices_.size(), false);
+  result.hitTargets.assign(activeTargetIndices_.size(), false);
+  result.targetEnergy.assign(activeTargetIndices_.size(), 0.0f);
+  result.activePortals.assign(activePortalIndices_.size(), false);
+  result.portalEntryHit.assign(activePortalIndices_.size(), glm::vec2(0.0f));
+  result.portalExitHit.assign(activePortalIndices_.size(), glm::vec2(0.0f));
+  result.portalHasHit.assign(activePortalIndices_.size(), false);
+  result.passingFilters.assign(activeFilterIndices_.size(), false);
+  result.blockedFilters.assign(activeFilterIndices_.size(), false);
+  result.filterHit.assign(activeFilterIndices_.size(), glm::vec2(0.0f));
+  result.filterHasHit.assign(activeFilterIndices_.size(), false);
+  result.activeSplitters.assign(activeSplitterIndices_.size(), false);
+  result.splitterHit.assign(activeSplitterIndices_.size(), glm::vec2(0.0f));
+  result.splitterHasHit.assign(activeSplitterIndices_.size(), false);
+  return result;
 }
 
 void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
@@ -441,7 +833,10 @@ glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
   }
 
   const float aspect = screenSize_.x / screenSize_.y;
-  const float halfHeight = Deflektorish::kOrthographicHeight * 0.5f;
+  const float orthoHeight =
+      cameraNode_ != nullptr ? cameraNode_->orthographicHeight()
+                             : Deflektorish::kOrthographicHeight;
+  const float halfHeight = orthoHeight * 0.5f;
   const float halfWidth = halfHeight * aspect;
   const glm::vec2 normalized{
       screenPosition.x / screenSize_.x,
@@ -460,7 +855,7 @@ bool DeflektorishScene::selectReflektorAtWorld(glm::vec2 worldPosition) {
 
   for (std::size_t i = 0; i < reflektors_.size(); ++i) {
     const Reflektor &reflektor = reflektors_[i];
-    if (reflektor.automatic) {
+    if (reflektor.automatic || !isCurrentRoom(reflektor.roomIndex)) {
       continue;
     }
     const float distance =
@@ -500,76 +895,89 @@ void DeflektorishScene::updateSource(float dt, const BeamResult &result) {
 
 void DeflektorishScene::updateReflektorVisuals(float dt,
                                                const BeamResult &result) {
-  for (std::size_t i = 0; i < reflektors_.size(); ++i) {
-    Reflektor &reflektor = reflektors_[i];
+  for (std::size_t activeIndex = 0; activeIndex < activeReflektorIndices_.size();
+       ++activeIndex) {
+    Reflektor &reflektor = reflektors_[activeReflektorIndices_[activeIndex]];
     renderer_.updateReflektor(
-        reflektor.node, reflektor.glow, result.activeReflektors[i],
-        reflektor.automatic, selectedReflektor_ == static_cast<int>(i),
-        result.reflektorEnergy[i], dt);
+        reflektor.node, reflektor.glow, result.activeReflektors[activeIndex],
+        reflektor.automatic,
+        selectedReflektor_ ==
+            static_cast<int>(activeReflektorIndices_[activeIndex]),
+        result.reflektorEnergy[activeIndex], dt);
   }
 }
 
 void DeflektorishScene::updateBlockerVisuals(float dt,
                                              const BeamResult &result) {
-  for (std::size_t i = 0; i < blockers_.size(); ++i) {
-    Blocker &blocker = blockers_[i];
+  for (std::size_t activeIndex = 0; activeIndex < activeBlockerIndices_.size();
+       ++activeIndex) {
+    Blocker &blocker = blockers_[activeBlockerIndices_[activeIndex]];
     renderer_.updateBlocker(blocker.node, blocker.glow, blocker.energy,
-                            blocker.hitPoint, result.activeBlockers[i],
-                            result.blockerEnergy[i],
-                            result.blockerHasHit[i], result.blockerHit[i],
-                            dt);
+                            blocker.hitPoint,
+                            result.activeBlockers[activeIndex],
+                            result.blockerEnergy[activeIndex],
+                            result.blockerHasHit[activeIndex],
+                            result.blockerHit[activeIndex], dt);
   }
 }
 
 void DeflektorishScene::updatePortalVisuals(float dt,
                                             const BeamResult &result) {
-  for (std::size_t i = 0; i < portals_.size(); ++i) {
-    Portal &portal = portals_[i];
+  for (std::size_t activeIndex = 0; activeIndex < activePortalIndices_.size();
+       ++activeIndex) {
+    Portal &portal = portals_[activePortalIndices_[activeIndex]];
     renderer_.updatePortal(
         portal.entryNode, portal.exitNode, portal.glow, portal.entryHitPoint,
-        portal.exitHitPoint, portal.phase, result.activePortals[i],
-        result.portalEntryHit[i], result.portalExitHit[i],
-        result.portalHasHit[i], elapsed_, dt);
+        portal.exitHitPoint, portal.phase, result.activePortals[activeIndex],
+        result.portalEntryHit[activeIndex], result.portalExitHit[activeIndex],
+        result.portalHasHit[activeIndex], elapsed_, dt);
   }
 }
 
 void DeflektorishScene::updateFilterVisuals(float dt,
                                             const BeamResult &result) {
-  for (std::size_t i = 0; i < filters_.size(); ++i) {
-    Filter &filter = filters_[i];
+  for (std::size_t activeIndex = 0; activeIndex < activeFilterIndices_.size();
+       ++activeIndex) {
+    Filter &filter = filters_[activeFilterIndices_[activeIndex]];
     renderer_.updateFilter(filter.node, filter.passGlow, filter.blockGlow,
-                           filter.hitPoint, result.passingFilters[i],
-                           result.blockedFilters[i], result.filterHasHit[i],
-                           result.filterHit[i], dt);
+                           filter.hitPoint,
+                           result.passingFilters[activeIndex],
+                           result.blockedFilters[activeIndex],
+                           result.filterHasHit[activeIndex],
+                           result.filterHit[activeIndex], dt);
   }
 }
 
 void DeflektorishScene::updateSplitterVisuals(float dt,
                                               const BeamResult &result) {
-  for (std::size_t i = 0; i < splitters_.size(); ++i) {
-    Splitter &splitter = splitters_[i];
+  for (std::size_t activeIndex = 0; activeIndex < activeSplitterIndices_.size();
+       ++activeIndex) {
+    Splitter &splitter = splitters_[activeSplitterIndices_[activeIndex]];
     renderer_.updateSplitter(splitter.node, splitter.glow, splitter.hitPoint,
-                             result.activeSplitters[i],
-                             result.splitterHasHit[i],
-                             result.splitterHit[i], dt);
+                             result.activeSplitters[activeIndex],
+                             result.splitterHasHit[activeIndex],
+                             result.splitterHit[activeIndex], dt);
   }
 }
 
 void DeflektorishScene::updateTargetState(float dt, const BeamResult &result) {
-  for (std::size_t i = 0; i < targets_.size(); ++i) {
-    Target &target = targets_[i];
-    if (result.hitTargets[i] && target.alive && target.dying <= 0.0f) {
+  for (std::size_t activeIndex = 0; activeIndex < activeTargetIndices_.size();
+       ++activeIndex) {
+    const std::size_t targetIndex = activeTargetIndices_[activeIndex];
+    Target &target = targets_[targetIndex];
+    if (result.hitTargets[activeIndex] && target.alive &&
+        target.dying <= 0.0f) {
       target.dying = kTargetPrepopDuration;
-      target.hitEnergy = result.targetEnergy[i];
+      target.hitEnergy = result.targetEnergy[activeIndex];
       target.hitFlash = 1.0f;
-      emitTargetFirstHit(i, target.position, target.hitEnergy);
+      emitTargetFirstHit(targetIndex, target.position, target.hitEnergy);
     }
     target.hitFlash = std::max(target.hitFlash - dt * 6.5f, 0.0f);
     if (target.dying > 0.0f) {
       target.dying -= dt;
       if (target.dying <= 0.0f) {
         target.alive = false;
-        emitTargetDestroyed(i, target.position, target.hitEnergy);
+        emitTargetDestroyed(targetIndex, target.position, target.hitEnergy);
       }
     }
   }
@@ -626,14 +1034,20 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
   sourcePulse_ =
       std::min(sourcePulse_ + 0.35f + event.energy * 0.08f, 1.0f);
   if (postBumpCallback_) {
-    postBumpCallback_(event.position, 1.0f + event.energy * 0.22f);
+    const glm::vec2 roomOffset =
+        rooms_.empty() ? glm::vec2(0.0f)
+                       : rooms_[currentLevelIndex_].offsetPixels;
+    postBumpCallback_(event.position - roomOffset, 1.0f + event.energy * 0.22f);
   }
   if (soundCallback_) {
     soundCallback_(Deflektorish::Sound::TargetDestroyed, event.position,
                    event.energy);
   }
   spawnExplosion(event.position, event.energy);
-  startCameraShake(event.position, kShakeStrength + event.energy * 0.85f,
+  const glm::vec2 roomOffset =
+      rooms_.empty() ? glm::vec2(0.0f) : rooms_[currentLevelIndex_].offsetPixels;
+  startCameraShake(event.position - roomOffset,
+                   kShakeStrength + event.energy * 0.85f,
                    0.34f + event.energy * 0.025f);
   if (event.index >= 0 &&
       static_cast<std::size_t>(event.index) < targets_.size()) {
@@ -681,9 +1095,9 @@ void DeflektorishScene::updateExplosions(float dt) {
 }
 
 bool DeflektorishScene::allTargetsDestroyed() const {
-  return !targets_.empty() &&
-         std::all_of(targets_.begin(), targets_.end(),
-                     [](const Target &target) { return !target.alive; });
+  return !activeTargetIndices_.empty() &&
+         std::all_of(activeTargetIndices_.begin(), activeTargetIndices_.end(),
+                     [this](std::size_t index) { return !targets_[index].alive; });
 }
 
 bool DeflektorishScene::anyExplosionActive() const {
@@ -704,7 +1118,9 @@ float DeflektorishScene::victoryNoise(int index, float salt) const {
 glm::vec2 DeflektorishScene::victoryBlastPosition(int index) const {
   const float x = 105.0f + victoryNoise(index, 0.13f) * 750.0f;
   const float y = 95.0f + victoryNoise(index, 0.71f) * 470.0f;
-  return {x, y};
+  const glm::vec2 roomOffset =
+      rooms_.empty() ? glm::vec2(0.0f) : rooms_[currentLevelIndex_].offsetPixels;
+  return roomOffset + glm::vec2{x, y};
 }
 
 void DeflektorishScene::createCompletionOverlay() {
@@ -879,8 +1295,11 @@ void DeflektorishScene::updateVictoryCelebration(float dt) {
       if (soundCallback_) {
         soundCallback_(Deflektorish::Sound::TargetDestroyed, position, energy);
       }
-      startCameraShake(position, kShakeStrength * 0.34f + energy * 0.22f,
-                       0.18f);
+      const glm::vec2 roomOffset =
+          rooms_.empty() ? glm::vec2(0.0f)
+                         : rooms_[currentLevelIndex_].offsetPixels;
+      startCameraShake(position - roomOffset,
+                       kShakeStrength * 0.34f + energy * 0.22f, 0.18f);
       ++victoryBlastIndex_;
       victoryBlastTimer_ += kVictoryBlastInterval;
     }
@@ -1010,6 +1429,7 @@ void DeflektorishScene::updateBonusTally(float dt) {
     bonusFadeTime_ += dt;
     if (bonusFadeTime_ >= kBonusFadeDuration) {
       bonusTallyPhase_ = BonusTallyPhase::Done;
+      queueNextLevel();
     }
     break;
   case BonusTallyPhase::Energy: {
@@ -1185,8 +1605,9 @@ void DeflektorishScene::updateCameraShake(float dt) {
     return;
   }
   if (shakeTrauma_ <= 0.0f && shakeKick_ <= 0.0f) {
-    cameraNode_->setLocalPosition({0.0f, 0.0f, 10.5f});
-    cameraNode_->lookAtWorld({0.0f, 0.0f, 0.0f});
+    cameraNode_->setLocalPosition({cameraBaseWorld_.x, cameraBaseWorld_.y,
+                                   10.5f});
+    cameraNode_->lookAtWorld({cameraBaseWorld_.x, cameraBaseWorld_.y, 0.0f});
     return;
   }
   shakeTrauma_ = std::max(shakeTrauma_ - dt * kShakeDecay, 0.0f);
@@ -1215,8 +1636,9 @@ void DeflektorishScene::updateCameraShake(float dt) {
       glm::vec2(-shakeKickDirection_.y, shakeKickDirection_.x) * shakeKick_ *
           kickPulse * 0.24f;
   const glm::vec2 offset = offsetPixels * Deflektorish::kPixelToWorld;
-  cameraNode_->setLocalPosition({offset.x, offset.y, 10.5f});
-  cameraNode_->lookAtWorld({offset.x, offset.y, 0.0f});
+  const glm::vec2 cameraPosition = cameraBaseWorld_ + offset;
+  cameraNode_->setLocalPosition({cameraPosition.x, cameraPosition.y, 10.5f});
+  cameraNode_->lookAtWorld({cameraPosition.x, cameraPosition.y, 0.0f});
 }
 
 void DeflektorishScene::startCameraShake(glm::vec2 position, float strength,
@@ -1245,7 +1667,8 @@ int DeflektorishScene::findNextManualReflektor(int startIndex) const {
   for (std::size_t offset = 1; offset <= reflektors_.size(); ++offset) {
     const int index = (startIndex + static_cast<int>(offset)) %
                       static_cast<int>(reflektors_.size());
-    if (!reflektors_[index].automatic) {
+    if (!reflektors_[index].automatic &&
+        isCurrentRoom(reflektors_[index].roomIndex)) {
       return index;
     }
   }

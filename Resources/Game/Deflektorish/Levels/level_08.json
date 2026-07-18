@@ -1,0 +1,45 @@
+{
+  "name": "level_08_splitter_crossfire",
+  "grid": {
+    "tileSize": 32,
+    "origin": [16, 16]
+  },
+  "source": {
+    "cell": [3, 7],
+    "angleDegrees": 0
+  },
+  "explosionPoolSize": 34,
+  "reflektors": [
+    { "cell": [8, 7], "angleDegrees": 22, "automatic": false },
+    { "cell": [12, 17], "angleDegrees": 14, "automatic": false },
+    { "cell": [4, 17], "angleDegrees": 74, "automatic": false },
+    { "cell": [24, 17], "angleDegrees": -18, "automatic": false }
+  ],
+  "targets": [
+    { "cell": [8, 10] },
+    { "cell": [10, 14] },
+    { "cell": [6, 14] },
+    { "cell": [16, 17] },
+    { "cell": [20, 17] },
+    { "cell": [8, 17] },
+    { "cell": [24, 13] },
+    { "cell": [24, 9] }
+  ],
+  "blockers": [
+    { "cell": [6, 5], "reflective": false },
+    { "cell": [7, 5], "reflective": false },
+    { "cell": [11, 7], "reflective": false },
+    { "cell": [12, 7], "reflective": false },
+    { "cell": [11, 12], "reflective": false },
+    { "cell": [5, 12], "reflective": false },
+    { "cell": [2, 15], "reflective": false },
+    { "cell": [14, 15], "reflective": false },
+    { "cell": [18, 14], "reflective": false },
+    { "cell": [22, 14], "reflective": false },
+    { "cell": [26, 9], "reflective": true },
+    { "cell": [26, 8], "reflective": true }
+  ],
+  "splitters": [
+    { "cell": [8, 12], "angleDegrees": 0 }
+  ]
+}

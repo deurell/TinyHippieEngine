@@ -62,6 +62,7 @@ private:
     bool automatic = false;
     float speed = 0.0f;
     float glow = 0.0f;
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
   };
 
@@ -72,6 +73,7 @@ private:
     float hitEnergy = 0.0f;
     float hitFlash = 0.0f;
     float phase = 0.0f;
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
   };
 
@@ -81,6 +83,7 @@ private:
     float glow = 0.0f;
     float energy = 0.0f;
     glm::vec2 hitPoint{0.0f};
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
   };
 
@@ -101,6 +104,7 @@ private:
     float glow = 0.0f;
     glm::vec2 entryHitPoint{0.0f};
     glm::vec2 exitHitPoint{0.0f};
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *entryNode = nullptr;
     DL::ShaderPlaneNode *exitNode = nullptr;
   };
@@ -113,6 +117,7 @@ private:
     float passGlow = 0.0f;
     float blockGlow = 0.0f;
     glm::vec2 hitPoint{0.0f};
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
   };
 
@@ -121,7 +126,20 @@ private:
     float angle = 0.0f;
     float glow = 0.0f;
     glm::vec2 hitPoint{0.0f};
+    std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
+  };
+
+  struct RoomRuntime {
+    std::string name;
+    glm::vec2 offsetPixels{0.0f};
+    glm::vec2 cameraCenterWorld{0.0f};
+    glm::vec2 boundsMinPixels{0.0f};
+    glm::vec2 boundsMaxPixels{0.0f};
+    float orthographicHeight = 0.0f;
+    glm::vec2 sourcePosition{0.0f};
+    float sourceAngle = 0.0f;
+    DL::ShaderPlaneNode *sourceNode = nullptr;
   };
 
   struct GameEvent {
@@ -144,13 +162,23 @@ private:
                                       int renderLayer, float z = 0.0f,
                                       float rotationRadians = 0.0f);
   void createCameraNode();
-  void addBackground();
-  void spawnLevel();
+  void addBackground(glm::vec2 offsetPixels, std::size_t roomIndex);
+  void spawnLevel(const Deflektorish::LevelConfig &level, glm::vec2 offsetPixels,
+                  std::size_t roomIndex);
+  void resetLevelRuntime();
+  void loadCampaign();
+  void queueNextLevel();
+  void advanceToNextLevel();
+  void activateRoom(std::size_t roomIndex, bool animated);
+  void updateCameraPan(float dt);
+  float fittedOrthographicHeight(const RoomRuntime &room) const;
+  void updateHudPositions();
   void updateInput(const DL::FrameContext &ctx);
   void updateReflektors(float dt);
   void updateFilters(float dt);
   void updateSelection(float dt);
   BeamResult solveBeam();
+  BeamResult inactiveBeamResult() const;
   void updateBeamEnergy(float dt, const BeamResult &result);
   void updateSource(float dt, const BeamResult &result);
   void updateReflektorVisuals(float dt, const BeamResult &result);
@@ -187,6 +215,8 @@ private:
   glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
   bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;
+  void rebuildActiveRoomMaps();
+  bool isCurrentRoom(std::size_t roomIndex) const;
 
   static glm::vec2 toWorld(glm::vec2 pixels);
 
@@ -202,6 +232,13 @@ private:
   Deflektorish::GridConfig grid_;
   glm::vec2 sourcePosition_{0.0f};
   float sourceAngle_ = 0.0f;
+  std::vector<RoomRuntime> rooms_;
+  std::vector<std::size_t> activeReflektorIndices_;
+  std::vector<std::size_t> activeTargetIndices_;
+  std::vector<std::size_t> activeBlockerIndices_;
+  std::vector<std::size_t> activePortalIndices_;
+  std::vector<std::size_t> activeFilterIndices_;
+  std::vector<std::size_t> activeSplitterIndices_;
   std::vector<Reflektor> reflektors_;
   std::vector<Target> targets_;
   std::vector<Blocker> blockers_;
@@ -229,6 +266,17 @@ private:
   float sourceLoadTarget_ = 0.0f;
   Deflektorish::BeamEnergyConfig beamEnergyConfig_;
   Deflektorish::BeamEnergyState beamEnergy_;
+  std::vector<std::string> levelPaths_;
+  std::size_t currentLevelIndex_ = 0;
+  bool levelAdvancePending_ = false;
+  glm::vec2 cameraBaseWorld_{0.0f};
+  glm::vec2 cameraPanStartWorld_{0.0f};
+  glm::vec2 cameraPanTargetWorld_{0.0f};
+  float cameraBaseHeight_ = 0.0f;
+  float cameraPanStartHeight_ = 0.0f;
+  float cameraPanTargetHeight_ = 0.0f;
+  float cameraPanTime_ = 0.0f;
+  float cameraPanDuration_ = 0.0f;
   float selectionFlash_ = 0.0f;
   float shakeTrauma_ = 0.0f;
   float shakeKick_ = 0.0f;

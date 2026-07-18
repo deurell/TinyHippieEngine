@@ -1,0 +1,51 @@
+{
+  "name": "level_09_portal_splitter_loop",
+  "grid": {
+    "tileSize": 32,
+    "origin": [16, 16]
+  },
+  "source": {
+    "cell": [3, 9],
+    "angleDegrees": 0
+  },
+  "explosionPoolSize": 36,
+  "reflektors": [
+    { "cell": [8, 9], "angleDegrees": 20, "automatic": false },
+    { "cell": [12, 18], "angleDegrees": 12, "automatic": false },
+    { "cell": [4, 18], "angleDegrees": 74, "automatic": false },
+    { "cell": [29, 7], "angleDegrees": 20, "automatic": false },
+    { "cell": [29, 17], "angleDegrees": -20, "automatic": false }
+  ],
+  "targets": [
+    { "cell": [8, 11] },
+    { "cell": [10, 15] },
+    { "cell": [6, 15] },
+    { "cell": [16, 18] },
+    { "cell": [20, 18] },
+    { "cell": [8, 18] },
+    { "cell": [25, 7] },
+    { "cell": [29, 11] },
+    { "cell": [29, 15] },
+    { "cell": [25, 17] },
+    { "cell": [21, 17] }
+  ],
+  "blockers": [
+    { "cell": [6, 7], "reflective": false },
+    { "cell": [7, 7], "reflective": false },
+    { "cell": [11, 9], "reflective": false },
+    { "cell": [12, 9], "reflective": false },
+    { "cell": [10, 13], "reflective": false },
+    { "cell": [6, 13], "reflective": false },
+    { "cell": [18, 15], "reflective": false },
+    { "cell": [22, 15], "reflective": false },
+    { "cell": [27, 10], "reflective": false },
+    { "cell": [31, 17], "reflective": true },
+    { "cell": [31, 16], "reflective": true }
+  ],
+  "portals": [
+    { "entryCell": [22, 18], "exitCell": [23, 7], "phase": 0.35 }
+  ],
+  "splitters": [
+    { "cell": [8, 13], "angleDegrees": 0 }
+  ]
+}

@@ -1,10 +1,144 @@
 #include "game/deflektorish/deflektorishlevel.h"
+#include "game/deflektorish/beamworld.h"
 
+#include <algorithm>
+#include <cmath>
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <limits>
 #include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace {
+
+bool hasFreeTargetBeforeFirstInteraction(const Deflektorish::LevelConfig &level) {
+  const glm::ivec2 source = level.source.cell;
+  int firstInteractionX = std::numeric_limits<int>::max();
+
+  auto consider = [&](glm::ivec2 cell) {
+    if (cell.y == source.y && cell.x > source.x) {
+      firstInteractionX = std::min(firstInteractionX, cell.x);
+    }
+  };
+
+  for (const Deflektorish::ReflektorConfig &reflektor : level.reflektors) {
+    consider(reflektor.cell);
+  }
+  for (const Deflektorish::BlockerConfig &blocker : level.blockers) {
+    consider(blocker.cell);
+  }
+  for (const Deflektorish::PortalConfig &portal : level.portals) {
+    consider(portal.entryCell);
+  }
+  for (const Deflektorish::FilterConfig &filter : level.filters) {
+    consider(filter.cell);
+  }
+  for (const Deflektorish::SplitterConfig &splitter : level.splitters) {
+    consider(splitter.cell);
+  }
+
+  if (firstInteractionX == std::numeric_limits<int>::max()) {
+    return false;
+  }
+
+  for (const Deflektorish::TargetConfig &target : level.targets) {
+    if (target.cell.y == source.y && target.cell.x > source.x &&
+        target.cell.x < firstInteractionX) {
+      return true;
+    }
+  }
+  return false;
+}
+
+Deflektorish::BeamWorld makeWorld(const Deflektorish::LevelConfig &level) {
+  Deflektorish::BeamWorld world;
+  world.sourcePosition = Deflektorish::cellToPosition(level.grid, level.source.cell);
+  world.sourceAngle = level.source.angleDegrees * 3.1415926535f / 180.0f;
+  for (const Deflektorish::ReflektorConfig &reflektor : level.reflektors) {
+    world.reflektors.push_back(
+        {Deflektorish::cellToPosition(level.grid, reflektor.cell),
+         reflektor.angleDegrees * 3.1415926535f / 180.0f});
+  }
+  for (const Deflektorish::TargetConfig &target : level.targets) {
+    world.targets.push_back(
+        {Deflektorish::cellToPosition(level.grid, target.cell), true});
+  }
+  for (const Deflektorish::BlockerConfig &blocker : level.blockers) {
+    world.blockers.push_back(
+        {Deflektorish::cellToPosition(level.grid, blocker.cell),
+         blocker.reflective});
+  }
+  for (const Deflektorish::PortalConfig &portal : level.portals) {
+    world.portals.push_back(
+        {Deflektorish::cellToPosition(level.grid, portal.entryCell),
+         Deflektorish::cellToPosition(level.grid, portal.exitCell)});
+  }
+  for (const Deflektorish::FilterConfig &filter : level.filters) {
+    world.filters.push_back(
+        {Deflektorish::cellToPosition(level.grid, filter.cell),
+         filter.angleDegrees * 3.1415926535f / 180.0f});
+  }
+  for (const Deflektorish::SplitterConfig &splitter : level.splitters) {
+    world.splitters.push_back(
+        {Deflektorish::cellToPosition(level.grid, splitter.cell),
+         splitter.angleDegrees * 3.1415926535f / 180.0f});
+  }
+  return world;
+}
+
+std::vector<bool> clearTargetMask(Deflektorish::BeamWorld world) {
+  std::vector<bool> cleared(world.targets.size(), false);
+  for (std::size_t step = 0; step < world.targets.size() + 6; ++step) {
+    const Deflektorish::BeamSolveResult result =
+        Deflektorish::solveBeamWorld(world, 64);
+    bool changed = false;
+    for (std::size_t i = 0; i < result.hitTargets.size(); ++i) {
+      if (result.hitTargets[i] && world.targets[i].alive) {
+        world.targets[i].alive = false;
+        cleared[i] = true;
+        changed = true;
+      }
+    }
+    if (!changed) {
+      break;
+    }
+  }
+  return cleared;
+}
+
+std::size_t clearTargets(Deflektorish::BeamWorld world) {
+  const std::vector<bool> cleared = clearTargetMask(std::move(world));
+  return static_cast<std::size_t>(
+      std::count(cleared.begin(), cleared.end(), true));
+}
+
+std::string missedTargetsText(const Deflektorish::LevelConfig &level,
+                              const std::vector<bool> &cleared) {
+  std::string text;
+  for (std::size_t i = 0; i < level.targets.size(); ++i) {
+    if (i < cleared.size() && cleared[i]) {
+      continue;
+    }
+    const glm::ivec2 cell = level.targets[i].cell;
+    text += " [" + std::to_string(cell.x) + "," + std::to_string(cell.y) + "]";
+  }
+  return text;
+}
+
+std::filesystem::path levelPath(int i) {
+  std::string index = std::to_string(i);
+  if (i < 10) {
+    index.insert(index.begin(), '0');
+  }
+  std::filesystem::path path =
+      "../Resources/Game/Deflektorish/Levels/level_" + index + ".json";
+  if (!std::filesystem::exists(path)) {
+    path = "Resources/Game/Deflektorish/Levels/level_" + index + ".json";
+  }
+  return path;
+}
 
 TEST(DeflektorishLevelTest, ParsesMinimalLevelData) {
   constexpr char kSource[] = R"json({
@@ -49,13 +183,57 @@ TEST(DeflektorishLevelTest, LoadsDefaultLevelFile) {
 
   const Deflektorish::LevelConfig level = Deflektorish::loadLevel(path);
 
-  EXPECT_EQ(level.name, "level_01");
-  EXPECT_EQ(level.reflektors.size(), 3u);
-  EXPECT_EQ(level.targets.size(), 32u);
-  EXPECT_EQ(level.blockers.size(), 62u);
-  EXPECT_EQ(level.portals.size(), 1u);
-  EXPECT_EQ(level.filters.size(), 2u);
-  EXPECT_EQ(level.splitters.size(), 1u);
+  EXPECT_EQ(level.name, "level_01_chicane");
+  EXPECT_EQ(level.reflektors.size(), 4u);
+  EXPECT_EQ(level.targets.size(), 8u);
+  EXPECT_EQ(level.blockers.size(), 14u);
+}
+
+TEST(DeflektorishLevelTest, LoadsProgressionLevelFiles) {
+  for (int i = 1; i <= 10; ++i) {
+    const std::filesystem::path path = levelPath(i);
+
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(path);
+
+    EXPECT_FALSE(level.name.empty()) << path;
+    EXPECT_FALSE(level.reflektors.empty()) << path;
+    EXPECT_FALSE(level.targets.empty()) << path;
+    EXPECT_FALSE(hasFreeTargetBeforeFirstInteraction(level)) << path;
+  }
+}
+
+TEST(DeflektorishLevelTest, ProgressionLevelsNeedInteractionAndHaveSolutions) {
+  const std::vector<std::vector<float>> solutions = {
+      {45.0f, 45.0f, -45.0f, -45.0f},
+      {45.0f, 45.0f, 45.0f, -45.0f},
+      {45.0f, 45.0f, -45.0f, -45.0f},
+      {45.0f, 27.5f, 62.5f},
+      {45.0f, 45.0f, 45.0f, -45.0f, 45.0f},
+      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f},
+      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f},
+      {45.0f, 27.5f, 62.5f, -45.0f},
+      {45.0f, 27.5f, 62.5f, 45.0f, -45.0f},
+      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f, 45.0f},
+  };
+
+  for (int i = 1; i <= 10; ++i) {
+    Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    EXPECT_LT(clearTargets(makeWorld(level)), level.targets.size())
+        << level.name << " should not clear itself with authored defaults";
+
+    ASSERT_EQ(level.reflektors.size(), solutions[static_cast<std::size_t>(i - 1)].size())
+        << level.name;
+    for (std::size_t reflektor = 0; reflektor < level.reflektors.size();
+         ++reflektor) {
+      level.reflektors[reflektor].angleDegrees =
+          solutions[static_cast<std::size_t>(i - 1)][reflektor];
+    }
+    const std::vector<bool> cleared = clearTargetMask(makeWorld(level));
+    EXPECT_EQ(std::count(cleared.begin(), cleared.end(), true),
+              static_cast<int>(level.targets.size()))
+        << level.name << " intended solution should clear every target; missed"
+        << missedTargetsText(level, cleared);
+  }
 }
 
 TEST(DeflektorishLevelTest, RejectsUnknownFields) {

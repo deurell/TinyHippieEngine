@@ -90,6 +90,9 @@ add_executable(tiny_hippie_engine
         source/game/scenes/deflektorishscene.cpp
         source/game/deflektorish/beamworld.h
         source/game/deflektorish/beamworld.cpp
+        source/game/deflektorish/deflektorishconfig.h
+        source/game/deflektorish/deflektorishlevel.h
+        source/game/deflektorish/deflektorishlevel.cpp
         source/game/deflektorish/deflektorishrenderer.h
         source/game/deflektorish/deflektorishrenderer.cpp
         source/game/scenes/inputdebugscene.h
@@ -271,6 +274,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/cameranode_test.cpp
             tests/camera_test.cpp
             tests/deflektorish_beamworld_test.cpp
+            tests/deflektorish_level_test.cpp
             tests/iscene_test.cpp
             tests/meshasset_test.cpp
             tests/meshassetcache_test.cpp
@@ -289,6 +293,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/cameranode.cpp
             source/game/scenes/deflektorishscene.cpp
             source/game/deflektorish/beamworld.cpp
+            source/game/deflektorish/deflektorishlevel.cpp
             source/game/deflektorish/deflektorishrenderer.cpp
             source/fogoverlaynode.cpp
             source/fogoverlayrendercomponent.cpp

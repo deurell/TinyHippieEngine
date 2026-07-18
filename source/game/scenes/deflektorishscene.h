@@ -3,6 +3,7 @@
 #include "cameranode.h"
 #include "game/deflektorish/beamworld.h"
 #include "game/deflektorish/deflektorishrenderer.h"
+#include "game/deflektorish/deflektorishlevel.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -129,7 +130,6 @@ private:
   bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;
 
-  static glm::vec2 grid(int x, int y);
   static glm::vec2 toWorld(glm::vec2 pixels);
 
   DL::IRenderDevice *renderDevice_ = nullptr;
@@ -140,6 +140,9 @@ private:
   glm::vec2 framebufferSize_{0.0f};
 
   Deflektorish::Renderer renderer_;
+  Deflektorish::GridConfig grid_;
+  glm::vec2 sourcePosition_{0.0f};
+  float sourceAngle_ = 0.0f;
   std::vector<Reflektor> reflektors_;
   std::vector<Target> targets_;
   std::vector<Blocker> blockers_;

@@ -30,6 +30,8 @@ constexpr int kStyleExplosion = 9;
 constexpr int kStylePortal = 10;
 constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
+constexpr char kDefaultLevelPath[] =
+    "Resources/Game/Deflektorish/Levels/level_01.json";
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
@@ -94,10 +96,6 @@ void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
 
 void DeflektorishScene::onFramebufferSizeChanged(glm::vec2 size) {
   framebufferSize_ = size;
-}
-
-glm::vec2 DeflektorishScene::grid(int x, int y) {
-  return {x * 32.0f + 16.0f, y * 32.0f + 16.0f};
 }
 
 glm::vec2 DeflektorishScene::toWorld(glm::vec2 pixels) {
@@ -167,57 +165,40 @@ void DeflektorishScene::addBackground() {
 }
 
 void DeflektorishScene::spawnLevel() {
-  const std::vector<glm::ivec2> targets = {
-      {6, 3},  {14, 3}, {21, 3}, {26, 4}, {4, 5},  {11, 5}, {18, 5},
-      {24, 6}, {13, 7}, {20, 7}, {27, 7}, {5, 8},  {10, 9}, {16, 9},
-      {23, 9}, {28, 10},{3, 11}, {11, 11},{15, 12},{24, 12},{6, 13},
-      {13, 13},{20, 13},{27, 14},{4, 15}, {9, 15}, {17, 15},{25, 16},
-      {7, 17}, {15, 17},{22, 17},{28, 18}};
-  const std::vector<glm::ivec2> solid = {
-      {4, 3},  {5, 3},  {4, 4},  {10, 4}, {11, 4}, {12, 4}, {12, 5},
-      {20, 4}, {20, 5}, {21, 5}, {25, 5}, {26, 5}, {26, 6}, {7, 9},
-      {8, 9},  {9, 9},  {8, 10}, {19, 8}, {19, 9}, {19, 10},{24, 10},
-      {24, 11},{5, 14}, {6, 14}, {6, 15}, {14, 14},{14, 15},{15, 15},
-      {23, 15},{24, 15},{23, 16}};
-  const std::vector<glm::ivec2> reflect = {
-      {18, 8}, {25, 10},{22, 15},{2, 12}, {2, 13}, {2, 14}, {2, 15},
-      {2, 16}, {29, 6}, {29, 7}, {29, 8}, {29, 9}, {7, 2},  {8, 2},
-      {9, 2},  {10, 2}, {15, 2}, {16, 2}, {17, 2}, {18, 2}, {28, 13},
-      {28, 14},{28, 15},{11, 16},{12, 16},{13, 16},{16, 19},{17, 19},
-      {18, 19},{19, 19},{20, 19}};
-
+  const Deflektorish::LevelConfig level =
+      Deflektorish::loadLevel(kDefaultLevelPath);
+  grid_ = level.grid;
+  sourcePosition_ = Deflektorish::cellToPosition(grid_, level.source.cell);
+  sourceAngle_ = glm::radians(level.source.angleDegrees);
   source_ = addShaderPlane("source", kStyleSource, DL::BlendMode::Additive,
-                           grid(3, 7), {41.0f, 41.0f}, 11, 0.10f);
+                           sourcePosition_, {41.0f, 41.0f}, 11, 0.10f,
+                           sourceAngle_);
 
   renderer_.createBeamSegments(this, &cameraNode_->camera(), renderDevice_,
                                renderResourceCache_, kMaxBeamSegments);
 
-  auto addReflektor = [&](int x, int y, float degrees, bool automatic,
-                          float speed) {
+  for (const Deflektorish::ReflektorConfig &config : level.reflektors) {
     Reflektor reflektor;
-    reflektor.position = grid(x, y);
-    reflektor.angle = glm::radians(degrees);
-    reflektor.automatic = automatic;
-    reflektor.speed = speed;
+    reflektor.position = Deflektorish::cellToPosition(grid_, config.cell);
+    reflektor.angle = glm::radians(config.angleDegrees);
+    reflektor.automatic = config.automatic;
+    reflektor.speed = config.speed;
     reflektor.node = addShaderPlane(
-        automatic ? "reflektor_auto" : "reflektor_manual",
-        automatic ? kStyleAutoReflector : kStyleManualReflector,
+        config.automatic ? "reflektor_auto" : "reflektor_manual",
+        config.automatic ? kStyleAutoReflector : kStyleManualReflector,
         DL::BlendMode::Alpha, reflektor.position, {22.0f, 5.0f}, 13, 0.12f,
         reflektor.angle);
     reflektors_.push_back(reflektor);
-  };
-  addReflektor(12, 7, 45.0f, false, 0.0f);
-  addReflektor(8, 12, 45.0f, true, 0.4f);
-  addReflektor(18, 12, -45.0f, false, 0.0f);
+  }
   selectedReflektor_ = 0;
   selection_ =
       addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
                      reflektors_[selectedReflektor_].position, {42.0f, 42.0f},
                      12, 0.10f);
 
-  for (std::size_t i = 0; i < targets.size(); ++i) {
+  for (std::size_t i = 0; i < level.targets.size(); ++i) {
     Target target;
-    target.position = grid(targets[i].x, targets[i].y);
+    target.position = Deflektorish::cellToPosition(grid_, level.targets[i].cell);
     target.phase = target.position.x * 0.071f + target.position.y * 0.113f;
     target.node = addShaderPlane("target_" + std::to_string(i + 1),
                                  kStyleTarget, DL::BlendMode::Alpha,
@@ -225,7 +206,7 @@ void DeflektorishScene::spawnLevel() {
     targets_.push_back(target);
   }
 
-  for (int i = 0; i < 12; ++i) {
+  for (int i = 0; i < level.explosionPoolSize; ++i) {
     Explosion explosion;
     explosion.node = addShaderPlane("explosion_" + std::to_string(i + 1),
                                     kStyleExplosion, DL::BlendMode::Additive,
@@ -234,58 +215,59 @@ void DeflektorishScene::spawnLevel() {
     explosions_.push_back(explosion);
   }
 
-  Portal portal;
-  portal.entryPosition = grid(16, 3);
-  portal.exitPosition = grid(22, 11);
-  portal.phase = 0.2f;
-  portal.entryNode =
-      addShaderPlane("portal_entry", kStylePortal, DL::BlendMode::Additive,
-                     portal.entryPosition, {27.0f, 27.0f}, 10, 0.11f);
-  portal.exitNode =
-      addShaderPlane("portal_exit", kStylePortal, DL::BlendMode::Additive,
-                     portal.exitPosition, {27.0f, 27.0f}, 10, 0.11f);
-  portals_.push_back(portal);
+  for (std::size_t i = 0; i < level.portals.size(); ++i) {
+    const Deflektorish::PortalConfig &config = level.portals[i];
+    Portal portal;
+    portal.entryPosition =
+        Deflektorish::cellToPosition(grid_, config.entryCell);
+    portal.exitPosition = Deflektorish::cellToPosition(grid_, config.exitCell);
+    portal.phase = config.phase;
+    portal.entryNode =
+        addShaderPlane("portal_entry_" + std::to_string(i + 1), kStylePortal,
+                       DL::BlendMode::Additive, portal.entryPosition,
+                       {27.0f, 27.0f}, 10, 0.11f);
+    portal.exitNode =
+        addShaderPlane("portal_exit_" + std::to_string(i + 1), kStylePortal,
+                       DL::BlendMode::Additive, portal.exitPosition,
+                       {27.0f, 27.0f}, 10, 0.11f);
+    portals_.push_back(portal);
+  }
 
-  auto addFilter = [&](int x, int y, float degrees, bool automatic,
-                       float speed) {
+  for (const Deflektorish::FilterConfig &config : level.filters) {
     Filter filter;
-    filter.position = grid(x, y);
-    filter.angle = glm::radians(degrees);
-    filter.automatic = automatic;
-    filter.speed = speed;
+    filter.position = Deflektorish::cellToPosition(grid_, config.cell);
+    filter.angle = glm::radians(config.angleDegrees);
+    filter.automatic = config.automatic;
+    filter.speed = config.speed;
     filter.node =
-        addShaderPlane(automatic ? "angle_filter_auto" : "angle_filter",
+        addShaderPlane(config.automatic ? "angle_filter_auto" : "angle_filter",
                        kStyleFilter, DL::BlendMode::Alpha, filter.position,
                        {17.0f, 17.0f}, 7, 0.05f, filter.angle);
     filters_.push_back(filter);
-  };
-  addFilter(12, 10, 90.0f, false, 0.0f);
-  addFilter(12, 13, 90.0f, true, 0.42f);
-
-  Splitter splitter;
-  splitter.position = grid(16, 7);
-  splitter.angle = glm::radians(0.0f);
-  splitter.node = addShaderPlane("beam_splitter", kStyleSplitter,
-                                 DL::BlendMode::Alpha, splitter.position,
-                                 {20.0f, 20.0f}, 8, 0.06f, splitter.angle);
-  splitters_.push_back(splitter);
-
-  auto addBlocker = [&](glm::ivec2 coord, bool reflective) {
-    Blocker blocker;
-    blocker.position = grid(coord.x, coord.y);
-    blocker.reflective = reflective;
-    blocker.node = addShaderPlane(
-        reflective ? "reflective_blocker" : "solid_blocker",
-        reflective ? kStyleReflectiveBlocker : kStyleBlocker,
-        DL::BlendMode::Alpha, blocker.position, {16.0f, 16.0f}, reflective ? 6 : 5,
-        reflective ? 0.025f : 0.02f);
-    blockers_.push_back(blocker);
-  };
-  for (const glm::ivec2 &coord : solid) {
-    addBlocker(coord, false);
   }
-  for (const glm::ivec2 &coord : reflect) {
-    addBlocker(coord, true);
+
+  for (std::size_t i = 0; i < level.splitters.size(); ++i) {
+    const Deflektorish::SplitterConfig &config = level.splitters[i];
+    Splitter splitter;
+    splitter.position = Deflektorish::cellToPosition(grid_, config.cell);
+    splitter.angle = glm::radians(config.angleDegrees);
+    splitter.node = addShaderPlane("beam_splitter_" + std::to_string(i + 1),
+                                   kStyleSplitter, DL::BlendMode::Alpha,
+                                   splitter.position, {20.0f, 20.0f}, 8,
+                                   0.06f, splitter.angle);
+    splitters_.push_back(splitter);
+  }
+
+  for (const Deflektorish::BlockerConfig &config : level.blockers) {
+    Blocker blocker;
+    blocker.position = Deflektorish::cellToPosition(grid_, config.cell);
+    blocker.reflective = config.reflective;
+    blocker.node = addShaderPlane(
+        config.reflective ? "reflective_blocker" : "solid_blocker",
+        config.reflective ? kStyleReflectiveBlocker : kStyleBlocker,
+        DL::BlendMode::Alpha, blocker.position, {16.0f, 16.0f},
+        config.reflective ? 6 : 5, config.reflective ? 0.025f : 0.02f);
+    blockers_.push_back(blocker);
   }
 }
 
@@ -350,8 +332,8 @@ void DeflektorishScene::updateSelection(float dt) {
 
 DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
   Deflektorish::BeamWorld world;
-  world.sourcePosition = grid(3, 7);
-  world.sourceAngle = 0.0f;
+  world.sourcePosition = sourcePosition_;
+  world.sourceAngle = sourceAngle_;
 
   world.reflektors.reserve(reflektors_.size());
   for (const Reflektor &reflektor : reflektors_) {

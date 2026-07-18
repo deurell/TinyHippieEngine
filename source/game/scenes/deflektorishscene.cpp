@@ -576,6 +576,8 @@ void DeflektorishScene::applyGameEvents() {
 }
 
 void DeflektorishScene::applyTargetFirstHit(const GameEvent &event) {
+  Deflektorish::addBeamEnergy(beamEnergy_, beamEnergyConfig_,
+                              beamEnergyConfig_.targetHitEnergyGain);
   if (soundCallback_) {
     soundCallback_(Deflektorish::Sound::TargetFirstHit, event.position,
                    event.energy);

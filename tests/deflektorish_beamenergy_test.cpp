@@ -129,7 +129,7 @@ TEST(DeflektorishBeamEnergyTest, NearReturnReflectorBounceIsAllowedBelowDirectTh
   EXPECT_EQ(hazards.directReturnCount, 0);
 }
 
-TEST(DeflektorishBeamEnergyTest, DrainsAndRegeneratesContinuously) {
+TEST(DeflektorishBeamEnergyTest, DrainsButDoesNotRegenerateWhileIdle) {
   Deflektorish::BeamEnergyState state{.current = 50.0f};
   Deflektorish::BeamHazards hazards;
   hazards.selfCrossCount = 1;
@@ -140,11 +140,11 @@ TEST(DeflektorishBeamEnergyTest, DrainsAndRegeneratesContinuously) {
 
   hazards.selfCrossCount = 0;
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
-  EXPECT_FLOAT_EQ(state.current, 48.5f);
+  EXPECT_FLOAT_EQ(state.current, 49.0f);
   EXPECT_FLOAT_EQ(state.selfCrossPressure, 0.5f);
 
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
-  EXPECT_FLOAT_EQ(state.current, 52.5f);
+  EXPECT_FLOAT_EQ(state.current, 49.0f);
   EXPECT_FLOAT_EQ(state.selfCrossPressure, 0.0f);
 }
 
@@ -157,6 +157,15 @@ TEST(DeflektorishBeamEnergyTest, DirectReturnDrainIsSeriousButNotLethal) {
 
   EXPECT_FLOAT_EQ(state.current, 32.5f);
   EXPECT_FLOAT_EQ(state.drainPerSecond, 35.0f);
+}
+
+TEST(DeflektorishBeamEnergyTest, TargetHitGainRestoresEnergyWithoutOverflow) {
+  Deflektorish::BeamEnergyState state{.current = 92.0f};
+  Deflektorish::BeamEnergyConfig config;
+
+  Deflektorish::addBeamEnergy(state, config, config.targetHitEnergyGain);
+
+  EXPECT_FLOAT_EQ(state.current, 100.0f);
 }
 
 } // namespace

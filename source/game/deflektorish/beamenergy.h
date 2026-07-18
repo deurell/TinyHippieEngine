@@ -6,7 +6,8 @@ namespace Deflektorish {
 
 struct BeamEnergyConfig {
   float maxEnergy = 100.0f;
-  float regenPerSecond = 8.0f;
+  float regenPerSecond = 0.0f;
+  float targetHitEnergyGain = 12.0f;
   float selfCrossDrainPerSecond = 2.0f;
   float backtrackDrainPerSecond = 32.0f;
   float directReturnDrainPerSecond = 35.0f;
@@ -38,5 +39,7 @@ float calculateBeamDrainPerSecond(const BeamHazards &hazards,
                                   const BeamEnergyConfig &config);
 void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,
                       const BeamEnergyConfig &config, float dt);
+void addBeamEnergy(BeamEnergyState &state, const BeamEnergyConfig &config,
+                   float amount);
 
 } // namespace Deflektorish

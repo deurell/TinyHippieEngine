@@ -161,13 +161,7 @@ void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,
       moveTowards(state.selfCrossPressure, targetCrossPressure,
                   std::max(crossPressureRate, 0.0f) * dt);
 
-  const float rawDrain =
-      state.selfCrossPressure * config.selfCrossDrainPerSecond +
-      static_cast<float>(hazards.backtrackCount) *
-          config.backtrackDrainPerSecond +
-      static_cast<float>(hazards.directReturnCount) *
-          config.directReturnDrainPerSecond;
-  state.drainPerSecond = std::clamp(rawDrain, 0.0f, config.maxDrainPerSecond);
+  state.drainPerSecond = calculateBeamDrainPerSecond(hazards, config);
   if (state.drainPerSecond > 0.0f) {
     state.current -= state.drainPerSecond * dt;
   } else {
@@ -179,6 +173,13 @@ void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,
                                       config.maxDrainPerSecond,
                                   0.0f, 1.0f)
                      : 0.0f;
+}
+
+void addBeamEnergy(BeamEnergyState &state, const BeamEnergyConfig &config,
+                   float amount) {
+  state.current =
+      std::clamp(state.current + std::max(amount, 0.0f), 0.0f,
+                 std::max(config.maxEnergy, 0.0f));
 }
 
 } // namespace Deflektorish

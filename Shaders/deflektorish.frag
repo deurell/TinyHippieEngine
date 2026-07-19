@@ -520,6 +520,11 @@ vec4 shadeCompletionOverlay(vec2 uv) {
     return vec4(color, alpha);
 }
 
+vec4 shadeIntroTransition(vec2 uv) {
+    float veil = clamp(proceduralParams.y, 0.0, 1.0);
+    return vec4(0.0, 0.0, 0.0, veil);
+}
+
 void main() {
     vec4 color = baseColor;
     if (proceduralStyle == 1) {
@@ -550,6 +555,8 @@ void main() {
         color = shadeEnergyBar(TexCoord);
     } else if (proceduralStyle == 14) {
         color = shadeCompletionOverlay(TexCoord);
+    } else if (proceduralStyle == 15) {
+        color = shadeIntroTransition(TexCoord);
     }
 
     color *= baseColor;

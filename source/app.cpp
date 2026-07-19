@@ -531,6 +531,7 @@ void DL::App::update() {
     processInput(window_);
     syncObservedWindowSizes();
   }
+  applyPendingSceneChange();
   if (!scene_)
     return;
   const auto frameTime = glfwGetTime();
@@ -796,6 +797,18 @@ void DL::App::loadCurrentScene() {
   }
 }
 
+void DL::App::requestSceneAdvance() { pendingNextScene_ = true; }
+
+void DL::App::applyPendingSceneChange() {
+  if (!pendingNextScene_) {
+    return;
+  }
+  pendingNextScene_ = false;
+  sceneManager_.next();
+  Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_start");
+  loadCurrentScene();
+}
+
 void DL::App::loadAudioClips() {
   deflektorSoundMap_ = Deflektorish::loadSoundMap(
       "Resources/Game/Deflektorish/Audio/sounds.json");
@@ -810,10 +823,7 @@ void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<DeflektorishIntroScene>(
         renderDevice_.get(), renderResourceCache_.get(), [this] {
-          sceneManager_.next();
-          Logger::instance().logEvent(LogLevel::Info, "scene",
-                                      "deflektorish_start");
-          loadCurrentScene();
+          requestSceneAdvance();
         });
   });
   sceneManager_.registerScene([this] {

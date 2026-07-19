@@ -3,6 +3,7 @@
 #include "camera.h"
 #include "game/deflektorish/beamworld.h"
 #include "game/deflektorish/deflektorishrenderer.h"
+#include "game/deflektorish/fadetransition.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -78,6 +79,7 @@ private:
   void updateBackgroundCamera();
   void updateLiveShowcase(float dt);
   void updateAttractPage();
+  void updateStartTransition(float dt);
   void requestStart();
   void updateLayout();
   glm::vec3 toWorld(glm::vec2 pixels, float z = 0.0f) const;
@@ -96,7 +98,10 @@ private:
   std::vector<IntroSource> demoSources_;
   std::vector<IntroReflektor> demoReflektors_;
   TextNode *pressFire_ = nullptr;
+  DL::ShaderPlaneNode *transitionOverlay_ = nullptr;
   bool previousFireDown_ = false;
   bool startRequested_ = false;
+  bool startCallbackDispatched_ = false;
+  Deflektorish::FadeTransition startTransition_;
   float elapsed_ = 0.0f;
 };

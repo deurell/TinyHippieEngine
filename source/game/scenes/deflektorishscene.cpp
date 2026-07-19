@@ -13,7 +13,7 @@ namespace {
 
 constexpr int kMaxBeamSegments = 28;
 constexpr float kEpsilon = 0.001f;
-constexpr float kManualRotateSpeed = 48.0f * 3.1415926535f / 180.0f;
+constexpr float kManualRotateSpeed = 36.0f * 3.1415926535f / 180.0f;
 constexpr float kReflektorPickRadius = 0.36f;
 constexpr float kTargetPrepopDuration = 0.26f;
 constexpr float kShakeStrength = 5.2f;
@@ -52,9 +52,11 @@ constexpr int kStyleFilter = 11;
 constexpr int kStyleSplitter = 12;
 constexpr int kStyleEnergyBar = 13;
 constexpr int kStyleCompletionOverlay = 14;
+constexpr int kStyleIntroTransition = 15;
 constexpr char kLevelRoot[] = "Resources/Game/Deflektorish/Levels/";
 constexpr float kRoomSpacingPixels = 1120.0f;
 constexpr float kRoomCameraPanDuration = 0.86f;
+constexpr float kEntryTransitionDuration = 0.46f;
 constexpr float kInactiveRoomAlpha = 0.18f;
 constexpr float kAutoReflektorSpeedScale = 3.2f;
 constexpr float kAutoFilterSpeedScale = 3.6f;
@@ -107,6 +109,7 @@ void DeflektorishScene::init() {
 void DeflektorishScene::update(const DL::FrameContext &ctx) {
   elapsed_ += ctx.delta_time;
   updateCameraPan(ctx.delta_time);
+  updateEntryTransition(ctx.delta_time);
   const bool gameplayActive = completionPhase_ == CompletionPhase::Playing &&
                               cameraPanDuration_ <= 0.0f;
   if (gameplayActive) {
@@ -275,6 +278,7 @@ void DeflektorishScene::resetLevelRuntime() {
   selection_ = nullptr;
   energyBar_ = nullptr;
   completionOverlay_ = nullptr;
+  entryTransitionOverlay_ = nullptr;
   completionTitle_ = nullptr;
   completionSubtitle_ = nullptr;
   bonusHeading_ = nullptr;
@@ -321,6 +325,7 @@ void DeflektorishScene::resetLevelRuntime() {
   victoryTime_ = 0.0f;
   victoryPostWaveTimer_ = 0.0f;
   completionFadeTime_ = 0.0f;
+  entryTransition_ = Deflektorish::FadeTransition{};
   completionPhase_ = CompletionPhase::Playing;
   levelElapsed_ = 0.0f;
   campaignScore_ = 0;
@@ -370,6 +375,7 @@ void DeflektorishScene::loadCampaign() {
   scoreHud_ = scoreHud.get();
   addChild(std::move(scoreHud));
   createCompletionOverlay();
+  createEntryTransitionOverlay();
   activateRoom(0, false);
   SceneNode::init();
   for (auto &child : children) {
@@ -381,6 +387,8 @@ void DeflektorishScene::loadCampaign() {
   if (framebufferSize_.x > 0.0f && framebufferSize_.y > 0.0f) {
     onFramebufferSizeChanged(framebufferSize_);
   }
+  updateHudPositions();
+  updateEntryTransition(0.0f);
 }
 
 bool DeflektorishScene::isCurrentRoom(std::size_t roomIndex) const {
@@ -859,6 +867,7 @@ void DeflektorishScene::updateHudPositions() {
                  Deflektorish::kScreenCenter,
              energyHalfSize, 0.20f);
   placePlane(completionOverlay_, {0.0f, 0.0f}, {520.0f, 350.0f}, 0.24f);
+  placePlane(entryTransitionOverlay_, {0.0f, 0.0f}, {620.0f, 430.0f}, 0.44f);
   placeText(completionTitle_, {0.0f, 48.0f}, 0.34f);
   placeText(completionSubtitle_, {0.0f, 8.0f}, 0.34f);
   placeText(bonusHeading_, {0.0f, 48.0f}, 0.35f);
@@ -1363,6 +1372,29 @@ void DeflektorishScene::createCompletionOverlay() {
                         Deflektorish::kPixelToWorld, 1.0f});
   bonusTotal_ = total.get();
   addChild(std::move(total));
+}
+
+void DeflektorishScene::createEntryTransitionOverlay() {
+  entryTransitionOverlay_ =
+      addShaderPlane("entry_transition_overlay", kStyleIntroTransition,
+                     DL::BlendMode::Alpha, Deflektorish::kScreenCenter,
+                     {620.0f, 430.0f}, 45, 0.44f);
+  if (entryTransitionOverlay_ != nullptr) {
+    entryTransitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
+    entryTransitionOverlay_->config.params0 = {elapsed_, 1.0f, 0.0f, 1.0f};
+  }
+  entryTransition_.start(kEntryTransitionDuration);
+}
+
+void DeflektorishScene::updateEntryTransition(float dt) {
+  if (entryTransitionOverlay_ == nullptr) {
+    return;
+  }
+  entryTransition_.update(dt);
+  const float alpha = entryTransition_.fadeOutAlpha();
+  entryTransitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, alpha};
+  entryTransitionOverlay_->config.params0 = {elapsed_, alpha,
+                                             entryTransition_.progress(), 1.0f};
 }
 
 void DeflektorishScene::startVictoryCelebration() {

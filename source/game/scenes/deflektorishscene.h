@@ -6,6 +6,7 @@
 #include "game/deflektorish/deflektorishrenderer.h"
 #include "game/deflektorish/deflektorishlevel.h"
 #include "game/deflektorish/deflektorishsound.h"
+#include "game/deflektorish/fadetransition.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
 #include "scenenode.h"
@@ -206,8 +207,10 @@ private:
   float victoryNoise(int index, float salt) const;
   glm::vec2 victoryBlastPosition(int index) const;
   void createCompletionOverlay();
+  void createEntryTransitionOverlay();
   void startVictoryCelebration();
   void resetBonusTally();
+  void updateEntryTransition(float dt);
   void updateVictoryCelebration(float dt);
   void updateCompletionOverlay();
   void startBonusTally();
@@ -256,6 +259,7 @@ private:
   DL::ShaderPlaneNode *selection_ = nullptr;
   DL::ShaderPlaneNode *energyBar_ = nullptr;
   DL::ShaderPlaneNode *completionOverlay_ = nullptr;
+  DL::ShaderPlaneNode *entryTransitionOverlay_ = nullptr;
   TextNode *completionTitle_ = nullptr;
   TextNode *completionSubtitle_ = nullptr;
   TextNode *bonusHeading_ = nullptr;
@@ -296,6 +300,7 @@ private:
   float victoryTime_ = 0.0f;
   float victoryPostWaveTimer_ = 0.0f;
   float completionFadeTime_ = 0.0f;
+  Deflektorish::FadeTransition entryTransition_;
   CompletionPhase completionPhase_ = CompletionPhase::Playing;
   BonusTallyPhase bonusTallyPhase_ = BonusTallyPhase::Hidden;
   float levelElapsed_ = 0.0f;

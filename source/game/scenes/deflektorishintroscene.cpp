@@ -9,8 +9,10 @@
 namespace {
 constexpr int kStyleSource = 2;
 constexpr int kStyleAutoReflector = 7;
+constexpr int kStyleIntroTransition = 15;
 constexpr float kPixelToWorld = Deflektorish::kPixelToWorld;
 constexpr float kAttractPageSeconds = 3.4f;
+constexpr float kStartFadeToBlackDuration = 0.24f;
 
 struct ScoreEntry {
   const char *name;
@@ -116,6 +118,14 @@ void DeflektorishIntroScene::init() {
   pressFire_ = addText("PRESS FIRE", {480.0f, 146.0f}, 24.0f,
                        {1.0f, 0.82f, 0.32f, 0.95f}, 12);
   addCredits();
+  transitionOverlay_ =
+      addPlane("intro_start_transition", kStyleIntroTransition,
+               DL::BlendMode::Alpha, {480.0f, 320.0f}, {620.0f, 430.0f}, 40,
+               0.32f);
+  if (transitionOverlay_ != nullptr) {
+    transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 0.0f};
+    transitionOverlay_->config.params0 = {elapsed_, 0.0f, 0.0f, 0.0f};
+  }
 
   SceneNode::init();
   for (auto &child : children) {
@@ -134,11 +144,14 @@ void DeflektorishIntroScene::update(const DL::FrameContext &ctx) {
 
   updateBackgroundCamera();
   updateLiveShowcase(ctx.delta_time);
+  updateStartTransition(ctx.delta_time);
 
   if (pressFire_ != nullptr) {
     const float blink = 0.58f + 0.42f * std::sin(elapsed_ * 7.0f);
+    const float fade = startRequested_ ? 1.0f - startTransition_.progress()
+                                       : 1.0f;
     pressFire_->setTextColor({1.0f, 0.62f + blink * 0.28f, 0.20f,
-                              0.48f + blink * 0.48f});
+                              (0.48f + blink * 0.48f) * fade});
   }
   updateAttractPage();
 
@@ -501,14 +514,38 @@ void DeflektorishIntroScene::updateAttractPage() {
   applyAlpha(creditTexts_, showCredits ? activeAlpha : inactiveAlpha);
 }
 
+void DeflektorishIntroScene::updateStartTransition(float dt) {
+  if (!startRequested_) {
+    if (transitionOverlay_ != nullptr) {
+      transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 0.0f};
+      transitionOverlay_->config.params0 = {elapsed_, 0.0f, 0.0f, 0.0f};
+    }
+    return;
+  }
+
+  startTransition_.update(dt);
+  const float alpha = startTransition_.fadeInAlpha();
+  if (transitionOverlay_ != nullptr) {
+    transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
+    transitionOverlay_->config.params0 = {elapsed_, alpha,
+                                          startTransition_.progress(), 0.0f};
+  }
+
+  if (!startCallbackDispatched_ && startTransition_.complete()) {
+    startCallbackDispatched_ = true;
+    if (startCallback_) {
+      startCallback_();
+    }
+  }
+}
+
 void DeflektorishIntroScene::requestStart() {
   if (startRequested_) {
     return;
   }
   startRequested_ = true;
-  if (startCallback_) {
-    startCallback_();
-  }
+  startCallbackDispatched_ = false;
+  startTransition_.start(kStartFadeToBlackDuration);
 }
 
 void DeflektorishIntroScene::updateLayout() {

@@ -121,6 +121,8 @@ private:
   bool canPlayDeflektorSound(Deflektorish::Sound sound,
                              const Deflektorish::SoundEventConfig &event);
   void loadCurrentScene();
+  void requestSceneAdvance();
+  void applyPendingSceneChange();
   void registerScenes();
   void configureDefaultPostProcessStack();
   void ensurePostProcessResources(std::uint32_t framebufferWidth,
@@ -181,6 +183,7 @@ private:
   glm::ivec2 lastObservedFramebufferSize_{0, 0};
 
   bool hasLastMousePosition_ = false;
+  bool pendingNextScene_ = false;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;
 };

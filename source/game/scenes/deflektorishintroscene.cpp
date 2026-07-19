@@ -12,23 +12,22 @@ namespace {
 constexpr float kPixelToWorld = Deflektorish::kPixelToWorld;
 constexpr float kAttractPageSeconds = 3.4f;
 constexpr float kStartFadeToBlackDuration = 0.24f;
+constexpr float kInitialsRepeatDelay = 0.16f;
 
-struct ScoreEntry {
-  const char *name;
-  int score;
-};
-
-constexpr ScoreEntry kHighScores[] = {
-    {"ACE", 98500}, {"LUX", 84200}, {"RAY", 73150},
-    {"KID", 60900}, {"CPU", 42750},
-};
-
-std::string scoreText(int rank, const ScoreEntry &entry) {
+std::string scoreText(int rank, const Deflektorish::HighScoreEntry &entry) {
   std::string value = std::to_string(std::max(entry.score, 0));
-  while (value.size() < 6) {
+  while (value.size() < 8) {
     value.insert(value.begin(), '0');
   }
-  return std::to_string(rank) + "  " + entry.name + "  " + value;
+  return std::to_string(rank) + "  " + entry.initials + "  " + value;
+}
+
+std::string scoreDigits(int score) {
+  std::string value = std::to_string(std::max(score, 0));
+  while (value.size() < 8) {
+    value.insert(value.begin(), '0');
+  }
+  return value;
 }
 
 float angleOf(glm::vec2 direction) {
@@ -90,9 +89,15 @@ glm::vec2 sineBlobPoint(glm::vec2 base, float elapsed, float speed,
 DeflektorishIntroScene::DeflektorishIntroScene(
     DL::IRenderDevice *renderDevice,
     DL::RenderResourceCache *renderResourceCache,
+    const std::vector<Deflektorish::HighScoreEntry> *highScores,
+    std::optional<int> pendingInitialsScore,
+    std::function<void(int, std::string)> initialsCallback,
     std::function<void()> startCallback)
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
-      startCallback_(std::move(startCallback)) {}
+      startCallback_(std::move(startCallback)), highScores_(highScores),
+      pendingInitialsScore_(pendingInitialsScore),
+      initialsCallback_(std::move(initialsCallback)),
+      enteringInitials_(pendingInitialsScore_.has_value()) {}
 
 void DeflektorishIntroScene::init() {
   setDebugName("deflektorish_intro_scene");
@@ -114,6 +119,7 @@ void DeflektorishIntroScene::init() {
   addText("DEFLEKTORISH", {480.0f, 524.0f}, 52.0f,
           {0.74f, 0.98f, 1.0f, 0.96f}, 12);
   addHighScores();
+  createInitialsEntry();
   pressFire_ = addText("PRESS FIRE", {480.0f, 146.0f}, 24.0f,
                        {1.0f, 0.82f, 0.32f, 0.95f}, 12);
   addCredits();
@@ -139,7 +145,9 @@ void DeflektorishIntroScene::init() {
 void DeflektorishIntroScene::update(const DL::FrameContext &ctx) {
   elapsed_ += ctx.delta_time;
   const bool fireDown = ctx.input.isActionDown(DL::Action::Fire);
-  if (fireDown && !previousFireDown_) {
+  if (enteringInitials_) {
+    updateInitialsEntry(ctx.delta_time, ctx.input);
+  } else if (fireDown && !previousFireDown_) {
     requestStart();
   }
   previousFireDown_ = fireDown;
@@ -150,12 +158,17 @@ void DeflektorishIntroScene::update(const DL::FrameContext &ctx) {
 
   if (pressFire_ != nullptr) {
     const float blink = 0.58f + 0.42f * std::sin(elapsed_ * 7.0f);
-    const float fade = startRequested_ ? 1.0f - startTransition_.progress()
-                                       : 1.0f;
+    const float fade = enteringInitials_
+                           ? 0.0f
+                           : (startRequested_ ? 1.0f -
+                                                    startTransition_.progress()
+                                              : 1.0f);
     pressFire_->setTextColor({1.0f, 0.62f + blink * 0.28f, 0.20f,
                               (0.48f + blink * 0.48f) * fade});
   }
-  updateAttractPage();
+  if (!enteringInitials_) {
+    updateAttractPage();
+  }
 
   SceneNode::update(ctx);
 }
@@ -164,9 +177,26 @@ void DeflektorishIntroScene::render(const DL::FrameContext &ctx) {
   SceneNode::render(ctx);
 }
 
-void DeflektorishIntroScene::onClick(double, double) { requestStart(); }
+void DeflektorishIntroScene::onClick(double, double) {
+  if (enteringInitials_) {
+    confirmInitialsCharacter();
+  } else {
+    requestStart();
+  }
+}
 
-void DeflektorishIntroScene::onKey(int) {}
+void DeflektorishIntroScene::onKey(int key) {
+  if (!enteringInitials_) {
+    return;
+  }
+  constexpr int kKeyEnter = 257;
+  constexpr int kKeyBackspace = 259;
+  if (key == kKeyEnter) {
+    confirmInitialsCharacter();
+  } else if (key == kKeyBackspace) {
+    moveInitialsCursor(-1);
+  }
+}
 
 void DeflektorishIntroScene::onScreenSizeChanged(glm::vec2 size) {
   SceneNode::onScreenSizeChanged(size);
@@ -249,12 +279,15 @@ void DeflektorishIntroScene::addHighScores() {
   highScoreTexts_.push_back(addText("HIGH SCORES", {480.0f, 398.0f}, 24.0f,
                                     {1.0f, 0.74f, 0.28f, 0.94f}, 12));
   float y = 356.0f;
-  for (int i = 0; i < static_cast<int>(std::size(kHighScores)); ++i) {
+  const std::vector<Deflektorish::HighScoreEntry> emptyScores;
+  const auto &scores = highScores_ != nullptr ? *highScores_ : emptyScores;
+  for (int i = 0; i < static_cast<int>(scores.size()); ++i) {
     const glm::vec4 color =
         i == 0 ? glm::vec4{0.78f, 1.0f, 0.98f, 0.96f}
                : glm::vec4{0.76f, 0.86f, 0.95f, 0.86f};
     highScoreTexts_.push_back(
-        addText(scoreText(i + 1, kHighScores[i]), {480.0f, y}, 22.0f, color,
+        addText(scoreText(i + 1, scores[static_cast<std::size_t>(i)]),
+                {480.0f, y}, 22.0f, color,
                 12));
     y -= 30.0f;
   }
@@ -270,6 +303,26 @@ void DeflektorishIntroScene::addCredits() {
       addText("GFX   DEURELL", {480.0f, 302.0f}, 20.0f, color, 12));
   creditTexts_.push_back(
       addText("SFX   KENNEY", {480.0f, 262.0f}, 20.0f, color, 12));
+}
+
+void DeflektorishIntroScene::createInitialsEntry() {
+  initialsTitle_ = addText("ENTER INITIALS", {480.0f, 398.0f}, 28.0f,
+                           {1.0f, 0.74f, 0.28f, 0.0f}, 13);
+  initialsScore_ = addText("SCORE  00000000", {480.0f, 350.0f}, 22.0f,
+                           {0.72f, 0.98f, 1.0f, 0.0f}, 13);
+  constexpr std::array<float, 3> kLetterX{{424.0f, 480.0f, 536.0f}};
+  for (std::size_t i = 0; i < initialsLetterNodes_.size(); ++i) {
+    initialsLetterNodes_[i] =
+        addText("A", {kLetterX[i], 294.0f}, 44.0f,
+                {0.74f, 1.0f, 0.98f, 0.0f}, 13);
+    initialsCursorNodes_[i] =
+        addText("^", {kLetterX[i], 253.0f}, 22.0f,
+                {1.0f, 0.72f, 0.28f, 0.0f}, 13);
+  }
+  initialsPrompt_ =
+      addText("STICK SELECTS   FIRE LOCKS", {480.0f, 236.0f}, 18.0f,
+              {1.0f, 0.72f, 0.28f, 0.0f}, 13);
+  updateInitialsText();
 }
 
 void DeflektorishIntroScene::createLiveShowcase() {
@@ -519,6 +572,162 @@ void DeflektorishIntroScene::updateAttractPage() {
   };
   applyAlpha(highScoreTexts_, showCredits ? inactiveAlpha : activeAlpha);
   applyAlpha(creditTexts_, showCredits ? activeAlpha : inactiveAlpha);
+}
+
+void DeflektorishIntroScene::updateInitialsEntry(float dt,
+                                                 const DL::InputState &input) {
+  if (!enteringInitials_) {
+    return;
+  }
+
+  initialsRepeatTimer_ = std::max(initialsRepeatTimer_ - dt, 0.0f);
+  const glm::vec2 axis = input.moveAxis;
+  const auto pressed = [&](float value, float previous, float sign) {
+    return sign > 0.0f ? value > 0.55f && previous <= 0.55f
+                       : value < -0.55f && previous >= -0.55f;
+  };
+  const bool repeated = initialsRepeatTimer_ <= 0.0f;
+  if (pressed(axis.x, previousInitialsAxis_.x, 1.0f) ||
+      (repeated && axis.x > 0.85f)) {
+    moveInitialsCursor(1);
+    initialsRepeatTimer_ = kInitialsRepeatDelay;
+  } else if (pressed(axis.x, previousInitialsAxis_.x, -1.0f) ||
+             (repeated && axis.x < -0.85f)) {
+    moveInitialsCursor(-1);
+    initialsRepeatTimer_ = kInitialsRepeatDelay;
+  } else if (pressed(axis.y, previousInitialsAxis_.y, 1.0f) ||
+             (repeated && axis.y > 0.85f)) {
+    adjustInitialsCharacter(1);
+    initialsRepeatTimer_ = kInitialsRepeatDelay;
+  } else if (pressed(axis.y, previousInitialsAxis_.y, -1.0f) ||
+             (repeated && axis.y < -0.85f)) {
+    adjustInitialsCharacter(-1);
+    initialsRepeatTimer_ = kInitialsRepeatDelay;
+  }
+  previousInitialsAxis_ = axis;
+
+  const bool fireDown = input.isActionDown(DL::Action::Fire);
+  if (fireDown && !previousInitialsFireDown_) {
+    confirmInitialsCharacter();
+  }
+  previousInitialsFireDown_ = fireDown;
+  updateInitialsText();
+}
+
+void DeflektorishIntroScene::updateInitialsText() {
+  const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 8.0f);
+  const float alpha = enteringInitials_ ? 1.0f : 0.0f;
+  const auto applyAlpha = [](std::vector<TextNode *> &nodes, float value) {
+    for (TextNode *node : nodes) {
+      if (node == nullptr) {
+        continue;
+      }
+      glm::vec4 color = node->textColor();
+      color.a = value;
+      node->setTextColor(color);
+      node->setShadowColor({0.0f, 0.03f, 0.05f, value * 0.84f});
+    }
+  };
+  if (enteringInitials_) {
+    applyAlpha(highScoreTexts_, 0.0f);
+    applyAlpha(creditTexts_, 0.0f);
+  }
+
+  if (initialsTitle_ != nullptr) {
+    initialsTitle_->setTextColor({1.0f, 0.68f + pulse * 0.16f, 0.24f, alpha});
+    initialsTitle_->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
+  }
+  if (initialsScore_ != nullptr) {
+    const std::string text =
+        "SCORE  " + scoreDigits(pendingInitialsScore_.value_or(0));
+    initialsScore_->setText(text);
+    initialsScore_->setTextColor({0.72f, 0.98f, 1.0f, alpha});
+    initialsScore_->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
+  }
+  for (std::size_t i = 0; i < initialsLetterNodes_.size(); ++i) {
+    TextNode *letterNode = initialsLetterNodes_[i];
+    if (letterNode != nullptr) {
+      letterNode->setText(std::string(1, initials_[i]));
+      const bool selected = initialsCursor_ == static_cast<int>(i);
+      const glm::vec3 color =
+          selected ? glm::vec3{0.94f, 1.0f, 0.78f}
+                   : glm::vec3{0.70f + pulse * 0.12f, 1.0f, 0.98f};
+      letterNode->setTextColor({color.r, color.g, color.b, alpha});
+      letterNode->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
+    }
+
+    TextNode *cursorNode = initialsCursorNodes_[i];
+    if (cursorNode != nullptr) {
+      const bool visibleCursor =
+          initialsCursor_ == static_cast<int>(i) && pulse > 0.30f;
+      cursorNode->setText("^");
+      cursorNode->setTextColor({1.0f, 0.70f + pulse * 0.18f, 0.24f,
+                                visibleCursor ? alpha : 0.0f});
+      cursorNode->setShadowColor(
+          {0.0f, 0.03f, 0.05f, visibleCursor ? alpha * 0.84f : 0.0f});
+    }
+  }
+  if (initialsPrompt_ != nullptr) {
+    initialsPrompt_->setTextColor({1.0f, 0.68f + pulse * 0.18f, 0.24f,
+                                   alpha * (0.72f + pulse * 0.22f)});
+    initialsPrompt_->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
+  }
+}
+
+void DeflektorishIntroScene::adjustInitialsCharacter(int delta) {
+  char &letter = initials_[static_cast<std::size_t>(initialsCursor_)];
+  int index = letter - 'A';
+  index = (index + delta + 26) % 26;
+  letter = static_cast<char>('A' + index);
+}
+
+void DeflektorishIntroScene::moveInitialsCursor(int delta) {
+  initialsCursor_ = (initialsCursor_ + delta + 3) % 3;
+}
+
+void DeflektorishIntroScene::confirmInitialsCharacter() {
+  if (initialsCursor_ < 2) {
+    ++initialsCursor_;
+    updateInitialsText();
+    return;
+  }
+  submitInitials();
+}
+
+void DeflektorishIntroScene::submitInitials() {
+  if (!enteringInitials_) {
+    return;
+  }
+  const int score = pendingInitialsScore_.value_or(0);
+  std::string initials(initials_.begin(), initials_.end());
+  if (initialsCallback_) {
+    initialsCallback_(score, initials);
+  }
+  enteringInitials_ = false;
+  pendingInitialsScore_.reset();
+  previousInitialsFireDown_ = true;
+  refreshHighScoreTexts();
+  elapsed_ = 0.0f;
+  updateInitialsText();
+  updateAttractPage();
+}
+
+void DeflektorishIntroScene::refreshHighScoreTexts() {
+  if (highScoreTexts_.empty() || highScores_ == nullptr) {
+    return;
+  }
+  const std::size_t scoreTextCount = highScoreTexts_.size() - 1;
+  for (std::size_t i = 0; i < scoreTextCount; ++i) {
+    TextNode *node = highScoreTexts_[i + 1];
+    if (node == nullptr) {
+      continue;
+    }
+    if (i < highScores_->size()) {
+      node->setText(scoreText(static_cast<int>(i + 1), (*highScores_)[i]));
+    } else {
+      node->setText(std::to_string(i + 1) + "  ---  00000000");
+    }
+  }
 }
 
 void DeflektorishIntroScene::updateStartTransition(float dt) {

@@ -31,3 +31,32 @@ TEST(DeflektorishCampaignTest, TracksNonNegativeScore) {
   campaign.setScore(50);
   EXPECT_EQ(campaign.score(), 50);
 }
+
+TEST(DeflektorishCampaignTest, RecordsHighScoresInDescendingOrder) {
+  Deflektorish::Campaign campaign;
+
+  const std::size_t rank = campaign.recordHighScore("YOU", 90000);
+
+  ASSERT_EQ(campaign.highScores().size(), 5u);
+  EXPECT_EQ(rank, 1u);
+  EXPECT_EQ(campaign.highScores()[0].initials, "ACE");
+  EXPECT_EQ(campaign.highScores()[1].initials, "YOU");
+  EXPECT_EQ(campaign.highScores()[1].score, 90000);
+}
+
+TEST(DeflektorishCampaignTest, HighScoreInitialsStayThreeCharacters) {
+  Deflektorish::Campaign campaign;
+
+  campaign.recordHighScore("A", 100000);
+
+  ASSERT_FALSE(campaign.highScores().empty());
+  EXPECT_EQ(campaign.highScores()[0].initials, "A  ");
+}
+
+TEST(DeflektorishCampaignTest, ReportsWhetherScoreQualifiesForTable) {
+  Deflektorish::Campaign campaign;
+
+  EXPECT_FALSE(campaign.qualifiesHighScore(1));
+  EXPECT_TRUE(campaign.qualifiesHighScore(100));
+  EXPECT_TRUE(campaign.qualifiesHighScore(50000));
+}

@@ -1,6 +1,7 @@
 #pragma once
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
+#include "game/deflektorish/deflektorishcampaign.h"
 #include "game/deflektorish/deflektorishsound.h"
 #include "game/deflektorish/deflektorishsoundmap.h"
 #include "iscene.h"
@@ -14,6 +15,8 @@
 #include <GLFW/glfw3.h>
 #include <map>
 #include <memory>
+#include <optional>
+#include <string>
 #include <vector>
 
 #ifdef __EMSCRIPTEN__
@@ -122,6 +125,8 @@ private:
                              const Deflektorish::SoundEventConfig &event);
   void loadCurrentScene();
   void requestSceneAdvance();
+  void requestSceneReturnToIntro(int score);
+  void submitDeflektorInitials(int score, std::string initials);
   void applyPendingSceneChange();
   void registerScenes();
   void configureDefaultPostProcessStack();
@@ -173,6 +178,7 @@ private:
   RenderQueueStats lastRenderQueueStats_;
   std::vector<DeflektorPostBump> deflektorPostBumps_;
   Deflektorish::SoundMapConfig deflektorSoundMap_;
+  Deflektorish::Campaign deflektorCampaign_;
   std::map<Deflektorish::Sound, std::vector<AudioSystem::SoundId>>
       deflektorActiveSounds_;
   ActionMap actionMap_;
@@ -184,6 +190,8 @@ private:
 
   bool hasLastMousePosition_ = false;
   bool pendingNextScene_ = false;
+  bool pendingPreviousScene_ = false;
+  std::optional<int> pendingInitialsScore_;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;
 };

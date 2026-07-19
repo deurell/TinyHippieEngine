@@ -3,9 +3,15 @@
 #include <algorithm>
 #include <cstddef>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace Deflektorish {
+
+struct HighScoreEntry {
+  std::string initials = "AAA";
+  int score = 0;
+};
 
 class Campaign {
 public:
@@ -31,6 +37,15 @@ public:
     return currentLevelIndex_;
   }
   [[nodiscard]] int score() const { return score_; }
+  [[nodiscard]] const std::vector<HighScoreEntry> &highScores() const {
+    return highScores_;
+  }
+  [[nodiscard]] bool qualifiesHighScore(int score) const {
+    if (highScores_.size() < maxHighScores_) {
+      return true;
+    }
+    return std::max(score, 0) > highScores_.back().score;
+  }
 
   void setCurrentLevelIndex(std::size_t levelIndex, std::size_t levelCount) {
     currentLevelIndex_ = levelCount > 0 ? levelIndex % levelCount : 0;
@@ -39,9 +54,38 @@ public:
   void resetScore() { score_ = 0; }
   void addScore(int amount) { score_ = std::max(score_ + amount, 0); }
   void setScore(int score) { score_ = std::max(score, 0); }
+  std::size_t recordHighScore(std::string initials, int score) {
+    if (initials.empty()) {
+      initials = "AAA";
+    }
+    initials.resize(3, ' ');
+    const std::string normalizedInitials = initials;
+    const int normalizedScore = std::max(score, 0);
+    HighScoreEntry entry{std::move(initials), normalizedScore};
+    highScores_.push_back(std::move(entry));
+    std::sort(highScores_.begin(), highScores_.end(),
+              [](const HighScoreEntry &a, const HighScoreEntry &b) {
+                return a.score > b.score;
+              });
+    if (highScores_.size() > maxHighScores_) {
+      highScores_.resize(maxHighScores_);
+    }
+    for (std::size_t i = 0; i < highScores_.size(); ++i) {
+      if (highScores_[i].initials == normalizedInitials &&
+          highScores_[i].score == normalizedScore) {
+        return i;
+      }
+    }
+    return highScores_.size();
+  }
 
 private:
+  static constexpr std::size_t maxHighScores_ = 5;
   std::vector<std::string> levelPaths_;
+  std::vector<HighScoreEntry> highScores_{
+      {"ACE", 98500}, {"LUX", 84200}, {"RAY", 73150},
+      {"KID", 60900}, {"CPU", 1},
+  };
   std::size_t currentLevelIndex_ = 0;
   int score_ = 0;
 };

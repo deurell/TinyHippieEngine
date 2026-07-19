@@ -376,6 +376,8 @@ bool DL::App::init() {
   initActionMap();
   basisInit();
   configureDefaultPostProcessStack();
+  deflektorCampaign_.loadDefaultLevelPaths("Resources/Game/Deflektorish/Levels/",
+                                           10);
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
 #else
@@ -798,13 +800,35 @@ void DL::App::loadCurrentScene() {
 
 void DL::App::requestSceneAdvance() { pendingNextScene_ = true; }
 
+void DL::App::requestSceneReturnToIntro(int score) {
+  if (deflektorCampaign_.qualifiesHighScore(score)) {
+    pendingInitialsScore_ = score;
+  } else {
+    pendingInitialsScore_.reset();
+  }
+  pendingPreviousScene_ = true;
+}
+
+void DL::App::submitDeflektorInitials(int score, std::string initials) {
+  deflektorCampaign_.recordHighScore(std::move(initials), score);
+  pendingInitialsScore_.reset();
+}
+
 void DL::App::applyPendingSceneChange() {
-  if (!pendingNextScene_) {
+  if (!pendingNextScene_ && !pendingPreviousScene_) {
     return;
   }
+  const bool goNext = pendingNextScene_;
+  const bool goPrevious = pendingPreviousScene_;
   pendingNextScene_ = false;
-  sceneManager_.next();
-  Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_start");
+  pendingPreviousScene_ = false;
+  if (goNext) {
+    sceneManager_.next();
+    Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_start");
+  } else if (goPrevious) {
+    sceneManager_.previous();
+    Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_intro");
+  }
   loadCurrentScene();
 }
 
@@ -821,7 +845,12 @@ void DL::App::loadAudioClips() {
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<DeflektorishIntroScene>(
-        renderDevice_.get(), renderResourceCache_.get(), [this] {
+        renderDevice_.get(), renderResourceCache_.get(),
+        &deflektorCampaign_.highScores(), pendingInitialsScore_,
+        [this](int score, std::string initials) {
+          submitDeflektorInitials(score, std::move(initials));
+        },
+        [this] {
           requestSceneAdvance();
         });
   });
@@ -834,6 +863,9 @@ void DL::App::registerScenes() {
         [this](Deflektorish::Sound sound, glm::vec2 position,
                float energy) {
           submitDeflektorSound(sound, position, energy);
+        },
+        [this](int score) {
+          requestSceneReturnToIntro(score);
         });
   });
 }

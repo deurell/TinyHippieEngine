@@ -29,6 +29,8 @@ constexpr float kVictoryTextFadeDuration = 0.62f;
 constexpr float kVictoryPostWaveDelay = 0.12f;
 constexpr int kMinExplosionPoolSize = 28;
 constexpr int kDebugVictoryKey = 86;
+constexpr float kGameOverReturnDelay = 2.2f;
+constexpr float kGameOverSkipDelay = 0.8f;
 constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
@@ -76,10 +78,12 @@ std::string scoreDigits(int score) {
 DeflektorishScene::DeflektorishScene(
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *renderResourceCache,
     std::function<void(glm::vec2, float)> postBumpCallback,
-    std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback)
+    std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback,
+    std::function<void(int)> gameOverCallback)
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
       postBumpCallback_(std::move(postBumpCallback)),
-      soundCallback_(std::move(soundCallback)) {
+      soundCallback_(std::move(soundCallback)),
+      gameOverCallback_(std::move(gameOverCallback)) {
   campaign_.loadDefaultLevelPaths(kLevelRoot, 10);
 }
 
@@ -94,6 +98,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateEntryTransition(ctx.delta_time);
   const bool gameplayActive = completionPhase_ == CompletionPhase::Playing &&
                               cameraPanDuration_ <= 0.0f;
+  const bool fireDown = ctx.input.isActionDown(DL::Action::Fire);
   if (gameplayActive) {
     levelElapsed_ += ctx.delta_time;
     updateInput(ctx);
@@ -112,6 +117,10 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
 
   BeamResult result = gameplayActive ? solveBeam() : inactiveBeamResult();
   updateBeamEnergy(ctx.delta_time, result);
+  if (gameplayActive && beamEnergy_.current <= 0.0f && !allTargetsDestroyed()) {
+    startGameOver();
+    result = inactiveBeamResult();
+  }
   renderer_.updateBeamSegments(result);
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
@@ -126,6 +135,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   applyGameEvents();
   updateTargetVisuals();
   updateExplosions(ctx.delta_time);
+  updateGameOver(ctx.delta_time, fireDown);
   updateScoreHud(ctx.delta_time);
 
   SceneNode::update(ctx);
@@ -143,7 +153,8 @@ void DeflektorishScene::onClick(double x, double y) {
 void DeflektorishScene::onKey(int key) {
   if (key == kDebugVictoryKey &&
       completionPhase_ != CompletionPhase::Celebration &&
-      completionPhase_ != CompletionPhase::FadeOut) {
+      completionPhase_ != CompletionPhase::FadeOut &&
+      completionPhase_ != CompletionPhase::GameOver) {
     startVictoryCelebration();
   }
 }
@@ -268,6 +279,8 @@ void DeflektorishScene::resetLevelRuntime() {
   bonusEnergy_ = nullptr;
   bonusTime_ = nullptr;
   bonusTotal_ = nullptr;
+  gameOverTitle_ = nullptr;
+  gameOverScoreText_ = nullptr;
   scoreHud_ = nullptr;
   renderer_ = Deflektorish::Renderer{};
   rooms_.clear();
@@ -288,6 +301,8 @@ void DeflektorishScene::resetLevelRuntime() {
   selectedReflektor_ = -1;
   previousLeftMouseDown_ = false;
   previousSelectNextDown_ = false;
+  previousGameOverFireDown_ = false;
+  gameOverCallbackDispatched_ = false;
   rotateInput_ = 0.0f;
   sourcePulse_ = 0.0f;
   sourceLoad_ = 0.0f;
@@ -308,6 +323,9 @@ void DeflektorishScene::resetLevelRuntime() {
   victoryTime_ = 0.0f;
   victoryPostWaveTimer_ = 0.0f;
   completionFadeTime_ = 0.0f;
+  gameOverTime_ = 0.0f;
+  gameOverRankFlash_ = 0.0f;
+  gameOverScore_ = 0;
   entryTransition_ = Deflektorish::FadeTransition{};
   completionPhase_ = CompletionPhase::Playing;
   levelElapsed_ = 0.0f;
@@ -877,6 +895,8 @@ void DeflektorishScene::updateHudPositions() {
   placeText(bonusEnergy_, {0.0f, 14.0f}, 0.35f);
   placeText(bonusTime_, {0.0f, -12.0f}, 0.35f);
   placeText(bonusTotal_, {0.0f, -48.0f}, 0.35f);
+  placeText(gameOverTitle_, {0.0f, 62.0f}, 0.36f);
+  placeText(gameOverScoreText_, {0.0f, 10.0f}, 0.36f);
 }
 
 DeflektorishScene::BeamResult DeflektorishScene::solveBeam() {
@@ -1397,6 +1417,39 @@ void DeflektorishScene::createCompletionOverlay() {
                         Deflektorish::kPixelToWorld, 1.0f});
   bonusTotal_ = total.get();
   addChild(std::move(total));
+
+  auto gameOverTitle = std::make_unique<TextNode>(
+      this, "GAME OVER", renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  gameOverTitle->setDebugName("game_over_title");
+  gameOverTitle->setRenderLayer(23);
+  gameOverTitle->setFontPixelHeight(46.0f);
+  gameOverTitle->setTextAlignment(DL::TextAlignment::CENTER);
+  gameOverTitle->setTextAnchor(DL::TextAnchor::CENTER);
+  gameOverTitle->setTextColor({1.0f, 0.26f, 0.18f, 0.0f});
+  gameOverTitle->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  gameOverTitle->setShadowOffset({2.0f, -2.0f});
+  gameOverTitle->setLocalScale({Deflektorish::kPixelToWorld,
+                                Deflektorish::kPixelToWorld, 1.0f});
+  gameOverTitle_ = gameOverTitle.get();
+  addChild(std::move(gameOverTitle));
+
+  auto gameOverScore = std::make_unique<TextNode>(
+      this, "SCORE  00000000", renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  gameOverScore->setDebugName("game_over_score");
+  gameOverScore->setRenderLayer(23);
+  gameOverScore->setFontPixelHeight(23.0f);
+  gameOverScore->setTextAlignment(DL::TextAlignment::CENTER);
+  gameOverScore->setTextAnchor(DL::TextAnchor::CENTER);
+  gameOverScore->setTextColor({0.74f, 0.98f, 1.0f, 0.0f});
+  gameOverScore->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+  gameOverScore->setShadowOffset({1.4f, -1.4f});
+  gameOverScore->setLocalScale({Deflektorish::kPixelToWorld,
+                                Deflektorish::kPixelToWorld, 1.0f});
+  gameOverScoreText_ = gameOverScore.get();
+  addChild(std::move(gameOverScore));
+
 }
 
 void DeflektorishScene::createEntryTransitionOverlay() {
@@ -1460,7 +1513,9 @@ void DeflektorishScene::resetBonusTally() {
   lastBonusEnergyText_.clear();
   lastBonusTimeText_.clear();
   lastBonusTotalText_.clear();
+  lastGameOverScoreText_.clear();
   updateBonusText();
+  updateGameOverText();
 }
 
 void DeflektorishScene::updateVictoryCelebration(float dt) {
@@ -1777,6 +1832,87 @@ void DeflektorishScene::updateBonusText() {
     bonusTotal_->setShadowColor(
         {0.0f, 0.02f, 0.05f, showTotal ? alpha * 0.72f : 0.0f});
   }
+}
+
+void DeflektorishScene::startGameOver() {
+  if (completionPhase_ == CompletionPhase::GameOver) {
+    return;
+  }
+
+  resetBonusTally();
+  completionPhase_ = CompletionPhase::GameOver;
+  victoryCelebrationStarted_ = false;
+  victoryCelebrationComplete_ = false;
+  gameOverTime_ = 0.0f;
+  gameOverRankFlash_ = 1.0f;
+  previousGameOverFireDown_ = true;
+  gameOverCallbackDispatched_ = false;
+  gameOverScore_ = campaign_.score();
+  renderer_.hideNode(selection_);
+  if (completionOverlay_ != nullptr) {
+    Deflektorish::setCompletionOverlayParams(completionOverlay_, 0.0f, 0.70f,
+                                             1.0f, 1.0f, 1.0f, 0.72f);
+  }
+  startCameraShake(Deflektorish::kScreenCenter, kShakeStrength * 0.82f, 0.34f);
+  updateGameOverText();
+}
+
+void DeflektorishScene::updateGameOver(float dt, bool fireDown) {
+  if (completionPhase_ != CompletionPhase::GameOver) {
+    previousGameOverFireDown_ = fireDown;
+    updateGameOverText();
+    return;
+  }
+
+  gameOverTime_ += dt;
+  gameOverRankFlash_ = std::max(gameOverRankFlash_ - dt * 2.8f, 0.0f);
+  const bool canSkip = gameOverTime_ > kGameOverSkipDelay;
+  const bool shouldLeave =
+      gameOverTime_ >= kGameOverReturnDelay ||
+      (canSkip && fireDown && !previousGameOverFireDown_);
+  if (shouldLeave && !gameOverCallbackDispatched_) {
+    gameOverCallbackDispatched_ = true;
+    if (gameOverCallback_) {
+      gameOverCallback_(gameOverScore_);
+    }
+    previousGameOverFireDown_ = fireDown;
+    return;
+  }
+  previousGameOverFireDown_ = fireDown;
+  if (completionOverlay_ != nullptr) {
+    const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 5.0f);
+    Deflektorish::setCompletionOverlayParams(
+        completionOverlay_, gameOverTime_, 0.58f + pulse * 0.08f, 1.0f, 1.0f,
+        1.0f, 0.78f);
+  }
+  updateGameOverText();
+}
+
+void DeflektorishScene::updateGameOverText() {
+  const bool visible = completionPhase_ == CompletionPhase::GameOver;
+  const float intro =
+      visible ? std::clamp(gameOverTime_ / 0.34f, 0.0f, 1.0f) : 0.0f;
+  const float alpha = intro * intro * (3.0f - 2.0f * intro);
+  const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 8.0f);
+  const float promptPulse = 0.5f + 0.5f * std::sin(elapsed_ * 7.0f);
+
+  if (gameOverTitle_ != nullptr) {
+    gameOverTitle_->setTextColor(
+        {1.0f, 0.20f + pulse * 0.12f, 0.16f, alpha});
+    gameOverTitle_->setShadowColor({0.0f, 0.02f, 0.05f, alpha * 0.76f});
+  }
+
+  const std::string scoreText = "SCORE  " + scoreDigits(gameOverScore_);
+  if (gameOverScoreText_ != nullptr) {
+    if (lastGameOverScoreText_ != scoreText) {
+      gameOverScoreText_->setText(scoreText);
+      lastGameOverScoreText_ = scoreText;
+    }
+    gameOverScoreText_->setTextColor({0.70f + pulse * 0.10f, 0.96f, 1.0f,
+                                      alpha});
+    gameOverScoreText_->setShadowColor({0.0f, 0.02f, 0.05f, alpha * 0.70f});
+  }
+
 }
 
 void DeflektorishScene::updateScoreHud(float dt) {

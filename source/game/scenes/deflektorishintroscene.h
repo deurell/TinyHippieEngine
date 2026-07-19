@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "game/deflektorish/beamworld.h"
+#include "game/deflektorish/deflektorishcampaign.h"
 #include "game/deflektorish/deflektorishrenderer.h"
 #include "game/deflektorish/fadetransition.h"
 #include "renderdevice.h"
@@ -9,7 +10,9 @@
 #include "scenenode.h"
 #include "shaderplanenode.h"
 #include "textnode.h"
+#include <array>
 #include <functional>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -19,6 +22,9 @@ public:
   explicit DeflektorishIntroScene(
       DL::IRenderDevice *renderDevice = nullptr,
       DL::RenderResourceCache *renderResourceCache = nullptr,
+      const std::vector<Deflektorish::HighScoreEntry> *highScores = nullptr,
+      std::optional<int> pendingInitialsScore = std::nullopt,
+      std::function<void(int, std::string)> initialsCallback = {},
       std::function<void()> startCallback = {});
   ~DeflektorishIntroScene() override = default;
 
@@ -75,10 +81,18 @@ private:
                                          float rotationRadians = 0.0f);
   void addHighScores();
   void addCredits();
+  void createInitialsEntry();
   void createLiveShowcase();
   void updateBackgroundCamera();
   void updateLiveShowcase(float dt);
   void updateAttractPage();
+  void updateInitialsEntry(float dt, const DL::InputState &input);
+  void updateInitialsText();
+  void adjustInitialsCharacter(int delta);
+  void moveInitialsCursor(int delta);
+  void confirmInitialsCharacter();
+  void submitInitials();
+  void refreshHighScoreTexts();
   void updateStartTransition(float dt);
   void requestStart();
   void updateLayout();
@@ -88,18 +102,32 @@ private:
   DL::IRenderDevice *renderDevice_ = nullptr;
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::function<void()> startCallback_;
+  const std::vector<Deflektorish::HighScoreEntry> *highScores_ = nullptr;
+  std::optional<int> pendingInitialsScore_;
+  std::function<void(int, std::string)> initialsCallback_;
   DL::Camera camera_{glm::vec3(0.0f, 0.0f, 10.0f)};
   DL::Camera backgroundCamera_{glm::vec3(0.0f, 0.0f, 10.0f)};
   glm::vec2 screenSize_{0.0f};
   glm::vec2 framebufferSize_{0.0f};
   std::vector<TextNode *> highScoreTexts_;
   std::vector<TextNode *> creditTexts_;
+  TextNode *initialsTitle_ = nullptr;
+  TextNode *initialsScore_ = nullptr;
+  std::array<TextNode *, 3> initialsLetterNodes_{{nullptr, nullptr, nullptr}};
+  std::array<TextNode *, 3> initialsCursorNodes_{{nullptr, nullptr, nullptr}};
+  TextNode *initialsPrompt_ = nullptr;
   Deflektorish::Renderer renderer_;
   std::vector<IntroSource> demoSources_;
   std::vector<IntroReflektor> demoReflektors_;
   TextNode *pressFire_ = nullptr;
   DL::ShaderPlaneNode *transitionOverlay_ = nullptr;
   bool previousFireDown_ = false;
+  bool previousInitialsFireDown_ = false;
+  bool enteringInitials_ = false;
+  std::array<char, 3> initials_{{'A', 'A', 'A'}};
+  int initialsCursor_ = 0;
+  glm::vec2 previousInitialsAxis_{0.0f};
+  float initialsRepeatTimer_ = 0.0f;
   bool startRequested_ = false;
   bool startCallbackDispatched_ = false;
   Deflektorish::FadeTransition startTransition_;

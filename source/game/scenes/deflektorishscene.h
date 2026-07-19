@@ -26,7 +26,8 @@ public:
       DL::RenderResourceCache *renderResourceCache = nullptr,
       std::function<void(glm::vec2, float)> postBumpCallback = {},
       std::function<void(Deflektorish::Sound, glm::vec2, float)>
-          soundCallback = {});
+          soundCallback = {},
+      std::function<void(int)> gameOverCallback = {});
   ~DeflektorishScene() override = default;
 
   void init() override;
@@ -46,6 +47,7 @@ private:
     Celebration,
     FadeOut,
     BonusPending,
+    GameOver,
   };
 
   enum class BonusTallyPhase {
@@ -217,6 +219,9 @@ private:
   void startBonusTally();
   void updateBonusTally(float dt);
   void updateBonusText();
+  void startGameOver();
+  void updateGameOver(float dt, bool fireDown);
+  void updateGameOverText();
   void updateScoreHud(float dt);
   int advanceDisplayedScore(int current, int target, bool total) const;
   void updateCameraShake(float dt);
@@ -234,6 +239,7 @@ private:
   DL::RenderResourceCache *renderResourceCache_ = nullptr;
   std::function<void(glm::vec2, float)> postBumpCallback_;
   std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback_;
+  std::function<void(int)> gameOverCallback_;
   DL::CameraNode *cameraNode_ = nullptr;
   glm::vec2 screenSize_{0.0f};
   glm::vec2 framebufferSize_{0.0f};
@@ -268,10 +274,14 @@ private:
   TextNode *bonusEnergy_ = nullptr;
   TextNode *bonusTime_ = nullptr;
   TextNode *bonusTotal_ = nullptr;
+  TextNode *gameOverTitle_ = nullptr;
+  TextNode *gameOverScoreText_ = nullptr;
   TextNode *scoreHud_ = nullptr;
   int selectedReflektor_ = -1;
   bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
+  bool previousGameOverFireDown_ = false;
+  bool gameOverCallbackDispatched_ = false;
   float rotateInput_ = 0.0f;
   float sourcePulse_ = 0.0f;
   float sourceLoad_ = 0.0f;
@@ -312,9 +322,12 @@ private:
   float bonusEnergyFlash_ = 0.0f;
   float bonusTimeFlash_ = 0.0f;
   float bonusTotalFlash_ = 0.0f;
+  float gameOverTime_ = 0.0f;
+  float gameOverRankFlash_ = 0.0f;
   int energyBonus_ = 0;
   int timeBonus_ = 0;
   int totalBonus_ = 0;
+  int gameOverScore_ = 0;
   int displayedHudScore_ = 0;
   float scoreHudPulse_ = 0.0f;
   float scoreHudRollTime_ = 0.0f;
@@ -325,6 +338,7 @@ private:
   std::string lastBonusEnergyText_;
   std::string lastBonusTimeText_;
   std::string lastBonusTotalText_;
+  std::string lastGameOverScoreText_;
   std::string lastScoreHudText_;
   float elapsed_ = 0.0f;
 };

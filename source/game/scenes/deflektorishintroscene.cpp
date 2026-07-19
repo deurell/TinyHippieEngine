@@ -14,6 +14,11 @@ constexpr float kAttractPageSeconds = 3.4f;
 constexpr float kStartFadeToBlackDuration = 0.24f;
 constexpr float kInitialsRepeatDelay = 0.16f;
 
+bool showingCreditsPage(float elapsed) {
+  return std::fmod(elapsed, kAttractPageSeconds * 2.0f) >=
+         kAttractPageSeconds;
+}
+
 std::string scoreText(int rank, const Deflektorish::HighScoreEntry &entry) {
   std::string value = std::to_string(std::max(entry.score, 0));
   while (value.size() < 8) {
@@ -121,7 +126,7 @@ void DeflektorishIntroScene::init() {
   addHighScores();
   createInitialsEntry();
   pressFire_ = addText("PRESS FIRE", {480.0f, 146.0f}, 24.0f,
-                       {1.0f, 0.82f, 0.32f, 0.95f}, 12);
+                       {1.0f, 0.82f, 0.32f, 0.0f}, 12);
   addCredits();
   transitionOverlay_ =
       addPlane("intro_start_transition",
@@ -158,11 +163,11 @@ void DeflektorishIntroScene::update(const DL::FrameContext &ctx) {
 
   if (pressFire_ != nullptr) {
     const float blink = 0.58f + 0.42f * std::sin(elapsed_ * 7.0f);
-    const float fade = enteringInitials_
-                           ? 0.0f
-                           : (startRequested_ ? 1.0f -
-                                                    startTransition_.progress()
-                                              : 1.0f);
+    const bool showPrompt = !enteringInitials_ && showingCreditsPage(elapsed_);
+    const float fade = showPrompt ? (startRequested_
+                                         ? 1.0f - startTransition_.progress()
+                                         : 1.0f)
+                                  : 0.0f;
     pressFire_->setTextColor({1.0f, 0.62f + blink * 0.28f, 0.20f,
                               (0.48f + blink * 0.48f) * fade});
   }
@@ -319,9 +324,6 @@ void DeflektorishIntroScene::createInitialsEntry() {
         addText("^", {kLetterX[i], 253.0f}, 22.0f,
                 {1.0f, 0.72f, 0.28f, 0.0f}, 13);
   }
-  initialsPrompt_ =
-      addText("STICK SELECTS   FIRE LOCKS", {480.0f, 236.0f}, 18.0f,
-              {1.0f, 0.72f, 0.28f, 0.0f}, 13);
   updateInitialsText();
 }
 
@@ -550,7 +552,7 @@ void DeflektorishIntroScene::updateLiveShowcase(float dt) {
 
 void DeflektorishIntroScene::updateAttractPage() {
   const float pageTime = std::fmod(elapsed_, kAttractPageSeconds * 2.0f);
-  const bool showCredits = pageTime >= kAttractPageSeconds;
+  const bool showCredits = showingCreditsPage(elapsed_);
   const float localTime =
       showCredits ? pageTime - kAttractPageSeconds : pageTime;
   const float fadeIn = std::clamp(localTime / 0.28f, 0.0f, 1.0f);
@@ -666,11 +668,6 @@ void DeflektorishIntroScene::updateInitialsText() {
       cursorNode->setShadowColor(
           {0.0f, 0.03f, 0.05f, visibleCursor ? alpha * 0.84f : 0.0f});
     }
-  }
-  if (initialsPrompt_ != nullptr) {
-    initialsPrompt_->setTextColor({1.0f, 0.68f + pulse * 0.18f, 0.24f,
-                                   alpha * (0.72f + pulse * 0.22f)});
-    initialsPrompt_->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
   }
 }
 

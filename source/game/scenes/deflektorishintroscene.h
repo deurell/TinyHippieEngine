@@ -115,7 +115,6 @@ private:
   TextNode *initialsScore_ = nullptr;
   std::array<TextNode *, 3> initialsLetterNodes_{{nullptr, nullptr, nullptr}};
   std::array<TextNode *, 3> initialsCursorNodes_{{nullptr, nullptr, nullptr}};
-  TextNode *initialsPrompt_ = nullptr;
   Deflektorish::Renderer renderer_;
   std::vector<IntroSource> demoSources_;
   std::vector<IntroReflektor> demoReflektors_;

@@ -30,6 +30,10 @@ constexpr int kDebugVictoryKey = 86;
 constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
+constexpr int kTargetClearScore = 75;
+constexpr int kTargetBeamEnergyScore = 25;
+constexpr float kHudSafePaddingPixels = 46.0f;
+constexpr float kHudTopBandPixels = 36.0f;
 constexpr float kBonusLineDelay = 0.09f;
 constexpr float kBonusScoreTickInterval = 0.058f;
 constexpr float kBonusDoneHold = 1.5f;
@@ -67,6 +71,14 @@ std::string scoreLine(std::string_view label, int score) {
     value.insert(value.begin(), '0');
   }
   return std::string(label) + "  " + value;
+}
+
+std::string scoreDigits(int score) {
+  std::string value = std::to_string(std::max(score, 0));
+  while (value.size() < 8) {
+    value.insert(value.begin(), '0');
+  }
+  return value;
 }
 
 } // namespace
@@ -129,6 +141,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   applyGameEvents();
   updateTargetVisuals();
   updateExplosions(ctx.delta_time);
+  updateScoreHud(ctx.delta_time);
 
   SceneNode::update(ctx);
 }
@@ -268,6 +281,7 @@ void DeflektorishScene::resetLevelRuntime() {
   bonusEnergy_ = nullptr;
   bonusTime_ = nullptr;
   bonusTotal_ = nullptr;
+  scoreHud_ = nullptr;
   renderer_ = Deflektorish::Renderer{};
   rooms_.clear();
   activeReflektorIndices_.clear();
@@ -310,6 +324,10 @@ void DeflektorishScene::resetLevelRuntime() {
   completionPhase_ = CompletionPhase::Playing;
   levelElapsed_ = 0.0f;
   campaignScore_ = 0;
+  displayedHudScore_ = 0;
+  scoreHudPulse_ = 0.0f;
+  scoreHudRollTime_ = 0.0f;
+  lastScoreHudText_.clear();
   resetBonusTally();
 }
 
@@ -336,6 +354,21 @@ void DeflektorishScene::loadCampaign() {
   energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
                               DL::BlendMode::Alpha, {480.0f, 606.0f},
                               {150.0f, 8.0f}, 20, 0.20f);
+  auto scoreHud = std::make_unique<TextNode>(
+      this, scoreDigits(0), renderDevice_, renderResourceCache_,
+      &cameraNode_->camera());
+  scoreHud->setDebugName("score_hud");
+  scoreHud->setRenderLayer(22);
+  scoreHud->setFontPixelHeight(21.0f);
+  scoreHud->setTextAlignment(DL::TextAlignment::CENTER);
+  scoreHud->setTextAnchor(DL::TextAnchor::CENTER);
+  scoreHud->setTextColor({0.72f, 0.98f, 1.0f, 0.92f});
+  scoreHud->setShadowColor({0.0f, 0.02f, 0.05f, 0.78f});
+  scoreHud->setShadowOffset({1.2f, -1.2f});
+  scoreHud->setLocalScale({Deflektorish::kPixelToWorld,
+                           Deflektorish::kPixelToWorld, 1.0f});
+  scoreHud_ = scoreHud.get();
+  addChild(std::move(scoreHud));
   createCompletionOverlay();
   activateRoom(0, false);
   SceneNode::init();
@@ -640,8 +673,11 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     includeBounds(blocker.position, 34.0f);
   }
   RoomRuntime &spawnedRoom = rooms_.back();
+  const glm::vec2 cameraBoundsMinPixels = spawnedRoom.boundsMinPixels;
+  const glm::vec2 cameraBoundsMaxPixels =
+      spawnedRoom.boundsMaxPixels + glm::vec2{0.0f, kHudTopBandPixels};
   const glm::vec2 contentCenterPixels =
-      (spawnedRoom.boundsMinPixels + spawnedRoom.boundsMaxPixels) * 0.5f;
+      (cameraBoundsMinPixels + cameraBoundsMaxPixels) * 0.5f;
   spawnedRoom.cameraCenterWorld =
       spawnedRoom.offsetPixels * Deflektorish::kPixelToWorld +
       Deflektorish::gameToWorld(contentCenterPixels);
@@ -756,7 +792,8 @@ void DeflektorishScene::updateCameraPan(float dt) {
 float DeflektorishScene::fittedOrthographicHeight(
     const RoomRuntime &room) const {
   const glm::vec2 sizePixels =
-      glm::max(room.boundsMaxPixels - room.boundsMinPixels,
+      glm::max((room.boundsMaxPixels - room.boundsMinPixels) +
+                   glm::vec2{0.0f, kHudTopBandPixels},
                glm::vec2{640.0f, 360.0f});
   const float aspect = screenSize_.y > 0.0f && screenSize_.x > 0.0f
                            ? screenSize_.x / screenSize_.y
@@ -811,8 +848,16 @@ void DeflektorishScene::updateHudPositions() {
     node->setLocalScale({hudPixelToWorld, hudPixelToWorld, 1.0f});
   };
 
-  placePlane(energyBar_, glm::vec2{480.0f, 606.0f} - Deflektorish::kScreenCenter,
-             {150.0f, 8.0f}, 0.20f);
+  const glm::vec2 virtualScreen = Deflektorish::kScreenCenter * 2.0f;
+  const glm::vec2 topCenterSafe{virtualScreen.x * 0.5f,
+                                virtualScreen.y - kHudSafePaddingPixels};
+
+  placeText(scoreHud_, topCenterSafe - Deflektorish::kScreenCenter, 0.35f);
+  const glm::vec2 energyHalfSize{64.0f, 6.0f};
+  placePlane(energyBar_,
+             topCenterSafe + glm::vec2{0.0f, -27.0f} -
+                 Deflektorish::kScreenCenter,
+             energyHalfSize, 0.20f);
   placePlane(completionOverlay_, {0.0f, 0.0f}, {520.0f, 350.0f}, 0.24f);
   placeText(completionTitle_, {0.0f, 48.0f}, 0.34f);
   placeText(completionSubtitle_, {0.0f, 8.0f}, 0.34f);
@@ -1134,6 +1179,12 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
       static_cast<std::size_t>(event.index) < targets_.size()) {
     renderer_.hideNode(targets_[static_cast<std::size_t>(event.index)].node);
   }
+  const int targetScore =
+      kTargetClearScore +
+      static_cast<int>(std::round(std::clamp(event.energy, 0.0f, 3.0f) *
+                                  static_cast<float>(kTargetBeamEnergyScore)));
+  campaignScore_ += targetScore;
+  scoreHudPulse_ = 1.0f;
   if (!victoryCelebrationStarted_ && allTargetsDestroyed()) {
     startVictoryCelebration();
   }
@@ -1668,6 +1719,61 @@ void DeflektorishScene::updateBonusText() {
     bonusTotal_->setShadowColor(
         {0.0f, 0.02f, 0.05f, showTotal ? alpha * 0.72f : 0.0f});
   }
+}
+
+void DeflektorishScene::updateScoreHud(float dt) {
+  if (scoreHud_ == nullptr) {
+    return;
+  }
+
+  int targetScore = campaignScore_;
+  if (bonusTallyPhase_ == BonusTallyPhase::Total ||
+      bonusTallyPhase_ == BonusTallyPhase::Hold ||
+      bonusTallyPhase_ == BonusTallyPhase::FadeOut ||
+      bonusTallyPhase_ == BonusTallyPhase::Done) {
+    targetScore = std::max(targetScore, displayedTotalBonus_);
+  }
+
+  scoreHudRollTime_ += dt;
+  const int previous = displayedHudScore_;
+  if (displayedHudScore_ < targetScore) {
+    const int remaining = targetScore - displayedHudScore_;
+    const int smoothStep =
+        std::max(1, static_cast<int>(std::ceil(static_cast<float>(remaining) *
+                                               std::min(dt * 9.0f, 0.42f))));
+    const int arcadeStep =
+        remaining > 250 ? std::max(25, (smoothStep / 25) * 25) : smoothStep;
+    displayedHudScore_ =
+        std::min(displayedHudScore_ + arcadeStep, targetScore);
+  } else if (displayedHudScore_ > targetScore) {
+    displayedHudScore_ = targetScore;
+  }
+
+  if (displayedHudScore_ != previous) {
+    scoreHudPulse_ = 1.0f;
+  } else {
+    scoreHudPulse_ = std::max(scoreHudPulse_ - dt * 5.5f, 0.0f);
+  }
+
+  const std::string text = scoreDigits(displayedHudScore_);
+  if (lastScoreHudText_ != text) {
+    scoreHud_->setText(text);
+    lastScoreHudText_ = text;
+  }
+
+  const float shimmer = 0.5f + 0.5f * std::sin(elapsed_ * 18.0f);
+  const float rollFlicker =
+      displayedHudScore_ != targetScore
+          ? 0.5f + 0.5f * std::sin(scoreHudRollTime_ * 56.0f)
+          : 0.0f;
+  const float hot = std::clamp(scoreHudPulse_ * 0.86f + rollFlicker * 0.22f,
+                               0.0f, 1.0f);
+  const glm::vec3 cool{0.58f + shimmer * 0.08f, 0.92f, 1.0f};
+  const glm::vec3 warm{1.0f, 0.78f + shimmer * 0.10f, 0.24f};
+  const glm::vec3 color = glm::mix(cool, warm, hot);
+  const float alpha = 0.88f + shimmer * 0.04f + hot * 0.08f;
+  scoreHud_->setTextColor({color.r, color.g, color.b, alpha});
+  scoreHud_->setShadowColor({0.0f, 0.02f, 0.05f, 0.76f + hot * 0.18f});
 }
 
 int DeflektorishScene::advanceDisplayedScore(int current, int target,

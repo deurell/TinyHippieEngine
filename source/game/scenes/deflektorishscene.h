@@ -213,6 +213,7 @@ private:
   void startBonusTally();
   void updateBonusTally(float dt);
   void updateBonusText();
+  void updateScoreHud(float dt);
   int advanceDisplayedScore(int current, int target, bool total) const;
   void updateCameraShake(float dt);
   void startCameraShake(glm::vec2 position, float strength, float duration);
@@ -261,6 +262,7 @@ private:
   TextNode *bonusEnergy_ = nullptr;
   TextNode *bonusTime_ = nullptr;
   TextNode *bonusTotal_ = nullptr;
+  TextNode *scoreHud_ = nullptr;
   int selectedReflektor_ = -1;
   bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
@@ -308,6 +310,9 @@ private:
   int timeBonus_ = 0;
   int totalBonus_ = 0;
   int campaignScore_ = 0;
+  int displayedHudScore_ = 0;
+  float scoreHudPulse_ = 0.0f;
+  float scoreHudRollTime_ = 0.0f;
   int displayedEnergyBonus_ = 0;
   int displayedTimeBonus_ = 0;
   int displayedTotalBonus_ = 0;
@@ -315,5 +320,6 @@ private:
   std::string lastBonusEnergyText_;
   std::string lastBonusTimeText_;
   std::string lastBonusTotalText_;
+  std::string lastScoreHudText_;
   float elapsed_ = 0.0f;
 };

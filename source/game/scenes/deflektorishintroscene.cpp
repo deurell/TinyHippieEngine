@@ -1,6 +1,7 @@
 #include "deflektorishintroscene.h"
 
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishshaderparams.h"
 #include "game/deflektorish/deflektorishshaderstyle.h"
 #include <algorithm>
 #include <cmath>
@@ -124,7 +125,8 @@ void DeflektorishIntroScene::init() {
                40, 0.32f);
   if (transitionOverlay_ != nullptr) {
     transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 0.0f};
-    transitionOverlay_->config.params0 = {elapsed_, 0.0f, 0.0f, 0.0f};
+    Deflektorish::setFadeTransitionParams(transitionOverlay_, elapsed_, 0.0f,
+                                          0.0f, false);
   }
 
   SceneNode::init();
@@ -229,7 +231,8 @@ DL::ShaderPlaneNode *DeflektorishIntroScene::addPlaneForCamera(
   config.depthTest = false;
   config.proceduralStyle = style;
   config.color = {1.0f, 1.0f, 1.0f, 1.0f};
-  config.params0 = {0.35f, 0.7f, 1.0f, 1.0f};
+  config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
+  config.params1 = {0.0f, 0.0f, 0.0f, 0.0f};
   auto node = std::make_unique<DL::ShaderPlaneNode>(
       config, this, camera, renderDevice_, renderResourceCache_);
   node->setDebugName(std::move(name));
@@ -304,7 +307,7 @@ void DeflektorishIntroScene::createLiveShowcase() {
                           DL::BlendMode::Alpha, position, {28.0f, 6.0f}, 11,
                           &backgroundCamera_, 0.04f, angle);
     reflektor.node->config.color = {0.30f, 0.48f, 0.66f, 1.0f};
-    reflektor.node->config.params1.z = 1.0f;
+    Deflektorish::setReflectorOcclusionMode(reflektor.node, true);
     demoReflektors_.push_back(reflektor);
   };
 
@@ -522,7 +525,8 @@ void DeflektorishIntroScene::updateStartTransition(float dt) {
   if (!startRequested_) {
     if (transitionOverlay_ != nullptr) {
       transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 0.0f};
-      transitionOverlay_->config.params0 = {elapsed_, 0.0f, 0.0f, 0.0f};
+      Deflektorish::setFadeTransitionParams(transitionOverlay_, elapsed_,
+                                            0.0f, 0.0f, false);
     }
     return;
   }
@@ -531,8 +535,8 @@ void DeflektorishIntroScene::updateStartTransition(float dt) {
   const float alpha = startTransition_.fadeInAlpha();
   if (transitionOverlay_ != nullptr) {
     transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
-    transitionOverlay_->config.params0 = {elapsed_, alpha,
-                                          startTransition_.progress(), 0.0f};
+    Deflektorish::setFadeTransitionParams(
+        transitionOverlay_, elapsed_, alpha, startTransition_.progress(), false);
   }
 
   if (!startCallbackDispatched_ && startTransition_.complete()) {

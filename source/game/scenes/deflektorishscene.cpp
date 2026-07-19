@@ -1,6 +1,7 @@
 #include "deflektorishscene.h"
 
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishshaderparams.h"
 #include "game/deflektorish/deflektorishshaderstyle.h"
 #include "iscene.h"
 #include <algorithm>
@@ -956,11 +957,11 @@ void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
             ? std::clamp(beamEnergy_.current / beamEnergyConfig_.maxEnergy,
                          0.0f, 1.0f)
             : 0.0f;
-    energyBar_->config.params0 = {ratio, beamEnergy_.danger,
-                                  beamEnergy_.drainPerSecond /
-                                      std::max(beamEnergyConfig_.maxDrainPerSecond,
-                                               0.001f),
-                                  elapsed_};
+    Deflektorish::setEnergyBarParams(
+        energyBar_, ratio, beamEnergy_.danger,
+        beamEnergy_.drainPerSecond /
+            std::max(beamEnergyConfig_.maxDrainPerSecond, 0.001f),
+        elapsed_);
   }
 }
 
@@ -1293,7 +1294,7 @@ void DeflektorishScene::createCompletionOverlay() {
       DL::BlendMode::Alpha,
       Deflektorish::kScreenCenter, {520.0f, 350.0f}, 21, 0.24f);
   if (completionOverlay_ != nullptr) {
-    completionOverlay_->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
+    Deflektorish::clearShaderParams(completionOverlay_);
   }
 
   auto title = std::make_unique<TextNode>(
@@ -1407,7 +1408,8 @@ void DeflektorishScene::createEntryTransitionOverlay() {
                      {620.0f, 430.0f}, 45, 0.44f);
   if (entryTransitionOverlay_ != nullptr) {
     entryTransitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
-    entryTransitionOverlay_->config.params0 = {elapsed_, 1.0f, 0.0f, 1.0f};
+    Deflektorish::setFadeTransitionParams(entryTransitionOverlay_, elapsed_,
+                                          1.0f, 0.0f, true);
   }
   entryTransition_.start(kEntryTransitionDuration);
 }
@@ -1419,8 +1421,9 @@ void DeflektorishScene::updateEntryTransition(float dt) {
   entryTransition_.update(dt);
   const float alpha = entryTransition_.fadeOutAlpha();
   entryTransitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, alpha};
-  entryTransitionOverlay_->config.params0 = {elapsed_, alpha,
-                                             entryTransition_.progress(), 1.0f};
+  Deflektorish::setFadeTransitionParams(entryTransitionOverlay_, elapsed_,
+                                        alpha, entryTransition_.progress(),
+                                        true);
 }
 
 void DeflektorishScene::startVictoryCelebration() {
@@ -1538,11 +1541,9 @@ void DeflektorishScene::updateCompletionOverlay() {
       easedIntro * (0.58f + pulse * 0.08f) *
       std::max(fade, bonusBackdrop);
 
-  if (completionOverlay_ != nullptr) {
-    completionOverlay_->config.params0 = {victoryTime_, overlayAlpha,
-                                          blastProgress, easedIntro};
-    completionOverlay_->config.params1 = {fade, bonusBackdrop, 0.0f, 0.0f};
-  }
+  Deflektorish::setCompletionOverlayParams(completionOverlay_, victoryTime_,
+                                           overlayAlpha, blastProgress,
+                                           easedIntro, fade, bonusBackdrop);
   if (completionTitle_ != nullptr) {
     const float titleAlpha = std::clamp((victoryTime_ - 0.12f) / 0.36f,
                                         0.0f, 1.0f);
@@ -1627,10 +1628,8 @@ void DeflektorishScene::updateBonusTally(float dt) {
       completionPhase_ = CompletionPhase::Playing;
       victoryCelebrationStarted_ = false;
       victoryCelebrationComplete_ = false;
-      if (completionOverlay_ != nullptr) {
-        completionOverlay_->config.params0 = {victoryTime_, 0.0f, 1.0f, 1.0f};
-        completionOverlay_->config.params1 = {0.0f, 0.0f, 0.0f, 0.0f};
-      }
+      Deflektorish::setCompletionOverlayParams(
+          completionOverlay_, victoryTime_, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f);
       if (completionTitle_ != nullptr) {
         completionTitle_->setTextColor({0.64f, 0.96f, 1.0f, 0.0f});
         completionTitle_->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});

@@ -86,6 +86,8 @@ add_executable(tiny_hippie_engine
         source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
         source/debugui.h source/debugui.cpp
+        source/game/scenes/deflektorishintroscene.h
+        source/game/scenes/deflektorishintroscene.cpp
         source/game/scenes/deflektorishscene.h
         source/game/scenes/deflektorishscene.cpp
         source/game/deflektorish/beamenergy.h
@@ -299,6 +301,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/scenedescription_test.cpp
             source/logger.cpp
             source/cameranode.cpp
+            source/game/scenes/deflektorishintroscene.cpp
             source/game/scenes/deflektorishscene.cpp
             source/game/deflektorish/beamenergy.cpp
             source/game/deflektorish/beamworld.cpp

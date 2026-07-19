@@ -55,4 +55,26 @@ TEST(DeflektorishBeamWorldTest, PassingFilterCanHitTargetInsideFilter) {
   EXPECT_TRUE(result.hitTargets[0]);
 }
 
+TEST(DeflektorishBeamWorldTest, IntroSourceToSinkPathIsConnected) {
+  Deflektorish::BeamWorld world;
+  world.sourcePosition = {140.0f, 390.0f};
+  world.sourceAngle = 0.705568178f;
+  world.reflektors.push_back({{275.0f, 505.0f}, 0.251116047f});
+  world.reflektors.push_back({{760.0f, 405.0f}, -1.475068809f});
+  world.reflektors.push_back({{220.0f, 180.0f}, -1.414971383f});
+  world.reflektors.push_back({{700.0f, 140.0f}, 0.360931131f});
+  world.targets.push_back({{825.0f, 270.0f}, true});
+
+  const Deflektorish::BeamSolveResult result =
+      Deflektorish::solveBeamWorld(world, 18);
+
+  ASSERT_GE(result.segments.size(), 5u);
+  ASSERT_EQ(result.activeReflektors.size(), 4u);
+  for (bool active : result.activeReflektors) {
+    EXPECT_TRUE(active);
+  }
+  ASSERT_EQ(result.hitTargets.size(), 1u);
+  EXPECT_TRUE(result.hitTargets.front());
+}
+
 } // namespace

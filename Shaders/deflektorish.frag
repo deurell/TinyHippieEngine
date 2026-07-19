@@ -163,6 +163,7 @@ vec4 shadeBlocker(vec2 uv, bool reflective) {
 vec4 shadeReflector(vec2 uv, bool automatic) {
     vec2 p = uv * 2.0 - 1.0;
     float body = 1.0 - smoothstep(0.72, 0.92, abs(p.y));
+    float occlusionBody = 1.0 - smoothstep(0.86, 0.94, abs(p.y));
     float bevel = smoothstep(0.82, 0.20, abs(p.x));
     float shine = smoothstep(0.16, 0.0, abs(p.y + p.x * 0.18 - 0.22));
     float glow = clamp(proceduralParams.x, 0.0, 1.0);
@@ -179,7 +180,10 @@ vec4 shadeReflector(vec2 uv, bool automatic) {
     color += beamColor * shine * glow * (0.18 + energy * 0.16);
     color += vec3(1.0) * selected * body * 0.45;
     color = min(color, vec3(1.15));
-    return vec4(color, clamp(body + glow * 0.16 + selected * 0.25, 0.0, 1.0));
+    float regularAlpha = clamp(body + glow * 0.16 + selected * 0.25, 0.0, 1.0);
+    float occlusionAlpha = clamp(max(occlusionBody, glow * 0.16 + selected * 0.25), 0.0, 1.0);
+    float alpha = mix(regularAlpha, occlusionAlpha, clamp(proceduralParams2.z, 0.0, 1.0));
+    return vec4(color, clamp(alpha, 0.0, 1.0));
 }
 
 vec4 shadeSelection(vec2 uv) {

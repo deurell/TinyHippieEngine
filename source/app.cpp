@@ -8,16 +8,11 @@
 #include "imgui_impl_opengl3.h"
 #endif
 #include "game/deflektorish/deflektorishconfig.h"
-#include "game/scenes/skeletalanimationblendscene.h"
+#include "game/scenes/deflektorishintroscene.h"
 #include "game/scenes/deflektorishscene.h"
-#include "game/scenes/inputdebugscene.h"
-#include "game/scenes/textstarterscene.h"
 #include "logger.h"
 #include "renderqueue.h"
 #include "scenemanager.h"
-#ifdef TINY_ENGINE_ENABLE_PHYSICS
-#include "game/scenes/physicstestscene.h"
-#endif
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -813,6 +808,15 @@ void DL::App::loadAudioClips() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
+    return std::make_unique<DeflektorishIntroScene>(
+        renderDevice_.get(), renderResourceCache_.get(), [this] {
+          sceneManager_.next();
+          Logger::instance().logEvent(LogLevel::Info, "scene",
+                                      "deflektorish_start");
+          loadCurrentScene();
+        });
+  });
+  sceneManager_.registerScene([this] {
     return std::make_unique<DeflektorishScene>(
         renderDevice_.get(), renderResourceCache_.get(),
         [this](glm::vec2 position, float strength) {
@@ -822,37 +826,6 @@ void DL::App::registerScenes() {
                float energy) {
           submitDeflektorSound(sound, position, energy);
         });
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<TextStarterScene>(
-        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
-        renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<InputDebugScene>(renderDevice_.get(),
-                                             renderResourceCache_.get());
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<TextStarterScene>(
-        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
-        renderResourceCache_.get(),
-        "Resources/Scenes/tiny_dungeon_atlas.scene.json");
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<TextStarterScene>(
-        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
-        renderResourceCache_.get(),
-        "Resources/Scenes/kenney_platformer.scene.json");
-  });
-#ifdef TINY_ENGINE_ENABLE_PHYSICS
-  sceneManager_.registerScene([this] {
-    return std::make_unique<PhysicsTestScene>(renderDevice_.get());
-  });
-#endif
-  sceneManager_.registerScene([this] {
-    return std::make_unique<SkeletalAnimationBlendScene>(
-        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
-        renderResourceCache_.get());
   });
 }
 

@@ -281,6 +281,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/animationplayer_test.cpp
             tests/cameranode_test.cpp
             tests/camera_test.cpp
+            tests/deflektorish_campaign_test.cpp
             tests/deflektorish_beamenergy_test.cpp
             tests/deflektorish_beamworld_test.cpp
             tests/deflektorish_level_test.cpp

@@ -79,13 +79,7 @@ DeflektorishScene::DeflektorishScene(
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
       postBumpCallback_(std::move(postBumpCallback)),
       soundCallback_(std::move(soundCallback)) {
-  for (int i = 1; i <= 10; ++i) {
-    std::string index = std::to_string(i);
-    if (i < 10) {
-      index.insert(index.begin(), '0');
-    }
-    levelPaths_.push_back(std::string(kLevelRoot) + "level_" + index + ".json");
-  }
+  campaign_.loadDefaultLevelPaths(kLevelRoot, 10);
 }
 
 void DeflektorishScene::init() {
@@ -160,7 +154,8 @@ void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {
     room.orthographicHeight = fittedOrthographicHeight(room);
   }
   if (!rooms_.empty()) {
-    cameraPanTargetHeight_ = rooms_[currentLevelIndex_].orthographicHeight;
+    cameraPanTargetHeight_ =
+        rooms_[campaign_.currentLevelIndex()].orthographicHeight;
     if (cameraPanDuration_ <= 0.0f) {
       cameraBaseHeight_ = cameraPanTargetHeight_;
       if (cameraNode_ != nullptr) {
@@ -315,7 +310,7 @@ void DeflektorishScene::resetLevelRuntime() {
   entryTransition_ = Deflektorish::FadeTransition{};
   completionPhase_ = CompletionPhase::Playing;
   levelElapsed_ = 0.0f;
-  campaignScore_ = 0;
+  campaign_.resetScore();
   displayedHudScore_ = 0;
   scoreHudPulse_ = 0.0f;
   scoreHudRollTime_ = 0.0f;
@@ -324,17 +319,18 @@ void DeflektorishScene::resetLevelRuntime() {
 }
 
 void DeflektorishScene::loadCampaign() {
-  if (levelPaths_.empty()) {
+  if (!campaign_.hasLevels()) {
     return;
   }
-  currentLevelIndex_ = 0;
+  campaign_.setCurrentLevelIndex(0, 1);
   resetLevelRuntime();
   createCameraNode();
   renderer_.createBeamSegments(this, &cameraNode_->camera(), renderDevice_,
                                renderResourceCache_, kMaxBeamSegments);
-  for (std::size_t i = 0; i < levelPaths_.size(); ++i) {
+  const auto &levelPaths = campaign_.levelPaths();
+  for (std::size_t i = 0; i < levelPaths.size(); ++i) {
     const Deflektorish::LevelConfig level =
-        Deflektorish::loadLevel(levelPaths_[i]);
+        Deflektorish::loadLevel(levelPaths[i]);
     const glm::vec2 offsetPixels{kRoomSpacingPixels * static_cast<float>(i),
                                  0.0f};
     spawnLevel(level, offsetPixels, i);
@@ -381,7 +377,7 @@ void DeflektorishScene::loadCampaign() {
 }
 
 bool DeflektorishScene::isCurrentRoom(std::size_t roomIndex) const {
-  return roomIndex == currentLevelIndex_;
+  return roomIndex == campaign_.currentLevelIndex();
 }
 
 void DeflektorishScene::rebuildActiveRoomMaps() {
@@ -429,8 +425,8 @@ void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated,
   if (rooms_.empty()) {
     return;
   }
-  currentLevelIndex_ = roomIndex % rooms_.size();
-  const RoomRuntime &room = rooms_[currentLevelIndex_];
+  campaign_.setCurrentLevelIndex(roomIndex, rooms_.size());
+  const RoomRuntime &room = rooms_[campaign_.currentLevelIndex()];
   sourcePosition_ = room.sourcePosition;
   sourceAngle_ = room.sourceAngle;
   source_ = room.sourceNode;
@@ -1192,16 +1188,19 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
   sourcePulse_ =
       std::min(sourcePulse_ + 0.35f + event.energy * 0.08f, 1.0f);
   if (postBumpCallback_) {
-    postBumpCallback_(postBumpUvForWorld(Deflektorish::gameToWorld(event.position)),
-                      1.35f + event.energy * 0.28f);
+    postBumpCallback_(
+        postBumpUvForWorld(Deflektorish::gameToWorld(event.position)),
+        1.35f + event.energy * 0.28f);
   }
   if (soundCallback_) {
     soundCallback_(Deflektorish::Sound::TargetDestroyed, event.position,
                    event.energy);
   }
   spawnExplosion(event.position, event.energy);
-  const glm::vec2 roomOffset =
-      rooms_.empty() ? glm::vec2(0.0f) : rooms_[currentLevelIndex_].offsetPixels;
+  const glm::vec2 roomOffset = rooms_.empty()
+                                   ? glm::vec2(0.0f)
+                                   : rooms_[campaign_.currentLevelIndex()]
+                                         .offsetPixels;
   startCameraShake(event.position - roomOffset,
                    kShakeStrength + event.energy * 0.85f,
                    0.34f + event.energy * 0.025f);
@@ -1213,7 +1212,7 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
       kTargetClearScore +
       static_cast<int>(std::round(std::clamp(event.energy, 0.0f, 3.0f) *
                                   static_cast<float>(kTargetBeamEnergyScore)));
-  campaignScore_ += targetScore;
+  campaign_.addScore(targetScore);
   scoreHudPulse_ = 1.0f;
   if (!victoryCelebrationStarted_ && allTargetsDestroyed()) {
     startVictoryCelebration();
@@ -1280,8 +1279,10 @@ float DeflektorishScene::victoryNoise(int index, float salt) const {
 glm::vec2 DeflektorishScene::victoryBlastPosition(int index) const {
   const float x = 105.0f + victoryNoise(index, 0.13f) * 750.0f;
   const float y = 95.0f + victoryNoise(index, 0.71f) * 470.0f;
-  const glm::vec2 roomOffset =
-      rooms_.empty() ? glm::vec2(0.0f) : rooms_[currentLevelIndex_].offsetPixels;
+  const glm::vec2 roomOffset = rooms_.empty()
+                                   ? glm::vec2(0.0f)
+                                   : rooms_[campaign_.currentLevelIndex()]
+                                         .offsetPixels;
   return roomOffset + glm::vec2{x, y};
 }
 
@@ -1484,9 +1485,10 @@ void DeflektorishScene::updateVictoryCelebration(float dt) {
       if (soundCallback_) {
         soundCallback_(Deflektorish::Sound::TargetDestroyed, position, energy);
       }
-      const glm::vec2 roomOffset =
-          rooms_.empty() ? glm::vec2(0.0f)
-                         : rooms_[currentLevelIndex_].offsetPixels;
+      const glm::vec2 roomOffset = rooms_.empty()
+                                       ? glm::vec2(0.0f)
+                                       : rooms_[campaign_.currentLevelIndex()]
+                                             .offsetPixels;
       startCameraShake(position - roomOffset,
                        kShakeStrength * 0.34f + energy * 0.22f, 0.18f);
       ++victoryBlastIndex_;
@@ -1575,17 +1577,17 @@ void DeflektorishScene::startBonusTally() {
   timeBonus_ = static_cast<int>(
       std::round(std::max(kLevelParTimeSeconds - clearTime_, 0.0f) *
                  kTimeBonusPerSecond));
-  totalBonus_ = campaignScore_ + energyBonus_ + timeBonus_;
+  totalBonus_ = campaign_.score() + energyBonus_ + timeBonus_;
   displayedEnergyBonus_ = 0;
   displayedTimeBonus_ = 0;
-  displayedTotalBonus_ = campaignScore_;
+  displayedTotalBonus_ = campaign_.score();
   bonusPhaseTime_ = 0.0f;
   bonusFadeTime_ = 0.0f;
   bonusScoreTickTimer_ = 0.0f;
   bonusTallyPhase_ = BonusTallyPhase::Energy;
   updateBonusText();
   if (rooms_.size() > 1) {
-    activateRoom(currentLevelIndex_ + 1, true, true);
+    activateRoom(campaign_.currentLevelIndex() + 1, true, true);
   }
 }
 
@@ -1677,7 +1679,7 @@ void DeflektorishScene::updateBonusTally(float dt) {
     }
     scoreAdvanced = displayedTotalBonus_ != previous;
     if (displayedTotalBonus_ >= totalBonus_) {
-      campaignScore_ = totalBonus_;
+      campaign_.setScore(totalBonus_);
       bonusTallyPhase_ = BonusTallyPhase::Hold;
       bonusPhaseTime_ = 0.0f;
       bonusTotalFlash_ = 1.0f;
@@ -1783,7 +1785,7 @@ void DeflektorishScene::updateScoreHud(float dt) {
     return;
   }
 
-  int targetScore = campaignScore_;
+  int targetScore = campaign_.score();
   if (bonusTallyPhase_ == BonusTallyPhase::Total ||
       bonusTallyPhase_ == BonusTallyPhase::Hold ||
       bonusTallyPhase_ == BonusTallyPhase::FadeOut ||

@@ -3,6 +3,7 @@
 #include "cameranode.h"
 #include "game/deflektorish/beamenergy.h"
 #include "game/deflektorish/beamworld.h"
+#include "game/deflektorish/deflektorishcampaign.h"
 #include "game/deflektorish/deflektorishrenderer.h"
 #include "game/deflektorish/deflektorishlevel.h"
 #include "game/deflektorish/deflektorishsound.h"
@@ -277,8 +278,7 @@ private:
   float sourceLoadTarget_ = 0.0f;
   Deflektorish::BeamEnergyConfig beamEnergyConfig_;
   Deflektorish::BeamEnergyState beamEnergy_;
-  std::vector<std::string> levelPaths_;
-  std::size_t currentLevelIndex_ = 0;
+  Deflektorish::Campaign campaign_;
   glm::vec2 cameraBaseWorld_{0.0f};
   glm::vec2 cameraPanStartWorld_{0.0f};
   glm::vec2 cameraPanTargetWorld_{0.0f};
@@ -315,7 +315,6 @@ private:
   int energyBonus_ = 0;
   int timeBonus_ = 0;
   int totalBonus_ = 0;
-  int campaignScore_ = 0;
   int displayedHudScore_ = 0;
   float scoreHudPulse_ = 0.0f;
   float scoreHudRollTime_ = 0.0f;

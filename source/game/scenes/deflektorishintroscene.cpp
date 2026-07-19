@@ -1,15 +1,13 @@
 #include "deflektorishintroscene.h"
 
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishshaderstyle.h"
 #include <algorithm>
 #include <cmath>
 #include <memory>
 #include <utility>
 
 namespace {
-constexpr int kStyleSource = 2;
-constexpr int kStyleAutoReflector = 7;
-constexpr int kStyleIntroTransition = 15;
 constexpr float kPixelToWorld = Deflektorish::kPixelToWorld;
 constexpr float kAttractPageSeconds = 3.4f;
 constexpr float kStartFadeToBlackDuration = 0.24f;
@@ -119,9 +117,11 @@ void DeflektorishIntroScene::init() {
                        {1.0f, 0.82f, 0.32f, 0.95f}, 12);
   addCredits();
   transitionOverlay_ =
-      addPlane("intro_start_transition", kStyleIntroTransition,
-               DL::BlendMode::Alpha, {480.0f, 320.0f}, {620.0f, 430.0f}, 40,
-               0.32f);
+      addPlane("intro_start_transition",
+               Deflektorish::shaderStyle(
+                   Deflektorish::ShaderStyle::FadeTransition),
+               DL::BlendMode::Alpha, {480.0f, 320.0f}, {620.0f, 430.0f},
+               40, 0.32f);
   if (transitionOverlay_ != nullptr) {
     transitionOverlay_->config.color = {1.0f, 1.0f, 1.0f, 0.0f};
     transitionOverlay_->config.params0 = {elapsed_, 0.0f, 0.0f, 0.0f};
@@ -278,7 +278,9 @@ void DeflektorishIntroScene::createLiveShowcase() {
     source.baseAngle = angle;
     source.phase = phase;
     source.node =
-        addPlaneForCamera("intro_demo_source", kStyleSource,
+        addPlaneForCamera("intro_demo_source",
+                          Deflektorish::shaderStyle(
+                              Deflektorish::ShaderStyle::Source),
                           DL::BlendMode::Additive, position, {24.0f, 24.0f},
                           10, &backgroundCamera_, 0.02f, angle);
     source.node->config.color = {0.55f, 0.76f, 1.0f, 0.26f};
@@ -296,7 +298,9 @@ void DeflektorishIntroScene::createLiveShowcase() {
     reflektor.speed = speed;
     reflektor.phase = phase;
     reflektor.node =
-        addPlaneForCamera("intro_demo_reflector", kStyleAutoReflector,
+        addPlaneForCamera("intro_demo_reflector",
+                          Deflektorish::shaderStyle(
+                              Deflektorish::ShaderStyle::AutoReflector),
                           DL::BlendMode::Alpha, position, {28.0f, 6.0f}, 11,
                           &backgroundCamera_, 0.04f, angle);
     reflektor.node->config.color = {0.30f, 0.48f, 0.66f, 1.0f};

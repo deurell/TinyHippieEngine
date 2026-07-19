@@ -25,6 +25,8 @@ constexpr char kCrtCurvatureUniform[] = "crtCurvature";
 constexpr float kCrtCurveScale = 0.94f;
 constexpr float kCrtCurveOffset = 0.03f;
 constexpr float kDeflektorPostBumpDuration = 1.35f;
+constexpr float kDeflektorPostBumpStrengthScale = 0.026f;
+constexpr float kDeflektorPostBumpMaxStrength = 0.052f;
 DL::App *gActiveApp = nullptr;
 
 float randomRange(float minValue, float maxValue) {
@@ -664,16 +666,13 @@ void DL::App::processInput(GLFWwindow *window) {
   actionMap_.apply(inputState_, inputState_);
 }
 
-void DL::App::submitDeflektorPostBump(glm::vec2 gamePosition, float strength) {
-  const glm::vec2 framebufferSize = getFramebufferSize();
-  const float aspect = framebufferSize.y > 0.0f
-                           ? framebufferSize.x / framebufferSize.y
-                           : 16.0f / 9.0f;
+void DL::App::submitDeflektorPostBumpUv(glm::vec2 uv, float strength) {
   DeflektorPostBump bump;
-  bump.uv = glm::clamp(Deflektorish::gameToPostUv(gamePosition, aspect),
-                       glm::vec2(0.0f), glm::vec2(1.0f));
+  bump.uv = glm::clamp(uv, glm::vec2(0.0f), glm::vec2(1.0f));
   bump.age = 0.0f;
-  bump.strength = std::min(std::max(strength, 0.0f) * 0.026f, 0.052f);
+  bump.strength =
+      std::min(std::max(strength, 0.0f) * kDeflektorPostBumpStrengthScale,
+               kDeflektorPostBumpMaxStrength);
   deflektorPostBumps_.insert(deflektorPostBumps_.begin(), bump);
   while (deflektorPostBumps_.size() > 2) {
     deflektorPostBumps_.pop_back();
@@ -829,8 +828,8 @@ void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
     return std::make_unique<DeflektorishScene>(
         renderDevice_.get(), renderResourceCache_.get(),
-        [this](glm::vec2 position, float strength) {
-          submitDeflektorPostBump(position, strength);
+        [this](glm::vec2 uv, float strength) {
+          submitDeflektorPostBumpUv(uv, strength);
         },
         [this](Deflektorish::Sound sound, glm::vec2 position,
                float energy) {

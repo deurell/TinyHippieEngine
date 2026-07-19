@@ -83,7 +83,7 @@ public:
   bool renderCullingEnabled() const { return renderCullingEnabled_; }
   void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
   RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
-  void submitDeflektorPostBump(glm::vec2 gamePosition, float strength);
+  void submitDeflektorPostBumpUv(glm::vec2 uv, float strength);
   void submitDeflektorSound(Deflektorish::Sound sound,
                             glm::vec2 gamePosition, float energy);
 

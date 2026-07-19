@@ -2,6 +2,7 @@
 
 #include "camera.h"
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishshaderstyle.h"
 #include "scenenode.h"
 #include "shaderplanenode.h"
 #include <algorithm>
@@ -17,7 +18,6 @@ constexpr float kBeamThicknessPerReflect = 6.0f;
 constexpr float kEpsilon = 0.001f;
 constexpr float kBlockerGlowSpeed = 8.0f;
 constexpr float kReflektorGlowSpeed = 14.0f;
-constexpr int kStyleBeam = 1;
 
 float atan2Vec(glm::vec2 v) { return std::atan2(v.y, v.x); }
 
@@ -39,7 +39,7 @@ void Renderer::createBeamSegments(DL::SceneNode *parent, DL::Camera *camera,
     config.fragmentShader = "Shaders/deflektorish.frag";
     config.blendMode = DL::BlendMode::Additive;
     config.depthTest = false;
-    config.proceduralStyle = kStyleBeam;
+    config.proceduralStyle = shaderStyle(ShaderStyle::Beam);
     auto node = std::make_unique<DL::ShaderPlaneNode>(
         std::move(config), parent, camera, renderDevice, renderResourceCache);
     node->setDebugName("beam_segment_" + std::to_string(i + 1));

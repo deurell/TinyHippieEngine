@@ -1,6 +1,7 @@
 #include "deflektorishscene.h"
 
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishshaderstyle.h"
 #include "iscene.h"
 #include <algorithm>
 #include <cmath>
@@ -39,20 +40,6 @@ constexpr float kBonusScoreTickInterval = 0.058f;
 constexpr float kBonusDoneHold = 1.5f;
 constexpr float kBonusFadeDuration = 0.21f;
 constexpr float kBonusFlashDecay = 4.2f;
-constexpr int kStyleSource = 2;
-constexpr int kStyleTarget = 3;
-constexpr int kStyleBlocker = 4;
-constexpr int kStyleReflectiveBlocker = 5;
-constexpr int kStyleManualReflector = 6;
-constexpr int kStyleAutoReflector = 7;
-constexpr int kStyleSelection = 8;
-constexpr int kStyleExplosion = 9;
-constexpr int kStylePortal = 10;
-constexpr int kStyleFilter = 11;
-constexpr int kStyleSplitter = 12;
-constexpr int kStyleEnergyBar = 13;
-constexpr int kStyleCompletionOverlay = 14;
-constexpr int kStyleIntroTransition = 15;
 constexpr char kLevelRoot[] = "Resources/Game/Deflektorish/Levels/";
 constexpr float kRoomSpacingPixels = 1120.0f;
 constexpr float kRoomCameraPanDuration = 0.86f;
@@ -353,12 +340,14 @@ void DeflektorishScene::loadCampaign() {
     spawnLevel(level, offsetPixels, i);
     addBackground(rooms_.back(), i);
   }
-  selection_ =
-      addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
-                     {-10000.0f, -10000.0f}, {42.0f, 42.0f}, 12, 0.10f);
-  energyBar_ = addShaderPlane("beam_energy_bar", kStyleEnergyBar,
-                              DL::BlendMode::Alpha, {480.0f, 606.0f},
-                              {150.0f, 8.0f}, 20, 0.20f);
+  selection_ = addShaderPlane(
+      "selection", Deflektorish::shaderStyle(Deflektorish::ShaderStyle::Selection),
+      DL::BlendMode::Alpha, {-10000.0f, -10000.0f}, {42.0f, 42.0f}, 12,
+      0.10f);
+  energyBar_ = addShaderPlane(
+      "beam_energy_bar",
+      Deflektorish::shaderStyle(Deflektorish::ShaderStyle::EnergyBar),
+      DL::BlendMode::Alpha, {480.0f, 606.0f}, {150.0f, 8.0f}, 20, 0.20f);
   auto scoreHud = std::make_unique<TextNode>(
       this, scoreDigits(0), renderDevice_, renderResourceCache_,
       &cameraNode_->camera());
@@ -550,7 +539,8 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
       Deflektorish::cellToPosition(grid_, level.source.cell) + offsetPixels;
   room.sourceAngle = glm::radians(level.source.angleDegrees);
   room.sourceNode =
-      addShaderPlane("source_" + std::to_string(roomIndex + 1), kStyleSource,
+      addShaderPlane("source_" + std::to_string(roomIndex + 1),
+                     Deflektorish::shaderStyle(Deflektorish::ShaderStyle::Source),
                      DL::BlendMode::Additive, room.sourcePosition,
                      {41.0f, 41.0f}, 11, 0.10f, room.sourceAngle);
   rooms_.push_back(room);
@@ -579,7 +569,9 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     reflektor.roomIndex = roomIndex;
     reflektor.node = addShaderPlane(
         config.automatic ? "reflektor_auto" : "reflektor_manual",
-        config.automatic ? kStyleAutoReflector : kStyleManualReflector,
+        Deflektorish::shaderStyle(config.automatic
+                                      ? Deflektorish::ShaderStyle::AutoReflector
+                                      : Deflektorish::ShaderStyle::ManualReflector),
         DL::BlendMode::Alpha, reflektor.position, {22.0f, 5.0f}, 13, 0.12f,
         reflektor.angle);
     reflektors_.push_back(reflektor);
@@ -594,7 +586,9 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     target.roomIndex = roomIndex;
     target.phase = target.position.x * 0.071f + target.position.y * 0.113f;
     target.node = addShaderPlane("target_" + std::to_string(i + 1),
-                                 kStyleTarget, DL::BlendMode::Alpha,
+                                 Deflektorish::shaderStyle(
+                                     Deflektorish::ShaderStyle::Target),
+                                 DL::BlendMode::Alpha,
                                  target.position, {13.0f, 13.0f}, 8, 0.04f);
     targets_.push_back(target);
     includeBounds(target.position, 32.0f);
@@ -605,7 +599,9 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
   for (int i = 0; i < explosionPoolSize; ++i) {
     Explosion explosion;
     explosion.node = addShaderPlane("explosion_" + std::to_string(i + 1),
-                                    kStyleExplosion, DL::BlendMode::Additive,
+                                    Deflektorish::shaderStyle(
+                                        Deflektorish::ShaderStyle::Explosion),
+                                    DL::BlendMode::Additive,
                                     {-10000.0f, -10000.0f}, {1.0f, 1.0f}, 18,
                                     0.16f);
     explosions_.push_back(explosion);
@@ -621,11 +617,15 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     portal.phase = config.phase;
     portal.roomIndex = roomIndex;
     portal.entryNode =
-        addShaderPlane("portal_entry_" + std::to_string(i + 1), kStylePortal,
+        addShaderPlane("portal_entry_" + std::to_string(i + 1),
+                       Deflektorish::shaderStyle(
+                           Deflektorish::ShaderStyle::Portal),
                        DL::BlendMode::Additive, portal.entryPosition,
                        {27.0f, 27.0f}, 10, 0.11f);
     portal.exitNode =
-        addShaderPlane("portal_exit_" + std::to_string(i + 1), kStylePortal,
+        addShaderPlane("portal_exit_" + std::to_string(i + 1),
+                       Deflektorish::shaderStyle(
+                           Deflektorish::ShaderStyle::Portal),
                        DL::BlendMode::Additive, portal.exitPosition,
                        {27.0f, 27.0f}, 10, 0.11f);
     portals_.push_back(portal);
@@ -645,8 +645,10 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     filter.roomIndex = roomIndex;
     filter.node =
         addShaderPlane(config.automatic ? "angle_filter_auto" : "angle_filter",
-                       kStyleFilter, DL::BlendMode::Alpha, filter.position,
-                       {17.0f, 17.0f}, 7, 0.05f, filter.angle);
+                       Deflektorish::shaderStyle(
+                           Deflektorish::ShaderStyle::Filter),
+                       DL::BlendMode::Alpha, filter.position, {17.0f, 17.0f},
+                       7, 0.05f, filter.angle);
     filters_.push_back(filter);
     includeBounds(filter.position, 36.0f);
   }
@@ -659,7 +661,9 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     splitter.angle = glm::radians(config.angleDegrees);
     splitter.roomIndex = roomIndex;
     splitter.node = addShaderPlane("beam_splitter_" + std::to_string(i + 1),
-                                   kStyleSplitter, DL::BlendMode::Alpha,
+                                   Deflektorish::shaderStyle(
+                                       Deflektorish::ShaderStyle::Splitter),
+                                   DL::BlendMode::Alpha,
                                    splitter.position, {20.0f, 20.0f}, 8,
                                    0.06f, splitter.angle);
     splitters_.push_back(splitter);
@@ -674,7 +678,9 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     blocker.roomIndex = roomIndex;
     blocker.node = addShaderPlane(
         config.reflective ? "reflective_blocker" : "solid_blocker",
-        config.reflective ? kStyleReflectiveBlocker : kStyleBlocker,
+        Deflektorish::shaderStyle(
+            config.reflective ? Deflektorish::ShaderStyle::ReflectiveBlocker
+                              : Deflektorish::ShaderStyle::Blocker),
         DL::BlendMode::Alpha, blocker.position, {16.0f, 16.0f},
         config.reflective ? 6 : 5, config.reflective ? 0.025f : 0.02f);
     blockers_.push_back(blocker);
@@ -962,6 +968,23 @@ void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
   }
 }
 
+glm::vec2 DeflektorishScene::postBumpUvForWorld(glm::vec2 worldPosition) const {
+  const float aspect = framebufferSize_.y > 0.0f
+                           ? framebufferSize_.x / framebufferSize_.y
+                           : 16.0f / 9.0f;
+  const float orthoHeight =
+      cameraNode_ != nullptr ? cameraNode_->orthographicHeight()
+                             : Deflektorish::kOrthographicHeight;
+  const float halfHeight = orthoHeight * 0.5f;
+  const float halfWidth = halfHeight * aspect;
+  const glm::vec2 cameraOffset =
+      cameraNode_ != nullptr ? glm::vec2(cameraNode_->getLocalPosition())
+                             : cameraBaseWorld_;
+  const glm::vec2 relative = worldPosition - cameraOffset;
+  return {0.5f + relative.x / (halfWidth * 2.0f),
+          0.5f + relative.y / (halfHeight * 2.0f)};
+}
+
 glm::vec2 DeflektorishScene::screenToWorld(glm::vec2 screenPosition) const {
   if (screenSize_.x <= 0.0f || screenSize_.y <= 0.0f) {
     return {0.0f, 0.0f};
@@ -1169,10 +1192,8 @@ void DeflektorishScene::applyTargetDestroyed(const GameEvent &event) {
   sourcePulse_ =
       std::min(sourcePulse_ + 0.35f + event.energy * 0.08f, 1.0f);
   if (postBumpCallback_) {
-    const glm::vec2 roomOffset =
-        rooms_.empty() ? glm::vec2(0.0f)
-                       : rooms_[currentLevelIndex_].offsetPixels;
-    postBumpCallback_(event.position - roomOffset, 1.0f + event.energy * 0.22f);
+    postBumpCallback_(postBumpUvForWorld(Deflektorish::gameToWorld(event.position)),
+                      1.35f + event.energy * 0.28f);
   }
   if (soundCallback_) {
     soundCallback_(Deflektorish::Sound::TargetDestroyed, event.position,
@@ -1266,7 +1287,9 @@ glm::vec2 DeflektorishScene::victoryBlastPosition(int index) const {
 
 void DeflektorishScene::createCompletionOverlay() {
   completionOverlay_ = addShaderPlane(
-      "level_complete_overlay", kStyleCompletionOverlay, DL::BlendMode::Alpha,
+      "level_complete_overlay",
+      Deflektorish::shaderStyle(Deflektorish::ShaderStyle::CompletionOverlay),
+      DL::BlendMode::Alpha,
       Deflektorish::kScreenCenter, {520.0f, 350.0f}, 21, 0.24f);
   if (completionOverlay_ != nullptr) {
     completionOverlay_->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -1376,7 +1399,9 @@ void DeflektorishScene::createCompletionOverlay() {
 
 void DeflektorishScene::createEntryTransitionOverlay() {
   entryTransitionOverlay_ =
-      addShaderPlane("entry_transition_overlay", kStyleIntroTransition,
+      addShaderPlane("entry_transition_overlay",
+                     Deflektorish::shaderStyle(
+                         Deflektorish::ShaderStyle::FadeTransition),
                      DL::BlendMode::Alpha, Deflektorish::kScreenCenter,
                      {620.0f, 430.0f}, 45, 0.44f);
   if (entryTransitionOverlay_ != nullptr) {
@@ -1445,7 +1470,7 @@ void DeflektorishScene::updateVictoryCelebration(float dt) {
     if (victoryPostWaveTimer_ > 0.0f) {
       victoryPostWaveTimer_ -= dt;
       if (victoryPostWaveTimer_ <= 0.0f && postBumpCallback_) {
-        postBumpCallback_(Deflektorish::kScreenCenter, 1.85f);
+        postBumpCallback_({0.5f, 0.5f}, 1.85f);
       }
     }
 

@@ -220,6 +220,7 @@ private:
   int advanceDisplayedScore(int current, int target, bool total) const;
   void updateCameraShake(float dt);
   void startCameraShake(glm::vec2 position, float strength, float duration);
+  glm::vec2 postBumpUvForWorld(glm::vec2 worldPosition) const;
   glm::vec2 screenToWorld(glm::vec2 screenPosition) const;
   bool selectReflektorAtWorld(glm::vec2 worldPosition);
   int findNextManualReflektor(int startIndex) const;

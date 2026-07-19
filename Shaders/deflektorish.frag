@@ -548,7 +548,7 @@ void main() {
         color = shadeCompletionOverlay(TexCoord);
     }
 
-    color *= vec4(baseColor.rgb, 1.0);
+    color *= baseColor;
     if (color.a < 0.025) {
         discard;
     }

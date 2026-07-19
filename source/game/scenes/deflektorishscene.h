@@ -59,8 +59,10 @@ private:
   struct Reflektor {
     glm::vec2 position{0.0f};
     float angle = 0.0f;
+    float baseAngle = 0.0f;
     bool automatic = false;
     float speed = 0.0f;
+    float phase = 0.0f;
     float glow = 0.0f;
     std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
@@ -112,8 +114,10 @@ private:
   struct Filter {
     glm::vec2 position{0.0f};
     float angle = 0.0f;
+    float baseAngle = 0.0f;
     bool automatic = false;
     float speed = 0.0f;
+    float phase = 0.0f;
     float passGlow = 0.0f;
     float blockGlow = 0.0f;
     glm::vec2 hitPoint{0.0f};
@@ -162,14 +166,14 @@ private:
                                       int renderLayer, float z = 0.0f,
                                       float rotationRadians = 0.0f);
   void createCameraNode();
-  void addBackground(glm::vec2 offsetPixels, std::size_t roomIndex);
+  void addBackground(const RoomRuntime &room, std::size_t roomIndex);
   void spawnLevel(const Deflektorish::LevelConfig &level, glm::vec2 offsetPixels,
                   std::size_t roomIndex);
   void resetLevelRuntime();
   void loadCampaign();
-  void queueNextLevel();
-  void advanceToNextLevel();
-  void activateRoom(std::size_t roomIndex, bool animated);
+  void activateRoom(std::size_t roomIndex, bool animated,
+                    bool preserveCompletionFlow = false);
+  void updateRoomVisibility();
   void updateCameraPan(float dt);
   float fittedOrthographicHeight(const RoomRuntime &room) const;
   void updateHudPositions();
@@ -268,7 +272,6 @@ private:
   Deflektorish::BeamEnergyState beamEnergy_;
   std::vector<std::string> levelPaths_;
   std::size_t currentLevelIndex_ = 0;
-  bool levelAdvancePending_ = false;
   glm::vec2 cameraBaseWorld_{0.0f};
   glm::vec2 cameraPanStartWorld_{0.0f};
   glm::vec2 cameraPanTargetWorld_{0.0f};
@@ -304,6 +307,7 @@ private:
   int energyBonus_ = 0;
   int timeBonus_ = 0;
   int totalBonus_ = 0;
+  int campaignScore_ = 0;
   int displayedEnergyBonus_ = 0;
   int displayedTimeBonus_ = 0;
   int displayedTotalBonus_ = 0;

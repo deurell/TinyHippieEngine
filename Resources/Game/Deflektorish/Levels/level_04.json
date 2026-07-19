@@ -1,40 +1,94 @@
 {
-  "name": "level_04_splitter_gate",
+  "name": "level_04_portal_switchyard",
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]
   },
   "source": {
-    "cell": [3, 7],
+    "cell": [3, 12],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 30,
+  "explosionPoolSize": 36,
   "reflektors": [
-    { "cell": [8, 7], "angleDegrees": 22, "automatic": false },
-    { "cell": [12, 17], "angleDegrees": 14, "automatic": false },
-    { "cell": [4, 17], "angleDegrees": 74, "automatic": false }
+    { "cell": [7, 12], "angleDegrees": 18, "automatic": false },
+    { "cell": [7, 19], "angleDegrees": 12, "automatic": false },
+    { "cell": [13, 19], "angleDegrees": -18, "automatic": true, "speed": 0.17 },
+    { "cell": [13, 7], "angleDegrees": -16, "automatic": false },
+    { "cell": [25, 7], "angleDegrees": 22, "automatic": true, "speed": -0.19 },
+    { "cell": [25, 17], "angleDegrees": -24, "automatic": false },
+    { "cell": [32, 17], "angleDegrees": 18, "automatic": false },
+    { "cell": [32, 10], "angleDegrees": -12, "automatic": false }
   ],
   "targets": [
-    { "cell": [8, 10] },
-    { "cell": [10, 14] },
-    { "cell": [6, 14] },
-    { "cell": [16, 17] },
-    { "cell": [20, 17] },
-    { "cell": [8, 17] }
+    { "cell": [7, 15] },
+    { "cell": [7, 18] },
+    { "cell": [10, 19] },
+    { "cell": [13, 16] },
+    { "cell": [13, 12] },
+    { "cell": [17, 7] },
+    { "cell": [21, 7] },
+    { "cell": [25, 10] },
+    { "cell": [25, 14] },
+    { "cell": [28, 17] },
+    { "cell": [32, 14] },
+    { "cell": [32, 11] }
   ],
   "blockers": [
-    { "cell": [6, 5], "reflective": false },
-    { "cell": [7, 5], "reflective": false },
-    { "cell": [11, 7], "reflective": false },
-    { "cell": [12, 7], "reflective": false },
+    { "cell": [5, 10], "reflective": false },
+    { "cell": [6, 10], "reflective": false },
+    { "cell": [5, 11], "reflective": false },
+    { "cell": [10, 11], "reflective": false },
+    { "cell": [11, 11], "reflective": false },
+    { "cell": [10, 12], "reflective": false },
     { "cell": [11, 12], "reflective": false },
-    { "cell": [5, 12], "reflective": false },
-    { "cell": [2, 15], "reflective": false },
-    { "cell": [14, 15], "reflective": false },
-    { "cell": [22, 17], "reflective": true },
-    { "cell": [22, 18], "reflective": true }
+    { "cell": [10, 13], "reflective": false },
+    { "cell": [10, 16], "reflective": false },
+    { "cell": [11, 16], "reflective": false },
+    { "cell": [15, 15], "reflective": false },
+    { "cell": [15, 16], "reflective": false },
+    { "cell": [16, 16], "reflective": false },
+    { "cell": [17, 18], "reflective": false },
+    { "cell": [17, 19], "reflective": false },
+    { "cell": [18, 11], "reflective": true },
+    { "cell": [18, 12], "reflective": true },
+    { "cell": [19, 12], "reflective": true },
+    { "cell": [20, 12], "reflective": true },
+    { "cell": [20, 15], "reflective": true },
+    { "cell": [21, 15], "reflective": true },
+    { "cell": [22, 9], "reflective": false },
+    { "cell": [23, 9], "reflective": false },
+    { "cell": [24, 9], "reflective": false },
+    { "cell": [27, 9], "reflective": true },
+    { "cell": [27, 10], "reflective": true },
+    { "cell": [27, 11], "reflective": false },
+    { "cell": [29, 13], "reflective": false },
+    { "cell": [30, 13], "reflective": false },
+    { "cell": [5, 17], "reflective": false },
+    { "cell": [6, 17], "reflective": false },
+    { "cell": [6, 18], "reflective": false },
+    { "cell": [24, 19], "reflective": false },
+    { "cell": [25, 19], "reflective": false },
+    { "cell": [25, 20], "reflective": false },
+    { "cell": [19, 6], "reflective": true },
+    { "cell": [21, 6], "reflective": true },
+    { "cell": [28, 10], "reflective": true },
+    { "cell": [31, 8], "reflective": true },
+    { "cell": [32, 8], "reflective": true },
+    { "cell": [31, 5], "reflective": true },
+    { "cell": [32, 5], "reflective": true },
+    { "cell": [34, 19], "reflective": true },
+    { "cell": [35, 19], "reflective": true },
+    { "cell": [35, 10], "reflective": true }
   ],
-  "splitters": [
-    { "cell": [8, 12], "angleDegrees": 0 }
+  "portals": [
+    { "entryCell": [16, 19], "exitCell": [20, 7], "phase": 0.15 },
+    { "entryCell": [29, 17], "exitCell": [30, 10], "phase": 0.55 }
+  ],
+  "filters": [
+    { "cell": [13, 14], "angleDegrees": 90, "automatic": true, "speed": 0.14 },
+    { "cell": [20, 10], "angleDegrees": 90, "automatic": true, "speed": 0.22 },
+    { "cell": [25, 12], "angleDegrees": 90, "automatic": true, "speed": -0.18 },
+    { "cell": [29, 15], "angleDegrees": 90, "automatic": true, "speed": -0.20 },
+    { "cell": [32, 13], "angleDegrees": 90, "automatic": false }
   ]
 }

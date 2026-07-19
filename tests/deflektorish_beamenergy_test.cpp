@@ -135,16 +135,16 @@ TEST(DeflektorishBeamEnergyTest, DrainsButDoesNotRegenerateWhileIdle) {
   hazards.selfCrossCount = 1;
 
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
-  EXPECT_FLOAT_EQ(state.current, 48.25f);
+  EXPECT_FLOAT_EQ(state.current, 46.0f);
   EXPECT_FLOAT_EQ(state.selfCrossPressure, 1.0f);
 
   hazards.selfCrossCount = 0;
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
-  EXPECT_FLOAT_EQ(state.current, 48.25f);
+  EXPECT_FLOAT_EQ(state.current, 46.0f);
   EXPECT_FLOAT_EQ(state.selfCrossPressure, 0.5f);
 
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
-  EXPECT_FLOAT_EQ(state.current, 48.25f);
+  EXPECT_FLOAT_EQ(state.current, 46.0f);
   EXPECT_FLOAT_EQ(state.selfCrossPressure, 0.0f);
 }
 
@@ -155,8 +155,8 @@ TEST(DeflektorishBeamEnergyTest, DirectReturnDrainIsSeriousButNotLethal) {
 
   Deflektorish::updateBeamEnergy(state, hazards, {}, 0.5f);
 
-  EXPECT_FLOAT_EQ(state.current, 32.5f);
-  EXPECT_FLOAT_EQ(state.drainPerSecond, 35.0f);
+  EXPECT_FLOAT_EQ(state.current, 26.0f);
+  EXPECT_FLOAT_EQ(state.drainPerSecond, 48.0f);
 }
 
 TEST(DeflektorishBeamEnergyTest, TargetHitGainRestoresEnergyWithoutOverflow) {

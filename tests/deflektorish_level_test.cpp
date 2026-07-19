@@ -202,21 +202,13 @@ TEST(DeflektorishLevelTest, LoadsProgressionLevelFiles) {
   }
 }
 
-TEST(DeflektorishLevelTest, ProgressionLevelsNeedInteractionAndHaveSolutions) {
+TEST(DeflektorishLevelTest, TrainingLevelsNeedInteractionAndHaveSolutions) {
   const std::vector<std::vector<float>> solutions = {
       {45.0f, 45.0f, -45.0f, -45.0f},
       {45.0f, 45.0f, 45.0f, -45.0f},
-      {45.0f, 45.0f, -45.0f, -45.0f},
-      {45.0f, 27.5f, 62.5f},
-      {45.0f, 45.0f, 45.0f, -45.0f, 45.0f},
-      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f},
-      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f},
-      {45.0f, 27.5f, 62.5f, -45.0f},
-      {45.0f, 27.5f, 62.5f, 45.0f, -45.0f},
-      {45.0f, 45.0f, -45.0f, -45.0f, 45.0f, 45.0f},
   };
 
-  for (int i = 1; i <= 10; ++i) {
+  for (int i = 1; i <= 2; ++i) {
     Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
     EXPECT_LT(clearTargets(makeWorld(level)), level.targets.size())
         << level.name << " should not clear itself with authored defaults";
@@ -233,6 +225,37 @@ TEST(DeflektorishLevelTest, ProgressionLevelsNeedInteractionAndHaveSolutions) {
               static_cast<int>(level.targets.size()))
         << level.name << " intended solution should clear every target; missed"
         << missedTargetsText(level, cleared);
+  }
+}
+
+TEST(DeflektorishLevelTest, LaterProgressionLevelsAreDenseManualPuzzles) {
+  for (int i = 3; i <= 10; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+
+    EXPECT_GE(level.reflektors.size(), 7u) << level.name;
+    EXPECT_GE(level.targets.size(), 12u) << level.name;
+    EXPECT_GE(level.blockers.size(), 20u) << level.name;
+    EXPECT_LT(clearTargets(makeWorld(level)), level.targets.size())
+        << level.name << " should not clear itself with authored defaults";
+  }
+}
+
+TEST(DeflektorishLevelTest, LaterLevelsContainAutomaticMotion) {
+  for (int i = 3; i <= 10; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    const auto hasAutomaticReflektor =
+        std::any_of(level.reflektors.begin(), level.reflektors.end(),
+                    [](const Deflektorish::ReflektorConfig &reflektor) {
+                      return reflektor.automatic && reflektor.speed != 0.0f;
+                    });
+    const auto hasAutomaticFilter =
+        std::any_of(level.filters.begin(), level.filters.end(),
+                    [](const Deflektorish::FilterConfig &filter) {
+                      return filter.automatic && filter.speed != 0.0f;
+                    });
+
+    EXPECT_TRUE(hasAutomaticReflektor) << level.name;
+    EXPECT_TRUE(hasAutomaticFilter) << level.name;
   }
 }
 

@@ -23,13 +23,13 @@
     },
     "score_tick": {
       "clip": "tone1.ogg",
-      "volume": 0.11,
+      "volume": 0.08,
       "volumePerEnergy": 0.0,
-      "maxVolume": 0.16,
-      "pitchMin": 1.0,
-      "pitchMax": 1.0,
+      "maxVolume": 0.12,
+      "pitchMin": 3.0,
+      "pitchMax": 3.0,
       "poolSize": 10,
-      "maxConcurrent": 4
+      "maxConcurrent": 6
     }
   }
 }

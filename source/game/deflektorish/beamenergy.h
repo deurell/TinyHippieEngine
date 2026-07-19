@@ -8,10 +8,10 @@ struct BeamEnergyConfig {
   float maxEnergy = 100.0f;
   float regenPerSecond = 0.0f;
   float targetHitEnergyGain = 12.0f;
-  float selfCrossDrainPerSecond = 3.5f;
-  float backtrackDrainPerSecond = 32.0f;
-  float directReturnDrainPerSecond = 35.0f;
-  float maxDrainPerSecond = 90.0f;
+  float selfCrossDrainPerSecond = 8.0f;
+  float backtrackDrainPerSecond = 42.0f;
+  float directReturnDrainPerSecond = 48.0f;
+  float maxDrainPerSecond = 120.0f;
   float selfCrossPressureRisePerSecond = 6.0f;
   float selfCrossPressureDecayPerSecond = 1.0f;
   float selfCrossTrimPixels = 16.0f;

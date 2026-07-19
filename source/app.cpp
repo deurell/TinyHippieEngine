@@ -898,21 +898,21 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.name = "CRT";
   crtEffect.fragmentShaderPath = "Shaders/crt.frag";
 #ifdef __EMSCRIPTEN__
-  constexpr float kDefaultCrtScanlineStrength = 0.450f;
-  constexpr float kDefaultCrtVignetteStrength = 0.114f;
-  constexpr float kDefaultCrtCurvature = 0.250f;
-  constexpr float kDefaultCrtWobbleStrength = 0.0002f;
-  constexpr float kDefaultCrtGrilleStrength = 0.135f;
-  constexpr float kDefaultCrtChromaticStrength = 0.156f;
-  constexpr float kDefaultCrtBrightness = 1.03f;
+  constexpr float kDefaultCrtScanlineStrength = 0.427f;
+  constexpr float kDefaultCrtVignetteStrength = 0.147f;
+  constexpr float kDefaultCrtCurvature = 0.916f;
+  constexpr float kDefaultCrtWobbleStrength = 0.0016f;
+  constexpr float kDefaultCrtGrilleStrength = 0.478f;
+  constexpr float kDefaultCrtChromaticStrength = 1.061f;
+  constexpr float kDefaultCrtBrightness = 1.16f;
 #else
-  constexpr float kDefaultCrtScanlineStrength = 0.312f;
-  constexpr float kDefaultCrtVignetteStrength = 0.040f;
-  constexpr float kDefaultCrtCurvature = 0.316f;
-  constexpr float kDefaultCrtWobbleStrength = 0.0003f;
-  constexpr float kDefaultCrtGrilleStrength = 0.096f;
-  constexpr float kDefaultCrtChromaticStrength = 0.221f;
-  constexpr float kDefaultCrtBrightness = 1.05f;
+  constexpr float kDefaultCrtScanlineStrength = 0.427f;
+  constexpr float kDefaultCrtVignetteStrength = 0.147f;
+  constexpr float kDefaultCrtCurvature = 0.916f;
+  constexpr float kDefaultCrtWobbleStrength = 0.0016f;
+  constexpr float kDefaultCrtGrilleStrength = 0.478f;
+  constexpr float kDefaultCrtChromaticStrength = 1.061f;
+  constexpr float kDefaultCrtBrightness = 1.16f;
 #endif
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtScanlineStrength",

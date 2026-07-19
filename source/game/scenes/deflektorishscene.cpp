@@ -31,7 +31,7 @@ constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
 constexpr float kBonusLineDelay = 0.09f;
-constexpr float kBonusScoreTickInterval = 0.085f;
+constexpr float kBonusScoreTickInterval = 0.058f;
 constexpr float kBonusDoneHold = 1.5f;
 constexpr float kBonusFadeDuration = 0.21f;
 constexpr float kBonusFlashDecay = 4.2f;
@@ -51,6 +51,11 @@ constexpr int kStyleCompletionOverlay = 14;
 constexpr char kLevelRoot[] = "Resources/Game/Deflektorish/Levels/";
 constexpr float kRoomSpacingPixels = 1120.0f;
 constexpr float kRoomCameraPanDuration = 0.86f;
+constexpr float kInactiveRoomAlpha = 0.18f;
+constexpr float kAutoReflektorSpeedScale = 3.2f;
+constexpr float kAutoFilterSpeedScale = 3.6f;
+constexpr float kAutoReflektorWobble = 10.0f * 3.1415926535f / 180.0f;
+constexpr float kAutoFilterWobble = 14.0f * 3.1415926535f / 180.0f;
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
@@ -124,9 +129,6 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   applyGameEvents();
   updateTargetVisuals();
   updateExplosions(ctx.delta_time);
-  if (levelAdvancePending_) {
-    advanceToNextLevel();
-  }
 
   SceneNode::update(ctx);
 }
@@ -209,12 +211,28 @@ void DeflektorishScene::createCameraNode() {
   addChild(std::move(node));
 }
 
-void DeflektorishScene::addBackground(glm::vec2 offsetPixels,
+void DeflektorishScene::addBackground(const RoomRuntime &room,
                                       std::size_t roomIndex) {
   DL::ShaderPlaneNode::Config backgroundConfig;
   backgroundConfig.blendMode = DL::BlendMode::Opaque;
   backgroundConfig.depthTest = true;
-  const glm::vec2 offset = offsetPixels * Deflektorish::kPixelToWorld;
+  constexpr float kFieldPaddingPixels = 96.0f;
+  constexpr float kBackPaddingPixels = 190.0f;
+  const glm::vec2 contentCenterPixels =
+      (room.boundsMinPixels + room.boundsMaxPixels) * 0.5f;
+  const glm::vec2 contentSizePixels =
+      room.boundsMaxPixels - room.boundsMinPixels;
+  const glm::vec2 center =
+      room.offsetPixels * Deflektorish::kPixelToWorld +
+      Deflektorish::gameToWorld(contentCenterPixels);
+  const glm::vec2 fieldHalfSize =
+      glm::max((contentSizePixels + glm::vec2(kFieldPaddingPixels)) *
+                   Deflektorish::kPixelToWorld * 0.5f,
+               glm::vec2{5.4f, 3.8f});
+  const glm::vec2 backHalfSize =
+      glm::max((contentSizePixels + glm::vec2(kBackPaddingPixels)) *
+                   Deflektorish::kPixelToWorld * 0.5f,
+               glm::vec2{6.8f, 4.8f});
 
   auto back = std::make_unique<DL::ShaderPlaneNode>(
       backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
@@ -222,8 +240,8 @@ void DeflektorishScene::addBackground(glm::vec2 offsetPixels,
   back->setDebugName("deflektorish_backplate_" + std::to_string(roomIndex + 1));
   back->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
   back->setRenderLayer(-30);
-  back->setLocalPosition({offset.x, offset.y, -0.08f});
-  back->setLocalScale({6.8f, 4.8f, 1.0f});
+  back->setLocalPosition({center.x, center.y, -0.08f});
+  back->setLocalScale({backHalfSize.x, backHalfSize.y, 1.0f});
   addChild(std::move(back));
 
   auto field = std::make_unique<DL::ShaderPlaneNode>(
@@ -232,8 +250,8 @@ void DeflektorishScene::addBackground(glm::vec2 offsetPixels,
   field->setDebugName("deflektorish_playfield_" + std::to_string(roomIndex + 1));
   field->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
   field->setRenderLayer(-25);
-  field->setLocalPosition({offset.x, offset.y, -0.07f});
-  field->setLocalScale({5.4f, 3.8f, 1.0f});
+  field->setLocalPosition({center.x, center.y, -0.07f});
+  field->setLocalScale({fieldHalfSize.x, fieldHalfSize.y, 1.0f});
   addChild(std::move(field));
 }
 
@@ -291,7 +309,7 @@ void DeflektorishScene::resetLevelRuntime() {
   completionFadeTime_ = 0.0f;
   completionPhase_ = CompletionPhase::Playing;
   levelElapsed_ = 0.0f;
-  levelAdvancePending_ = false;
+  campaignScore_ = 0;
   resetBonusTally();
 }
 
@@ -309,8 +327,8 @@ void DeflektorishScene::loadCampaign() {
         Deflektorish::loadLevel(levelPaths_[i]);
     const glm::vec2 offsetPixels{kRoomSpacingPixels * static_cast<float>(i),
                                  0.0f};
-    addBackground(offsetPixels, i);
     spawnLevel(level, offsetPixels, i);
+    addBackground(rooms_.back(), i);
   }
   selection_ =
       addShaderPlane("selection", kStyleSelection, DL::BlendMode::Alpha,
@@ -330,15 +348,6 @@ void DeflektorishScene::loadCampaign() {
   if (framebufferSize_.x > 0.0f && framebufferSize_.y > 0.0f) {
     onFramebufferSizeChanged(framebufferSize_);
   }
-}
-
-void DeflektorishScene::queueNextLevel() {
-  levelAdvancePending_ = true;
-}
-
-void DeflektorishScene::advanceToNextLevel() {
-  levelAdvancePending_ = false;
-  activateRoom(currentLevelIndex_ + 1, true);
 }
 
 bool DeflektorishScene::isCurrentRoom(std::size_t roomIndex) const {
@@ -385,7 +394,8 @@ void DeflektorishScene::rebuildActiveRoomMaps() {
   }
 }
 
-void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated) {
+void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated,
+                                     bool preserveCompletionFlow) {
   if (rooms_.empty()) {
     return;
   }
@@ -405,12 +415,16 @@ void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated) {
   beamEnergy_ = Deflektorish::BeamEnergyState{};
   beamEnergy_.current = beamEnergyConfig_.maxEnergy;
   selectionFlash_ = 1.0f;
-  victoryCelebrationStarted_ = false;
-  victoryCelebrationComplete_ = false;
-  completionFadeTime_ = 0.0f;
-  completionPhase_ = CompletionPhase::Playing;
+  if (!preserveCompletionFlow) {
+    victoryCelebrationStarted_ = false;
+    victoryCelebrationComplete_ = false;
+    completionFadeTime_ = 0.0f;
+    completionPhase_ = CompletionPhase::Playing;
+  }
   levelElapsed_ = 0.0f;
-  resetBonusTally();
+  if (!preserveCompletionFlow) {
+    resetBonusTally();
+  }
 
   cameraPanStartWorld_ = cameraBaseWorld_;
   cameraPanTargetWorld_ = room.cameraCenterWorld;
@@ -427,6 +441,56 @@ void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated) {
     }
   }
   updateHudPositions();
+  updateRoomVisibility();
+}
+
+void DeflektorishScene::updateRoomVisibility() {
+  const auto roomColor = [&](std::size_t roomIndex) {
+    if (isCurrentRoom(roomIndex)) {
+      return glm::vec4{1.0f, 1.0f, 1.0f, 1.0f};
+    }
+    return glm::vec4{0.36f, 0.42f, 0.50f, kInactiveRoomAlpha};
+  };
+
+  for (std::size_t i = 0; i < rooms_.size(); ++i) {
+    if (rooms_[i].sourceNode != nullptr) {
+      rooms_[i].sourceNode->config.color = roomColor(i);
+    }
+  }
+  for (Reflektor &reflektor : reflektors_) {
+    if (reflektor.node != nullptr) {
+      reflektor.node->config.color = roomColor(reflektor.roomIndex);
+    }
+  }
+  for (Target &target : targets_) {
+    if (target.node != nullptr) {
+      target.node->config.color = roomColor(target.roomIndex);
+    }
+  }
+  for (Blocker &blocker : blockers_) {
+    if (blocker.node != nullptr) {
+      blocker.node->config.color = roomColor(blocker.roomIndex);
+    }
+  }
+  for (Portal &portal : portals_) {
+    const glm::vec4 color = roomColor(portal.roomIndex);
+    if (portal.entryNode != nullptr) {
+      portal.entryNode->config.color = color;
+    }
+    if (portal.exitNode != nullptr) {
+      portal.exitNode->config.color = color;
+    }
+  }
+  for (Filter &filter : filters_) {
+    if (filter.node != nullptr) {
+      filter.node->config.color = roomColor(filter.roomIndex);
+    }
+  }
+  for (Splitter &splitter : splitters_) {
+    if (splitter.node != nullptr) {
+      splitter.node->config.color = roomColor(splitter.roomIndex);
+    }
+  }
 }
 
 void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
@@ -466,8 +530,11 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     reflektor.position =
         Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     reflektor.angle = glm::radians(config.angleDegrees);
+    reflektor.baseAngle = reflektor.angle;
     reflektor.automatic = config.automatic;
     reflektor.speed = config.speed;
+    reflektor.phase =
+        reflektor.position.x * 0.017f + reflektor.position.y * 0.031f;
     reflektor.roomIndex = roomIndex;
     reflektor.node = addShaderPlane(
         config.automatic ? "reflektor_auto" : "reflektor_manual",
@@ -530,8 +597,10 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     filter.position =
         Deflektorish::cellToPosition(grid_, config.cell) + offsetPixels;
     filter.angle = glm::radians(config.angleDegrees);
+    filter.baseAngle = filter.angle;
     filter.automatic = config.automatic;
     filter.speed = config.speed;
+    filter.phase = filter.position.x * 0.019f + filter.position.y * 0.037f;
     filter.roomIndex = roomIndex;
     filter.node =
         addShaderPlane(config.automatic ? "angle_filter_auto" : "angle_filter",
@@ -605,7 +674,13 @@ void DeflektorishScene::updateReflektors(float dt) {
       continue;
     }
     if (reflektor.automatic) {
-      reflektor.angle += reflektor.speed * dt;
+      const float t = elapsed_ + reflektor.phase;
+      const float wobble =
+          std::sin(t * (2.1f + std::abs(reflektor.speed) * 1.7f)) *
+          kAutoReflektorWobble;
+      reflektor.angle =
+          reflektor.baseAngle +
+          elapsed_ * reflektor.speed * kAutoReflektorSpeedScale + wobble;
     } else if (selectedReflektor_ == static_cast<int>(i)) {
       reflektor.angle += rotateInput_ * kManualRotateSpeed * dt;
     }
@@ -623,7 +698,13 @@ void DeflektorishScene::updateFilters(float dt) {
       continue;
     }
     if (filter.automatic) {
-      filter.angle += filter.speed * dt;
+      const float t = elapsed_ + filter.phase;
+      const float wobble =
+          std::sin(t * (2.8f + std::abs(filter.speed) * 1.5f)) *
+          kAutoFilterWobble;
+      filter.angle =
+          filter.baseAngle + elapsed_ * filter.speed * kAutoFilterSpeedScale +
+          wobble;
     }
     if (filter.node != nullptr) {
       filter.node->setLocalRotation(
@@ -1306,14 +1387,12 @@ void DeflektorishScene::updateVictoryCelebration(float dt) {
     if (victoryBlastIndex_ >= kVictoryBlastCount && !anyExplosionActive()) {
       completionPhase_ = CompletionPhase::FadeOut;
       completionFadeTime_ = 0.0f;
-    }
-  } else if (completionPhase_ == CompletionPhase::FadeOut) {
-    completionFadeTime_ += dt;
-    if (completionFadeTime_ >= kVictoryTextFadeDuration) {
-      completionPhase_ = CompletionPhase::BonusPending;
       victoryCelebrationComplete_ = true;
       startBonusTally();
     }
+  } else if (completionPhase_ == CompletionPhase::FadeOut) {
+    completionFadeTime_ += dt;
+    updateBonusTally(dt);
   } else if (completionPhase_ == CompletionPhase::BonusPending) {
     updateBonusTally(dt);
   }
@@ -1337,11 +1416,14 @@ void DeflektorishScene::updateCompletionOverlay() {
   if (completionPhase_ == CompletionPhase::FadeOut) {
     fade = 1.0f - std::clamp(completionFadeTime_ / kVictoryTextFadeDuration,
                              0.0f, 1.0f);
-  } else if (completionPhase_ == CompletionPhase::BonusPending) {
+  } else if (completionPhase_ == CompletionPhase::BonusPending ||
+             bonusTallyPhase_ != BonusTallyPhase::Hidden) {
     fade = 0.0f;
   }
+  const bool bonusVisible = bonusTallyPhase_ != BonusTallyPhase::Hidden &&
+                            bonusTallyPhase_ != BonusTallyPhase::Done;
   const float bonusBackdrop =
-      completionPhase_ == CompletionPhase::BonusPending ? 0.34f : 1.0f;
+      bonusVisible ? 0.34f : 1.0f;
   const float overlayAlpha =
       easedIntro * (0.58f + pulse * 0.08f) *
       std::max(fade, bonusBackdrop);
@@ -1385,15 +1467,18 @@ void DeflektorishScene::startBonusTally() {
   timeBonus_ = static_cast<int>(
       std::round(std::max(kLevelParTimeSeconds - clearTime_, 0.0f) *
                  kTimeBonusPerSecond));
-  totalBonus_ = energyBonus_ + timeBonus_;
+  totalBonus_ = campaignScore_ + energyBonus_ + timeBonus_;
   displayedEnergyBonus_ = 0;
   displayedTimeBonus_ = 0;
-  displayedTotalBonus_ = 0;
+  displayedTotalBonus_ = campaignScore_;
   bonusPhaseTime_ = 0.0f;
   bonusFadeTime_ = 0.0f;
   bonusScoreTickTimer_ = 0.0f;
   bonusTallyPhase_ = BonusTallyPhase::Energy;
   updateBonusText();
+  if (rooms_.size() > 1) {
+    activateRoom(currentLevelIndex_ + 1, true, true);
+  }
 }
 
 void DeflektorishScene::updateBonusTally(float dt) {
@@ -1429,7 +1514,21 @@ void DeflektorishScene::updateBonusTally(float dt) {
     bonusFadeTime_ += dt;
     if (bonusFadeTime_ >= kBonusFadeDuration) {
       bonusTallyPhase_ = BonusTallyPhase::Done;
-      queueNextLevel();
+      completionPhase_ = CompletionPhase::Playing;
+      victoryCelebrationStarted_ = false;
+      victoryCelebrationComplete_ = false;
+      if (completionOverlay_ != nullptr) {
+        completionOverlay_->config.params0 = {victoryTime_, 0.0f, 1.0f, 1.0f};
+        completionOverlay_->config.params1 = {0.0f, 0.0f, 0.0f, 0.0f};
+      }
+      if (completionTitle_ != nullptr) {
+        completionTitle_->setTextColor({0.64f, 0.96f, 1.0f, 0.0f});
+        completionTitle_->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+      }
+      if (completionSubtitle_ != nullptr) {
+        completionSubtitle_->setTextColor({1.0f, 0.72f, 0.28f, 0.0f});
+        completionSubtitle_->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+      }
     }
     break;
   case BonusTallyPhase::Energy: {
@@ -1440,7 +1539,7 @@ void DeflektorishScene::updateBonusTally(float dt) {
     }
     scoreAdvanced = displayedEnergyBonus_ != previous;
     if (displayedEnergyBonus_ >= energyBonus_ &&
-        bonusPhaseTime_ >= kBonusLineDelay + 0.24f) {
+        bonusPhaseTime_ >= kBonusLineDelay + 0.12f) {
       bonusTallyPhase_ = BonusTallyPhase::Time;
       bonusPhaseTime_ = 0.0f;
       bonusEnergyFlash_ = 1.0f;
@@ -1455,7 +1554,7 @@ void DeflektorishScene::updateBonusTally(float dt) {
     }
     scoreAdvanced = displayedTimeBonus_ != previous;
     if (displayedTimeBonus_ >= timeBonus_ &&
-        bonusPhaseTime_ >= kBonusLineDelay + 0.24f) {
+        bonusPhaseTime_ >= kBonusLineDelay + 0.12f) {
       bonusTallyPhase_ = BonusTallyPhase::Total;
       bonusPhaseTime_ = 0.0f;
       bonusTimeFlash_ = 1.0f;
@@ -1470,6 +1569,7 @@ void DeflektorishScene::updateBonusTally(float dt) {
     }
     scoreAdvanced = displayedTotalBonus_ != previous;
     if (displayedTotalBonus_ >= totalBonus_) {
+      campaignScore_ = totalBonus_;
       bonusTallyPhase_ = BonusTallyPhase::Hold;
       bonusPhaseTime_ = 0.0f;
       bonusTotalFlash_ = 1.0f;
@@ -1580,20 +1680,12 @@ int DeflektorishScene::advanceDisplayedScore(int current, int target,
     return target;
   }
 
-  const float progress =
-      target > 0 ? std::clamp(static_cast<float>(current) /
-                                  static_cast<float>(target),
-                              0.0f, 1.0f)
-                 : 1.0f;
-  const float arcadeEnvelope =
-      0.55f + std::sin(progress * 3.1415926535f) * (total ? 1.35f : 1.05f);
-  const float desiredTicks = total ? 18.0f : 12.0f;
-  const float rawStep =
-      static_cast<float>(target) / desiredTicks * arcadeEnvelope;
-  const int quantum = total ? 100 : 50;
+  const float desiredTicks = total ? 10.0f : 8.0f;
+  const float rawStep = static_cast<float>(target) / desiredTicks;
+  const int quantum = 100;
   int step = static_cast<int>(std::round(rawStep / static_cast<float>(quantum))) *
              quantum;
-  step = std::clamp(step, quantum, total ? 1400 : 700);
+  step = std::clamp(step, quantum, total ? 1800 : 1000);
   if (remaining <= step + quantum) {
     return target;
   }

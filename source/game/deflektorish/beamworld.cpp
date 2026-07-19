@@ -424,6 +424,23 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
         if (nearest.passesFilter) {
           const glm::vec2 exitPoint =
               ray.origin + ray.rayDir * nearest.exitDistance;
+          for (std::size_t i = 0; i < world.targets.size(); ++i) {
+            const Target &target = world.targets[i];
+            if (!target.alive || result.hitTargets[i]) {
+              continue;
+            }
+            const glm::vec2 toTarget = target.position - ray.origin;
+            const float projected = glm::dot(toTarget, ray.rayDir);
+            if (projected < nearest.distance - kEpsilon ||
+                projected > nearest.exitDistance + kEpsilon) {
+              continue;
+            }
+            const glm::vec2 closest = ray.origin + ray.rayDir * projected;
+            if (glm::length(target.position - closest) <= kTargetRadius) {
+              result.hitTargets[i] = true;
+              result.targetEnergy[i] = ray.energy;
+            }
+          }
           addSegment(result, ray.visualOrigin, exitPoint, ray.energy,
                      maxSegments, BeamSegmentEnd::Filter);
           result.passingFilters[nearest.index] = true;

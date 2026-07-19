@@ -38,4 +38,21 @@ TEST(DeflektorishBeamWorldTest, SplitterCreatesTwoBranches) {
   EXPECT_LT(result.segments[2].end.y, 0.0f);
 }
 
+TEST(DeflektorishBeamWorldTest, PassingFilterCanHitTargetInsideFilter) {
+  Deflektorish::BeamWorld world;
+  world.sourcePosition = {0.0f, 0.0f};
+  world.sourceAngle = 0.0f;
+  world.filters.push_back({{100.0f, 0.0f}, 0.0f});
+  world.targets.push_back({{100.0f, 0.0f}, true});
+
+  const Deflektorish::BeamSolveResult result =
+      Deflektorish::solveBeamWorld(world, 4);
+
+  ASSERT_EQ(result.hitTargets.size(), 1u);
+  ASSERT_EQ(result.passingFilters.size(), 1u);
+  EXPECT_TRUE(result.passingFilters[0]);
+  EXPECT_FALSE(result.blockedFilters[0]);
+  EXPECT_TRUE(result.hitTargets[0]);
+}
+
 } // namespace

@@ -122,6 +122,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
     result = inactiveBeamResult();
   }
   renderer_.updateBeamSegments(result);
+  renderer_.updateBeamPulse(elapsed_, gameplayActive ? 0.66f : 0.0f);
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
   updateBlockerVisuals(ctx.delta_time, result);

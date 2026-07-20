@@ -68,6 +68,17 @@ void Renderer::updateBeamSegments(const BeamSolveResult &result) {
   }
 }
 
+void Renderer::updateBeamPulse(float elapsed, float strength) {
+  for (std::size_t i = 0; i < beamSegments_.size(); ++i) {
+    BeamSegmentNode &segment = beamSegments_[i];
+    if (!segment.visible) {
+      continue;
+    }
+    const float phase = static_cast<float>(i) * 0.19f;
+    setBeamPulseParams(segment.node, elapsed, strength, phase);
+  }
+}
+
 std::size_t Renderer::beamSegmentCapacity() const {
   return beamSegments_.size();
 }
@@ -214,6 +225,7 @@ void Renderer::layoutSegment(BeamSegmentNode &segment, glm::vec2 start,
                                energizedThickness * 0.5f * kPixelToWorld,
                                1.0f});
   segment.energy = energy;
+  segment.visible = true;
   setBeamSegmentParams(segment.node, energy, length, 160.0f);
 }
 
@@ -224,6 +236,7 @@ void Renderer::hideSegment(BeamSegmentNode &segment) {
   segment.node->setLocalPosition({-100.0f, -100.0f, 0.0f});
   segment.node->setLocalScale({0.001f, 0.001f, 1.0f});
   segment.energy = 0.0f;
+  segment.visible = false;
   clearShaderParams(segment.node);
 }
 

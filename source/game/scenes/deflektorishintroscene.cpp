@@ -512,6 +512,7 @@ void DeflektorishIntroScene::updateLiveShowcase(float dt) {
     result.segments.back().end = sink->position;
   }
   renderer_.updateBeamSegments(result);
+  renderer_.updateBeamPulse(elapsed_, 0.92f);
   if (source != nullptr) {
     renderer_.updateSource(source->node, elapsed_ + source->phase, 0.8f, 1.0f);
   }

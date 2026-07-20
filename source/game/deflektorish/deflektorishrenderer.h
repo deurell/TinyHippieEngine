@@ -21,6 +21,7 @@ public:
                           DL::RenderResourceCache *renderResourceCache,
                           int maxSegments);
   void updateBeamSegments(const BeamSolveResult &result);
+  void updateBeamPulse(float elapsed, float strength);
   void updateSource(DL::ShaderPlaneNode *node, float elapsed, float pulse,
                     float load);
   void updateReflektor(DL::ShaderPlaneNode *node, float &glow, bool active,
@@ -54,6 +55,7 @@ private:
   struct BeamSegmentNode {
     DL::ShaderPlaneNode *node = nullptr;
     float energy = 0.0f;
+    bool visible = false;
   };
 
   void layoutSegment(BeamSegmentNode &segment, glm::vec2 start, glm::vec2 end,

@@ -85,6 +85,13 @@ inline void setBeamSegmentParams(DL::ShaderPlaneNode *node, float energy,
   }
 }
 
+inline void setBeamPulseParams(DL::ShaderPlaneNode *node, float elapsed,
+                               float strength, float phase) {
+  if (node != nullptr) {
+    node->config.params1 = {elapsed, strength, phase, 0.0f};
+  }
+}
+
 inline void clearShaderParams(DL::ShaderPlaneNode *node) {
   if (node != nullptr) {
     node->config.params0 = {0.0f, 0.0f, 0.0f, 0.0f};

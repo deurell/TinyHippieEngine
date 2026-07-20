@@ -56,6 +56,13 @@ vec4 shadeBeam(vec2 uv) {
     float filament = smoothstep(0.032 + energy * 0.003, 0.000, abs(p.y - center + sin(beamX * 13.0 + beamTime * 1.7) * (0.028 + energy * 0.003)));
     float sparks = pow(max(0.0, sin(beamX * 37.0 - beamTime * 2.4)), 18.0) *
                    smoothstep(0.18, 0.0, y);
+    float pulseStrength = clamp(proceduralParams2.y, 0.0, 1.0);
+    float pulseCenter = fract(proceduralParams2.x * 0.86 - proceduralParams2.z);
+    float pulseDistance = abs(fract(uv.x - pulseCenter + 0.5) - 0.5);
+    float packet = (1.0 - smoothstep(0.020, 0.155, pulseDistance)) *
+                   smoothstep(0.24, 0.0, y) * edgeMatch * pulseStrength;
+    float packetTail = (1.0 - smoothstep(0.10, 0.34, pulseDistance)) *
+                       smoothstep(0.38, 0.0, y) * edgeMatch * pulseStrength;
     vec3 electric = vec3(0.55, 0.92, 1.0);
     vec3 plasma = vec3(1.0, 0.45, 0.92);
     vec3 hot = vec3(1.0, 0.92, 1.0);
@@ -67,11 +74,14 @@ vec4 shadeBeam(vec2 uv) {
     color += vec3(1.0) * innerCore * (1.36 + energy * 0.24);
     color += beamColor * filament * (0.40 + energy * 0.14);
     color += vec3(1.0, 0.86, 1.0) * sparks * (0.55 + energy * 0.18);
+    color += vec3(1.0, 0.98, 0.82) * packet * (1.35 + energy * 0.16);
+    color += beamColor * packetTail * (0.58 + energy * 0.08);
     color *= spearMask;
     float alpha = clamp(glow * (0.55 + energy * 0.035) +
                         halo * (0.10 + energy * 0.018) +
                         core * (0.65 + energy * 0.044) +
-                        filament * (0.20 + energy * 0.02) + sparks * 0.27,
+                        filament * (0.20 + energy * 0.02) + sparks * 0.27 +
+                        packet * 0.36 + packetTail * 0.15,
                         0.0, 0.76 + energy * 0.035);
     alpha *= spearMask;
     return vec4(color, alpha);

@@ -512,7 +512,7 @@ void DeflektorishIntroScene::updateLiveShowcase(float dt) {
     result.segments.back().end = sink->position;
   }
   renderer_.updateBeamSegments(result);
-  renderer_.updateBeamPulse(elapsed_, 0.92f);
+  renderer_.updateBeamPulse(elapsed_, 0.92f, 0.0f);
   if (source != nullptr) {
     renderer_.updateSource(source->node, elapsed_ + source->phase, 0.8f, 1.0f);
   }
@@ -531,8 +531,14 @@ void DeflektorishIntroScene::updateLiveShowcase(float dt) {
         i < result.activeReflektors.size() && result.activeReflektors[i];
     const float energy =
         i < result.reflektorEnergy.size() ? result.reflektorEnergy[i] : 0.0f;
+    if (i < result.reflektorHasHit.size() && result.reflektorHasHit[i]) {
+      reflektor.hitPoint = result.reflektorHit[i];
+    }
     renderer_.updateReflektor(reflektor.node, reflektor.glow, active, true,
-                              false, energy, dt);
+                              false, energy,
+                              i < result.reflektorHasHit.size() &&
+                                  result.reflektorHasHit[i],
+                              reflektor.hitPoint, dt);
   }
 
   const float breathe = 0.78f + 0.22f * std::sin(elapsed_ * 0.85f);

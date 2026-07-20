@@ -21,11 +21,12 @@ public:
                           DL::RenderResourceCache *renderResourceCache,
                           int maxSegments);
   void updateBeamSegments(const BeamSolveResult &result);
-  void updateBeamPulse(float elapsed, float strength);
+  void updateBeamPulse(float elapsed, float strength, float danger);
   void updateSource(DL::ShaderPlaneNode *node, float elapsed, float pulse,
                     float load);
   void updateReflektor(DL::ShaderPlaneNode *node, float &glow, bool active,
-                       bool automatic, bool selected, float energy, float dt);
+                       bool automatic, bool selected, float energy,
+                       bool hasHit, glm::vec2 hit, float dt);
   void updateBlocker(DL::ShaderPlaneNode *node, float &glow,
                      float &storedEnergy, glm::vec2 &hitPoint, bool active,
                      float energy, bool hasHit, glm::vec2 hit, float dt);

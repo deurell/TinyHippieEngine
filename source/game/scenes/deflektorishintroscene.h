@@ -50,6 +50,7 @@ private:
     float speed = 1.0f;
     float phase = 0.0f;
     float glow = 0.0f;
+    glm::vec2 hitPoint{0.0f};
     DL::ShaderPlaneNode *node = nullptr;
   };
 

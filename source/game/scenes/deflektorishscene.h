@@ -68,6 +68,7 @@ private:
     float speed = 0.0f;
     float phase = 0.0f;
     float glow = 0.0f;
+    glm::vec2 hitPoint{0.0f};
     std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
   };
@@ -286,6 +287,7 @@ private:
   float sourcePulse_ = 0.0f;
   float sourceLoad_ = 0.0f;
   float sourceLoadTarget_ = 0.0f;
+  float beamDangerVisual_ = 0.0f;
   Deflektorish::BeamEnergyConfig beamEnergyConfig_;
   Deflektorish::BeamEnergyState beamEnergy_;
   Deflektorish::Campaign campaign_;

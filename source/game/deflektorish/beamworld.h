@@ -56,6 +56,8 @@ struct BeamSolveResult {
   std::vector<BeamSegment> segments;
   std::vector<bool> activeReflektors;
   std::vector<float> reflektorEnergy;
+  std::vector<glm::vec2> reflektorHit;
+  std::vector<bool> reflektorHasHit;
   std::vector<bool> activeBlockers;
   std::vector<float> blockerEnergy;
   std::vector<glm::vec2> blockerHit;

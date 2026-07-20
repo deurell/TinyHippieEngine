@@ -13,10 +13,15 @@ inline void setSourceParams(DL::ShaderPlaneNode *node, float elapsed,
 }
 
 inline void setReflectorParams(DL::ShaderPlaneNode *node, float glow,
-                               bool automatic, bool selected, float energy) {
+                               bool automatic, bool selected, float energy,
+                               bool hasHit = false,
+                               glm::vec2 hitPoint = glm::vec2(0.0f)) {
   if (node != nullptr) {
     node->config.params0 = {glow, automatic ? 1.0f : 0.0f,
                             selected ? 1.0f : 0.0f, energy / 3.0f};
+    node->config.params1.x = hitPoint.x;
+    node->config.params1.y = hitPoint.y;
+    node->config.params1.w = hasHit ? 1.0f : 0.0f;
   }
 }
 
@@ -86,9 +91,9 @@ inline void setBeamSegmentParams(DL::ShaderPlaneNode *node, float energy,
 }
 
 inline void setBeamPulseParams(DL::ShaderPlaneNode *node, float elapsed,
-                               float strength, float phase) {
+                               float strength, float phase, float danger) {
   if (node != nullptr) {
-    node->config.params1 = {elapsed, strength, phase, 0.0f};
+    node->config.params1 = {elapsed, strength, phase, danger};
   }
 }
 

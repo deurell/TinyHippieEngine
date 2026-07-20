@@ -84,6 +84,8 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
   BeamSolveResult result;
   result.activeReflektors.assign(world.reflektors.size(), false);
   result.reflektorEnergy.assign(world.reflektors.size(), 0.0f);
+  result.reflektorHit.assign(world.reflektors.size(), glm::vec2(0.0f));
+  result.reflektorHasHit.assign(world.reflektors.size(), false);
   result.activeBlockers.assign(world.blockers.size(), false);
   result.blockerEnergy.assign(world.blockers.size(), 0.0f);
   result.blockerHit.assign(world.blockers.size(), glm::vec2(0.0f));
@@ -358,6 +360,11 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
             reflectAcrossMirror(ray.rayDir, nearest.mirrorDir);
         result.activeReflektors[nearest.index] = true;
         result.reflektorEnergy[nearest.index] = ray.energy;
+        result.reflektorHit[nearest.index] =
+            rotateVec(nearest.point - world.reflektors[nearest.index].position,
+                      -world.reflektors[nearest.index].angle) /
+            (kMirrorLength * 0.5f);
+        result.reflektorHasHit[nearest.index] = true;
         addSegment(result, ray.visualOrigin,
                    nearest.point - ray.rayDir * stopGap, ray.energy,
                    maxSegments, BeamSegmentEnd::Reflektor);

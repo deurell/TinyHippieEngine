@@ -122,7 +122,8 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
     result = inactiveBeamResult();
   }
   renderer_.updateBeamSegments(result);
-  renderer_.updateBeamPulse(elapsed_, gameplayActive ? 0.66f : 0.0f);
+  renderer_.updateBeamPulse(elapsed_, gameplayActive ? 0.66f : 0.0f,
+                            gameplayActive ? beamDangerVisual_ : 0.0f);
   updateSource(ctx.delta_time, result);
   updateReflektorVisuals(ctx.delta_time, result);
   updateBlockerVisuals(ctx.delta_time, result);
@@ -948,6 +949,8 @@ DeflektorishScene::BeamResult DeflektorishScene::inactiveBeamResult() const {
   BeamResult result;
   result.activeReflektors.assign(activeReflektorIndices_.size(), false);
   result.reflektorEnergy.assign(activeReflektorIndices_.size(), 0.0f);
+  result.reflektorHit.assign(activeReflektorIndices_.size(), glm::vec2(0.0f));
+  result.reflektorHasHit.assign(activeReflektorIndices_.size(), false);
   result.activeBlockers.assign(activeBlockerIndices_.size(), false);
   result.blockerEnergy.assign(activeBlockerIndices_.size(), 0.0f);
   result.blockerHit.assign(activeBlockerIndices_.size(), glm::vec2(0.0f));
@@ -984,6 +987,13 @@ void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
             std::max(beamEnergyConfig_.maxDrainPerSecond, 0.001f),
         elapsed_);
   }
+  const float visualDrainRange =
+      std::max(beamEnergyConfig_.selfCrossDrainPerSecond * 3.0f, 0.001f);
+  const float drainRatio = beamEnergy_.drainPerSecond / visualDrainRange;
+  const float targetVisual =
+      std::clamp(std::max(beamEnergy_.danger, drainRatio), 0.0f, 1.0f);
+  beamDangerVisual_ = approach(beamDangerVisual_, targetVisual,
+                               std::clamp(dt * 14.0f, 0.0f, 1.0f));
 }
 
 glm::vec2 DeflektorishScene::postBumpUvForWorld(glm::vec2 worldPosition) const {
@@ -1074,12 +1084,16 @@ void DeflektorishScene::updateReflektorVisuals(float dt,
   for (std::size_t activeIndex = 0; activeIndex < activeReflektorIndices_.size();
        ++activeIndex) {
     Reflektor &reflektor = reflektors_[activeReflektorIndices_[activeIndex]];
+    if (result.reflektorHasHit[activeIndex]) {
+      reflektor.hitPoint = result.reflektorHit[activeIndex];
+    }
     renderer_.updateReflektor(
         reflektor.node, reflektor.glow, result.activeReflektors[activeIndex],
         reflektor.automatic,
         selectedReflektor_ ==
             static_cast<int>(activeReflektorIndices_[activeIndex]),
-        result.reflektorEnergy[activeIndex], dt);
+        result.reflektorEnergy[activeIndex],
+        result.reflektorHasHit[activeIndex], reflektor.hitPoint, dt);
   }
 }
 

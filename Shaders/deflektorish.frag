@@ -19,6 +19,10 @@ float softDiskSq(vec2 p, float radius) {
     return 1.0 - smoothstep(0.0, radius * radius, dot(p, p));
 }
 
+float softLengthMaskSq(vec2 p, float radius) {
+    return 1.0 - smoothstep(0.0, radius * radius, dot(p, p));
+}
+
 float sdBox(vec2 p, vec2 halfSize) {
     vec2 d = abs(p) - halfSize;
     return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0);
@@ -43,7 +47,10 @@ vec4 shadeBeam(vec2 uv) {
     float beamX = p.x * lengthScale / referenceLength;
     float edgeMatch = smoothstep(0.0, 0.045, uv.x) *
                       smoothstep(0.0, 0.045, 1.0 - uv.x);
-    float width = 0.18 + energy * 0.026;
+    float danger = clamp(proceduralParams2.w, 0.0, 1.0);
+    float dangerPulse = danger * (0.55 + 0.45 * sin(beamTime * 2.7 + beamX * 0.18));
+    float dangerFlicker = danger * (0.65 + 0.35 * sin(beamTime * 8.0 + beamX * 0.55));
+    float width = 0.18 + energy * 0.026 - danger * 0.025;
     float center = electroNoise(vec2(beamX, p.y), beamTime) * width * edgeMatch;
     float y = abs(p.y - center);
     float endTaper = smoothstep(0.54, 1.0, abs(p.x));
@@ -51,11 +58,15 @@ vec4 shadeBeam(vec2 uv) {
     float spearMask = 1.0 - smoothstep(spearHalfWidth, spearHalfWidth + 0.13, y);
     float glow = clamp(1.0 - pow(max(y, 0.0001), 0.20 + energy * 0.010), 0.0, 1.0);
     float halo = 1.0 - smoothstep(0.0, 0.85 + energy * 0.065, y);
-    float core = smoothstep(0.052 + energy * 0.012, 0.000, y);
-    float innerCore = smoothstep(0.022 + energy * 0.006, 0.000, y);
+    float core = smoothstep(0.052 + energy * 0.012 - danger * 0.010, 0.000, y);
+    float innerCore = smoothstep(0.022 + energy * 0.006 - danger * 0.004, 0.000, y);
     float filament = smoothstep(0.032 + energy * 0.003, 0.000, abs(p.y - center + sin(beamX * 13.0 + beamTime * 1.7) * (0.028 + energy * 0.003)));
-    float sparks = pow(max(0.0, sin(beamX * 37.0 - beamTime * 2.4)), 18.0) *
-                   smoothstep(0.18, 0.0, y);
+    float sparkWave = max(0.0, sin(beamX * 37.0 - beamTime * 2.4));
+    float spark2 = sparkWave * sparkWave;
+    float spark4 = spark2 * spark2;
+    float spark8 = spark4 * spark4;
+    float sparks = spark8 * spark8 * spark2;
+    sparks *= smoothstep(0.18, 0.0, y);
     float pulseStrength = clamp(proceduralParams2.y, 0.0, 1.0);
     float pulseCenter = fract(proceduralParams2.x * 0.86 - proceduralParams2.z);
     float pulseDistance = abs(fract(uv.x - pulseCenter + 0.5) - 0.5);
@@ -65,15 +76,22 @@ vec4 shadeBeam(vec2 uv) {
                        smoothstep(0.38, 0.0, y) * edgeMatch * pulseStrength;
     vec3 electric = vec3(0.55, 0.92, 1.0);
     vec3 plasma = vec3(1.0, 0.45, 0.92);
+    vec3 warning = vec3(1.0, 0.30, 0.10);
     vec3 hot = vec3(1.0, 0.92, 1.0);
-    vec3 beamColor = mix(electric, plasma, energy01 * 0.42) * baseColor.rgb;
+    vec3 beamColor = mix(electric, plasma, energy01 * 0.42);
+    beamColor = mix(beamColor, warning, danger * (0.34 + dangerPulse * 0.30)) * baseColor.rgb;
     float intensity = 1.0 + energy * 0.19;
     vec3 color = beamColor * glow * 1.20 * intensity + beamColor * halo * (0.34 + energy * 0.035) * intensity;
     color *= mix(vec3(1.0), color, 0.68);
-    color += mix(vec3(1.0, 0.96, 1.0), hot, energy01 * 0.65) * core * (1.44 + energy * 0.18);
-    color += vec3(1.0) * innerCore * (1.36 + energy * 0.24);
+    color += mix(vec3(1.0, 0.96, 1.0), hot, energy01 * 0.65) * core *
+             (1.44 + energy * 0.18 - danger * 0.55);
+    color += vec3(1.0) * innerCore * (1.36 + energy * 0.24 - danger * 0.52);
+    color += warning * glow * danger * (0.62 + dangerPulse * 0.40);
+    color += warning * halo * danger * (0.38 + dangerFlicker * 0.36);
     color += beamColor * filament * (0.40 + energy * 0.14);
     color += vec3(1.0, 0.86, 1.0) * sparks * (0.55 + energy * 0.18);
+    color += warning * sparks * danger * (1.45 + dangerPulse * 1.10);
+    color += warning * filament * danger * (0.92 + dangerPulse * 0.60);
     color += vec3(1.0, 0.98, 0.82) * packet * (1.35 + energy * 0.16);
     color += beamColor * packetTail * (0.58 + energy * 0.08);
     color *= spearMask;
@@ -83,6 +101,7 @@ vec4 shadeBeam(vec2 uv) {
                         filament * (0.20 + energy * 0.02) + sparks * 0.27 +
                         packet * 0.36 + packetTail * 0.15,
                         0.0, 0.76 + energy * 0.035);
+    alpha = clamp(alpha + danger * (0.08 + dangerFlicker * 0.05), 0.0, 0.94);
     alpha *= spearMask;
     return vec4(color, alpha);
 }
@@ -146,7 +165,7 @@ vec4 shadeBlocker(vec2 uv, bool reflective) {
     float border = max(smoothstep(0.72, 0.79, ap.x),
                        smoothstep(0.72, 0.79, ap.y)) * box;
     float inner = (1.0 - border) * box;
-    float depth = 1.0 - smoothstep(0.0, 0.92, length(p * vec2(0.85, 1.1)));
+    float depth = softLengthMaskSq(p * vec2(0.85, 1.1), 0.92);
     vec3 solid = vec3(0.10, 0.13, 0.17) * inner +
                  vec3(0.07, 0.10, 0.13) * depth * inner +
                  vec3(0.38, 0.46, 0.54) * border;
@@ -160,7 +179,7 @@ vec4 shadeBlocker(vec2 uv, bool reflective) {
     vec3 beamColor = mix(vec3(0.55, 0.92, 1.0), vec3(1.0, 0.45, 0.92), energy * 0.65);
     vec2 hitDelta = p - hitPoint;
     float hitDistanceSq = dot(hitDelta, hitDelta);
-    vec2 hitDir = normalize(hitPoint + vec2(0.0001));
+    vec2 hitDir = hitPoint * inversesqrt(max(dot(hitPoint, hitPoint), 0.0001));
     float alongHit = max(dot(hitDelta, -hitDir), 0.0);
     float acrossHit = abs(hitDelta.x * hitDir.y - hitDelta.y * hitDir.x);
     float localBloom = (1.0 - smoothstep(0.0, 1.72 * 1.72, hitDistanceSq)) * glow * box;
@@ -184,6 +203,8 @@ vec4 shadeReflector(vec2 uv, bool automatic) {
     float glow = clamp(proceduralParams.x, 0.0, 1.0);
     float selected = clamp(proceduralParams.z, 0.0, 1.0);
     float energy = clamp(proceduralParams.w, 0.0, 1.0);
+    vec2 hitPoint = vec2(clamp(proceduralParams2.x, -1.0, 1.0), 0.0);
+    float hasHit = clamp(proceduralParams2.w, 0.0, 1.0);
     vec3 manualBase = vec3(0.58, 0.86, 1.0);
     vec3 autoBase = vec3(1.0, 0.60, 0.28);
     vec3 base = automatic ? autoBase : manualBase;
@@ -191,12 +212,27 @@ vec4 shadeReflector(vec2 uv, bool automatic) {
     vec3 color = mix(edge, base, bevel);
     color += vec3(0.18, 0.28, 0.32) * shine;
     vec3 beamColor = mix(vec3(0.42, 0.78, 0.95), vec3(0.86, 0.36, 0.78), energy * 0.55);
+    vec2 hitDelta = p - hitPoint;
+    float contact = softLengthMaskSq(hitDelta * vec2(0.88, 2.45), 0.46) *
+                    glow * hasHit;
+    float contactLine = (1.0 - smoothstep(0.020, 0.135, abs(p.y))) *
+                        (1.0 - smoothstep(0.0, 0.70, abs(hitDelta.x))) *
+                        glow * hasHit;
+    float contactSpark = softLengthMaskSq(hitDelta * vec2(0.55, 2.20), 0.26) *
+                         glow * hasHit;
     color += beamColor * glow * body * (0.22 + energy * 0.22);
     color += beamColor * shine * glow * (0.18 + energy * 0.16);
     color += vec3(1.0) * selected * body * 0.45;
     color = min(color, vec3(1.15));
-    float regularAlpha = clamp(body + glow * 0.16 + selected * 0.25, 0.0, 1.0);
-    float occlusionAlpha = clamp(max(occlusionBody, glow * 0.16 + selected * 0.25), 0.0, 1.0);
+    color += beamColor * contactLine * (0.95 + energy * 0.38);
+    color += beamColor * contact * (1.95 + energy * 0.72);
+    color += vec3(1.0, 0.95, 1.0) * contactSpark * (2.25 + energy * 0.85);
+    float regularAlpha = clamp(body + glow * 0.16 + selected * 0.25 +
+                               contact * 0.18 + contactSpark * 0.18,
+                               0.0, 1.0);
+    float occlusionAlpha = clamp(max(occlusionBody, glow * 0.16 + selected * 0.25) +
+                                 contact * 0.18 + contactSpark * 0.18,
+                                 0.0, 1.0);
     float alpha = mix(regularAlpha, occlusionAlpha, clamp(proceduralParams2.z, 0.0, 1.0));
     return vec4(color, clamp(alpha, 0.0, 1.0));
 }
@@ -219,9 +255,8 @@ vec4 shadeSelection(vec2 uv) {
                      smoothstep(0.40, 0.56, ap.x) *
                      (1.0 - smoothstep(0.74, 0.94, ap.x));
     float brackets = max(bracketX, bracketY) * outerCorner;
-    vec2 dir = normalize(p + vec2(0.0001));
     vec2 sweepDir = vec2(cos(iTime * 2.4), sin(iTime * 2.4));
-    float sweep = 1.0 - smoothstep(0.0, 0.13, abs(dot(dir, sweepDir)));
+    float sweep = 1.0 - smoothstep(0.0, 0.13, abs(dot(p, sweepDir)));
     float arc = ring(d, 0.58, 0.045) * sweep;
     float innerRing = ring(d, 0.31 + flash * 0.045, 0.035);
     float popRing = ring(d, mix(0.34, 0.76, 1.0 - flash), 0.10 + flash * 0.05) * flash;
@@ -244,7 +279,8 @@ vec4 shadePortal(vec2 uv) {
     vec2 hitPoint = proceduralParams2.xy;
     float spin = t * mix(0.62, -0.58, side) + phase * 6.28318;
     vec2 axis = vec2(cos(spin), sin(spin));
-    vec2 dir = normalize(p + vec2(0.0001));
+    float invD = inversesqrt(max(dot(p, p), 0.0001));
+    vec2 dir = p * invD;
     float pulse = 0.5 + 0.5 * sin(t * (1.65 + portalActive * 1.5) + phase * 6.28318);
     float outer = ring(d, 0.63 + pulse * 0.026 + portalActive * 0.035,
                        0.105 + portalActive * 0.030);
@@ -254,9 +290,9 @@ vec4 shadePortal(vec2 uv) {
     float crescent = smoothstep(0.16, 0.95, dot(dir, axis)) *
                      (1.0 - smoothstep(0.25, 0.78, d)) *
                      (0.35 + portalActive * 0.65);
-    float softMouth = 1.0 - smoothstep(0.0, 0.58 + portalActive * 0.08,
-                                       length(p * vec2(0.82, 1.10)));
-    vec2 hitDir = normalize(hitPoint + vec2(0.0001));
+    float softMouth = softLengthMaskSq(p * vec2(0.82, 1.10),
+                                       0.58 + portalActive * 0.08);
+    vec2 hitDir = hitPoint * inversesqrt(max(dot(hitPoint, hitPoint), 0.0001));
     float sideDot = max(dot(dir, hitDir), 0.0);
     float sideDot2 = sideDot * sideDot;
     float sideLight = sideDot2 * sideDot2 * sideDot * portalActive;
@@ -298,7 +334,7 @@ vec4 shadeFilter(vec2 uv) {
     float box = 1.0 - smoothstep(0.86, 0.96, max(ap.x, ap.y));
     float frame = max(smoothstep(0.70, 0.82, ap.x),
                       smoothstep(0.70, 0.82, ap.y)) * box;
-    float depth = (1.0 - smoothstep(0.0, 1.05, length(p * vec2(0.95, 1.10)))) * box;
+    float depth = softLengthMaskSq(p * vec2(0.95, 1.10), 1.05) * box;
     float gateLineA = 1.0 - smoothstep(0.018, 0.055, abs(p.y - 0.44));
     float gateLineB = 1.0 - smoothstep(0.018, 0.055, abs(p.y - 0.22));
     float gateLineC = 1.0 - smoothstep(0.018, 0.055, abs(p.y));

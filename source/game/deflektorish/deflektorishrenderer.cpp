@@ -68,14 +68,14 @@ void Renderer::updateBeamSegments(const BeamSolveResult &result) {
   }
 }
 
-void Renderer::updateBeamPulse(float elapsed, float strength) {
+void Renderer::updateBeamPulse(float elapsed, float strength, float danger) {
   for (std::size_t i = 0; i < beamSegments_.size(); ++i) {
     BeamSegmentNode &segment = beamSegments_[i];
     if (!segment.visible) {
       continue;
     }
     const float phase = static_cast<float>(i) * 0.19f;
-    setBeamPulseParams(segment.node, elapsed, strength, phase);
+    setBeamPulseParams(segment.node, elapsed, strength, phase, danger);
   }
 }
 
@@ -90,9 +90,10 @@ void Renderer::updateSource(DL::ShaderPlaneNode *node, float elapsed,
 
 void Renderer::updateReflektor(DL::ShaderPlaneNode *node, float &glow,
                                bool active, bool automatic, bool selected,
-                               float energy, float dt) {
+                               float energy, bool hasHit, glm::vec2 hit,
+                               float dt) {
   glow = approach(glow, active ? 1.0f : 0.0f, dt * kReflektorGlowSpeed);
-  setReflectorParams(node, glow, automatic, selected, energy);
+  setReflectorParams(node, glow, automatic, selected, energy, hasHit, hit);
 }
 
 void Renderer::updateBlocker(DL::ShaderPlaneNode *node, float &glow,

@@ -46,6 +46,9 @@ vec4 shadeBeam(vec2 uv) {
     float width = 0.18 + energy * 0.026;
     float center = electroNoise(vec2(beamX, p.y), beamTime) * width * edgeMatch;
     float y = abs(p.y - center);
+    float endTaper = smoothstep(0.54, 1.0, abs(p.x));
+    float spearHalfWidth = mix(width * 1.72, 0.030 + energy * 0.004, endTaper);
+    float spearMask = 1.0 - smoothstep(spearHalfWidth, spearHalfWidth + 0.13, y);
     float glow = clamp(1.0 - pow(max(y, 0.0001), 0.20 + energy * 0.010), 0.0, 1.0);
     float halo = 1.0 - smoothstep(0.0, 0.85 + energy * 0.065, y);
     float core = smoothstep(0.052 + energy * 0.012, 0.000, y);
@@ -64,11 +67,13 @@ vec4 shadeBeam(vec2 uv) {
     color += vec3(1.0) * innerCore * (1.36 + energy * 0.24);
     color += beamColor * filament * (0.40 + energy * 0.14);
     color += vec3(1.0, 0.86, 1.0) * sparks * (0.55 + energy * 0.18);
+    color *= spearMask;
     float alpha = clamp(glow * (0.55 + energy * 0.035) +
                         halo * (0.10 + energy * 0.018) +
                         core * (0.65 + energy * 0.044) +
                         filament * (0.20 + energy * 0.02) + sparks * 0.27,
                         0.0, 0.76 + energy * 0.035);
+    alpha *= spearMask;
     return vec4(color, alpha);
 }
 

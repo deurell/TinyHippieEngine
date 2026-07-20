@@ -127,6 +127,7 @@ void DeflektorishIntroScene::init() {
   createInitialsEntry();
   pressFire_ = addText("PRESS FIRE", {480.0f, 146.0f}, 24.0f,
                        {1.0f, 0.82f, 0.32f, 0.0f}, 12);
+  pressFire_->setShadowColor({0.0f, 0.03f, 0.05f, 0.0f});
   addCredits();
   transitionOverlay_ =
       addPlane("intro_start_transition",
@@ -168,8 +169,10 @@ void DeflektorishIntroScene::update(const DL::FrameContext &ctx) {
                                          ? 1.0f - startTransition_.progress()
                                          : 1.0f)
                                   : 0.0f;
+    const float alpha = (0.48f + blink * 0.48f) * fade;
     pressFire_->setTextColor({1.0f, 0.62f + blink * 0.28f, 0.20f,
-                              (0.48f + blink * 0.48f) * fade});
+                              alpha});
+    pressFire_->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
   }
   if (!enteringInitials_) {
     updateAttractPage();

@@ -165,7 +165,7 @@ vec4 shadeReflector(vec2 uv, bool automatic) {
     float body = 1.0 - smoothstep(0.72, 0.92, abs(p.y));
     float occlusionBody = 1.0 - smoothstep(0.86, 0.94, abs(p.y));
     float bevel = smoothstep(0.82, 0.20, abs(p.x));
-    float shine = smoothstep(0.16, 0.0, abs(p.y + p.x * 0.18 - 0.22));
+    float shine = 1.0 - smoothstep(0.0, 0.10, abs(p.y - 0.22));
     float glow = clamp(proceduralParams.x, 0.0, 1.0);
     float selected = clamp(proceduralParams.z, 0.0, 1.0);
     float energy = clamp(proceduralParams.w, 0.0, 1.0);
@@ -174,7 +174,7 @@ vec4 shadeReflector(vec2 uv, bool automatic) {
     vec3 base = automatic ? autoBase : manualBase;
     vec3 edge = automatic ? vec3(0.45, 0.20, 0.08) : vec3(0.12, 0.30, 0.45);
     vec3 color = mix(edge, base, bevel);
-    color += vec3(0.36, 0.60, 0.68) * shine;
+    color += vec3(0.18, 0.28, 0.32) * shine;
     vec3 beamColor = mix(vec3(0.42, 0.78, 0.95), vec3(0.86, 0.36, 0.78), energy * 0.55);
     color += beamColor * glow * body * (0.22 + energy * 0.22);
     color += beamColor * shine * glow * (0.18 + energy * 0.16);

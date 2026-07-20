@@ -64,6 +64,7 @@ add_executable(tiny_hippie_engine
         source/model.h source/model.cpp
         source/particle.cpp
         source/particlesystem.cpp
+        source/persistentstorage.cpp
         source/particlesystemnode.h source/particlesystemnode.cpp
         source/particlerendercomponent.h source/particlerendercomponent.cpp
         source/planenode.h source/planenode.cpp
@@ -99,6 +100,8 @@ add_executable(tiny_hippie_engine
         source/game/deflektorish/deflektorishlevel.cpp
         source/game/deflektorish/deflektorishrenderer.h
         source/game/deflektorish/deflektorishrenderer.cpp
+        source/game/deflektorish/deflektorishsavedata.h
+        source/game/deflektorish/deflektorishsavedata.cpp
         source/game/deflektorish/deflektorishsound.h
         source/game/deflektorish/deflektorishsoundmap.h
         source/game/deflektorish/deflektorishsoundmap.cpp
@@ -307,6 +310,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/game/deflektorish/beamenergy.cpp
             source/game/deflektorish/beamworld.cpp
             source/game/deflektorish/deflektorishlevel.cpp
+            source/game/deflektorish/deflektorishsavedata.cpp
             source/game/deflektorish/deflektorishsoundmap.cpp
             source/game/deflektorish/deflektorishrenderer.cpp
             source/fogoverlaynode.cpp
@@ -319,6 +323,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/meshrendercomponent.cpp
             source/particlerendercomponent.cpp
             source/particlesystemnode.cpp
+            source/persistentstorage.cpp
             source/planenode.cpp
             source/planerendercomponent.cpp
             source/phongshapenode.cpp

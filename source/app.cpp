@@ -8,6 +8,7 @@
 #include "imgui_impl_opengl3.h"
 #endif
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishsavedata.h"
 #include "game/scenes/deflektorishintroscene.h"
 #include "game/scenes/deflektorishscene.h"
 #include "logger.h"
@@ -378,6 +379,7 @@ bool DL::App::init() {
   configureDefaultPostProcessStack();
   deflektorCampaign_.loadDefaultLevelPaths("Resources/Game/Deflektorish/Levels/",
                                            10);
+  Deflektorish::loadHighScores(deflektorCampaign_);
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
 #else
@@ -811,6 +813,7 @@ void DL::App::requestSceneReturnToIntro(int score) {
 
 void DL::App::submitDeflektorInitials(int score, std::string initials) {
   deflektorCampaign_.recordHighScore(std::move(initials), score);
+  Deflektorish::saveHighScores(deflektorCampaign_);
   pendingInitialsScore_.reset();
 }
 

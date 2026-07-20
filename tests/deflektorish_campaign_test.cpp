@@ -60,3 +60,33 @@ TEST(DeflektorishCampaignTest, ReportsWhetherScoreQualifiesForTable) {
   EXPECT_TRUE(campaign.qualifiesHighScore(100));
   EXPECT_TRUE(campaign.qualifiesHighScore(50000));
 }
+
+TEST(DeflektorishCampaignTest, SerializesHighScoresAsJson) {
+  Deflektorish::Campaign campaign;
+  campaign.recordHighScore("YOU", 90000);
+
+  const std::string data = campaign.serializeHighScores();
+
+  EXPECT_NE(data.find("\"highScores\""), std::string::npos);
+  EXPECT_NE(data.find("\"initials\": \"YOU\""), std::string::npos);
+  EXPECT_NE(data.find("\"score\": 90000"), std::string::npos);
+}
+
+TEST(DeflektorishCampaignTest, LoadsHighScoresFromJson) {
+  Deflektorish::Campaign campaign;
+  const bool loaded = campaign.loadHighScoresFromText(
+      "{\n"
+      "  \"version\": 1,\n"
+      "  \"highScores\": [\n"
+      "    { \"initials\": \"ZZZ\", \"score\": 12 },\n"
+      "    { \"initials\": \"AAA\", \"score\": 1200 }\n"
+      "  ]\n"
+      "}\n");
+
+  ASSERT_TRUE(loaded);
+  ASSERT_EQ(campaign.highScores().size(), 2u);
+  EXPECT_EQ(campaign.highScores()[0].initials, "AAA");
+  EXPECT_EQ(campaign.highScores()[0].score, 1200);
+  EXPECT_EQ(campaign.highScores()[1].initials, "ZZZ");
+  EXPECT_EQ(campaign.highScores()[1].score, 12);
+}

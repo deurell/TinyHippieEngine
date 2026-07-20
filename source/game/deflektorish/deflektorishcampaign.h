@@ -1,7 +1,9 @@
 #pragma once
 
 #include <algorithm>
+#include <cctype>
 #include <cstddef>
+#include <charconv>
 #include <string>
 #include <utility>
 #include <vector>
@@ -46,6 +48,24 @@ public:
     }
     return std::max(score, 0) > highScores_.back().score;
   }
+  [[nodiscard]] std::string serializeHighScores() const {
+    std::string data = "{\n  \"version\": 1,\n  \"highScores\": [\n";
+    for (const HighScoreEntry &entry : highScores_) {
+      std::string initials = entry.initials;
+      initials.resize(3, ' ');
+      data += "    { \"initials\": \"";
+      data += escapeJson(initials);
+      data += "\", \"score\": ";
+      data += std::to_string(std::max(entry.score, 0));
+      data += " }";
+      if (&entry != &highScores_.back()) {
+        data += ',';
+      }
+      data += '\n';
+    }
+    data += "  ]\n}\n";
+    return data;
+  }
 
   void setCurrentLevelIndex(std::size_t levelIndex, std::size_t levelCount) {
     currentLevelIndex_ = levelCount > 0 ? levelIndex % levelCount : 0;
@@ -54,6 +74,64 @@ public:
   void resetScore() { score_ = 0; }
   void addScore(int amount) { score_ = std::max(score_ + amount, 0); }
   void setScore(int score) { score_ = std::max(score, 0); }
+  bool loadHighScoresFromText(const std::string &data) {
+    std::vector<HighScoreEntry> loaded;
+    std::size_t cursor = data.find("\"highScores\"");
+    if (cursor == std::string::npos) {
+      return false;
+    }
+    cursor = data.find('[', cursor);
+    const std::size_t endArray = data.find(']', cursor);
+    if (cursor == std::string::npos || endArray == std::string::npos) {
+      return false;
+    }
+    while (cursor < endArray) {
+      const std::size_t initialsKey = data.find("\"initials\"", cursor);
+      if (initialsKey == std::string::npos || initialsKey >= endArray) {
+        break;
+      }
+      const std::size_t initialsColon = data.find(':', initialsKey);
+      const std::size_t initialsQuote = data.find('"', initialsColon);
+      const std::size_t initialsEnd = data.find('"', initialsQuote + 1);
+      const std::size_t scoreKey = data.find("\"score\"", initialsEnd);
+      if (initialsColon == std::string::npos ||
+          initialsQuote == std::string::npos ||
+          initialsEnd == std::string::npos || scoreKey == std::string::npos ||
+          scoreKey >= endArray) {
+        break;
+      }
+      const std::size_t scoreColon = data.find(':', scoreKey);
+      if (scoreColon == std::string::npos) {
+        break;
+      }
+      std::size_t scoreBegin = scoreColon + 1;
+      while (scoreBegin < data.size() &&
+             std::isspace(static_cast<unsigned char>(data[scoreBegin]))) {
+        ++scoreBegin;
+      }
+      std::size_t scoreEnd = scoreBegin;
+      while (scoreEnd < data.size() &&
+             (std::isdigit(static_cast<unsigned char>(data[scoreEnd])) ||
+              data[scoreEnd] == '-')) {
+        ++scoreEnd;
+      }
+      int score = 0;
+      const auto result =
+          std::from_chars(data.data() + scoreBegin, data.data() + scoreEnd,
+                          score);
+      if (result.ec == std::errc()) {
+        std::string initials =
+            data.substr(initialsQuote + 1, initialsEnd - initialsQuote - 1);
+        loaded.push_back({std::move(initials), std::max(score, 0)});
+      }
+      cursor = scoreEnd;
+    }
+    if (loaded.empty()) {
+      return false;
+    }
+    setHighScores(std::move(loaded));
+    return true;
+  }
   std::size_t recordHighScore(std::string initials, int score) {
     if (initials.empty()) {
       initials = "AAA";
@@ -80,6 +158,35 @@ public:
   }
 
 private:
+  static std::string escapeJson(const std::string &value) {
+    std::string escaped;
+    for (char c : value) {
+      if (c == '"' || c == '\\') {
+        escaped.push_back('\\');
+      }
+      escaped.push_back(c);
+    }
+    return escaped;
+  }
+
+  void setHighScores(std::vector<HighScoreEntry> scores) {
+    for (HighScoreEntry &entry : scores) {
+      if (entry.initials.empty()) {
+        entry.initials = "AAA";
+      }
+      entry.initials.resize(3, ' ');
+      entry.score = std::max(entry.score, 0);
+    }
+    std::sort(scores.begin(), scores.end(),
+              [](const HighScoreEntry &a, const HighScoreEntry &b) {
+                return a.score > b.score;
+              });
+    if (scores.size() > maxHighScores_) {
+      scores.resize(maxHighScores_);
+    }
+    highScores_ = std::move(scores);
+  }
+
   static constexpr std::size_t maxHighScores_ = 5;
   std::vector<std::string> levelPaths_;
   std::vector<HighScoreEntry> highScores_{

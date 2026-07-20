@@ -1592,13 +1592,16 @@ void DeflektorishScene::updateCompletionOverlay() {
                             bonusTallyPhase_ != BonusTallyPhase::Done;
   const float bonusBackdrop =
       bonusVisible ? 0.34f : 1.0f;
+  const float bandA = bonusVisible ? 0.14f : 0.26f;
+  const float bandB = bonusVisible ? -0.14f : -0.10f;
   const float overlayAlpha =
       easedIntro * (0.58f + pulse * 0.08f) *
       std::max(fade, bonusBackdrop);
 
   Deflektorish::setCompletionOverlayParams(completionOverlay_, victoryTime_,
                                            overlayAlpha, blastProgress,
-                                           easedIntro, fade, bonusBackdrop);
+                                           easedIntro, fade, bonusBackdrop,
+                                           bandA, bandB);
   if (completionTitle_ != nullptr) {
     const float titleAlpha = std::clamp((victoryTime_ - 0.12f) / 0.36f,
                                         0.0f, 1.0f);
@@ -1851,7 +1854,8 @@ void DeflektorishScene::startGameOver() {
   renderer_.hideNode(selection_);
   if (completionOverlay_ != nullptr) {
     Deflektorish::setCompletionOverlayParams(completionOverlay_, 0.0f, 0.70f,
-                                             1.0f, 1.0f, 1.0f, 0.72f);
+                                             1.0f, 1.0f, 1.0f, 0.72f, 0.34f,
+                                             -0.12f);
   }
   startCameraShake(Deflektorish::kScreenCenter, kShakeStrength * 0.82f, 0.34f);
   updateGameOverText();
@@ -1883,7 +1887,7 @@ void DeflektorishScene::updateGameOver(float dt, bool fireDown) {
     const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 5.0f);
     Deflektorish::setCompletionOverlayParams(
         completionOverlay_, gameOverTime_, 0.58f + pulse * 0.08f, 1.0f, 1.0f,
-        1.0f, 0.78f);
+        1.0f, 0.78f, 0.34f, -0.12f);
   }
   updateGameOverText();
 }

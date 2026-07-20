@@ -484,6 +484,8 @@ vec4 shadeCompletionOverlay(vec2 uv) {
     float intro = clamp(proceduralParams.w, 0.0, 1.0);
     float detailFade = clamp(proceduralParams2.x, 0.0, 1.0);
     float backdrop = clamp(proceduralParams2.y, 0.0, 1.0);
+    float bandAPosition = clamp(proceduralParams2.z, -1.0, 1.0);
+    float bandBPosition = clamp(proceduralParams2.w, -1.0, 1.0);
     float ambientFade = max(detailFade, backdrop);
     float d = length(p * vec2(0.72, 1.0));
 
@@ -492,8 +494,8 @@ vec4 shadeCompletionOverlay(vec2 uv) {
     float sweepX = fract(t * 0.42);
     float sweep = 1.0 - smoothstep(0.0, 0.18, abs(uv.x - sweepX));
     sweep *= smoothstep(0.08, 0.42, uv.y) * smoothstep(0.92, 0.58, uv.y);
-    float bandA = 1.0 - smoothstep(0.018, 0.075, abs(p.y - 0.26));
-    float bandB = 1.0 - smoothstep(0.018, 0.065, abs(p.y + 0.10));
+    float bandA = 1.0 - smoothstep(0.018, 0.075, abs(p.y - bandAPosition));
+    float bandB = 1.0 - smoothstep(0.018, 0.065, abs(p.y - bandBPosition));
     float centerGlow = 1.0 - smoothstep(0.0, 0.78, length(p * vec2(1.0, 1.85)));
     float tick = step(0.72, fract((uv.x + progress * 0.65) * 18.0));
     float tickMask = tick * (bandA * 0.28 + bandB * 0.18) * progress;

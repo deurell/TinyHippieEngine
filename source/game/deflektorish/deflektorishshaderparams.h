@@ -110,10 +110,11 @@ inline void setFadeTransitionParams(DL::ShaderPlaneNode *node, float elapsed,
 inline void setCompletionOverlayParams(DL::ShaderPlaneNode *node, float time,
                                        float alpha, float blastProgress,
                                        float intro, float textFade,
-                                       float backdrop) {
+                                       float backdrop, float bandA = 0.26f,
+                                       float bandB = -0.10f) {
   if (node != nullptr) {
     node->config.params0 = {time, alpha, blastProgress, intro};
-    node->config.params1 = {textFade, backdrop, 0.0f, 0.0f};
+    node->config.params1 = {textFade, backdrop, bandA, bandB};
   }
 }
 

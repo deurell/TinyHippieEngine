@@ -4,6 +4,7 @@
 #include "game/deflektorish/beamworld.h"
 #include "game/deflektorish/deflektorishcampaign.h"
 #include "game/deflektorish/deflektorishrenderer.h"
+#include "game/deflektorish/deflektorishsound.h"
 #include "game/deflektorish/fadetransition.h"
 #include "renderdevice.h"
 #include "renderresourcecache.h"
@@ -25,6 +26,8 @@ public:
       const std::vector<Deflektorish::HighScoreEntry> *highScores = nullptr,
       std::optional<int> pendingInitialsScore = std::nullopt,
       std::function<void(int, std::string)> initialsCallback = {},
+      std::function<void(Deflektorish::Sound, glm::vec2, float)>
+          soundCallback = {},
       std::function<void()> startCallback = {});
   ~DeflektorishIntroScene() override = default;
 
@@ -106,6 +109,7 @@ private:
   const std::vector<Deflektorish::HighScoreEntry> *highScores_ = nullptr;
   std::optional<int> pendingInitialsScore_;
   std::function<void(int, std::string)> initialsCallback_;
+  std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback_;
   DL::Camera camera_{glm::vec3(0.0f, 0.0f, 10.0f)};
   DL::Camera backgroundCamera_{glm::vec3(0.0f, 0.0f, 10.0f)};
   glm::vec2 screenSize_{0.0f};

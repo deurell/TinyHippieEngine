@@ -6,6 +6,8 @@ enum class Sound {
   TargetFirstHit,
   TargetDestroyed,
   ScoreTick,
+  InitialsLetterChange,
+  GameOver,
 };
 
 } // namespace Deflektorish

@@ -2,19 +2,19 @@
   "audioRoot": "Resources/Game/Deflektorish/Audio",
   "events": {
     "target_first_hit": {
-      "clip": "impactMetal_001.ogg",
-      "volume": 0.16,
-      "volumePerEnergy": 0.015,
-      "maxVolume": 0.32,
-      "pitchMin": 1.0,
-      "pitchMax": 1.0,
+      "clip": "impactMetal_heavy_000.ogg",
+      "volume": 0.06,
+      "volumePerEnergy": 0.0,
+      "maxVolume": 0.09,
+      "pitchMin": 2.15,
+      "pitchMax": 2.45,
       "poolSize": 8,
       "maxConcurrent": 4
     },
     "target_destroyed": {
       "clip": "lowFrequency_explosion_001.ogg",
-      "volume": 0.82,
-      "volumePerEnergy": 0.055,
+      "volume": 0.9,
+      "volumePerEnergy": 0.06,
       "maxVolume": 1.0,
       "pitchMin": 0.92,
       "pitchMax": 1.03,
@@ -30,6 +30,26 @@
       "pitchMax": 3.0,
       "poolSize": 10,
       "maxConcurrent": 6
+    },
+    "initials_letter_change": {
+      "clip": "impactGeneric_light_001.ogg",
+      "volume": 0.09,
+      "volumePerEnergy": 0.0,
+      "maxVolume": 0.12,
+      "pitchMin": 1.35,
+      "pitchMax": 1.55,
+      "poolSize": 6,
+      "maxConcurrent": 2
+    },
+    "game_over": {
+      "clip": "spaceEngine_game_over.ogg",
+      "volume": 0.22,
+      "volumePerEnergy": 0.0,
+      "maxVolume": 0.22,
+      "pitchMin": 0.72,
+      "pitchMax": 0.78,
+      "poolSize": 1,
+      "maxConcurrent": 1
     }
   }
 }

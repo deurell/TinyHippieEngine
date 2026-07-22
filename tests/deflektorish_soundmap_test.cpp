@@ -58,10 +58,16 @@ TEST(DeflektorishSoundMapTest, LoadsDefaultSoundMapFile) {
 
   ASSERT_NE(soundMap.find(Deflektorish::Sound::TargetFirstHit), nullptr);
   ASSERT_NE(soundMap.find(Deflektorish::Sound::TargetDestroyed), nullptr);
+  ASSERT_NE(soundMap.find(Deflektorish::Sound::InitialsLetterChange), nullptr);
+  ASSERT_NE(soundMap.find(Deflektorish::Sound::GameOver), nullptr);
   EXPECT_EQ(soundMap.find(Deflektorish::Sound::TargetFirstHit)->clip,
-            "impactMetal_001.ogg");
+            "impactMetal_heavy_000.ogg");
   EXPECT_EQ(soundMap.find(Deflektorish::Sound::TargetDestroyed)->clip,
             "lowFrequency_explosion_001.ogg");
+  EXPECT_EQ(soundMap.find(Deflektorish::Sound::InitialsLetterChange)->clip,
+            "impactGeneric_light_001.ogg");
+  EXPECT_EQ(soundMap.find(Deflektorish::Sound::GameOver)->clip,
+            "spaceEngine_game_over.ogg");
 }
 
 TEST(DeflektorishSoundMapTest, RejectsInvalidPitchRange) {

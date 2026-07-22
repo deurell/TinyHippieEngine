@@ -326,6 +326,12 @@ Sound soundFromEventKey(std::string_view key) {
   if (key == "score_tick") {
     return Sound::ScoreTick;
   }
+  if (key == "initials_letter_change") {
+    return Sound::InitialsLetterChange;
+  }
+  if (key == "game_over") {
+    return Sound::GameOver;
+  }
   throw std::runtime_error("unknown Deflektorish sound event '" +
                            std::string(key) + "'");
 }
@@ -387,6 +393,10 @@ const char *soundEventKey(Sound sound) {
     return "target_destroyed";
   case Sound::ScoreTick:
     return "score_tick";
+  case Sound::InitialsLetterChange:
+    return "initials_letter_change";
+  case Sound::GameOver:
+    return "game_over";
   }
   return "unknown";
 }

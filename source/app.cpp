@@ -688,7 +688,9 @@ void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
   switch (sound) {
   case Deflektorish::Sound::TargetFirstHit:
   case Deflektorish::Sound::TargetDestroyed:
-  case Deflektorish::Sound::ScoreTick: {
+  case Deflektorish::Sound::ScoreTick:
+  case Deflektorish::Sound::InitialsLetterChange:
+  case Deflektorish::Sound::GameOver: {
     const Deflektorish::SoundEventConfig *event =
         deflektorSoundMap_.find(sound);
     if (event == nullptr) {
@@ -852,6 +854,9 @@ void DL::App::registerScenes() {
         &deflektorCampaign_.highScores(), pendingInitialsScore_,
         [this](int score, std::string initials) {
           submitDeflektorInitials(score, std::move(initials));
+        },
+        [this](Deflektorish::Sound sound, glm::vec2 position, float energy) {
+          submitDeflektorSound(sound, position, energy);
         },
         [this] {
           requestSceneAdvance();

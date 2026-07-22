@@ -29,7 +29,7 @@ constexpr float kVictoryTextFadeDuration = 0.62f;
 constexpr float kVictoryPostWaveDelay = 0.12f;
 constexpr int kMinExplosionPoolSize = 28;
 constexpr int kDebugVictoryKey = 86;
-constexpr float kGameOverReturnDelay = 2.2f;
+constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
 constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
@@ -1867,6 +1867,10 @@ void DeflektorishScene::startGameOver() {
   gameOverCallbackDispatched_ = false;
   gameOverScore_ = campaign_.score();
   renderer_.hideNode(selection_);
+  if (soundCallback_) {
+    soundCallback_(Deflektorish::Sound::GameOver, Deflektorish::kScreenCenter,
+                   0.0f);
+  }
   if (completionOverlay_ != nullptr) {
     Deflektorish::setCompletionOverlayParams(completionOverlay_, 0.0f, 0.70f,
                                              1.0f, 1.0f, 1.0f, 0.72f, 0.34f,

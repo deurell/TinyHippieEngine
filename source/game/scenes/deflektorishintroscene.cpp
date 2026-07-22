@@ -97,11 +97,13 @@ DeflektorishIntroScene::DeflektorishIntroScene(
     const std::vector<Deflektorish::HighScoreEntry> *highScores,
     std::optional<int> pendingInitialsScore,
     std::function<void(int, std::string)> initialsCallback,
+    std::function<void(Deflektorish::Sound, glm::vec2, float)> soundCallback,
     std::function<void()> startCallback)
     : renderDevice_(renderDevice), renderResourceCache_(renderResourceCache),
       startCallback_(std::move(startCallback)), highScores_(highScores),
       pendingInitialsScore_(pendingInitialsScore),
       initialsCallback_(std::move(initialsCallback)),
+      soundCallback_(std::move(soundCallback)),
       enteringInitials_(pendingInitialsScore_.has_value()) {}
 
 void DeflektorishIntroScene::init() {
@@ -683,9 +685,14 @@ void DeflektorishIntroScene::updateInitialsText() {
 
 void DeflektorishIntroScene::adjustInitialsCharacter(int delta) {
   char &letter = initials_[static_cast<std::size_t>(initialsCursor_)];
+  const char previous = letter;
   int index = letter - 'A';
   index = (index + delta + 26) % 26;
   letter = static_cast<char>('A' + index);
+  if (letter != previous && soundCallback_) {
+    soundCallback_(Deflektorish::Sound::InitialsLetterChange,
+                   Deflektorish::kScreenCenter, 0.0f);
+  }
 }
 
 void DeflektorishIntroScene::moveInitialsCursor(int delta) {

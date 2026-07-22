@@ -3,9 +3,9 @@
   "events": {
     "target_first_hit": {
       "clip": "impactMetal_heavy_000.ogg",
-      "volume": 0.06,
+      "volume": 0.03,
       "volumePerEnergy": 0.0,
-      "maxVolume": 0.09,
+      "maxVolume": 0.045,
       "pitchMin": 2.15,
       "pitchMax": 2.45,
       "poolSize": 8,

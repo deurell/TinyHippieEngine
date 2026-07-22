@@ -104,6 +104,10 @@ void SceneNode::render(const FrameContext &ctx) {
 }
 
 void SceneNode::renderPass(const FrameContext &ctx, RenderPassId pass) {
+  if (!visible_) {
+    return;
+  }
+
   for (auto &component : renderComponents_) {
     component->render(worldTransform, ctx, pass);
   }

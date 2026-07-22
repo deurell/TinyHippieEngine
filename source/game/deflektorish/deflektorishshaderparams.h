@@ -130,4 +130,14 @@ inline void setCompletionOverlayParams(DL::ShaderPlaneNode *node, float time,
   }
 }
 
+inline void setParallaxBackgroundParams(DL::ShaderPlaneNode *node,
+                                        float elapsed,
+                                        glm::vec2 cameraPosition,
+                                        float roomIndex) {
+  if (node != nullptr) {
+    node->config.params0 = {elapsed, cameraPosition.x, cameraPosition.y,
+                            roomIndex};
+  }
+}
+
 } // namespace Deflektorish

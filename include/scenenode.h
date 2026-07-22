@@ -56,6 +56,8 @@ public:
   std::string_view getDebugName() const;
   void setRenderLayer(int layer) { renderLayer_ = layer; }
   [[nodiscard]] int renderLayer() const { return renderLayer_; }
+  void setVisible(bool visible) { visible_ = visible; }
+  [[nodiscard]] bool isVisible() const { return visible_; }
   bool hasParent() const { return parent != nullptr; }
   SceneNode *parentNode() const { return parent; }
   void setDebugTransformOverrideEnabled(bool enabled);
@@ -87,6 +89,7 @@ protected:
   glm::vec3 localScale = glm::vec3(1.0f, 1.0f, 1.0f);
   std::string debugName_ = "SceneNode";
   int renderLayer_ = 0;
+  bool visible_ = true;
   bool debugTransformOverrideEnabled_ = false;
   std::vector<std::unique_ptr<RenderComponent>> renderComponents_;
 

@@ -578,6 +578,60 @@ vec4 shadeIntroTransition(vec2 uv) {
     return vec4(0.0, 0.0, 0.0, veil);
 }
 
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 345.45));
+    p += dot(p, p + 34.345);
+    return fract(p.x * p.y);
+}
+
+float sparseCell(vec2 p, float threshold, float radius) {
+    vec2 cell = floor(p);
+    vec2 local = fract(p) - 0.5;
+    float n = hash21(cell);
+    float enabled = step(threshold, n);
+    float size = radius * mix(0.45, 1.35, hash21(cell + 17.7));
+    return enabled * (1.0 - smoothstep(size, size + radius * 0.9, length(local)));
+}
+
+vec2 rotate2d(vec2 p, float angle) {
+    float s = sin(angle);
+    float c = cos(angle);
+    return vec2(c * p.x - s * p.y, s * p.x + c * p.y);
+}
+
+vec4 shadeParallaxBackground(vec2 uv) {
+    float t = proceduralParams.x;
+    float roomSeed = proceduralParams.w * 19.13;
+    vec2 p = uv * 2.0 - 1.0;
+    float vignette = smoothstep(1.42, 0.22, length(p * vec2(1.0, 1.14)));
+
+    vec2 centered = uv - 0.5;
+    vec2 farUv = rotate2d(centered, t * 0.018 + roomSeed * 0.013) + 0.5;
+    vec2 nearUv = rotate2d(centered * 1.08, -t * 0.011 + roomSeed * 0.021) +
+                  0.5;
+
+    float starsA = sparseCell(farUv * vec2(44.0, 27.0) + roomSeed,
+                              0.956, 0.046);
+    float starsB = sparseCell(nearUv * vec2(26.0, 16.0) + roomSeed * 0.37,
+                              0.938, 0.040);
+    float dust = sparseCell(farUv * vec2(82.0, 49.0) + roomSeed * 0.11,
+                            0.980, 0.034);
+
+    float pulse = 0.5 + 0.5 * sin(t * 1.6 + roomSeed);
+    vec3 deep = vec3(0.026, 0.033, 0.055);
+    vec3 field = vec3(0.052, 0.070, 0.118);
+    vec3 cyan = vec3(0.34, 0.78, 0.92);
+    vec3 blue = vec3(0.16, 0.34, 0.72);
+
+    vec3 color = mix(deep, field, 0.62 + vignette * 0.26);
+    color += cyan * starsA * (0.24 + pulse * 0.12);
+    color += blue * starsB * (0.20 + (1.0 - pulse) * 0.10);
+    color += vec3(0.72, 0.92, 1.0) * dust * 0.18;
+    color += cyan * pow(vignette, 2.0) * 0.030;
+
+    return vec4(color, 1.0);
+}
+
 void main() {
     vec4 color = baseColor;
     if (proceduralStyle == 1) {
@@ -610,6 +664,8 @@ void main() {
         color = shadeCompletionOverlay(TexCoord);
     } else if (proceduralStyle == 15) {
         color = shadeIntroTransition(TexCoord);
+    } else if (proceduralStyle == 16) {
+        color = shadeParallaxBackground(TexCoord);
     }
 
     color *= baseColor;

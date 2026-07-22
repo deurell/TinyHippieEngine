@@ -29,6 +29,7 @@ constexpr float kVictoryTextFadeDuration = 0.62f;
 constexpr float kVictoryPostWaveDelay = 0.12f;
 constexpr int kMinExplosionPoolSize = 28;
 constexpr int kDebugVictoryKey = 86;
+constexpr int kBackgroundToggleKey = 66;
 constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
 constexpr float kLevelParTimeSeconds = 90.0f;
@@ -139,6 +140,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   updateExplosions(ctx.delta_time);
   updateGameOver(ctx.delta_time, fireDown);
   updateScoreHud(ctx.delta_time);
+  updateParallaxBackgrounds();
 
   SceneNode::update(ctx);
 }
@@ -153,6 +155,9 @@ void DeflektorishScene::onClick(double x, double y) {
 }
 
 void DeflektorishScene::onKey(int key) {
+  if (key == kBackgroundToggleKey) {
+    setBackgroundEffectsEnabled(!backgroundEffectsEnabled_);
+  }
   if (key == kDebugVictoryKey &&
       completionPhase_ != CompletionPhase::Celebration &&
       completionPhase_ != CompletionPhase::FadeOut &&
@@ -225,9 +230,17 @@ void DeflektorishScene::createCameraNode() {
 
 void DeflektorishScene::addBackground(const RoomRuntime &room,
                                       std::size_t roomIndex) {
+  DL::ShaderPlaneNode::Config flatConfig;
+  flatConfig.fragmentShader = "Shaders/simple.frag";
+  flatConfig.blendMode = DL::BlendMode::Opaque;
+  flatConfig.depthTest = true;
+
   DL::ShaderPlaneNode::Config backgroundConfig;
+  backgroundConfig.fragmentShader = "Shaders/deflektorish.frag";
   backgroundConfig.blendMode = DL::BlendMode::Opaque;
   backgroundConfig.depthTest = true;
+  backgroundConfig.proceduralStyle =
+      Deflektorish::shaderStyle(Deflektorish::ShaderStyle::ParallaxBackground);
   constexpr float kFieldPaddingPixels = 96.0f;
   constexpr float kBackPaddingPixels = 190.0f;
   const glm::vec2 contentCenterPixels =
@@ -246,25 +259,74 @@ void DeflektorishScene::addBackground(const RoomRuntime &room,
                    Deflektorish::kPixelToWorld * 0.5f,
                glm::vec2{6.8f, 4.8f});
 
+  auto flatBack = std::make_unique<DL::ShaderPlaneNode>(
+      flatConfig, this, &cameraNode_->camera(), renderDevice_,
+      renderResourceCache_);
+  flatBack->setDebugName("deflektorish_flat_backplate_" +
+                         std::to_string(roomIndex + 1));
+  flatBack->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
+  flatBack->setRenderLayer(-32);
+  flatBack->setLocalPosition({center.x, center.y, -0.10f});
+  flatBack->setLocalScale({backHalfSize.x, backHalfSize.y, 1.0f});
+  flatBack->setVisible(!backgroundEffectsEnabled_);
+  flatBackgrounds_.push_back(flatBack.get());
+  addChild(std::move(flatBack));
+
+  auto flatField = std::make_unique<DL::ShaderPlaneNode>(
+      flatConfig, this, &cameraNode_->camera(), renderDevice_,
+      renderResourceCache_);
+  flatField->setDebugName("deflektorish_flat_playfield_" +
+                          std::to_string(roomIndex + 1));
+  flatField->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
+  flatField->setRenderLayer(-31);
+  flatField->setLocalPosition({center.x, center.y, -0.09f});
+  flatField->setLocalScale({fieldHalfSize.x, fieldHalfSize.y, 1.0f});
+  flatField->setVisible(!backgroundEffectsEnabled_);
+  flatBackgrounds_.push_back(flatField.get());
+  addChild(std::move(flatField));
+
   auto back = std::make_unique<DL::ShaderPlaneNode>(
       backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
       renderResourceCache_);
   back->setDebugName("deflektorish_backplate_" + std::to_string(roomIndex + 1));
-  back->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
+  back->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
+  Deflektorish::setParallaxBackgroundParams(
+      back.get(), elapsed_, cameraBaseWorld_, static_cast<float>(roomIndex));
   back->setRenderLayer(-30);
   back->setLocalPosition({center.x, center.y, -0.08f});
   back->setLocalScale({backHalfSize.x, backHalfSize.y, 1.0f});
+  back->setVisible(backgroundEffectsEnabled_);
+  parallaxBackgrounds_.push_back({back.get(), static_cast<float>(roomIndex)});
   addChild(std::move(back));
 
   auto field = std::make_unique<DL::ShaderPlaneNode>(
       backgroundConfig, this, &cameraNode_->camera(), renderDevice_,
       renderResourceCache_);
   field->setDebugName("deflektorish_playfield_" + std::to_string(roomIndex + 1));
-  field->config.color = {0.038f, 0.047f, 0.071f, 1.0f};
+  field->config.color = {1.0f, 1.0f, 1.0f, 1.0f};
+  Deflektorish::setParallaxBackgroundParams(
+      field.get(), elapsed_, cameraBaseWorld_, static_cast<float>(roomIndex));
   field->setRenderLayer(-25);
   field->setLocalPosition({center.x, center.y, -0.07f});
   field->setLocalScale({fieldHalfSize.x, fieldHalfSize.y, 1.0f});
+  field->setVisible(backgroundEffectsEnabled_);
+  parallaxBackgrounds_.push_back({field.get(), static_cast<float>(roomIndex)});
   addChild(std::move(field));
+}
+
+void DeflektorishScene::setBackgroundEffectsEnabled(bool enabled) {
+  backgroundEffectsEnabled_ = enabled;
+  for (DL::ShaderPlaneNode *node : flatBackgrounds_) {
+    if (node != nullptr) {
+      node->setVisible(!backgroundEffectsEnabled_);
+    }
+  }
+  for (const auto &[node, roomIndex] : parallaxBackgrounds_) {
+    (void)roomIndex;
+    if (node != nullptr) {
+      node->setVisible(backgroundEffectsEnabled_);
+    }
+  }
 }
 
 void DeflektorishScene::resetLevelRuntime() {
@@ -300,6 +362,8 @@ void DeflektorishScene::resetLevelRuntime() {
   filters_.clear();
   splitters_.clear();
   gameEvents_.clear();
+  parallaxBackgrounds_.clear();
+  flatBackgrounds_.clear();
   selectedReflektor_ = -1;
   previousLeftMouseDown_ = false;
   previousSelectNextDown_ = false;
@@ -1147,6 +1211,21 @@ void DeflektorishScene::updateSplitterVisuals(float dt,
                              result.activeSplitters[activeIndex],
                              result.splitterHasHit[activeIndex],
                              result.splitterHit[activeIndex], dt);
+  }
+}
+
+void DeflektorishScene::updateParallaxBackgrounds() {
+  if (parallaxBackgrounds_.empty()) {
+    return;
+  }
+  glm::vec2 cameraPosition = cameraBaseWorld_;
+  if (cameraNode_ != nullptr) {
+    const glm::vec3 localPosition = cameraNode_->getLocalPosition();
+    cameraPosition = {localPosition.x, localPosition.y};
+  }
+  for (const auto &[node, roomIndex] : parallaxBackgrounds_) {
+    Deflektorish::setParallaxBackgroundParams(
+        node, elapsed_, cameraPosition, roomIndex);
   }
 }
 

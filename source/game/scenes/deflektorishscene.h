@@ -17,6 +17,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 class DeflektorishScene final : public DL::SceneNode {
@@ -172,6 +173,7 @@ private:
                                       float rotationRadians = 0.0f);
   void createCameraNode();
   void addBackground(const RoomRuntime &room, std::size_t roomIndex);
+  void setBackgroundEffectsEnabled(bool enabled);
   void spawnLevel(const Deflektorish::LevelConfig &level, glm::vec2 offsetPixels,
                   std::size_t roomIndex);
   void resetLevelRuntime();
@@ -195,6 +197,7 @@ private:
   void updatePortalVisuals(float dt, const BeamResult &result);
   void updateFilterVisuals(float dt, const BeamResult &result);
   void updateSplitterVisuals(float dt, const BeamResult &result);
+  void updateParallaxBackgrounds();
   void updateTargetState(float dt, const BeamResult &result);
   void updateTargetVisuals();
   void emitTargetFirstHit(std::size_t targetIndex, glm::vec2 position,
@@ -264,6 +267,8 @@ private:
   std::vector<Filter> filters_;
   std::vector<Splitter> splitters_;
   std::vector<GameEvent> gameEvents_;
+  std::vector<std::pair<DL::ShaderPlaneNode *, float>> parallaxBackgrounds_;
+  std::vector<DL::ShaderPlaneNode *> flatBackgrounds_;
   DL::ShaderPlaneNode *source_ = nullptr;
   DL::ShaderPlaneNode *selection_ = nullptr;
   DL::ShaderPlaneNode *energyBar_ = nullptr;
@@ -281,6 +286,7 @@ private:
   int selectedReflektor_ = -1;
   bool previousLeftMouseDown_ = false;
   bool previousSelectNextDown_ = false;
+  bool backgroundEffectsEnabled_ = true;
   bool previousGameOverFireDown_ = false;
   bool gameOverCallbackDispatched_ = false;
   float rotateInput_ = 0.0f;

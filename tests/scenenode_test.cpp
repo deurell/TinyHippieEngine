@@ -135,6 +135,20 @@ TEST(SceneNodeTest, AddRenderComponentStoresAndRendersComponent) {
   EXPECT_EQ(renderCount, 1);
 }
 
+TEST(SceneNodeTest, InvisibleNodeSkipsRendering) {
+  TestSceneNode node;
+  DL::Camera camera({0.0f, 0.0f, 1.0f});
+  int renderCount = 0;
+
+  node.addRenderComponent(
+      std::make_unique<TestRenderComponent>(camera, node, renderCount));
+  node.setVisible(false);
+  node.render({});
+
+  EXPECT_FALSE(node.isVisible());
+  EXPECT_EQ(renderCount, 0);
+}
+
 TEST(SceneNodeTest, OnScreenSizeChangedPropagatesToChildren) {
   auto child = std::make_unique<TrackingSceneNode>();
   auto *childPtr = child.get();

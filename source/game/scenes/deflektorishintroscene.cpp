@@ -10,13 +10,20 @@
 
 namespace {
 constexpr float kPixelToWorld = Deflektorish::kPixelToWorld;
-constexpr float kAttractPageSeconds = 3.4f;
+constexpr float kHighScorePageSeconds = 13.5f;
+constexpr float kCreditsPageSeconds = 4.4f;
 constexpr float kStartFadeToBlackDuration = 0.24f;
 constexpr float kInitialsRepeatDelay = 0.16f;
+constexpr int kHighScoreVisibleRows = 8;
+constexpr int kHighScoreMarqueeRows = kHighScoreVisibleRows + 1;
+constexpr float kHighScoreFirstRowY = 356.0f;
+constexpr float kHighScoreRowSpacing = 27.0f;
+constexpr float kHighScoreScrollHoldSeconds = 1.2f;
+constexpr float kHighScoreScrollSettleSeconds = 1.4f;
 
 bool showingCreditsPage(float elapsed) {
-  return std::fmod(elapsed, kAttractPageSeconds * 2.0f) >=
-         kAttractPageSeconds;
+  return std::fmod(elapsed, kHighScorePageSeconds + kCreditsPageSeconds) >=
+         kHighScorePageSeconds;
 }
 
 std::string scoreText(int rank, const Deflektorish::HighScoreEntry &entry) {
@@ -24,7 +31,11 @@ std::string scoreText(int rank, const Deflektorish::HighScoreEntry &entry) {
   while (value.size() < 8) {
     value.insert(value.begin(), '0');
   }
-  return std::to_string(rank) + "  " + entry.initials + "  " + value;
+  std::string rankText = std::to_string(std::max(rank, 0));
+  if (rankText.size() < 2) {
+    rankText.insert(rankText.begin(), '0');
+  }
+  return rankText + "  " + entry.initials + "  " + value;
 }
 
 std::string scoreDigits(int score) {
@@ -288,19 +299,17 @@ DL::ShaderPlaneNode *DeflektorishIntroScene::addPlaneForCamera(
 void DeflektorishIntroScene::addHighScores() {
   highScoreTexts_.push_back(addText("HIGH SCORES", {480.0f, 398.0f}, 24.0f,
                                     {1.0f, 0.74f, 0.28f, 0.94f}, 12));
-  float y = 356.0f;
-  const std::vector<Deflektorish::HighScoreEntry> emptyScores;
-  const auto &scores = highScores_ != nullptr ? *highScores_ : emptyScores;
-  for (int i = 0; i < static_cast<int>(scores.size()); ++i) {
+  for (int i = 0; i < kHighScoreMarqueeRows; ++i) {
     const glm::vec4 color =
         i == 0 ? glm::vec4{0.78f, 1.0f, 0.98f, 0.96f}
                : glm::vec4{0.76f, 0.86f, 0.95f, 0.86f};
-    highScoreTexts_.push_back(
-        addText(scoreText(i + 1, scores[static_cast<std::size_t>(i)]),
-                {480.0f, y}, 22.0f, color,
-                12));
-    y -= 30.0f;
+    TextNode *row =
+        addText("", {480.0f, kHighScoreFirstRowY - i * kHighScoreRowSpacing},
+                19.0f, color, 12);
+    highScoreRowTexts_.push_back(row);
+    highScoreTexts_.push_back(row);
   }
+  updateHighScoreScroll(0.0f, 0.0f);
 }
 
 void DeflektorishIntroScene::addCredits() {
@@ -563,13 +572,16 @@ void DeflektorishIntroScene::updateLiveShowcase(float dt) {
 }
 
 void DeflektorishIntroScene::updateAttractPage() {
-  const float pageTime = std::fmod(elapsed_, kAttractPageSeconds * 2.0f);
+  const float cycleSeconds = kHighScorePageSeconds + kCreditsPageSeconds;
+  const float pageTime = std::fmod(elapsed_, cycleSeconds);
   const bool showCredits = showingCreditsPage(elapsed_);
   const float localTime =
-      showCredits ? pageTime - kAttractPageSeconds : pageTime;
+      showCredits ? pageTime - kHighScorePageSeconds : pageTime;
+  const float pageDuration =
+      showCredits ? kCreditsPageSeconds : kHighScorePageSeconds;
   const float fadeIn = std::clamp(localTime / 0.28f, 0.0f, 1.0f);
   const float fadeOut =
-      std::clamp((kAttractPageSeconds - localTime) / 0.28f, 0.0f, 1.0f);
+      std::clamp((pageDuration - localTime) / 0.28f, 0.0f, 1.0f);
   const float activeAlpha = std::min(fadeIn, fadeOut);
   const float inactiveAlpha = 0.0f;
 
@@ -584,8 +596,94 @@ void DeflektorishIntroScene::updateAttractPage() {
       node->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
     }
   };
-  applyAlpha(highScoreTexts_, showCredits ? inactiveAlpha : activeAlpha);
+  if (showCredits) {
+    applyAlpha(highScoreTexts_, inactiveAlpha);
+  } else {
+    updateHighScoreScroll(activeAlpha, localTime);
+  }
   applyAlpha(creditTexts_, showCredits ? activeAlpha : inactiveAlpha);
+}
+
+void DeflektorishIntroScene::updateHighScoreScroll(float alpha,
+                                                   float localTime) {
+  const std::vector<Deflektorish::HighScoreEntry> emptyScores;
+  const auto &scores = highScores_ != nullptr ? *highScores_ : emptyScores;
+  if (highScoreTexts_.empty()) {
+    return;
+  }
+
+  TextNode *title = highScoreTexts_.front();
+  if (title != nullptr) {
+    title->setTextColor({1.0f, 0.74f, 0.28f, alpha});
+    title->setShadowColor({0.0f, 0.03f, 0.05f, alpha * 0.84f});
+  }
+
+  const float maxScrollRows =
+      scores.size() > kHighScoreVisibleRows
+          ? static_cast<float>(scores.size() - kHighScoreVisibleRows)
+          : 0.0f;
+  const float scrollDuration =
+      std::max(kHighScorePageSeconds - kHighScoreScrollHoldSeconds -
+                   kHighScoreScrollSettleSeconds,
+               0.001f);
+  const float scrollProgress =
+      std::clamp((localTime - kHighScoreScrollHoldSeconds) / scrollDuration,
+                 0.0f, 1.0f);
+  const float scrollRows = maxScrollRows * (1.0f - scrollProgress);
+  const int firstIndex = static_cast<int>(std::floor(scrollRows));
+  const float rowOffset = scrollRows - std::floor(scrollRows);
+
+  for (std::size_t i = 0; i < highScoreRowTexts_.size(); ++i) {
+    TextNode *node = highScoreRowTexts_[i];
+    if (node == nullptr) {
+      continue;
+    }
+
+    const float rowY =
+        kHighScoreFirstRowY -
+        (static_cast<float>(i) - rowOffset) * kHighScoreRowSpacing;
+    node->setLocalPosition(toWorld({480.0f, rowY}, 0.15f));
+
+    const bool rowInsideWindow =
+        rowY <= kHighScoreFirstRowY + 0.5f &&
+        rowY >= kHighScoreFirstRowY -
+                    (kHighScoreVisibleRows - 1) * kHighScoreRowSpacing - 0.5f;
+    const float bottomY =
+        kHighScoreFirstRowY - (kHighScoreVisibleRows - 1) *
+                                  kHighScoreRowSpacing;
+    float edgeFade = 1.0f;
+    if (!rowInsideWindow) {
+      if (rowY > kHighScoreFirstRowY) {
+        edgeFade =
+            1.0f - (rowY - kHighScoreFirstRowY) / kHighScoreRowSpacing;
+      } else if (rowY < bottomY) {
+        edgeFade = 1.0f - (bottomY - rowY) / kHighScoreRowSpacing;
+      }
+      edgeFade = std::clamp(edgeFade, 0.0f, 1.0f);
+    }
+    const float rowAlpha = alpha * edgeFade;
+
+    if (!scores.empty()) {
+      const std::size_t scoreIndex =
+          static_cast<std::size_t>(firstIndex) + i;
+      if (scoreIndex < scores.size()) {
+        node->setText(scoreText(static_cast<int>(scoreIndex + 1),
+                                scores[scoreIndex]));
+      } else {
+        node->setText("");
+      }
+    } else {
+      node->setText("");
+    }
+
+    const bool topRank = !scores.empty() &&
+                         static_cast<std::size_t>(firstIndex) + i == 0;
+    glm::vec4 color =
+        topRank ? glm::vec4{0.78f, 1.0f, 0.98f, rowAlpha}
+                : glm::vec4{0.76f, 0.86f, 0.95f, rowAlpha};
+    node->setTextColor(color);
+    node->setShadowColor({0.0f, 0.03f, 0.05f, rowAlpha * 0.84f});
+  }
 }
 
 void DeflektorishIntroScene::updateInitialsEntry(float dt,
@@ -727,21 +825,7 @@ void DeflektorishIntroScene::submitInitials() {
 }
 
 void DeflektorishIntroScene::refreshHighScoreTexts() {
-  if (highScoreTexts_.empty() || highScores_ == nullptr) {
-    return;
-  }
-  const std::size_t scoreTextCount = highScoreTexts_.size() - 1;
-  for (std::size_t i = 0; i < scoreTextCount; ++i) {
-    TextNode *node = highScoreTexts_[i + 1];
-    if (node == nullptr) {
-      continue;
-    }
-    if (i < highScores_->size()) {
-      node->setText(scoreText(static_cast<int>(i + 1), (*highScores_)[i]));
-    } else {
-      node->setText(std::to_string(i + 1) + "  ---  00000000");
-    }
-  }
+  updateHighScoreScroll(0.0f, 0.0f);
 }
 
 void DeflektorishIntroScene::updateStartTransition(float dt) {

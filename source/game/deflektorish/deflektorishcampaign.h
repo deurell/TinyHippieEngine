@@ -170,6 +170,18 @@ private:
   }
 
   void setHighScores(std::vector<HighScoreEntry> scores) {
+    const std::vector<HighScoreEntry> defaults = defaultHighScores();
+    for (const HighScoreEntry &entry : defaults) {
+      const bool alreadyPresent =
+          std::any_of(scores.begin(), scores.end(),
+                      [&](const HighScoreEntry &score) {
+                        return score.initials == entry.initials &&
+                               score.score == entry.score;
+                      });
+      if (!alreadyPresent) {
+        scores.push_back(entry);
+      }
+    }
     for (HighScoreEntry &entry : scores) {
       if (entry.initials.empty()) {
         entry.initials = "AAA";
@@ -187,12 +199,19 @@ private:
     highScores_ = std::move(scores);
   }
 
-  static constexpr std::size_t maxHighScores_ = 5;
+  static std::vector<HighScoreEntry> defaultHighScores() {
+    return {
+        {"ACE", 98500}, {"LUX", 84200}, {"RAY", 73150}, {"KID", 60900},
+        {"MIR", 55400}, {"ZAP", 50850}, {"ORB", 46300}, {"ION", 41750},
+        {"PIX", 38200}, {"VEX", 34600}, {"NIX", 31150}, {"QRT", 28700},
+        {"JAM", 25350}, {"BPM", 22100}, {"CRT", 19650}, {"GLW", 17000},
+        {"HUM", 13250}, {"TIN", 9400},  {"BYT", 5200}, {"CPU", 1},
+    };
+  }
+
+  static constexpr std::size_t maxHighScores_ = 20;
   std::vector<std::string> levelPaths_;
-  std::vector<HighScoreEntry> highScores_{
-      {"ACE", 98500}, {"LUX", 84200}, {"RAY", 73150},
-      {"KID", 60900}, {"CPU", 1},
-  };
+  std::vector<HighScoreEntry> highScores_ = defaultHighScores();
   std::size_t currentLevelIndex_ = 0;
   int score_ = 0;
 };

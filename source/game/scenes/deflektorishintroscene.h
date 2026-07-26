@@ -90,6 +90,7 @@ private:
   void updateBackgroundCamera();
   void updateLiveShowcase(float dt);
   void updateAttractPage();
+  void updateHighScoreScroll(float alpha, float localTime);
   void updateInitialsEntry(float dt, const DL::InputState &input);
   void updateInitialsText();
   void adjustInitialsCharacter(int delta);
@@ -115,6 +116,7 @@ private:
   glm::vec2 screenSize_{0.0f};
   glm::vec2 framebufferSize_{0.0f};
   std::vector<TextNode *> highScoreTexts_;
+  std::vector<TextNode *> highScoreRowTexts_;
   std::vector<TextNode *> creditTexts_;
   TextNode *initialsTitle_ = nullptr;
   TextNode *initialsScore_ = nullptr;

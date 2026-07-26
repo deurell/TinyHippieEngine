@@ -1,4 +1,5 @@
 #include "game/deflektorish/deflektorishcampaign.h"
+#include <algorithm>
 #include <gtest/gtest.h>
 
 TEST(DeflektorishCampaignTest, BuildsDefaultLevelPaths) {
@@ -37,11 +38,23 @@ TEST(DeflektorishCampaignTest, RecordsHighScoresInDescendingOrder) {
 
   const std::size_t rank = campaign.recordHighScore("YOU", 90000);
 
-  ASSERT_EQ(campaign.highScores().size(), 5u);
+  ASSERT_EQ(campaign.highScores().size(), 20u);
   EXPECT_EQ(rank, 1u);
   EXPECT_EQ(campaign.highScores()[0].initials, "ACE");
   EXPECT_EQ(campaign.highScores()[1].initials, "YOU");
   EXPECT_EQ(campaign.highScores()[1].score, 90000);
+}
+
+TEST(DeflektorishCampaignTest, KeepsTopTwentyHighScores) {
+  Deflektorish::Campaign campaign;
+
+  for (int i = 0; i < 24; ++i) {
+    campaign.recordHighScore("YOU", 100000 + i);
+  }
+
+  ASSERT_EQ(campaign.highScores().size(), 20u);
+  EXPECT_EQ(campaign.highScores().front().score, 100023);
+  EXPECT_EQ(campaign.highScores().back().score, 100004);
 }
 
 TEST(DeflektorishCampaignTest, HighScoreInitialsStayThreeCharacters) {
@@ -84,9 +97,39 @@ TEST(DeflektorishCampaignTest, LoadsHighScoresFromJson) {
       "}\n");
 
   ASSERT_TRUE(loaded);
-  ASSERT_EQ(campaign.highScores().size(), 2u);
-  EXPECT_EQ(campaign.highScores()[0].initials, "AAA");
-  EXPECT_EQ(campaign.highScores()[0].score, 1200);
-  EXPECT_EQ(campaign.highScores()[1].initials, "ZZZ");
-  EXPECT_EQ(campaign.highScores()[1].score, 12);
+  ASSERT_EQ(campaign.highScores().size(), 20u);
+  EXPECT_EQ(campaign.highScores()[0].initials, "ACE");
+  EXPECT_TRUE(std::any_of(campaign.highScores().begin(),
+                          campaign.highScores().end(),
+                          [](const Deflektorish::HighScoreEntry &entry) {
+                            return entry.initials == "AAA" &&
+                                   entry.score == 1200;
+                          }));
+}
+
+TEST(DeflektorishCampaignTest, PadsLegacyFiveEntrySaveToTopTwenty) {
+  Deflektorish::Campaign campaign;
+  const bool loaded = campaign.loadHighScoresFromText(
+      "{\n"
+      "  \"version\": 1,\n"
+      "  \"highScores\": [\n"
+      "    { \"initials\": \"ACE\", \"score\": 98500 },\n"
+      "    { \"initials\": \"LUX\", \"score\": 84200 },\n"
+      "    { \"initials\": \"RAY\", \"score\": 73150 },\n"
+      "    { \"initials\": \"KID\", \"score\": 60900 },\n"
+      "    { \"initials\": \"CPU\", \"score\": 1 }\n"
+      "  ]\n"
+      "}\n");
+
+  ASSERT_TRUE(loaded);
+  ASSERT_EQ(campaign.highScores().size(), 20u);
+  EXPECT_EQ(std::count_if(campaign.highScores().begin(),
+                          campaign.highScores().end(),
+                          [](const Deflektorish::HighScoreEntry &entry) {
+                            return entry.initials == "ACE" &&
+                                   entry.score == 98500;
+                          }),
+            1);
+  EXPECT_EQ(campaign.highScores().back().initials, "CPU");
+  EXPECT_EQ(campaign.highScores().back().score, 1);
 }

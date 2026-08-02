@@ -1170,20 +1170,6 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
 #endif
 
   if (action != GLFW_RELEASE) {
-    if (action == GLFW_PRESS) {
-      if (!imguiWantsKeyboard && key == GLFW_KEY_RIGHT) {
-        sceneManager_.next();
-        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_next");
-        loadCurrentScene();
-        return;
-      }
-      if (!imguiWantsKeyboard && key == GLFW_KEY_LEFT) {
-        sceneManager_.previous();
-        Logger::instance().logEvent(LogLevel::Info, "scene", "scene_previous");
-        loadCurrentScene();
-        return;
-      }
-    }
     return;
   }
 

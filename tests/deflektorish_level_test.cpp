@@ -143,6 +143,7 @@ std::filesystem::path levelPath(int i) {
 TEST(DeflektorishLevelTest, ParsesMinimalLevelData) {
   constexpr char kSource[] = R"json({
     "name": "unit_level",
+    "parTimeSeconds": 42.5,
     "grid": { "tileSize": 32, "origin": [16, 16] },
     "source": { "cell": [3, 7], "angleDegrees": 0 },
     "explosionPoolSize": 4,
@@ -161,6 +162,7 @@ TEST(DeflektorishLevelTest, ParsesMinimalLevelData) {
       Deflektorish::parseLevel(kSource, "unit");
 
   EXPECT_EQ(level.name, "unit_level");
+  EXPECT_FLOAT_EQ(level.parTimeSeconds, 42.5f);
   EXPECT_EQ(level.explosionPoolSize, 4);
   EXPECT_EQ(level.source.cell, glm::ivec2(3, 7));
   EXPECT_EQ(level.reflektors.size(), 2u);
@@ -190,16 +192,29 @@ TEST(DeflektorishLevelTest, LoadsDefaultLevelFile) {
 }
 
 TEST(DeflektorishLevelTest, LoadsProgressionLevelFiles) {
+  constexpr float kExpectedParTimes[] = {15.0f, 15.0f, 30.0f, 40.0f, 25.0f,
+                                         45.0f, 25.0f, 35.0f, 25.0f, 60.0f};
   for (int i = 1; i <= 10; ++i) {
     const std::filesystem::path path = levelPath(i);
 
     const Deflektorish::LevelConfig level = Deflektorish::loadLevel(path);
 
     EXPECT_FALSE(level.name.empty()) << path;
+    EXPECT_FLOAT_EQ(level.parTimeSeconds, kExpectedParTimes[i - 1]) << path;
     EXPECT_FALSE(level.reflektors.empty()) << path;
     EXPECT_FALSE(level.targets.empty()) << path;
     EXPECT_FALSE(hasFreeTargetBeforeFirstInteraction(level)) << path;
   }
+}
+
+TEST(DeflektorishLevelTest, RejectsNonPositiveParTime) {
+  constexpr char kSource[] = R"json({
+    "name": "bad_par",
+    "parTimeSeconds": 0
+  })json";
+
+  EXPECT_THROW((void)Deflektorish::parseLevel(kSource, "bad"),
+               std::runtime_error);
 }
 
 TEST(DeflektorishLevelTest, TrainingLevelsNeedInteractionAndHaveSolutions) {

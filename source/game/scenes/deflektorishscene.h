@@ -142,6 +142,7 @@ private:
 
   struct RoomRuntime {
     std::string name;
+    float parTimeSeconds = 90.0f;
     glm::vec2 offsetPixels{0.0f};
     glm::vec2 cameraCenterWorld{0.0f};
     glm::vec2 boundsMinPixels{0.0f};
@@ -289,6 +290,7 @@ private:
   bool backgroundEffectsEnabled_ = true;
   bool previousGameOverFireDown_ = false;
   bool gameOverCallbackDispatched_ = false;
+  bool debugVictoryTriggered_ = false;
   float rotateInput_ = 0.0f;
   float sourcePulse_ = 0.0f;
   float sourceLoad_ = 0.0f;

@@ -1,6 +1,7 @@
 #include "deflektorishscene.h"
 
 #include "game/deflektorish/deflektorishconfig.h"
+#include "game/deflektorish/deflektorishsavedata.h"
 #include "game/deflektorish/deflektorishshaderparams.h"
 #include "game/deflektorish/deflektorishshaderstyle.h"
 #include "iscene.h"
@@ -32,7 +33,6 @@ constexpr int kDebugVictoryKey = 86;
 constexpr int kBackgroundToggleKey = 66;
 constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
-constexpr float kLevelParTimeSeconds = 90.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
 constexpr int kTargetClearScore = 75;
@@ -162,6 +162,7 @@ void DeflektorishScene::onKey(int key) {
       completionPhase_ != CompletionPhase::Celebration &&
       completionPhase_ != CompletionPhase::FadeOut &&
       completionPhase_ != CompletionPhase::GameOver) {
+    debugVictoryTriggered_ = true;
     startVictoryCelebration();
   }
 }
@@ -369,6 +370,7 @@ void DeflektorishScene::resetLevelRuntime() {
   previousSelectNextDown_ = false;
   previousGameOverFireDown_ = false;
   gameOverCallbackDispatched_ = false;
+  debugVictoryTriggered_ = false;
   rotateInput_ = 0.0f;
   sourcePulse_ = 0.0f;
   sourceLoad_ = 0.0f;
@@ -533,6 +535,7 @@ void DeflektorishScene::activateRoom(std::size_t roomIndex, bool animated,
     completionPhase_ = CompletionPhase::Playing;
   }
   levelElapsed_ = 0.0f;
+  debugVictoryTriggered_ = false;
   if (!preserveCompletionFlow) {
     resetBonusTally();
   }
@@ -610,6 +613,7 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
   grid_ = level.grid;
   RoomRuntime room;
   room.name = level.name;
+  room.parTimeSeconds = level.parTimeSeconds;
   room.offsetPixels = offsetPixels;
   room.cameraCenterWorld = offsetPixels * Deflektorish::kPixelToWorld;
   room.boundsMinPixels = {std::numeric_limits<float>::max(),
@@ -1720,6 +1724,13 @@ void DeflektorishScene::startBonusTally() {
   }
 
   clearTime_ = levelElapsed_;
+  const std::size_t completedLevel = campaign_.currentLevelIndex();
+  const std::string_view completedName =
+      completedLevel < rooms_.size()
+          ? std::string_view(rooms_[completedLevel].name)
+          : std::string_view("unknown");
+  Deflektorish::recordLevelTime(completedLevel, completedName, clearTime_,
+                               debugVictoryTriggered_);
   const float energyRatio =
       beamEnergyConfig_.maxEnergy > 0.0f
           ? std::clamp(beamEnergy_.current / beamEnergyConfig_.maxEnergy,
@@ -1727,8 +1738,11 @@ void DeflektorishScene::startBonusTally() {
           : 0.0f;
   energyBonus_ = static_cast<int>(
       std::round(energyRatio * static_cast<float>(kMaxEnergyBonus)));
+  const float parTime = completedLevel < rooms_.size()
+                            ? rooms_[completedLevel].parTimeSeconds
+                            : 90.0f;
   timeBonus_ = static_cast<int>(
-      std::round(std::max(kLevelParTimeSeconds - clearTime_, 0.0f) *
+      std::round(std::max(parTime - clearTime_, 0.0f) *
                  kTimeBonusPerSecond));
   totalBonus_ = campaign_.score() + energyBonus_ + timeBonus_;
   displayedEnergyBonus_ = 0;

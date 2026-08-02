@@ -54,6 +54,7 @@ struct SplitterConfig {
 
 struct LevelConfig {
   std::string name = "deflektorish_level";
+  float parTimeSeconds = 90.0f;
   GridConfig grid;
   SourceConfig source;
   int explosionPoolSize = 12;

@@ -1,5 +1,6 @@
 {
   "name": "level_09_overload_grid",
+  "parTimeSeconds": 25,
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]

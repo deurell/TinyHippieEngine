@@ -1,5 +1,6 @@
 {
   "name": "level_04_portal_switchyard",
+  "parTimeSeconds": 40,
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]

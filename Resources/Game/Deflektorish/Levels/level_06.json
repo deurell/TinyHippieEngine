@@ -1,5 +1,6 @@
 {
   "name": "level_06_splitter_lattice",
+  "parTimeSeconds": 45,
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]

@@ -1,5 +1,6 @@
 {
   "name": "level_01_chicane",
+  "parTimeSeconds": 15,
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]

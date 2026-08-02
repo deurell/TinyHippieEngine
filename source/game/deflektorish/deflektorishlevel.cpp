@@ -451,14 +451,19 @@ glm::vec2 cellToPosition(const GridConfig &grid, glm::ivec2 cell) {
 LevelConfig parseLevel(std::string_view source, std::string_view sourceName) {
   const JsonValue rootValue = JsonParser(source, sourceName).parse();
   const auto &root = asObject(rootValue, "level");
-  requireNoUnknownFields(root,
-                         {"name", "grid", "source", "explosionPoolSize",
-                          "reflektors", "targets", "blockers", "portals",
-                          "filters", "splitters"},
-                         "level");
+  requireNoUnknownFields(
+      root,
+      {"name", "parTimeSeconds", "grid", "source", "explosionPoolSize",
+       "reflektors", "targets", "blockers", "portals", "filters",
+       "splitters"},
+      "level");
 
   LevelConfig level;
   level.name = stringOr(root, "name", level.name);
+  level.parTimeSeconds = floatOr(root, "parTimeSeconds", level.parTimeSeconds);
+  if (level.parTimeSeconds <= 0.0f) {
+    throw std::runtime_error("parTimeSeconds must be greater than zero");
+  }
   level.explosionPoolSize =
       intOr(root, "explosionPoolSize", level.explosionPoolSize);
   if (level.explosionPoolSize <= 0) {

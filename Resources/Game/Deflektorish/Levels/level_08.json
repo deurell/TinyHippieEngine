@@ -1,5 +1,6 @@
 {
   "name": "level_08_machine_room",
+  "parTimeSeconds": 35,
   "grid": {
     "tileSize": 32,
     "origin": [16, 16]

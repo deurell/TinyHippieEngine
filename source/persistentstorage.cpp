@@ -25,7 +25,9 @@ std::filesystem::path storagePath(const std::string &key) {
   if (filename.empty()) {
     filename = "data";
   }
-  filename += ".txt";
+  if (!filename.ends_with(".json")) {
+    filename += ".txt";
+  }
   return std::filesystem::current_path() / ".tiny_hippie_storage" / filename;
 }
 #endif

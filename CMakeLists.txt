@@ -91,6 +91,8 @@ add_executable(tiny_hippie_engine
         source/game/scenes/deflektorishintroscene.cpp
         source/game/scenes/deflektorishscene.h
         source/game/scenes/deflektorishscene.cpp
+        source/game/scenes/kebnekaiseterrainscene.h
+        source/game/scenes/kebnekaiseterrainscene.cpp
         source/game/deflektorish/beamenergy.h
         source/game/deflektorish/beamenergy.cpp
         source/game/deflektorish/beamworld.h
@@ -307,6 +309,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             source/cameranode.cpp
             source/game/scenes/deflektorishintroscene.cpp
             source/game/scenes/deflektorishscene.cpp
+            source/game/scenes/kebnekaiseterrainscene.cpp
             source/game/deflektorish/beamenergy.cpp
             source/game/deflektorish/beamworld.cpp
             source/game/deflektorish/deflektorishlevel.cpp

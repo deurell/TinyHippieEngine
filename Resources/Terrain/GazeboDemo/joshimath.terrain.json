@@ -1,0 +1,16 @@
+{
+  "name": "joshimath",
+  "source": "/private/tmp/gazebo_demo_joshimath/Joshimath.world",
+  "terrain": "joshimath_terrain.gltf",
+  "route": null,
+  "metresPerUnit": 200.0,
+  "sizeMetres": [
+    15396.6,
+    11365.07,
+    3325.2
+  ],
+  "origin": {
+    "latitude": 30.567683429320212,
+    "longitude": 79.55064713012462
+  }
+}

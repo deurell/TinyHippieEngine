@@ -26,6 +26,24 @@ TEST(MeshAssetTest, DispatchesGltfThroughGenericMeshLoader) {
   EXPECT_FALSE(asset.submeshes[0].indices.empty());
 }
 
+TEST(MeshAssetTest, LoadsKebnekaiseTerrainAndRouteAssets) {
+  const auto terrain = DL::loadMeshAsset(
+      "../Resources/Terrain/Kebnekaise/kebnekaise_imported_terrain.gltf");
+  const auto route = DL::loadMeshAsset(
+      "../Resources/Terrain/Kebnekaise/kebnekaise_imported_route.gltf");
+
+  ASSERT_EQ(terrain.submeshes.size(), 1u);
+  EXPECT_EQ(terrain.submeshes[0].positions.size(), 148225u);
+  EXPECT_EQ(terrain.submeshes[0].normals.size(), 148225u);
+  EXPECT_EQ(terrain.submeshes[0].indices.size(), 884736u);
+  ASSERT_FALSE(terrain.submeshes[0].texturePath.empty());
+  EXPECT_TRUE(std::filesystem::exists(terrain.submeshes[0].texturePath));
+  ASSERT_EQ(route.submeshes.size(), 1u);
+  EXPECT_EQ(route.submeshes[0].positions.size(),
+            route.submeshes[0].normals.size());
+  EXPECT_GT(route.submeshes[0].indices.size(), 1000u);
+}
+
 TEST(MeshAssetTest, LoadsKenneyPlatformerGlbAsset) {
   const auto asset = DL::loadMeshAsset(
       "../Resources/Kenney/PlatformerKit/Models/block-grass-large.glb");

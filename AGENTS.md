@@ -24,10 +24,8 @@ Precedence:
 - Default window size: `1280x720`.
 - `App` owns an `AudioSystem` (miniaudio backend); access via `app.audioSystem()`.
 - Animation is `AnimationClip` + `AnimationPlayer` + `Skinning` — used with glTF-loaded models.
-- Starter app registers the generic sample `TextStarterScene` first, then
-  `InputDebugScene`, then the Tiny Dungeon atlas `TextStarterScene`, then the
-  Kenney GLB `TextStarterScene`, then `SkeletalAnimationBlendScene`;
-  physics-enabled builds also register `PhysicsTestScene`.
+- This terrain-spike branch registers only the web-friendly real-elevation
+  `KebnekaiseTerrainScene` sample.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
   `LightNode`, `Light2DNode`, `SpriteNode`, `SpriteAnimationNode`,
@@ -55,6 +53,7 @@ Precedence:
   `Resources/Textures/generated/retro-crystal-terminal.png`,
   `Resources/Kenney/TinyDungeon/`,
   `Resources/Kenney/PlatformerKit/`,
+  `Resources/Terrain/Kebnekaise/`,
   `Shaders/meshnode.*`,
   `Shaders/colored_line.*`, `Shaders/status.*`, `Shaders/image.*`,
   `Shaders/tilemap.*`, `Shaders/fogoverlay.*`, `Shaders/light2d.frag`,

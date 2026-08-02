@@ -6,6 +6,7 @@ TINY_ENGINE_ENABLE_PHYSICS="${TINY_ENGINE_ENABLE_PHYSICS:-OFF}"
 
 scripts/check_architecture.sh
 python3 scripts/test_scene_validator.py
+python3 scripts/test_gazebo_terrain_importer.py
 python3 scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json
 cmake -S . -B "${BUILD_DIR}" -DBUILD_TESTING=ON \
   -DTINY_ENGINE_ENABLE_PHYSICS="${TINY_ENGINE_ENABLE_PHYSICS}"

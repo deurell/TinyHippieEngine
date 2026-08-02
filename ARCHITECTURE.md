@@ -48,10 +48,8 @@ Core pieces:
   authoring feedback before running the engine.
 
 Starter content:
-- The app registers the generic sample `TextStarterScene` first, then the
-  Tiny Dungeon atlas `TextStarterScene`, then the Kenney GLB `TextStarterScene`,
-  then `SkeletalAnimationBlendScene`.
-  Physics-enabled builds also register `PhysicsTestScene`.
+- This terrain-spike branch registers only the real-elevation
+  `KebnekaiseTerrainScene` sample.
 - Runtime resources are intentionally minimal:
   `Resources/Scenes/simple_starter.scene.json`,
   `Resources/Scenes/tiny_dungeon_atlas.scene.json`,

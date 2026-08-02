@@ -1,0 +1,125 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Tiny Hippie Gazebo terrain importer"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "joshimath"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "aerial terrain",
+      "pbrMetallicRoughness": {
+        "baseColorTexture": {
+          "index": 0
+        },
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.92
+      }
+    }
+  ],
+  "textures": [
+    {
+      "source": 0
+    }
+  ],
+  "images": [
+    {
+      "uri": "joshimath_aerial.png"
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "joshimath_terrain.bin",
+      "byteLength": 8282144
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 1778700,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 1778700,
+      "byteLength": 1778700,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 3557400,
+      "byteLength": 1185800,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 4743200,
+      "byteLength": 3538944,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 148225,
+      "type": "VEC3",
+      "min": [
+        -38.4915,
+        0.0,
+        -28.412675
+      ],
+      "max": [
+        38.4915,
+        16.625999999999998,
+        28.412675
+      ]
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 148225,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 148225,
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 3,
+      "componentType": 5125,
+      "count": 884736,
+      "type": "SCALAR"
+    }
+  ]
+}

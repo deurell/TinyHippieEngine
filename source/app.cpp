@@ -11,6 +11,7 @@
 #include "game/deflektorish/deflektorishsavedata.h"
 #include "game/scenes/deflektorishintroscene.h"
 #include "game/scenes/deflektorishscene.h"
+#include "game/scenes/kebnekaiseterrainscene.h"
 #include "logger.h"
 #include "renderqueue.h"
 #include "scenemanager.h"
@@ -849,32 +850,9 @@ void DL::App::loadAudioClips() {
 
 void DL::App::registerScenes() {
   sceneManager_.registerScene([this] {
-    return std::make_unique<DeflektorishIntroScene>(
-        renderDevice_.get(), renderResourceCache_.get(),
-        &deflektorCampaign_.highScores(), pendingInitialsScore_,
-        [this](int score, std::string initials) {
-          submitDeflektorInitials(score, std::move(initials));
-        },
-        [this](Deflektorish::Sound sound, glm::vec2 position, float energy) {
-          submitDeflektorSound(sound, position, energy);
-        },
-        [this] {
-          requestSceneAdvance();
-        });
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DeflektorishScene>(
-        renderDevice_.get(), renderResourceCache_.get(),
-        [this](glm::vec2 uv, float strength) {
-          submitDeflektorPostBumpUv(uv, strength);
-        },
-        [this](Deflektorish::Sound sound, glm::vec2 position,
-               float energy) {
-          submitDeflektorSound(sound, position, energy);
-        },
-        [this](int score) {
-          requestSceneReturnToIntro(score);
-        });
+    return std::make_unique<KebnekaiseTerrainScene>(
+        renderDevice_.get(), codebook_.get(), meshAssetCache_.get(),
+        renderResourceCache_.get());
   });
 }
 

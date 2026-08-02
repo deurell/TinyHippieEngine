@@ -1,0 +1,95 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "Tiny Hippie route importer"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "kebnekaise_imported route"
+    }
+  ],
+  "meshes": [
+    {
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0,
+            "NORMAL": 1
+          },
+          "indices": 2,
+          "material": 0
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "navigation orange",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1.0,
+          0.16,
+          0.015,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.38
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "kebnekaise_imported_route.bin",
+      "byteLength": 122640
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteOffset": 0,
+      "byteLength": 30720,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 30720,
+      "byteLength": 30720,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteOffset": 61440,
+      "byteLength": 61200,
+      "target": 34963
+    }
+  ],
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 2560,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 2560,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5125,
+      "count": 15300,
+      "type": "SCALAR"
+    }
+  ]
+}

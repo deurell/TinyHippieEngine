@@ -47,6 +47,9 @@ The desktop build produces two applications:
 scripts/run_tests.sh
 ```
 
+Runtime, Deflektorish, and public-header smoke tests are separate build targets;
+`tiny_hippie_engine_tests` remains an umbrella target for all three.
+
 Physics is off by default. To include the optional Box3D wrapper in tests, run:
 
 ```bash

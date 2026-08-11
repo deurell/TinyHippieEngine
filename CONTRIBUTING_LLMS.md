@@ -44,6 +44,19 @@ Avoid:
 - custom binary authoring formats without a readable source artifact
 - broad node catalogs where a small composable node would do
 
+## Engine And Game Ownership
+
+- Keep reusable primitives in `tiny_hippie_runtime`.
+- Keep sample composition in `tiny_hippie_samples` and game rules/content in
+  `deflektorish_game`.
+- Prototype uncertain functionality in the game. Promote only the smallest
+  proven reusable contract into the runtime, with runtime tests and a focused
+  sample demonstrating it independently.
+- Do not make the shared `App` branch on application identity. Each executable
+  injects its own `AppBootstrap` composition root.
+- Treat `include/` as the public baseline. Do not add private `source/` headers
+  to the public API smoke consumer.
+
 ## Adding Scene-Authored Features
 
 When adding or changing scene JSON support:

@@ -304,16 +304,11 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
 
     include(GoogleTest)
 
-    add_executable(tiny_hippie_engine_tests
+    add_executable(tiny_hippie_runtime_tests
             tests/animationclip_test.cpp
             tests/animationplayer_test.cpp
             tests/cameranode_test.cpp
             tests/camera_test.cpp
-            tests/deflektorish_campaign_test.cpp
-            tests/deflektorish_beamenergy_test.cpp
-            tests/deflektorish_beamworld_test.cpp
-            tests/deflektorish_level_test.cpp
-            tests/deflektorish_soundmap_test.cpp
             tests/iscene_test.cpp
             tests/meshasset_test.cpp
             tests/meshassetcache_test.cpp
@@ -327,31 +322,51 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)
-        target_sources(tiny_hippie_engine_tests PRIVATE
+        target_sources(tiny_hippie_runtime_tests PRIVATE
                 tests/physicsworld_test.cpp
         )
     endif ()
 
-    target_include_directories(tiny_hippie_engine_tests
+    target_include_directories(tiny_hippie_runtime_tests
             PRIVATE
             ${CMAKE_SOURCE_DIR}/include
             ${CMAKE_SOURCE_DIR}/source
             ${CMAKE_SOURCE_DIR}/transcoder
     )
 
-    target_compile_definitions(tiny_hippie_engine_tests PRIVATE GLFW_INCLUDE_NONE)
+    target_compile_definitions(tiny_hippie_runtime_tests PRIVATE GLFW_INCLUDE_NONE)
     if (TINY_ENGINE_ENABLE_PHYSICS)
-        target_compile_definitions(tiny_hippie_engine_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+        target_compile_definitions(tiny_hippie_runtime_tests PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
     endif ()
 
     if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d::box3d)
+        target_link_libraries(tiny_hippie_runtime_tests PRIVATE box3d::box3d)
     elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
-        target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d)
+        target_link_libraries(tiny_hippie_runtime_tests PRIVATE box3d)
     endif ()
 
-    target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main
-            tiny_hippie_samples deflektorish_game)
+    target_link_libraries(tiny_hippie_runtime_tests PRIVATE GTest::gtest_main
+            tiny_hippie_runtime)
 
-    gtest_discover_tests(tiny_hippie_engine_tests)
+    add_executable(deflektorish_tests
+            tests/deflektorish_campaign_test.cpp
+            tests/deflektorish_beamenergy_test.cpp
+            tests/deflektorish_beamworld_test.cpp
+            tests/deflektorish_level_test.cpp
+            tests/deflektorish_soundmap_test.cpp)
+    target_link_libraries(deflektorish_tests PRIVATE GTest::gtest_main
+            deflektorish_game)
+
+    add_executable(tiny_hippie_public_api_smoke
+            tests/public_api_smoke.cpp)
+    target_link_libraries(tiny_hippie_public_api_smoke PRIVATE
+            tiny_hippie_runtime)
+
+    add_custom_target(tiny_hippie_engine_tests
+            DEPENDS tiny_hippie_runtime_tests deflektorish_tests
+                    tiny_hippie_public_api_smoke)
+
+    gtest_discover_tests(tiny_hippie_runtime_tests)
+    gtest_discover_tests(deflektorish_tests)
+    add_test(NAME TinyHippiePublicApiSmoke COMMAND tiny_hippie_public_api_smoke)
 endif ()

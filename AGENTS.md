@@ -123,6 +123,10 @@ Tests:
 scripts/run_tests.sh
 ```
 
+Test ownership is split into `tiny_hippie_runtime_tests`,
+`deflektorish_tests`, and `tiny_hippie_public_api_smoke`; the compatibility
+target `tiny_hippie_engine_tests` builds all three.
+
 `run_tests.sh` runs `scripts/check_architecture.sh` first (requires `rg`),
 validates scene JSON, then builds and runs CTest.
 

@@ -56,3 +56,36 @@ if rg -n "createAlphaTexture" include source tests; then
   echo "Architecture check failed: createAlphaTexture should stay removed." >&2
   exit 1
 fi
+
+app_boundary_paths=(include/app.h include/appbootstrap.h source/app.cpp)
+if rg -n '#include "game/|Deflektorish|StarterBootstrap' "${app_boundary_paths[@]}"; then
+  echo "Architecture check failed: application shell depends on game/sample content." >&2
+  exit 1
+fi
+
+runtime_target=$(sed -n '/add_library(tiny_hippie_runtime STATIC/,/^)/p' CMakeLists.txt)
+if rg -n 'source/game/' <<<"${runtime_target}"; then
+  echo "Architecture check failed: tiny_hippie_runtime contains game sources." >&2
+  exit 1
+fi
+
+sample_paths=(
+  source/game/starterbootstrap.cpp
+  source/game/scenes/inputdebugscene.cpp
+  source/game/scenes/inputdebugscene.h
+  source/game/scenes/textstarterscene.cpp
+  source/game/scenes/textstarterscene.h
+  source/game/scenes/skeletalanimationblendscene.cpp
+  source/game/scenes/skeletalanimationblendscene.h
+)
+if rg -n 'Deflektorish|game/deflektorish|deflektorishscene' "${sample_paths[@]}"; then
+  echo "Architecture check failed: samples depend on Deflektorish." >&2
+  exit 1
+fi
+
+while IFS= read -r header; do
+  if [[ ! -f "include/${header}" ]]; then
+    echo "Architecture check failed: public API smoke test includes private header '${header}'." >&2
+    exit 1
+  fi
+done < <(sed -n 's/^#include "\([^"]*\)"/\1/p' tests/public_api_smoke.cpp)

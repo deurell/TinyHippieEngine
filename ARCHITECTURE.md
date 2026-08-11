@@ -91,6 +91,46 @@ Build-time ownership boundaries:
   game scene transitions remain driven by game callbacks.
 - Tests link the runtime and game-content libraries instead of recompiling
   engine implementation sources.
+- Tests are separated by ownership: `tiny_hippie_runtime_tests` links only the
+  runtime, `deflektorish_tests` links the game, and
+  `tiny_hippie_public_api_smoke` includes only headers from `include/`.
+- `scripts/check_architecture.sh` enforces that the runtime contains no game
+  sources, the application shell contains no sample/game references, samples
+  contain no Deflektorish references, and the API smoke test stays on public
+  headers.
+
+### Feature Promotion Workflow
+
+Deflektorish is the engine's dogfooding application, while the starter is the
+engine showroom. They are separate applications rather than modes of one app.
+
+Use this sequence for functionality discovered while building the game:
+
+1. Prototype uncertain, game-specific behavior inside `deflektorish_game`.
+2. Keep rules, content, tuning, campaign flow, and bespoke presentation in the
+   game when they have no demonstrated second use.
+3. When a capability becomes reusable, extract the smallest typed primitive
+   into `tiny_hippie_runtime`; do not move the surrounding game behavior.
+4. Add runtime tests for the extracted contract.
+5. Add a focused, copyable demonstration to `tiny_hippie_samples` so the
+   capability can be understood without reading Deflektorish.
+6. Consume the promoted primitive from the game through the public engine API.
+
+Dependency direction is one-way:
+
+```text
+tiny_hippie_engine -> tiny_hippie_samples -> tiny_hippie_app/runtime
+deflektorish       -> deflektorish_game   -> tiny_hippie_app/runtime
+tiny_hippie_app    -> tiny_hippie_runtime
+tiny_hippie_runtime -> no sample or game target
+```
+
+Public-header policy:
+- `include/` is the currently supported consumer-facing header surface.
+- `source/` headers remain available internally while the API is clarified;
+  they should be promoted individually only when a real consumer needs them.
+- Avoid a bulk header move or compatibility facade without an external use
+  case. The public API smoke target records the intentionally public baseline.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).

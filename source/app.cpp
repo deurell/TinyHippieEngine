@@ -1029,6 +1029,10 @@ void DL::App::onKey(int key, int scancode, int action, int mod) {
   const bool imguiWantsKeyboard = false;
 #endif
 
+  if (!imguiWantsKeyboard && bootstrap_->onKey(*this, key, action, mod)) {
+    return;
+  }
+
   if (action != GLFW_RELEASE) {
     return;
   }

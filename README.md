@@ -87,6 +87,7 @@ scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-
 Controls:
 
 - `WASD`: move the camera.
+- `Left` / `Right`: switch scenes in the sample application.
 - Hold right mouse button and move the mouse: rotate the camera heading.
 - `ESC`: quit.
 

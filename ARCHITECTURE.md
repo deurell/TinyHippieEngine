@@ -84,8 +84,11 @@ Build-time ownership boundaries:
   `DeflektorishBootstrap`. The executable is the composition root: there is no
   runtime mode toggle between the two applications.
 - Bootstraps may register scenes and own application-specific state through the
-  narrow configure/resources/update/before-render lifecycle. They do not
+  narrow configure/resources/update/before-render/input lifecycle. They do not
   override the platform loop or simulation timing.
+- The starter bootstrap consumes Left/Right arrow presses to navigate its demo
+  scene catalog. The Deflektorish bootstrap does not install this navigation;
+  game scene transitions remain driven by game callbacks.
 - Tests link the runtime and game-content libraries instead of recompiling
   engine implementation sources.
 

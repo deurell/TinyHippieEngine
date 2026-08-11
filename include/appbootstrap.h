@@ -11,6 +11,9 @@ public:
   virtual void resourcesReady(App &app) {}
   virtual void update(App &app, float deltaTime) {}
   virtual void beforeRender(App &app) {}
+  virtual bool onKey(App &app, int key, int action, int mods) {
+    return false;
+  }
 };
 
 } // namespace DL

@@ -4,6 +4,7 @@
 #include "game/scenes/inputdebugscene.h"
 #include "game/scenes/skeletalanimationblendscene.h"
 #include "game/scenes/textstarterscene.h"
+#include <GLFW/glfw3.h>
 #ifdef TINY_ENGINE_ENABLE_PHYSICS
 #include "game/scenes/physicstestscene.h"
 #endif
@@ -32,6 +33,20 @@ public:
       return std::make_unique<PhysicsTestScene>(app.renderDevice());
     });
 #endif
+  }
+
+  bool onKey(DL::App &app, int key, int action, int) override {
+    if (key != GLFW_KEY_LEFT && key != GLFW_KEY_RIGHT) {
+      return false;
+    }
+    if (action == GLFW_PRESS) {
+      if (key == GLFW_KEY_RIGHT) {
+        app.requestNextScene();
+      } else {
+        app.requestPreviousScene();
+      }
+    }
+    return true;
   }
 
 private:

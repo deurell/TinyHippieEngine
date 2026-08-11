@@ -126,11 +126,14 @@ tiny_hippie_runtime -> no sample or game target
 ```
 
 Public-header policy:
-- `include/` is the currently supported consumer-facing header surface.
+- `include/` contains the intended consumer-facing headers, but it is not yet a
+  standalone installable SDK: some headers still depend on implementation
+  headers from `source/`.
 - `source/` headers remain available internally while the API is clarified;
   they should be promoted individually only when a real consumer needs them.
 - Avoid a bulk header move or compatibility facade without an external use
-  case. The public API smoke target records the intentionally public baseline.
+  case. The API smoke target records a small intentionally public baseline; it
+  does not certify every header in `include/` as independently installable.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).

@@ -63,21 +63,17 @@ if rg -n '#include "game/|Deflektorish|StarterBootstrap' "${app_boundary_paths[@
   exit 1
 fi
 
-runtime_target=$(sed -n '/add_library(tiny_hippie_runtime STATIC/,/^)/p' CMakeLists.txt)
+runtime_target=$(sed -n '/add_library(tiny_hippie_runtime STATIC/,/^)/p;
+  /target_sources(tiny_hippie_runtime /,/^)/p' CMakeLists.txt)
 if rg -n 'source/game/' <<<"${runtime_target}"; then
   echo "Architecture check failed: tiny_hippie_runtime contains game sources." >&2
   exit 1
 fi
 
-sample_paths=(
-  source/game/starterbootstrap.cpp
-  source/game/scenes/inputdebugscene.cpp
-  source/game/scenes/inputdebugscene.h
-  source/game/scenes/textstarterscene.cpp
-  source/game/scenes/textstarterscene.h
-  source/game/scenes/skeletalanimationblendscene.cpp
-  source/game/scenes/skeletalanimationblendscene.h
-)
+sample_paths=()
+while IFS= read -r path; do
+  sample_paths+=("${path}")
+done < <(rg --files source/game | rg 'starterbootstrap|inputdebugscene|textstarterscene|skeletalanimationblendscene|physicstestscene')
 if rg -n 'Deflektorish|game/deflektorish|deflektorishscene' "${sample_paths[@]}"; then
   echo "Architecture check failed: samples depend on Deflektorish." >&2
   exit 1
@@ -89,3 +85,14 @@ while IFS= read -r header; do
     exit 1
   fi
 done < <(sed -n 's/^#include "\([^"]*\)"/\1/p' tests/public_api_smoke.cpp)
+
+if ! rg -q 'tiny_hippie_engine PRIVATE tiny_hippie_app' CMakeLists.txt ||
+   ! rg -q 'deflektorish PRIVATE tiny_hippie_app' CMakeLists.txt; then
+  echo "Architecture check failed: executable composition roots changed unexpectedly." >&2
+  exit 1
+fi
+
+if rg -n -- '--preload-file Resources@|--preload-file Resources ' CMakeLists.txt; then
+  echo "Architecture check failed: web targets must not package the entire Resources tree." >&2
+  exit 1
+fi

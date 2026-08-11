@@ -26,7 +26,7 @@ elseif (UNIX AND NOT APPLE AND NOT EMSCRIPTEN)
 endif ()
 
 if (EMSCRIPTEN)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1 --preload-file Shaders --preload-file Resources")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s ALLOW_MEMORY_GROWTH=1")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --shell-file ../shell.html -s USE_GLFW=3 -s MIN_WEBGL_VERSION=2 -s MAX_WEBGL_VERSION=2")
 endif ()
 
@@ -173,6 +173,21 @@ target_link_libraries(tiny_hippie_engine PRIVATE tiny_hippie_app
 add_executable(deflektorish source/deflektorish_main.cpp)
 target_link_libraries(deflektorish PRIVATE tiny_hippie_app
         deflektorish_game)
+
+if (EMSCRIPTEN)
+    target_link_options(tiny_hippie_engine PRIVATE
+            "SHELL:--preload-file Shaders@Shaders"
+            "SHELL:--preload-file Resources/C64_Pro-STYLE.ttf@Resources/C64_Pro-STYLE.ttf"
+            "SHELL:--preload-file Resources/Scenes@Resources/Scenes"
+            "SHELL:--preload-file Resources/Textures@Resources/Textures"
+            "SHELL:--preload-file Resources/Kenney@Resources/Kenney"
+            "SHELL:--preload-file Resources/character-l.glb@Resources/character-l.glb"
+            "SHELL:--preload-file Resources/character-q.glb@Resources/character-q.glb")
+    target_link_options(deflektorish PRIVATE
+            "SHELL:--preload-file Shaders@Shaders"
+            "SHELL:--preload-file Resources/C64_Pro-STYLE.ttf@Resources/C64_Pro-STYLE.ttf"
+            "SHELL:--preload-file Resources/Game@Resources/Game")
+endif ()
 
 if (TINY_ENGINE_ENABLE_IMGUI)
     add_library(imgui STATIC

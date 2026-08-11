@@ -164,9 +164,13 @@ Current scene representation:
 - `FogOverlayNode` supports transparent scrolling texture overlays for mist,
   clouds, and cloud shadows.
 - `TileMapNode` supports compact atlas-backed orthogonal maps with Tiled-style
-  global tile IDs and flip flags.
+  global tile IDs and flip flags. Its atlas is a fixed-cell regular grid with
+  one tileset, no margin or spacing, and square world-space cells; arbitrary
+  rectangle packing is intentionally outside this node's current contract.
 - `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into
-  JSON-authored `TileMapNode` scenes; runtime scene loading stays JSON-only.
+  complete JSON-authored `TileMapNode` scenes; runtime scene loading stays
+  JSON-only. Conversion replaces the output scene, so TMX/TSX is the visual map
+  source and reconversion must not be assumed to preserve hand-authored nodes.
 - `scripts/tiny_hippie_validate.py` validates scene JSON structure, known node
   fields, node type payloads, enum values, common atlas/tilemap invariants, and
   referenced asset paths. It may warn about suspicious authored transforms, but

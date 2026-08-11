@@ -101,8 +101,8 @@ DrawCommand toDrawCommand(const RenderItem &item) {
   command.texture = item.texture;
   command.pass = item.pass;
   command.blendMode = item.blendMode;
-  command.depthTest = item.depthTest;
   command.sortMode = item.sortMode;
+  command.depthTest = item.depthTest;
   command.sortDepth = item.sortDepth;
   command.lineWidth = item.lineWidth;
   command.uniforms = item.uniforms;

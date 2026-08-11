@@ -304,6 +304,69 @@ avoid a single obvious sliding pattern.
 `data` is row-major and may include Tiled flip bits. `0` means no tile.
 `firstGid` is the first Tiled global tile ID for the tileset used by the map.
 
+`TileMapNode` deliberately supports a simple regular-grid atlas, not an
+arbitrary rectangle-packed sprite atlas:
+
+- Every atlas tile has the same pixel dimensions (`tileWidth` by
+  `tileHeight`).
+- Tiles are laid out from left to right in rows, with `columns` tiles per row.
+- The atlas has no margin, spacing, or rotated entries.
+- One map uses one tileset and one atlas image.
+- `tileWorldSize` is a single scalar, so rendered cells are square in world
+  space even if the source pixels are rectangular.
+- Tiled tile-animation metadata is not imported; every `TileMapNode` cell is
+  static after initialization.
+
+The atlas tile index is derived from the Tiled global ID after removing Tiled's
+horizontal, vertical, and diagonal flip bits and subtracting `firstGid`. Large
+values such as `1610612787` therefore represent an ordinary tile ID plus flip
+flags; they are not intended to be interpreted manually.
+
+The first `data` value is the top-left map cell. Rows proceed downward in the
+JSON data. At runtime the complete map is centered on the `TileMapNode` origin,
+with positive world Y pointing upward. Use the node `transform` to position,
+rotate, or scale the complete map, and use each layer's `z` to control layer
+ordering.
+
+`TileMapNode` builds one static mesh during initialization. The current API is
+suited to maps authored in Tiled and loaded as static scene content; it does not
+yet expose runtime cell replacement such as changing cell `(2, 2)` to another
+atlas tile. For a small number of animated decorations, leave those cells empty
+in Tiled and place `SpriteAnimationNode` children at the corresponding world
+positions. Native animated map cells would require importing each Tiled frame
+sequence and updating the affected atlas UVs during `fixedUpdate()`.
+
+### Tiled conversion workflow
+
+Author the tile grid visually in Tiled and save an orthogonal `.tmx` map with
+exactly one tileset and CSV-encoded tile layers. Convert it from the repository
+root:
+
+```bash
+scripts/convert_tiled_map.py \
+  path/to/map.tmx \
+  Resources/Scenes/my_map.scene.json \
+  --tile-world-size 0.34 \
+  --layer-step 0.01 \
+  --use-packed
+```
+
+`--use-packed` selects a sibling image named `*_packed.png` when one exists;
+this image must still be a regular fixed-cell grid. Use repeated
+`--layer-z NAME=VALUE` options when particular Tiled layers need explicit
+depths. Run `scripts/convert_tiled_map.py --help` for camera, naming, and marker
+options.
+
+The converter writes a complete scene containing a camera, an optional marker,
+and the `TileMapNode`. It replaces the output file. Hand-authored nodes added to
+that generated file will be lost on reconversion, so keep the `.tmx`/`.tsx`
+files as the visual map source and reconvert deliberately. Validate the result
+with:
+
+```bash
+scripts/tiny_hippie_validate.py Resources/Scenes/my_map.scene.json
+```
+
 ## TextNode
 
 ```json

@@ -79,8 +79,37 @@ TARGET=all scripts/build_web.sh                # both applications
 Tiled `.tmx` maps can be converted into JSON `TileMapNode` scenes:
 
 ```bash
-scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-packed
+scripts/convert_tiled_map.py \
+  input.tmx \
+  Resources/Scenes/output.scene.json \
+  --tile-world-size 0.34 \
+  --use-packed
 ```
+
+The input must be an orthogonal map with one tileset and CSV-encoded tile
+layers. The tileset image must be a regular grid of fixed-size tiles; arbitrary
+rectangle-packed atlases, margins, spacing, and multiple tilesets are not
+supported. Tiled animated-tile metadata is not imported; use separate
+`SpriteAnimationNode` scene content for occasional animated decorations.
+`--use-packed` means “prefer a sibling `*_packed.png` image”; that image must
+still have the same regular grid layout.
+
+The converter replaces the output with a complete scene containing a camera
+and `TileMapNode`. Treat the `.tmx`/`.tsx` files as the visual source of truth
+and do not expect hand-authored nodes in the generated JSON to survive
+reconversion. Validate and register a generated scene with:
+
+```bash
+scripts/tiny_hippie_validate.py Resources/Scenes/output.scene.json
+```
+
+```cpp
+registerTextScene(app, "Resources/Scenes/output.scene.json");
+```
+
+The sample application can then reach it through its Left/Right scene
+navigation. See `Resources/Scenes/SCHEMA.md` for field semantics, coordinate
+orientation, flip-bit handling, layer depth, and current limitations.
 
 ## Running
 

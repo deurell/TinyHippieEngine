@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Convert a Tiled TMX map into Tiny Hippie Engine scene JSON."""
+"""Convert a Tiled TMX map into Tiny Hippie Engine scene JSON.
+
+The output is a complete generated scene and is replaced on every conversion.
+"""
 
 from __future__ import annotations
 
@@ -154,7 +157,7 @@ def parse_vec3(value: str) -> list[float]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", help="Input Tiled .tmx file")
-    parser.add_argument("output", help="Output scene .json file")
+    parser.add_argument("output", help="Output scene .json file (overwritten)")
     parser.add_argument("--repo-root", default=".", help="Repository root for resource-relative paths")
     parser.add_argument("--scene-name", default="", help="Scene name in generated JSON")
     parser.add_argument("--node-name", default="tile_map", help="Generated TileMapNode name")

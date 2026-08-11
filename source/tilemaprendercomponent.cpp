@@ -10,13 +10,11 @@
 
 namespace {
 
-std::array<glm::vec2, 4> transformedTileUvs(std::uint32_t tileIndex,
-                                            std::uint32_t columns,
-                                            std::uint32_t tileWidth,
-                                            std::uint32_t tileHeight,
-                                            const glm::vec2 &atlasSize,
-                                            bool flipX, bool flipY,
-                                            bool flipDiagonal) {
+std::array<glm::vec2, 4>
+transformedTileUvs(std::uint32_t tileIndex, std::uint32_t columns,
+                   std::uint32_t tileWidth, std::uint32_t tileHeight,
+                   const glm::vec2 &atlasSize, bool flipX, bool flipY,
+                   bool flipDiagonal) {
   const std::uint32_t col = columns > 0 ? tileIndex % columns : 0u;
   const std::uint32_t row = columns > 0 ? tileIndex / columns : 0u;
   const glm::vec2 origin{static_cast<float>(col * tileWidth) + 0.5f,
@@ -25,8 +23,8 @@ std::array<glm::vec2, 4> transformedTileUvs(std::uint32_t tileIndex,
                        static_cast<float>(tileHeight) - 1.0f};
 
   std::array<glm::vec2, 4> local = {
-      glm::vec2{1.0f, 0.0f}, glm::vec2{1.0f, 1.0f},
-      glm::vec2{0.0f, 1.0f}, glm::vec2{0.0f, 0.0f}};
+      glm::vec2{1.0f, 0.0f}, glm::vec2{1.0f, 1.0f}, glm::vec2{0.0f, 1.0f},
+      glm::vec2{0.0f, 0.0f}};
   for (glm::vec2 &uv : local) {
     if (flipDiagonal) {
       uv = {uv.y, uv.x};
@@ -51,7 +49,7 @@ TileMapRenderComponent::TileMapRenderComponent(
     DL::IRenderDevice *renderDevice, DL::RenderResourceCache *resourceCache,
     std::string vertexShaderPath, std::string fragmentShaderPath)
     : RenderComponent(camera, std::move(vertexShaderPath),
-                     std::move(fragmentShaderPath), node),
+                      std::move(fragmentShaderPath), node),
       renderDevice_(renderDevice), resourceCache_(resourceCache),
       config_(std::move(config)) {
   if (renderDevice_ == nullptr) {
@@ -95,7 +93,8 @@ TileMapRenderComponent::TileMapRenderComponent(
   }
 
   if (!texture_.valid()) {
-    std::cerr << "Failed to load tilemap texture: " << config_.imagePath << "\n";
+    std::cerr << "Failed to load tilemap texture: " << config_.imagePath
+              << "\n";
     return;
   }
 
@@ -115,6 +114,19 @@ TileMapRenderComponent::~TileMapRenderComponent() {
   if (pipeline_.valid() && resourceCache_ == nullptr) {
     renderDevice_->destroy(pipeline_);
   }
+}
+
+void TileMapRenderComponent::setConfig(const TileMapConfig &config) {
+  config_ = config;
+  if (renderDevice_ == nullptr) {
+    return;
+  }
+  if (mesh_.valid()) {
+    renderDevice_->destroy(mesh_);
+    mesh_ = {};
+  }
+  localBounds_ = {};
+  buildMesh();
 }
 
 void TileMapRenderComponent::buildMesh() {
@@ -190,8 +202,8 @@ void TileMapRenderComponent::buildMesh() {
 }
 
 void TileMapRenderComponent::render(const glm::mat4 &worldTransform,
-                               const DL::FrameContext &ctx,
-                               DL::RenderPassId pass) {
+                                    const DL::FrameContext &ctx,
+                                    DL::RenderPassId pass) {
   if (pass != DL::RenderPassId::Opaque || renderDevice_ == nullptr ||
       !mesh_.valid() || !texture_.valid() || !pipeline_.valid()) {
     return;

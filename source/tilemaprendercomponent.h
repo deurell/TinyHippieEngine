@@ -1,9 +1,9 @@
 #pragma once
 
+#include "rendercomponent.h"
 #include "renderdevice.h"
 #include "renderqueue.h"
 #include "renderresourcecache.h"
-#include "rendercomponent.h"
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -14,6 +14,13 @@ struct TileMapTile {
   std::uint32_t tileIndex = 0;
   std::uint32_t x = 0;
   std::uint32_t y = 0;
+  bool flipX = false;
+  bool flipY = false;
+  bool flipDiagonal = false;
+};
+
+struct TileMapCell {
+  std::uint32_t tileIndex = 0;
   bool flipX = false;
   bool flipY = false;
   bool flipDiagonal = false;
@@ -47,6 +54,8 @@ public:
       std::string fragmentShaderPath = "Shaders/tilemap.frag");
 
   ~TileMapRenderComponent() override;
+
+  void setConfig(const TileMapConfig &config);
 
   void render(const glm::mat4 &worldTransform, const DL::FrameContext &ctx,
               DL::RenderPassId pass) override;

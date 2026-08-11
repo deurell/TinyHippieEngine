@@ -47,6 +47,8 @@ Precedence:
   `SpriteAnimationNode` advances atlas frames in `fixedUpdate()`,
   `SpriteBatchNode` batches many static atlas sprites from one image, and
   `FogOverlayNode` renders scrolling transparent mist/cloud overlays, and
+  `TileMapNode` supports runtime cell query/replacement with one deferred mesh
+  rebuild per update,
   `ShaderPlaneNode` renders authored shader-driven quads with explicit blend,
   depth, and vec4 parameter buckets.
 - Scene JSON authoring is validated with `scripts/tiny_hippie_validate.py`;

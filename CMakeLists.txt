@@ -340,6 +340,7 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/particlesystemnode_test.cpp
             tests/renderqueue_test.cpp
             tests/scenedescription_test.cpp
+            tests/tilemapnode_test.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)

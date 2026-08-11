@@ -167,6 +167,9 @@ Current scene representation:
   global tile IDs and flip flags. Its atlas is a fixed-cell regular grid with
   one tileset, no margin or spacing, and square world-space cells; arbitrary
   rectangle packing is intentionally outside this node's current contract.
+  Runtime code can query, replace, and clear sparse cells by layer name and map
+  coordinate. Mutations mark render data dirty and are folded into one mesh
+  rebuild during the next `update()`.
 - `scripts/convert_tiled_map.py` converts Tiled TMX/TSX content into
   complete JSON-authored `TileMapNode` scenes; runtime scene loading stays
   JSON-only. Conversion replaces the output scene, so TMX/TSX is the visual map

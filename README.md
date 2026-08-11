@@ -12,7 +12,8 @@ richer glTF animation and flocking example.
 - WebGL2 build path via Emscripten.
 - Scene graph based runtime with `SceneNode` transforms and render components.
 - Text-authored scene composition for LLM/coder-friendly node setup.
-- Atlas-backed `TileMapNode` support for compact 2D tile-map scenes.
+- Atlas-backed `TileMapNode` support for compact 2D tile-map scenes, including
+  batched runtime cell replacement.
 - glTF/GLB mesh loading with animation clips, animation playback, and skinning helpers.
 - Mesh rendering through `IRenderDevice` and the OpenGL backend.
 - ImGui debug UI, runtime logs, scene tree, and inspector.

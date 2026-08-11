@@ -314,8 +314,8 @@ arbitrary rectangle-packed sprite atlas:
 - One map uses one tileset and one atlas image.
 - `tileWorldSize` is a single scalar, so rendered cells are square in world
   space even if the source pixels are rectangular.
-- Tiled tile-animation metadata is not imported; every `TileMapNode` cell is
-  static after initialization.
+- Tiled tile-animation metadata is not imported. Runtime code may replace
+  cells, but the node does not advance authored animation sequences itself.
 
 The atlas tile index is derived from the Tiled global ID after removing Tiled's
 horizontal, vertical, and diagonal flip bits and subtracting `firstGid`. Large
@@ -328,13 +328,34 @@ with positive world Y pointing upward. Use the node `transform` to position,
 rotate, or scale the complete map, and use each layer's `z` to control layer
 ordering.
 
-`TileMapNode` builds one static mesh during initialization. The current API is
-suited to maps authored in Tiled and loaded as static scene content; it does not
-yet expose runtime cell replacement such as changing cell `(2, 2)` to another
-atlas tile. For a small number of animated decorations, leave those cells empty
-in Tiled and place `SpriteAnimationNode` children at the corresponding world
-positions. Native animated map cells would require importing each Tiled frame
-sequence and updating the affected atlas UVs during `fixedUpdate()`.
+Runtime code can query, replace, or clear a cell without editing the authored
+scene description:
+
+```cpp
+if (tileMap.setTile("Dungeon", {2, 2}, {.tileIndex = 10})) {
+  // Cell (2, 2) now displays atlas tile 10.
+}
+
+tileMap.clearTile("Dungeon", {2, 2});
+const auto cell = tileMap.tile("Dungeon", {2, 2}); // empty after clear
+const glm::vec2 center = tileMap.mapToLocal({2, 2});
+```
+
+Runtime `tileIndex` values are zero-based atlas indices. This differs from JSON
+`data`, which stores Tiled global IDs: `0` means empty and the first tile is
+`firstGid`. `setTile` and `clearTile` return `false` for an unknown layer or an
+out-of-bounds coordinate; `clearTile` also returns `false` when the cell was
+already empty. `tile` returns `std::nullopt` for both an empty cell and an
+invalid lookup.
+
+Multiple cell edits are cheap to issue together: they only mark the tile map
+dirty, and `TileMapNode` rebuilds its single batched mesh once during the next
+`update()`. Make gameplay-driven changes in `fixedUpdate()`; rendering catches
+them on the following presentation update. For a small number of animated
+decorations, leave those cells empty in Tiled and place `SpriteAnimationNode`
+children at positions returned by `mapToLocal`. Native animated map cells would
+require importing each Tiled frame sequence and changing cells from
+`fixedUpdate()`.
 
 ### Tiled conversion workflow
 

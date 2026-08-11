@@ -49,8 +49,9 @@ scripts/run_tests.sh
 
 Runtime, Deflektorish, and public-header smoke tests are separate build targets;
 `tiny_hippie_engine_tests` remains an umbrella target for all three.
-The smoke target covers the deliberately small API baseline; this repository
-does not yet publish a standalone installed-header SDK.
+The smoke target builds a minimal bootstrap and scene without access to private
+`source/` headers. It covers the deliberately small API baseline; this
+repository does not yet publish a standalone installed-header SDK.
 
 Physics is off by default. To include the optional Box3D wrapper in tests, run:
 

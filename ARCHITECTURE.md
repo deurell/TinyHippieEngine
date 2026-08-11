@@ -126,14 +126,16 @@ tiny_hippie_runtime -> no sample or game target
 ```
 
 Public-header policy:
-- `include/` contains the intended consumer-facing headers, but it is not yet a
-  standalone installable SDK: some headers still depend on implementation
-  headers from `source/`.
+- `tiny_hippie_runtime` exposes `include/` and third-party transcoder headers;
+  it does not expose `source/` to consumers.
+- The API smoke target compiles a bootstrap and scene against the deliberately
+  small public baseline. Its dependency closure must not include headers from
+  `source/`; `scripts/check_architecture.sh` enforces this contract.
 - `source/` headers remain available internally while the API is clarified;
   they should be promoted individually only when a real consumer needs them.
 - Avoid a bulk header move or compatibility facade without an external use
-  case. The API smoke target records a small intentionally public baseline; it
-  does not certify every header in `include/` as independently installable.
+  case. The public baseline does not certify every header in `include/` as an
+  independently installable SDK surface.
 
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).

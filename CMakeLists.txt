@@ -46,7 +46,7 @@ endif ()
 add_library(tiny_hippie_runtime STATIC
         source/glad.c
         source/logger.cpp
-        source/camera.h
+        include/camera.h
         source/cameranode.h source/cameranode.cpp
         source/animationclip.h source/animationclip.cpp
         source/animationplayer.h source/animationplayer.cpp
@@ -116,8 +116,9 @@ endif ()
 target_include_directories(tiny_hippie_runtime
         PUBLIC
         ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/source
         ${CMAKE_SOURCE_DIR}/transcoder
+        PRIVATE
+        ${CMAKE_SOURCE_DIR}/source
 )
 
 target_compile_definitions(tiny_hippie_runtime PUBLIC GLFW_INCLUDE_NONE)
@@ -140,6 +141,7 @@ if (TINY_ENGINE_ENABLE_PHYSICS)
             source/game/scenes/physicstestscene.cpp)
 endif ()
 target_link_libraries(tiny_hippie_samples PUBLIC tiny_hippie_runtime)
+target_include_directories(tiny_hippie_samples PRIVATE ${CMAKE_SOURCE_DIR}/source)
 
 add_library(deflektorish_game STATIC
         source/game/deflektorishbootstrap.cpp
@@ -153,6 +155,7 @@ add_library(deflektorish_game STATIC
         source/game/deflektorish/deflektorishsoundmap.cpp
 )
 target_link_libraries(deflektorish_game PUBLIC tiny_hippie_runtime)
+target_include_directories(deflektorish_game PRIVATE ${CMAKE_SOURCE_DIR}/source)
 
 add_library(tiny_hippie_app STATIC
         include/app.h
@@ -165,12 +168,15 @@ else ()
 endif ()
 target_link_libraries(tiny_hippie_app PUBLIC tiny_hippie_runtime
 )
+target_include_directories(tiny_hippie_app PRIVATE ${CMAKE_SOURCE_DIR}/source)
 
 add_executable(tiny_hippie_engine source/main.cpp)
+target_include_directories(tiny_hippie_engine PRIVATE ${CMAKE_SOURCE_DIR}/source)
 target_link_libraries(tiny_hippie_engine PRIVATE tiny_hippie_app
         tiny_hippie_samples)
 
 add_executable(deflektorish source/deflektorish_main.cpp)
+target_include_directories(deflektorish PRIVATE ${CMAKE_SOURCE_DIR}/source)
 target_link_libraries(deflektorish PRIVATE tiny_hippie_app
         deflektorish_game)
 
@@ -371,6 +377,8 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/deflektorish_soundmap_test.cpp)
     target_link_libraries(deflektorish_tests PRIVATE GTest::gtest_main
             deflektorish_game)
+    target_include_directories(deflektorish_tests PRIVATE
+            ${CMAKE_SOURCE_DIR}/source)
 
     add_executable(tiny_hippie_public_api_smoke
             tests/public_api_smoke.cpp)

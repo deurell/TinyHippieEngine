@@ -55,8 +55,9 @@ Avoid:
 - Do not make the shared `App` branch on application identity. Each executable
   injects its own `AppBootstrap` composition root.
 - Treat the headers exercised by the API smoke consumer as the public baseline.
-  Do not add private `source/` headers to that consumer, and do not imply that
-  every header in `include/` is already a standalone installed SDK.
+  Its header closure must remain independent of `source/`, and the runtime must
+  not export `source/` as a public include directory. Do not imply that every
+  header in `include/` is already a standalone installed SDK.
 
 ## Adding Scene-Authored Features
 

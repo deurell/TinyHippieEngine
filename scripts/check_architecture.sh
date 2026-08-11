@@ -86,6 +86,33 @@ while IFS= read -r header; do
   fi
 done < <(sed -n 's/^#include "\([^"]*\)"/\1/p' tests/public_api_smoke.cpp)
 
+public_api_headers=(
+  appbootstrap.h
+  audiosystem.h
+  camera.h
+  iscene.h
+  lighting.h
+  rendercomponent.h
+  renderdevice.h
+  renderpass.h
+  scenemanager.h
+  scenenode.h
+)
+for header in "${public_api_headers[@]}"; do
+  while IFS= read -r dependency; do
+    if [[ -f "source/${dependency}" && ! -f "include/${dependency}" ]]; then
+      echo "Architecture check failed: public header '${header}' includes private header '${dependency}'." >&2
+      exit 1
+    fi
+  done < <(sed -n 's/^#include "\([^"]*\)"/\1/p' "include/${header}")
+done
+
+if sed -n '/target_include_directories(tiny_hippie_runtime/,/^)/p' CMakeLists.txt |
+   sed -n '/PUBLIC/,/PRIVATE/p' | rg -q '\$\{CMAKE_SOURCE_DIR\}/source'; then
+  echo "Architecture check failed: tiny_hippie_runtime exports source/ as a public include directory." >&2
+  exit 1
+fi
+
 if ! rg -q 'tiny_hippie_engine PRIVATE tiny_hippie_app' CMakeLists.txt ||
    ! rg -q 'deflektorish PRIVATE tiny_hippie_app' CMakeLists.txt; then
   echo "Architecture check failed: executable composition roots changed unexpectedly." >&2

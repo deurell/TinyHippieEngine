@@ -61,6 +61,12 @@ scripts/build_web.sh
 ```
 
 `EMS` may point to the emsdk root or directly to `upstream/emscripten`.
+The script builds Deflektorish by default. Select another web output with:
+
+```bash
+TARGET=tiny_hippie_engine scripts/build_web.sh # sample application
+TARGET=all scripts/build_web.sh                # both applications
+```
 
 ### Tiled Maps
 

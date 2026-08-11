@@ -271,6 +271,8 @@ Build flags:
 
 Web:
 - Use `scripts/build_web.sh`.
+- The default web target is `deflektorish`; `TARGET=tiny_hippie_engine` builds
+  the sample app and `TARGET=all` builds both applications.
 - `EMS` may point to either:
   - emsdk root (contains `upstream/emscripten/...`)
   - direct emscripten dir (`.../upstream/emscripten`)

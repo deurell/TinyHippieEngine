@@ -96,6 +96,8 @@ EMS=/path/to/emsdk ./scripts/build_web.sh
 ```
 
 `build_web.sh` accepts `EMS` as either emsdk root or direct `upstream/emscripten` path.
+It builds `deflektorish` by default; set `TARGET=tiny_hippie_engine` for the
+sample app or `TARGET=all` for both web executables.
 
 Tiled map conversion:
 

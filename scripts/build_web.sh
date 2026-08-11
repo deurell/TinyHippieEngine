@@ -8,7 +8,18 @@ fi
 
 WEB_DIR="${WEB_DIR:-web}"
 CONFIG="${CONFIG:-MinSizeRel}"
+TARGET="${TARGET:-deflektorish}"
 TOOLCHAIN_FILE=""
+
+case "${TARGET}" in
+    deflektorish|tiny_hippie_engine|all)
+        ;;
+    *)
+        echo "Unsupported web target '${TARGET}'." >&2
+        echo "Expected one of: deflektorish, tiny_hippie_engine, all." >&2
+        exit 1
+        ;;
+esac
 
 if [[ -f "${EMS}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake" ]]; then
   TOOLCHAIN_FILE="${EMS}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
@@ -30,4 +41,8 @@ if ! command -v ninja >/dev/null 2>&1; then
 fi
 
 cmake -S . -B "${WEB_DIR}" -G Ninja -DCMAKE_TOOLCHAIN_FILE="${TOOLCHAIN_FILE}" -DCMAKE_BUILD_TYPE="${CONFIG}"
-cmake --build "${WEB_DIR}"
+if [[ "${TARGET}" == "all" ]]; then
+    cmake --build "${WEB_DIR}"
+else
+    cmake --build "${WEB_DIR}" --target "${TARGET}"
+fi

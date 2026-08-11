@@ -36,6 +36,11 @@ scripts/build_desktop.sh
 CONFIG=Debug scripts/build_desktop.sh
 ```
 
+The desktop build produces two applications:
+
+- `tiny_hippie_engine`: generic starter and sample scenes.
+- `deflektorish`: the Deflektorish game.
+
 ### Tests
 
 ```bash
@@ -69,6 +74,8 @@ scripts/convert_tiled_map.py input.tmx Resources/Scenes/output.scene.json --use-
 
 ```bash
 ./build/tiny_hippie_engine
+# or
+./build/deflektorish
 ```
 
 Controls:
@@ -80,6 +87,13 @@ Controls:
 ## Project Layout
 
 - `source/`, `include/`: engine and starter scene code.
+- `tiny_hippie_runtime`: reusable engine library target with no game sources.
+- `tiny_hippie_samples`: engine demonstrations used by the starter app.
+- `deflektorish_game`: game-only behavior and content integration.
+- `tiny_hippie_app`: platform application loop shared by both executables.
+- `AppBootstrap`: narrow application composition hook; each executable injects
+  its own scene registration and application-specific state without adding
+  mode branches to the shared loop.
 - `Resources/`: starter character and Kenney sample assets, with external GLB
   textures under `Resources/Textures/` and text scene descriptions plus schema
   notes under `Resources/Scenes/`.

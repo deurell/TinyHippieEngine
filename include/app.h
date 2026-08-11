@@ -1,9 +1,7 @@
 #pragma once
+#include "appbootstrap.h"
 #include "audiosystem.h"
 #include "basisu_transcoder.h"
-#include "game/deflektorish/deflektorishcampaign.h"
-#include "game/deflektorish/deflektorishsound.h"
-#include "game/deflektorish/deflektorishsoundmap.h"
 #include "iscene.h"
 #include "meshassetcache.h"
 #include "renderqueue.h"
@@ -13,9 +11,7 @@
 #include "renderdevice.h"
 #include <array>
 #include <GLFW/glfw3.h>
-#include <map>
 #include <memory>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -26,7 +22,7 @@
 namespace DL {
 class App {
 public:
-  App() = default;
+  explicit App(std::unique_ptr<AppBootstrap> bootstrap);
   ~App();
 
   int run();
@@ -86,9 +82,22 @@ public:
   bool renderCullingEnabled() const { return renderCullingEnabled_; }
   void setRenderCullingEnabled(bool enabled) { renderCullingEnabled_ = enabled; }
   RenderQueueStats lastRenderQueueStats() const { return lastRenderQueueStats_; }
-  void submitDeflektorPostBumpUv(glm::vec2 uv, float strength);
-  void submitDeflektorSound(Deflektorish::Sound sound,
-                            glm::vec2 gamePosition, float energy);
+  void registerScene(SceneManager::SceneFactory factory);
+  void requestNextScene();
+  void requestPreviousScene();
+  IRenderDevice *renderDevice() const { return renderDevice_.get(); }
+  MeshAssetCache *meshAssetCache() const { return meshAssetCache_.get(); }
+  RenderResourceCache *renderResourceCache() const {
+    return renderResourceCache_.get();
+  }
+  basist::etc1_global_selector_codebook *basisCodebook() const {
+    return codebook_.get();
+  }
+  void addPostProcessEffect(std::string name, std::string fragmentShaderPath,
+                            std::vector<UniformValue> uniforms,
+                            bool enabled = true);
+  void setPostProcessVec4(std::string_view effectName,
+                          std::string_view uniformName, glm::vec4 value);
 
   static constexpr char const *windows_title = "tiny hippie engine";
   static constexpr float screen_width = 1280;
@@ -109,26 +118,13 @@ private:
     std::vector<PostProcessEffect> effects;
   };
 
-  struct DeflektorPostBump {
-    glm::vec2 uv{0.0f};
-    float age = 0.0f;
-    float strength = 0.0f;
-  };
-
   bool init();
   void shutdown();
   void basisInit();
   void calculateDeltaTime();
   void initActionMap();
-  void loadAudioClips();
-  bool canPlayDeflektorSound(Deflektorish::Sound sound,
-                             const Deflektorish::SoundEventConfig &event);
   void loadCurrentScene();
-  void requestSceneAdvance();
-  void requestSceneReturnToIntro(int score);
-  void submitDeflektorInitials(int score, std::string initials);
   void applyPendingSceneChange();
-  void registerScenes();
   void configureDefaultPostProcessStack();
   void ensurePostProcessResources(std::uint32_t framebufferWidth,
                                   std::uint32_t framebufferHeight);
@@ -146,12 +142,11 @@ private:
                                   std::string_view name);
   const UniformValue *findEffectUniform(const PostProcessEffect &effect,
                                         std::string_view name) const;
-  void updateDeflektorPostBumps(float dt);
-  void syncDeflektorPostBumpUniforms();
   glm::vec2 mapMousePositionToScene(glm::vec2 mousePosition,
                                     glm::vec2 windowSize) const;
 
   GLFWwindow *window_{};
+  std::unique_ptr<AppBootstrap> bootstrap_;
   AudioSystem audioSystem_;
   std::unique_ptr<DL::IScene> scene_;
   SceneManager sceneManager_;
@@ -176,11 +171,6 @@ private:
   bool simulationPaused_ = false;
   bool renderCullingEnabled_ = true;
   RenderQueueStats lastRenderQueueStats_;
-  std::vector<DeflektorPostBump> deflektorPostBumps_;
-  Deflektorish::SoundMapConfig deflektorSoundMap_;
-  Deflektorish::Campaign deflektorCampaign_;
-  std::map<Deflektorish::Sound, std::vector<AudioSystem::SoundId>>
-      deflektorActiveSounds_;
   ActionMap actionMap_;
   InputState inputState_;
   glm::vec2 touchMoveAxis_{0.0f};
@@ -191,7 +181,6 @@ private:
   bool hasLastMousePosition_ = false;
   bool pendingNextScene_ = false;
   bool pendingPreviousScene_ = false;
-  std::optional<int> pendingInitialsScore_;
   glm::vec2 getWindowSize() const;
   glm::vec2 getFramebufferSize() const;
 };

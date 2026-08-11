@@ -28,6 +28,11 @@ Precedence:
   `InputDebugScene`, then the Tiny Dungeon atlas `TextStarterScene`, then the
   Kenney GLB `TextStarterScene`, then `SkeletalAnimationBlendScene`;
   physics-enabled builds also register `PhysicsTestScene`.
+- Build targets separate reusable runtime (`tiny_hippie_runtime`), samples
+  (`tiny_hippie_samples`), Deflektorish (`deflektorish_game`), and the application shell
+  (`tiny_hippie_app`). `tiny_hippie_engine` injects the starter bootstrap and
+  `deflektorish` injects the game bootstrap; these are separate executable
+  composition roots, not runtime-selectable modes.
 - Starter scene composition can be authored in text via `SceneDescription`
   JSON files, currently validating `SceneNode`, `CameraNode`, `MeshNode`,
   `LightNode`, `Light2DNode`, `SpriteNode`, `SpriteAnimationNode`,

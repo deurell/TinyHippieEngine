@@ -43,10 +43,8 @@ if (TINY_ENGINE_ENABLE_PHYSICS)
     FetchContent_MakeAvailable(box3d)
 endif ()
 
-add_executable(tiny_hippie_engine
+add_library(tiny_hippie_runtime STATIC
         source/glad.c
-        source/main.cpp
-        source/app.cpp
         source/logger.cpp
         source/camera.h
         source/cameranode.h source/cameranode.cpp
@@ -86,36 +84,10 @@ add_executable(tiny_hippie_engine
         source/renderresourcecache.h source/renderresourcecache.cpp
         source/scenedescription.h source/scenedescription.cpp
         source/skinning.h source/skinning.cpp
-        source/debugui.h source/debugui.cpp
-        source/game/scenes/deflektorishintroscene.h
-        source/game/scenes/deflektorishintroscene.cpp
-        source/game/scenes/deflektorishscene.h
-        source/game/scenes/deflektorishscene.cpp
-        source/game/deflektorish/beamenergy.h
-        source/game/deflektorish/beamenergy.cpp
-        source/game/deflektorish/beamworld.h
-        source/game/deflektorish/beamworld.cpp
-        source/game/deflektorish/deflektorishconfig.h
-        source/game/deflektorish/deflektorishlevel.h
-        source/game/deflektorish/deflektorishlevel.cpp
-        source/game/deflektorish/deflektorishrenderer.h
-        source/game/deflektorish/deflektorishrenderer.cpp
-        source/game/deflektorish/deflektorishsavedata.h
-        source/game/deflektorish/deflektorishsavedata.cpp
-        source/game/deflektorish/deflektorishsound.h
-        source/game/deflektorish/deflektorishsoundmap.h
-        source/game/deflektorish/deflektorishsoundmap.cpp
-        source/game/scenes/inputdebugscene.h
-        source/game/scenes/inputdebugscene.cpp
-        source/game/scenes/textstarterscene.h
-        source/game/scenes/textstarterscene.cpp
-        source/game/scenes/skeletalanimationblendscene.h
-        source/game/scenes/skeletalanimationblendscene.cpp
         source/shader.h
         source/stb_image.h source/stb_image.cpp
         source/stb_truetype.h source/stb_truetype.cpp
         source/texture.h
-        include/app.h
         include/audiosystem.h source/audiosystem.cpp
         include/iscene.h
         include/miniaudio.h
@@ -132,32 +104,75 @@ add_executable(tiny_hippie_engine
 )
 
 if (TINY_ENGINE_ENABLE_PHYSICS)
-    target_sources(tiny_hippie_engine PRIVATE
+        target_sources(tiny_hippie_runtime PRIVATE
             source/physicscontext.h source/physicscontext.cpp
             source/physicsworld.h source/physicsworld.cpp
             source/physicsbodycomponent.h source/physicsbodycomponent.cpp
             source/physicsdebugrendercomponent.h source/physicsdebugrendercomponent.cpp
             source/physicsmeshrendercomponent.h source/physicsmeshrendercomponent.cpp
-            source/game/scenes/physicstestscene.h
-            source/game/scenes/physicstestscene.cpp
     )
 endif ()
 
-target_include_directories(tiny_hippie_engine
-        PRIVATE
+target_include_directories(tiny_hippie_runtime
+        PUBLIC
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/source
         ${CMAKE_SOURCE_DIR}/transcoder
 )
 
-target_compile_definitions(tiny_hippie_engine PRIVATE GLFW_INCLUDE_NONE)
+target_compile_definitions(tiny_hippie_runtime PUBLIC GLFW_INCLUDE_NONE)
 if (TINY_ENGINE_ENABLE_IMGUI)
-    target_compile_definitions(tiny_hippie_engine PRIVATE USE_IMGUI)
-    target_include_directories(tiny_hippie_engine PRIVATE ${CMAKE_SOURCE_DIR}/imgui)
+    target_compile_definitions(tiny_hippie_runtime PUBLIC USE_IMGUI)
+    target_include_directories(tiny_hippie_runtime PUBLIC ${CMAKE_SOURCE_DIR}/imgui)
 endif ()
 if (TINY_ENGINE_ENABLE_PHYSICS)
-    target_compile_definitions(tiny_hippie_engine PRIVATE TINY_ENGINE_ENABLE_PHYSICS=1)
+    target_compile_definitions(tiny_hippie_runtime PUBLIC TINY_ENGINE_ENABLE_PHYSICS=1)
 endif ()
+
+add_library(tiny_hippie_samples STATIC
+        source/game/starterbootstrap.cpp
+        source/game/scenes/inputdebugscene.cpp
+        source/game/scenes/textstarterscene.cpp
+        source/game/scenes/skeletalanimationblendscene.cpp
+)
+if (TINY_ENGINE_ENABLE_PHYSICS)
+    target_sources(tiny_hippie_samples PRIVATE
+            source/game/scenes/physicstestscene.cpp)
+endif ()
+target_link_libraries(tiny_hippie_samples PUBLIC tiny_hippie_runtime)
+
+add_library(deflektorish_game STATIC
+        source/game/deflektorishbootstrap.cpp
+        source/game/scenes/deflektorishintroscene.cpp
+        source/game/scenes/deflektorishscene.cpp
+        source/game/deflektorish/beamenergy.cpp
+        source/game/deflektorish/beamworld.cpp
+        source/game/deflektorish/deflektorishlevel.cpp
+        source/game/deflektorish/deflektorishrenderer.cpp
+        source/game/deflektorish/deflektorishsavedata.cpp
+        source/game/deflektorish/deflektorishsoundmap.cpp
+)
+target_link_libraries(deflektorish_game PUBLIC tiny_hippie_runtime)
+
+add_library(tiny_hippie_app STATIC
+        include/app.h
+        include/appbootstrap.h
+        source/app.cpp)
+if (TINY_ENGINE_ENABLE_IMGUI)
+    target_sources(tiny_hippie_app PRIVATE source/debugui.cpp)
+else ()
+    target_sources(tiny_hippie_app PRIVATE source/debugui_stub.cpp)
+endif ()
+target_link_libraries(tiny_hippie_app PUBLIC tiny_hippie_runtime
+)
+
+add_executable(tiny_hippie_engine source/main.cpp)
+target_link_libraries(tiny_hippie_engine PRIVATE tiny_hippie_app
+        tiny_hippie_samples)
+
+add_executable(deflektorish source/deflektorish_main.cpp)
+target_link_libraries(deflektorish PRIVATE tiny_hippie_app
+        deflektorish_game)
 
 if (TINY_ENGINE_ENABLE_IMGUI)
     add_library(imgui STATIC
@@ -200,7 +215,7 @@ target_include_directories(basisu PUBLIC ${CMAKE_SOURCE_DIR}/transcoder)
 
 if (EMSCRIPTEN)
     set_target_properties(
-            tiny_hippie_engine
+            tiny_hippie_engine deflektorish
             PROPERTIES
             SUFFIX ".html"
     )
@@ -222,7 +237,9 @@ if (NOT EMSCRIPTEN)
 endif ()
 
 if (APPLE)
-    set(visibility_targets tiny_hippie_engine basisu)
+    set(visibility_targets tiny_hippie_runtime tiny_hippie_samples
+            deflektorish_game
+            tiny_hippie_app tiny_hippie_engine deflektorish basisu)
     if (TINY_ENGINE_ENABLE_IMGUI)
         list(APPEND visibility_targets imgui)
     endif ()
@@ -232,14 +249,14 @@ if (APPLE)
 endif ()
 
 if (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d::box3d)
-    target_link_libraries(tiny_hippie_engine PRIVATE box3d::box3d)
+    target_link_libraries(tiny_hippie_runtime PRIVATE box3d::box3d)
 elseif (TINY_ENGINE_ENABLE_PHYSICS AND TARGET box3d)
-    target_link_libraries(tiny_hippie_engine PRIVATE box3d)
+    target_link_libraries(tiny_hippie_runtime PRIVATE box3d)
 endif ()
 
-target_link_libraries(tiny_hippie_engine PRIVATE basisu ${PLATFORM_LIBS})
+target_link_libraries(tiny_hippie_runtime PRIVATE basisu ${PLATFORM_LIBS})
 if (TINY_ENGINE_ENABLE_IMGUI)
-    target_link_libraries(tiny_hippie_engine PRIVATE imgui)
+    target_link_libraries(tiny_hippie_runtime PRIVATE imgui)
 endif ()
 
 add_custom_target(tiny_hippie_engine_assets
@@ -252,6 +269,7 @@ add_custom_target(tiny_hippie_engine_assets
         COMMENT "Copying runtime assets" VERBATIM
 )
 add_dependencies(tiny_hippie_engine tiny_hippie_engine_assets)
+add_dependencies(deflektorish tiny_hippie_engine_assets)
 
 if (EMSCRIPTEN)
     foreach (asset_dir IN ITEMS Shaders Resources)
@@ -261,6 +279,13 @@ if (EMSCRIPTEN)
                 ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
                 ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
                 COMMENT "Preparing ${asset_dir} for packaging" VERBATIM
+        )
+        add_custom_command(
+                TARGET deflektorish PRE_LINK
+                COMMAND ${CMAKE_COMMAND} -E copy_directory
+                ${CMAKE_CURRENT_SOURCE_DIR}/${asset_dir}
+                ${CMAKE_CURRENT_BINARY_DIR}/${asset_dir}
+                COMMENT "Preparing ${asset_dir} for Deflektorish packaging" VERBATIM
         )
     endforeach ()
 endif ()
@@ -293,67 +318,17 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
             tests/meshasset_test.cpp
             tests/meshassetcache_test.cpp
             tests/skinning_test.cpp
-            source/animationclip.cpp
-            source/animationplayer.cpp
-            source/meshassetcache.cpp
-            source/skinning.cpp
             tests/scenelifecycle_test.cpp
             tests/scenemanager_test.cpp
             tests/scenenode_test.cpp
             tests/particlesystemnode_test.cpp
             tests/renderqueue_test.cpp
             tests/scenedescription_test.cpp
-            source/logger.cpp
-            source/cameranode.cpp
-            source/game/scenes/deflektorishintroscene.cpp
-            source/game/scenes/deflektorishscene.cpp
-            source/game/deflektorish/beamenergy.cpp
-            source/game/deflektorish/beamworld.cpp
-            source/game/deflektorish/deflektorishlevel.cpp
-            source/game/deflektorish/deflektorishsavedata.cpp
-            source/game/deflektorish/deflektorishsoundmap.cpp
-            source/game/deflektorish/deflektorishrenderer.cpp
-            source/fogoverlaynode.cpp
-            source/fogoverlayrendercomponent.cpp
-            source/light2dnode.cpp
-            source/light2drendercomponent.cpp
-            source/lightnode.cpp
-            source/meshasset.cpp
-            source/meshnode.cpp
-            source/meshrendercomponent.cpp
-            source/particlerendercomponent.cpp
-            source/particlesystemnode.cpp
-            source/persistentstorage.cpp
-            source/planenode.cpp
-            source/planerendercomponent.cpp
-            source/phongshapenode.cpp
-            source/renderresourcecache.cpp
-            source/renderqueue.cpp
-            source/scenedescription.cpp
-            source/scenelifecycle.cpp
-            source/scenenode.cpp
-            source/shapegeometry.cpp
-            source/shaderplanenode.cpp
-            source/shaperendercomponent.cpp
-            source/spriteanimationnode.cpp
-            source/spritebatchnode.cpp
-            source/spritebatchrendercomponent.cpp
-            source/spritenode.cpp
-            source/spriterendercomponent.cpp
-            source/stb_image.cpp
-            source/stb_truetype.cpp
-            source/textnode.cpp
-            source/textrendercomponent.cpp
-            source/tilemapnode.cpp
-            source/tilemaprendercomponent.cpp
     )
 
     if (TINY_ENGINE_ENABLE_PHYSICS)
         target_sources(tiny_hippie_engine_tests PRIVATE
                 tests/physicsworld_test.cpp
-                source/physicscontext.cpp
-                source/physicsworld.cpp
-                source/physicsbodycomponent.cpp
         )
     endif ()
 
@@ -375,7 +350,8 @@ if (BUILD_TESTING AND NOT EMSCRIPTEN)
         target_link_libraries(tiny_hippie_engine_tests PRIVATE box3d)
     endif ()
 
-    target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main)
+    target_link_libraries(tiny_hippie_engine_tests PRIVATE GTest::gtest_main
+            tiny_hippie_samples deflektorish_game)
 
     gtest_discover_tests(tiny_hippie_engine_tests)
 endif ()

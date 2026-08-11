@@ -7,17 +7,12 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 #endif
-#include "game/deflektorish/deflektorishconfig.h"
-#include "game/deflektorish/deflektorishsavedata.h"
-#include "game/scenes/deflektorishintroscene.h"
-#include "game/scenes/deflektorishscene.h"
 #include "logger.h"
 #include "renderqueue.h"
 #include "scenemanager.h"
 #include <algorithm>
 #include <cmath>
 #include <iostream>
-#include <random>
 #include <thread>
 
 namespace {
@@ -25,16 +20,7 @@ constexpr char kCrtEffectName[] = "CRT";
 constexpr char kCrtCurvatureUniform[] = "crtCurvature";
 constexpr float kCrtCurveScale = 0.94f;
 constexpr float kCrtCurveOffset = 0.03f;
-constexpr float kDeflektorPostBumpDuration = 1.35f;
-constexpr float kDeflektorPostBumpStrengthScale = 0.026f;
-constexpr float kDeflektorPostBumpMaxStrength = 0.052f;
 DL::App *gActiveApp = nullptr;
-
-float randomRange(float minValue, float maxValue) {
-  static std::mt19937 rng{std::random_device{}()};
-  std::uniform_real_distribution<float> distribution(minValue, maxValue);
-  return distribution(rng);
-}
 
 glm::vec2 applyCrtCurve(glm::vec2 uv, float curvature, glm::vec2 screenSize) {
   // Keep in sync with Shaders/crt.frag curve().
@@ -119,6 +105,9 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
   auto *app = static_cast<DL::App *>(glfwGetWindowUserPointer(window));
   app->onFramebufferSizeChanged(width, height);
 }
+
+DL::App::App(std::unique_ptr<AppBootstrap> bootstrap)
+    : bootstrap_(std::move(bootstrap)) {}
 
 DL::App::~App() { shutdown(); }
 
@@ -377,16 +366,17 @@ bool DL::App::init() {
   initActionMap();
   basisInit();
   configureDefaultPostProcessStack();
-  deflektorCampaign_.loadDefaultLevelPaths("Resources/Game/Deflektorish/Levels/",
-                                           10);
-  Deflektorish::loadHighScores(deflektorCampaign_);
 #ifdef __EMSCRIPTEN__
   glslVersionString_ = "#version 300 es\n";
 #else
   glslVersionString_ = "#version 330 core\n";
 #endif
 
-  registerScenes();
+  if (bootstrap_ == nullptr) {
+    LogError("No application bootstrap provided");
+    return false;
+  }
+  bootstrap_->configure(*this);
   if (!sceneManager_.hasScenes()) {
     LogError("No scenes registered");
     return false;
@@ -456,7 +446,7 @@ int DL::App::run() {
   if (!audioSystem_.init()) {
     LogWarn("Audio system initialization failed");
   }
-  loadAudioClips();
+  bootstrap_->resourcesReady(*this);
 
   int frameWidth, frameHeight;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -531,7 +521,7 @@ void DL::App::shutdown() {
 
 void DL::App::update() {
   calculateDeltaTime();
-  updateDeflektorPostBumps(deltaTime_);
+  bootstrap_->update(*this, deltaTime_);
   audioSystem_.update();
   if (window_) {
     processInput(window_);
@@ -567,6 +557,7 @@ void DL::App::update() {
 void DL::App::render() {
   if (!scene_ || renderDevice_ == nullptr)
     return;
+  bootstrap_->beforeRender(*this);
   int frameWidth = 0;
   int frameHeight = 0;
   glfwGetFramebufferSize(window_, &frameWidth, &frameHeight);
@@ -670,98 +661,6 @@ void DL::App::processInput(GLFWwindow *window) {
   actionMap_.apply(inputState_, inputState_);
 }
 
-void DL::App::submitDeflektorPostBumpUv(glm::vec2 uv, float strength) {
-  DeflektorPostBump bump;
-  bump.uv = glm::clamp(uv, glm::vec2(0.0f), glm::vec2(1.0f));
-  bump.age = 0.0f;
-  bump.strength =
-      std::min(std::max(strength, 0.0f) * kDeflektorPostBumpStrengthScale,
-               kDeflektorPostBumpMaxStrength);
-  deflektorPostBumps_.insert(deflektorPostBumps_.begin(), bump);
-  while (deflektorPostBumps_.size() > 2) {
-    deflektorPostBumps_.pop_back();
-  }
-}
-
-void DL::App::submitDeflektorSound(Deflektorish::Sound sound,
-                                   glm::vec2 /*gamePosition*/, float energy) {
-  switch (sound) {
-  case Deflektorish::Sound::TargetFirstHit:
-  case Deflektorish::Sound::TargetDestroyed:
-  case Deflektorish::Sound::ScoreTick:
-  case Deflektorish::Sound::InitialsLetterChange:
-  case Deflektorish::Sound::GameOver: {
-    const Deflektorish::SoundEventConfig *event =
-        deflektorSoundMap_.find(sound);
-    if (event == nullptr) {
-      return;
-    }
-    if (!canPlayDeflektorSound(sound, *event)) {
-      return;
-    }
-    const float volume =
-        std::clamp(event->volume + energy * event->volumePerEnergy, 0.0f,
-                   event->maxVolume);
-    const float pitch = randomRange(event->pitchMin, event->pitchMax);
-    const AudioSystem::SoundId soundId =
-        audioSystem_.playOneShot(Deflektorish::soundEventKey(sound),
-                                 DL::AudioGroup::SFX, volume, pitch);
-    if (soundId != AudioSystem::kInvalidSoundId) {
-      deflektorActiveSounds_[sound].push_back(soundId);
-    }
-    break;
-  }
-  }
-}
-
-bool DL::App::canPlayDeflektorSound(
-    Deflektorish::Sound sound, const Deflektorish::SoundEventConfig &event) {
-  auto &activeSounds = deflektorActiveSounds_[sound];
-  activeSounds.erase(
-      std::remove_if(activeSounds.begin(), activeSounds.end(),
-                     [this](AudioSystem::SoundId id) {
-                       return !audioSystem_.isPlaying(id);
-                     }),
-      activeSounds.end());
-  return activeSounds.size() <
-         static_cast<std::size_t>(std::max(event.maxConcurrent, 1));
-}
-
-void DL::App::updateDeflektorPostBumps(float dt) {
-  for (auto &bump : deflektorPostBumps_) {
-    bump.age += dt;
-  }
-  deflektorPostBumps_.erase(
-      std::remove_if(deflektorPostBumps_.begin(), deflektorPostBumps_.end(),
-                     [](const DeflektorPostBump &bump) {
-                       return bump.age >= kDeflektorPostBumpDuration;
-                     }),
-      deflektorPostBumps_.end());
-}
-
-void DL::App::syncDeflektorPostBumpUniforms() {
-  PostProcessEffect *effect = findPostProcessEffect("Deflektor Bump");
-  if (effect == nullptr) {
-    return;
-  }
-  for (std::size_t index = 0; index < 2; ++index) {
-    UniformValue *uniform =
-        findEffectUniform(*effect, index == 0 ? "bump1" : "bump2");
-    if (uniform == nullptr) {
-      continue;
-    }
-    uniform->type = UniformValue::Type::Vec4;
-    if (index < deflektorPostBumps_.size()) {
-      const DeflektorPostBump &bump = deflektorPostBumps_[index];
-      uniform->vec4_value = {bump.uv.x, bump.uv.y,
-                             bump.age / kDeflektorPostBumpDuration,
-                             bump.strength};
-    } else {
-      uniform->vec4_value = {0.0f, 0.0f, 1.0f, 0.0f};
-    }
-  }
-}
-
 void DL::App::setTouchMoveAxis(glm::vec2 axis) {
   if (glm::length(axis) > 1.0f) {
     axis = glm::normalize(axis);
@@ -802,22 +701,13 @@ void DL::App::loadCurrentScene() {
   }
 }
 
-void DL::App::requestSceneAdvance() { pendingNextScene_ = true; }
-
-void DL::App::requestSceneReturnToIntro(int score) {
-  if (deflektorCampaign_.qualifiesHighScore(score)) {
-    pendingInitialsScore_ = score;
-  } else {
-    pendingInitialsScore_.reset();
-  }
-  pendingPreviousScene_ = true;
+void DL::App::registerScene(SceneManager::SceneFactory factory) {
+  sceneManager_.registerScene(std::move(factory));
 }
 
-void DL::App::submitDeflektorInitials(int score, std::string initials) {
-  deflektorCampaign_.recordHighScore(std::move(initials), score);
-  Deflektorish::saveHighScores(deflektorCampaign_);
-  pendingInitialsScore_.reset();
-}
+void DL::App::requestNextScene() { pendingNextScene_ = true; }
+
+void DL::App::requestPreviousScene() { pendingPreviousScene_ = true; }
 
 void DL::App::applyPendingSceneChange() {
   if (!pendingNextScene_ && !pendingPreviousScene_) {
@@ -829,68 +719,16 @@ void DL::App::applyPendingSceneChange() {
   pendingPreviousScene_ = false;
   if (goNext) {
     sceneManager_.next();
-    Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_start");
   } else if (goPrevious) {
     sceneManager_.previous();
-    Logger::instance().logEvent(LogLevel::Info, "scene", "deflektorish_intro");
   }
   loadCurrentScene();
 }
 
-void DL::App::loadAudioClips() {
-  deflektorSoundMap_ = Deflektorish::loadSoundMap(
-      "Resources/Game/Deflektorish/Audio/sounds.json");
-  for (const auto &[sound, event] : deflektorSoundMap_.events) {
-    audioSystem_.loadClip(Deflektorish::soundEventKey(sound),
-                          deflektorSoundMap_.audioRoot + "/" + event.clip,
-                          static_cast<std::size_t>(event.poolSize));
-  }
-}
-
-void DL::App::registerScenes() {
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DeflektorishIntroScene>(
-        renderDevice_.get(), renderResourceCache_.get(),
-        &deflektorCampaign_.highScores(), pendingInitialsScore_,
-        [this](int score, std::string initials) {
-          submitDeflektorInitials(score, std::move(initials));
-        },
-        [this](Deflektorish::Sound sound, glm::vec2 position, float energy) {
-          submitDeflektorSound(sound, position, energy);
-        },
-        [this] {
-          requestSceneAdvance();
-        });
-  });
-  sceneManager_.registerScene([this] {
-    return std::make_unique<DeflektorishScene>(
-        renderDevice_.get(), renderResourceCache_.get(),
-        [this](glm::vec2 uv, float strength) {
-          submitDeflektorPostBumpUv(uv, strength);
-        },
-        [this](Deflektorish::Sound sound, glm::vec2 position,
-               float energy) {
-          submitDeflektorSound(sound, position, energy);
-        },
-        [this](int score) {
-          requestSceneReturnToIntro(score);
-        });
-  });
-}
-
 void DL::App::configureDefaultPostProcessStack() {
-  if (!postProcessStack_.effects.empty()) {
+  if (findPostProcessEffect("Bloom Color Grade") != nullptr) {
     return;
   }
-
-  PostProcessEffect deflektorBumpEffect;
-  deflektorBumpEffect.name = "Deflektor Bump";
-  deflektorBumpEffect.fragmentShaderPath = "Shaders/deflektorish_post.frag";
-  deflektorBumpEffect.uniforms.push_back(
-      UniformValue::makeVec4("bump1", glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
-  deflektorBumpEffect.uniforms.push_back(
-      UniformValue::makeVec4("bump2", glm::vec4(0.0f, 0.0f, 1.0f, 0.0f)));
-  postProcessStack_.effects.push_back(std::move(deflektorBumpEffect));
 
   PostProcessEffect bloomColorGradeEffect;
   bloomColorGradeEffect.name = "Bloom Color Grade";
@@ -956,6 +794,29 @@ void DL::App::configureDefaultPostProcessStack() {
   crtEffect.uniforms.push_back(
       UniformValue::makeFloat("crtBrightness", kDefaultCrtBrightness));
   postProcessStack_.effects.push_back(std::move(crtEffect));
+}
+
+void DL::App::addPostProcessEffect(std::string name,
+                                   std::string fragmentShaderPath,
+                                   std::vector<UniformValue> uniforms,
+                                   bool enabled) {
+  PostProcessEffect effect;
+  effect.name = std::move(name);
+  effect.fragmentShaderPath = std::move(fragmentShaderPath);
+  effect.uniforms = std::move(uniforms);
+  effect.enabled = enabled;
+  postProcessStack_.effects.push_back(std::move(effect));
+}
+
+void DL::App::setPostProcessVec4(std::string_view effectName,
+                                 std::string_view uniformName,
+                                 glm::vec4 value) {
+  if (auto *effect = findPostProcessEffect(effectName)) {
+    if (auto *uniform = findEffectUniform(*effect, uniformName)) {
+      uniform->type = UniformValue::Type::Vec4;
+      uniform->vec4_value = value;
+    }
+  }
 }
 
 void DL::App::ensurePostProcessResources(std::uint32_t framebufferWidth,
@@ -1098,7 +959,6 @@ void DL::App::renderPostProcessPass(const FrameContext &ctx,
   if (enabledEffects.empty()) {
     return;
   }
-  syncDeflektorPostBumpUniforms();
 
   TextureHandle inputTexture =
       renderDevice_->getRenderTargetColorTexture(sceneRenderTarget_);

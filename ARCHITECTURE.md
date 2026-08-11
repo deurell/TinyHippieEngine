@@ -70,6 +70,25 @@ Starter content:
   `Shaders/chromatic_aberration.frag`, and `Shaders/crt.frag`.
 - `MeshNode` + `MeshRenderComponent` are the active node/render component pair.
 
+Build-time ownership boundaries:
+- `tiny_hippie_runtime` is the reusable engine library. It contains no
+  `source/game` files and owns the scene graph, rendering, assets, animation,
+  audio, persistence, and optional physics implementation.
+- `tiny_hippie_samples` owns reusable sample scenes and the starter bootstrap.
+- `deflektorish_game` owns Deflektorish gameplay, content integration, and its
+  bootstrap. Game features move into `tiny_hippie_runtime` only after they are
+  proven reusable, then receive a focused sample in `tiny_hippie_samples`.
+- `tiny_hippie_app` owns the GLFW application loop and debug UI integration. It
+  receives an `AppBootstrap` and has no starter or Deflektorish branches.
+- `tiny_hippie_engine` injects `StarterBootstrap`; `deflektorish` injects
+  `DeflektorishBootstrap`. The executable is the composition root: there is no
+  runtime mode toggle between the two applications.
+- Bootstraps may register scenes and own application-specific state through the
+  narrow configure/resources/update/before-render lifecycle. They do not
+  override the platform loop or simulation timing.
+- Tests link the runtime and game-content libraries instead of recompiling
+  engine implementation sources.
+
 Current scene representation:
 - Hierarchy and transforms are node-based (`SceneNode` tree).
 - Rendering behavior is component-based (`addRenderComponent(...)` on nodes).

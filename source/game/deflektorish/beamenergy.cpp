@@ -153,12 +153,12 @@ float calculateLatchDrainPerSecond(int latchedCrawlerCount) {
     return 0.0f;
   }
   if (latchedCrawlerCount == 1) {
-    return 3.0f;
+    return 4.0f;
   }
   if (latchedCrawlerCount == 2) {
-    return 7.0f;
+    return 10.0f;
   }
-  return 12.0f;
+  return 18.0f;
 }
 
 void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,

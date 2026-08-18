@@ -170,10 +170,10 @@ TEST(DeflektorishBeamEnergyTest, TargetHitGainRestoresEnergyWithoutOverflow) {
 
 TEST(DeflektorishBeamEnergyTest, LatchedCrawlersEscalateEnergyDrain) {
   EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(0), 0.0f);
-  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(1), 3.0f);
-  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(2), 7.0f);
-  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(3), 12.0f);
-  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(8), 12.0f);
+  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(1), 4.0f);
+  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(2), 10.0f);
+  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(3), 18.0f);
+  EXPECT_FLOAT_EQ(Deflektorish::calculateLatchDrainPerSecond(8), 18.0f);
 }
 
 } // namespace

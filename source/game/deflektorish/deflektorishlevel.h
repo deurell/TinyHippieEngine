@@ -52,6 +52,16 @@ struct SplitterConfig {
   float angleDegrees = 0.0f;
 };
 
+struct EnemyConfig {
+  glm::ivec2 spawnCell{0};
+  std::size_t targetReflektorIndex = 0;
+  float spawnDelay = 0.0f;
+  float spawnInterval = 8.0f;
+  float speed = 24.0f;
+  float destroySeconds = 6.0f;
+  int maxSpawns = 6;
+};
+
 struct LevelConfig {
   std::string name = "deflektorish_level";
   float parTimeSeconds = 90.0f;
@@ -64,6 +74,7 @@ struct LevelConfig {
   std::vector<PortalConfig> portals;
   std::vector<FilterConfig> filters;
   std::vector<SplitterConfig> splitters;
+  std::vector<EnemyConfig> enemies;
 };
 
 glm::vec2 cellToPosition(const GridConfig &grid, glm::ivec2 cell);

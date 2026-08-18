@@ -148,6 +148,19 @@ float calculateBeamDrainPerSecond(const BeamHazards &hazards,
   return std::clamp(rawDrain, 0.0f, config.maxDrainPerSecond);
 }
 
+float calculateLatchDrainPerSecond(int latchedCrawlerCount) {
+  if (latchedCrawlerCount <= 0) {
+    return 0.0f;
+  }
+  if (latchedCrawlerCount == 1) {
+    return 3.0f;
+  }
+  if (latchedCrawlerCount == 2) {
+    return 7.0f;
+  }
+  return 12.0f;
+}
+
 void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,
                       const BeamEnergyConfig &config, float dt) {
   state.current = std::clamp(state.current, 0.0f, config.maxEnergy);

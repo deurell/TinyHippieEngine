@@ -155,7 +155,10 @@ TEST(DeflektorishLevelTest, ParsesMinimalLevelData) {
     "blockers": [{ "cell": [4, 3], "reflective": false }],
     "portals": [{ "entryCell": [16, 3], "exitCell": [22, 11], "phase": 0.2 }],
     "filters": [{ "cell": [12, 10], "angleDegrees": 90, "automatic": false }],
-    "splitters": [{ "cell": [16, 7], "angleDegrees": 0 }]
+    "splitters": [{ "cell": [16, 7], "angleDegrees": 0 }],
+    "enemies": [{ "spawnCell": [2, 12], "targetReflektorIndex": 0,
+                   "spawnDelay": 4, "spawnInterval": 8, "speed": 28,
+                   "destroySeconds": 7.5, "maxSpawns": 9 }]
   })json";
 
   const Deflektorish::LevelConfig level =
@@ -172,6 +175,12 @@ TEST(DeflektorishLevelTest, ParsesMinimalLevelData) {
   EXPECT_EQ(level.blockers.size(), 1u);
   EXPECT_FALSE(level.blockers[0].reflective);
   EXPECT_EQ(level.portals[0].exitCell, glm::ivec2(22, 11));
+  ASSERT_EQ(level.enemies.size(), 1u);
+  EXPECT_EQ(level.enemies[0].targetReflektorIndex, 0u);
+  EXPECT_FLOAT_EQ(level.enemies[0].spawnDelay, 4.0f);
+  EXPECT_FLOAT_EQ(level.enemies[0].spawnInterval, 8.0f);
+  EXPECT_FLOAT_EQ(level.enemies[0].destroySeconds, 7.5f);
+  EXPECT_EQ(level.enemies[0].maxSpawns, 9);
   EXPECT_EQ(Deflektorish::cellToPosition(level.grid, {3, 7}),
             glm::vec2(112.0f, 240.0f));
 }
@@ -271,6 +280,22 @@ TEST(DeflektorishLevelTest, LaterLevelsContainAutomaticMotion) {
 
     EXPECT_TRUE(hasAutomaticReflektor) << level.name;
     EXPECT_TRUE(hasAutomaticFilter) << level.name;
+  }
+}
+
+TEST(DeflektorishLevelTest, ActionLevelsContainFiniteCrawlerWaves) {
+  for (int i = 1; i <= 10; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    if (i < 4) {
+      EXPECT_TRUE(level.enemies.empty()) << level.name;
+      continue;
+    }
+    ASSERT_FALSE(level.enemies.empty()) << level.name;
+    for (const Deflektorish::EnemyConfig &nest : level.enemies) {
+      EXPECT_GT(nest.maxSpawns, 0) << level.name;
+      EXPECT_GT(nest.spawnInterval, 0.0f) << level.name;
+      EXPECT_GT(nest.destroySeconds, 0.0f) << level.name;
+    }
   }
 }
 

@@ -69,6 +69,24 @@ inline void setTargetParams(DL::ShaderPlaneNode *node, float elapsed,
   }
 }
 
+inline void setEnemyCrawlerParams(DL::ShaderPlaneNode *node, float elapsed,
+                                  float danger, float hitFlash, bool active,
+                                  bool latched) {
+  if (node != nullptr) {
+    node->config.params0 = {elapsed, danger, hitFlash, active ? 1.0f : 0.0f};
+    node->config.params1 = {latched ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f};
+  }
+}
+
+inline void setEnemyNestParams(DL::ShaderPlaneNode *node, float elapsed,
+                               float charge, bool alive, float damage,
+                               bool beamContact) {
+  if (node != nullptr) {
+    node->config.params0 = {elapsed, charge, alive ? 1.0f : 0.0f, damage};
+    node->config.params1.x = beamContact ? 1.0f : 0.0f;
+  }
+}
+
 inline void setSelectionParams(DL::ShaderPlaneNode *node, float elapsed,
                                float flash) {
   if (node != nullptr) {

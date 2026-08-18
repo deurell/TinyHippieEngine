@@ -19,6 +19,8 @@ enum class ShaderStyle : int {
   CompletionOverlay = 14,
   FadeTransition = 15,
   ParallaxBackground = 16,
+  EnemyCrawler = 17,
+  EnemyNest = 18,
 };
 
 inline int shaderStyle(ShaderStyle style) { return static_cast<int>(style); }

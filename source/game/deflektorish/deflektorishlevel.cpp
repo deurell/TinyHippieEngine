@@ -441,6 +441,35 @@ SplitterConfig parseSplitter(const JsonValue::Object &object) {
   return splitter;
 }
 
+EnemyConfig parseEnemy(const JsonValue::Object &object) {
+  requireNoUnknownFields(
+      object,
+      {"spawnCell", "targetReflektorIndex", "spawnDelay", "spawnInterval",
+       "speed", "destroySeconds", "maxSpawns"},
+      "enemy");
+  EnemyConfig enemy;
+  enemy.spawnCell = cellOr(object, "spawnCell", enemy.spawnCell);
+  const int targetIndex = intOr(object, "targetReflektorIndex", 0);
+  if (targetIndex < 0) {
+    throw std::runtime_error("enemy targetReflektorIndex must be non-negative");
+  }
+  enemy.targetReflektorIndex = static_cast<std::size_t>(targetIndex);
+  enemy.spawnDelay = floatOr(object, "spawnDelay", enemy.spawnDelay);
+  enemy.spawnInterval =
+      floatOr(object, "spawnInterval", enemy.spawnInterval);
+  enemy.speed = floatOr(object, "speed", enemy.speed);
+  enemy.destroySeconds =
+      floatOr(object, "destroySeconds", enemy.destroySeconds);
+  enemy.maxSpawns = intOr(object, "maxSpawns", enemy.maxSpawns);
+  if (enemy.spawnDelay < 0.0f || enemy.spawnInterval <= 0.0f ||
+      enemy.speed <= 0.0f || enemy.destroySeconds <= 0.0f ||
+      enemy.maxSpawns <= 0) {
+    throw std::runtime_error(
+        "enemy timings and speed must be positive");
+  }
+  return enemy;
+}
+
 } // namespace
 
 glm::vec2 cellToPosition(const GridConfig &grid, glm::ivec2 cell) {
@@ -455,7 +484,7 @@ LevelConfig parseLevel(std::string_view source, std::string_view sourceName) {
       root,
       {"name", "parTimeSeconds", "grid", "source", "explosionPoolSize",
        "reflektors", "targets", "blockers", "portals", "filters",
-       "splitters"},
+       "splitters", "enemies"},
       "level");
 
   LevelConfig level;
@@ -511,9 +540,19 @@ LevelConfig parseLevel(std::string_view source, std::string_view sourceName) {
       level.splitters.push_back(parseSplitter(asObject(value, "splitter")));
     }
   }
+  if (const JsonValue *values = find(root, "enemies")) {
+    for (const JsonValue &value : asArray(*values, "enemies")) {
+      level.enemies.push_back(parseEnemy(asObject(value, "enemy")));
+    }
+  }
 
   if (level.reflektors.empty()) {
     throw std::runtime_error("level must define at least one reflektor");
+  }
+  for (const EnemyConfig &enemy : level.enemies) {
+    if (enemy.targetReflektorIndex >= level.reflektors.size()) {
+      throw std::runtime_error("enemy targetReflektorIndex is out of range");
+    }
   }
   return level;
 }

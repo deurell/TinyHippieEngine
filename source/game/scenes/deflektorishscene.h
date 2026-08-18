@@ -73,6 +73,35 @@ private:
     glm::vec2 hitPoint{0.0f};
     std::size_t roomIndex = 0;
     DL::ShaderPlaneNode *node = nullptr;
+    int latchedEnemyCount = 0;
+  };
+
+  struct Enemy {
+    glm::vec2 position{0.0f};
+    glm::vec2 spawnPosition{0.0f};
+    float speed = 24.0f;
+    float hitFlash = 0.0f;
+    std::size_t targetReflektorIndex = 0;
+    std::size_t nestIndex = 0;
+    std::size_t roomIndex = 0;
+    bool alive = false;
+    bool latched = false;
+    DL::ShaderPlaneNode *node = nullptr;
+  };
+
+  struct EnemyNest {
+    glm::vec2 position{0.0f};
+    float spawnTimer = 0.0f;
+    float spawnInterval = 8.0f;
+    float enemySpeed = 24.0f;
+    float destroySeconds = 6.0f;
+    float health = 1.0f;
+    int maxSpawns = 6;
+    int spawnedCount = 0;
+    std::size_t targetReflektorIndex = 0;
+    std::size_t roomIndex = 0;
+    bool alive = true;
+    DL::ShaderPlaneNode *node = nullptr;
   };
 
   struct Target {
@@ -201,6 +230,8 @@ private:
   void updateSplitterVisuals(float dt, const BeamResult &result);
   void updateParallaxBackgrounds();
   void updateTargetState(float dt, const BeamResult &result);
+  void updateEnemies(float dt, const BeamResult &result);
+  int findEnemyTarget(const EnemyNest &nest) const;
   void updateTargetVisuals();
   void emitTargetFirstHit(std::size_t targetIndex, glm::vec2 position,
                           float energy);
@@ -270,6 +301,8 @@ private:
   std::vector<Portal> portals_;
   std::vector<Filter> filters_;
   std::vector<Splitter> splitters_;
+  std::vector<Enemy> enemies_;
+  std::vector<EnemyNest> enemyNests_;
   std::vector<GameEvent> gameEvents_;
   std::vector<std::pair<DL::ShaderPlaneNode *, float>> parallaxBackgrounds_;
   std::vector<DL::ShaderPlaneNode *> flatBackgrounds_;

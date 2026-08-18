@@ -38,6 +38,14 @@
     { "cell": [32, 10] },
     { "cell": [35, 13] }
   ],
+  "enemies": [
+    { "spawnCell": [3, 23], "targetReflektorIndex": 1,
+      "spawnDelay": 5, "spawnInterval": 9, "speed": 23,
+      "destroySeconds": 6, "maxSpawns": 5 },
+    { "spawnCell": [38, 3], "targetReflektorIndex": 4,
+      "spawnDelay": 9, "spawnInterval": 10, "speed": 25,
+      "destroySeconds": 6, "maxSpawns": 5 }
+  ],
   "blockers": [
     { "cell": [5, 8], "reflective": false },
     { "cell": [6, 8], "reflective": false },

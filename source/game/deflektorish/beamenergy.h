@@ -37,6 +37,7 @@ BeamHazards analyzeBeamHazards(const BeamSolveResult &result,
                                const BeamEnergyConfig &config);
 float calculateBeamDrainPerSecond(const BeamHazards &hazards,
                                   const BeamEnergyConfig &config);
+float calculateLatchDrainPerSecond(int latchedCrawlerCount);
 void updateBeamEnergy(BeamEnergyState &state, const BeamHazards &hazards,
                       const BeamEnergyConfig &config, float dt);
 void addBeamEnergy(BeamEnergyState &state, const BeamEnergyConfig &config,

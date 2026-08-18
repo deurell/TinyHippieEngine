@@ -30,6 +30,8 @@ constexpr float kVictoryTextFadeDuration = 0.62f;
 constexpr float kVictoryPostWaveDelay = 0.12f;
 constexpr int kMinExplosionPoolSize = 28;
 constexpr int kDebugVictoryKey = 86;
+constexpr int kDebugFirstLevelKey = 293;
+constexpr int kDebugLastLevelKey = 299;
 constexpr int kBackgroundToggleKey = 66;
 constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
@@ -39,6 +41,15 @@ constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
 constexpr int kTargetClearScore = 75;
 constexpr int kTargetBeamEnergyScore = 25;
+constexpr float kEnemyHitRadiusPixels = 15.0f;
+constexpr float kEnemyLatchRadiusPixels = 13.0f;
+constexpr int kEnemyClearScore = 250;
+constexpr int kMaxActiveEnemies = 3;
+constexpr int kEnemyPoolPerNest = 3;
+constexpr float kEnemyKillEnergyGain = 6.0f;
+constexpr float kEnemyNestHitRadiusPixels = 21.0f;
+constexpr int kEnemyNestClearScore = 1000;
+constexpr float kEnemyNestEnergyGain = 15.0f;
 constexpr float kHudSafePaddingPixels = 46.0f;
 constexpr float kHudTopBandPixels = 36.0f;
 constexpr float kBonusLineDelay = 0.09f;
@@ -58,6 +69,17 @@ constexpr float kAutoFilterWobble = 14.0f * 3.1415926535f / 180.0f;
 
 float approach(float current, float target, float blend) {
   return current + (target - current) * std::clamp(blend, 0.0f, 1.0f);
+}
+
+float distanceToSegment(glm::vec2 point, glm::vec2 start, glm::vec2 end) {
+  const glm::vec2 segment = end - start;
+  const float lengthSquared = glm::dot(segment, segment);
+  if (lengthSquared <= kEpsilon) {
+    return glm::length(point - start);
+  }
+  const float amount =
+      std::clamp(glm::dot(point - start, segment) / lengthSquared, 0.0f, 1.0f);
+  return glm::length(point - (start + segment * amount));
 }
 
 std::string scoreLine(std::string_view label, int score) {
@@ -136,6 +158,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   gameEvents_.clear();
   if (gameplayActive) {
     updateTargetState(ctx.delta_time, result);
+    updateEnemies(ctx.delta_time, result);
   }
   applyGameEvents();
   updateTargetVisuals();
@@ -158,6 +181,15 @@ void DeflektorishScene::onClick(double x, double y) {
 }
 
 void DeflektorishScene::onKey(int key) {
+  if (key >= kDebugFirstLevelKey && key <= kDebugLastLevelKey) {
+    const std::size_t roomIndex =
+        static_cast<std::size_t>(key - kDebugFirstLevelKey + 3);
+    if (rooms_.size() > roomIndex) {
+      loadCampaign();
+      activateRoom(roomIndex, false);
+      return;
+    }
+  }
   if (key == kBackgroundToggleKey) {
     setBackgroundEffectsEnabled(!backgroundEffectsEnabled_);
   }
@@ -366,6 +398,8 @@ void DeflektorishScene::resetLevelRuntime() {
   portals_.clear();
   filters_.clear();
   splitters_.clear();
+  enemies_.clear();
+  enemyNests_.clear();
   gameEvents_.clear();
   parallaxBackgrounds_.clear();
   flatBackgrounds_.clear();
@@ -611,6 +645,16 @@ void DeflektorishScene::updateRoomVisibility() {
       splitter.node->config.color = roomColor(splitter.roomIndex);
     }
   }
+  for (Enemy &enemy : enemies_) {
+    if (enemy.node != nullptr) {
+      enemy.node->config.color = roomColor(enemy.roomIndex);
+    }
+  }
+  for (EnemyNest &nest : enemyNests_) {
+    if (nest.node != nullptr) {
+      nest.node->config.color = roomColor(nest.roomIndex);
+    }
+  }
 }
 
 void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
@@ -777,6 +821,48 @@ void DeflektorishScene::spawnLevel(const Deflektorish::LevelConfig &level,
     blockers_.push_back(blocker);
     includeBounds(blocker.position, 34.0f);
   }
+  const std::size_t roomReflektorStart =
+      reflektors_.size() - level.reflektors.size();
+  for (std::size_t i = 0; i < level.enemies.size(); ++i) {
+    const Deflektorish::EnemyConfig &config = level.enemies[i];
+    EnemyNest nest;
+    nest.position =
+        Deflektorish::cellToPosition(grid_, config.spawnCell) + offsetPixels;
+    nest.spawnTimer = config.spawnDelay;
+    nest.spawnInterval = config.spawnInterval;
+    nest.enemySpeed = config.speed;
+    nest.destroySeconds = config.destroySeconds;
+    nest.maxSpawns = config.maxSpawns;
+    nest.targetReflektorIndex =
+        roomReflektorStart + config.targetReflektorIndex;
+    nest.roomIndex = roomIndex;
+    nest.node = addShaderPlane(
+        "enemy_nest_" + std::to_string(i + 1),
+        Deflektorish::shaderStyle(Deflektorish::ShaderStyle::EnemyNest),
+        DL::BlendMode::Alpha, nest.position, {24.0f, 24.0f}, 14, 0.13f);
+    Deflektorish::setEnemyNestParams(nest.node, 0.0f, 0.0f, true, 0.0f,
+                                     false);
+    const std::size_t nestIndex = enemyNests_.size();
+    enemyNests_.push_back(nest);
+    for (int slot = 0; slot < kEnemyPoolPerNest; ++slot) {
+      Enemy enemy;
+      enemy.position = nest.position;
+      enemy.spawnPosition = nest.position;
+      enemy.speed = nest.enemySpeed;
+      enemy.targetReflektorIndex = nest.targetReflektorIndex;
+      enemy.nestIndex = nestIndex;
+      enemy.roomIndex = roomIndex;
+      enemy.node = addShaderPlane(
+          "enemy_crawler_" + std::to_string(i + 1) + "_" +
+              std::to_string(slot + 1),
+          Deflektorish::shaderStyle(Deflektorish::ShaderStyle::EnemyCrawler),
+          DL::BlendMode::Alpha, enemy.position, {18.0f, 18.0f}, 15, 0.14f);
+      Deflektorish::setEnemyCrawlerParams(enemy.node, 0.0f, 0.0f, 0.0f,
+                                          false, false);
+      enemies_.push_back(enemy);
+    }
+    includeBounds(nest.position, 36.0f);
+  }
   RoomRuntime &spawnedRoom = rooms_.back();
   const glm::vec2 cameraBoundsMinPixels = spawnedRoom.boundsMinPixels;
   const glm::vec2 cameraBoundsMaxPixels =
@@ -822,7 +908,8 @@ void DeflektorishScene::updateReflektors(float dt) {
       reflektor.angle =
           reflektor.baseAngle +
           elapsed_ * reflektor.speed * kAutoReflektorSpeedScale + wobble;
-    } else if (selectedReflektor_ == static_cast<int>(i)) {
+    } else if (reflektor.latchedEnemyCount == 0 &&
+               selectedReflektor_ == static_cast<int>(i)) {
       reflektor.angle += rotateInput_ * kManualRotateSpeed * dt;
     }
     if (reflektor.node != nullptr) {
@@ -1049,6 +1136,23 @@ void DeflektorishScene::updateBeamEnergy(float dt, const BeamResult &result) {
   const Deflektorish::BeamHazards hazards =
       Deflektorish::analyzeBeamHazards(result, beamEnergyConfig_);
   Deflektorish::updateBeamEnergy(beamEnergy_, hazards, beamEnergyConfig_, dt);
+  const int latchedCrawlerCount =
+      static_cast<int>(std::count_if(enemies_.begin(), enemies_.end(),
+                                     [&](const Enemy &enemy) {
+                                       return enemy.alive && enemy.latched &&
+                                              isCurrentRoom(enemy.roomIndex);
+                                     }));
+  const float latchDrain =
+      Deflektorish::calculateLatchDrainPerSecond(latchedCrawlerCount);
+  beamEnergy_.current =
+      std::max(beamEnergy_.current - latchDrain * dt, 0.0f);
+  beamEnergy_.drainPerSecond = std::min(
+      beamEnergy_.drainPerSecond + latchDrain,
+      beamEnergyConfig_.maxDrainPerSecond);
+  beamEnergy_.danger = beamEnergyConfig_.maxDrainPerSecond > 0.0f
+                           ? beamEnergy_.drainPerSecond /
+                                 beamEnergyConfig_.maxDrainPerSecond
+                           : 0.0f;
   if (energyBar_ != nullptr) {
     const float ratio =
         beamEnergyConfig_.maxEnergy > 0.0f
@@ -1115,7 +1219,8 @@ bool DeflektorishScene::selectReflektorAtWorld(glm::vec2 worldPosition) {
 
   for (std::size_t i = 0; i < reflektors_.size(); ++i) {
     const Reflektor &reflektor = reflektors_[i];
-    if (reflektor.automatic || !isCurrentRoom(reflektor.roomIndex)) {
+    if (reflektor.automatic || reflektor.latchedEnemyCount > 0 ||
+        !isCurrentRoom(reflektor.roomIndex)) {
       continue;
     }
     const float distance =
@@ -1260,6 +1365,160 @@ void DeflektorishScene::updateTargetState(float dt, const BeamResult &result) {
       }
     }
   }
+}
+
+void DeflektorishScene::updateEnemies(float dt, const BeamResult &result) {
+  int activeEnemyCount = static_cast<int>(
+      std::count_if(enemies_.begin(), enemies_.end(), [&](const Enemy &enemy) {
+        return enemy.alive && isCurrentRoom(enemy.roomIndex);
+      }));
+  for (std::size_t nestIndex = 0; nestIndex < enemyNests_.size(); ++nestIndex) {
+    EnemyNest &nest = enemyNests_[nestIndex];
+    if (!isCurrentRoom(nest.roomIndex)) {
+      continue;
+    }
+    const bool beamHit = nest.alive &&
+        std::any_of(result.segments.begin(), result.segments.end(),
+                    [&](const Deflektorish::BeamSegment &segment) {
+                      return distanceToSegment(nest.position, segment.start,
+                                               segment.end) <=
+                             kEnemyNestHitRadiusPixels;
+                    });
+    if (beamHit) {
+      nest.health = std::max(
+          nest.health - dt / nest.destroySeconds, 0.0f);
+      if (nest.health <= 0.0f) {
+        nest.alive = false;
+        spawnExplosion(nest.position, 2.4f);
+        renderer_.hideNode(nest.node);
+        campaign_.addScore(kEnemyNestClearScore);
+        Deflektorish::addBeamEnergy(beamEnergy_, beamEnergyConfig_,
+                                    kEnemyNestEnergyGain);
+        scoreHudPulse_ = 1.0f;
+        if (soundCallback_) {
+          soundCallback_(Deflektorish::Sound::TargetDestroyed, nest.position,
+                         2.4f);
+        }
+      }
+    }
+    const bool hasRemainingSpawns = nest.spawnedCount < nest.maxSpawns;
+    if (nest.alive && hasRemainingSpawns) {
+      nest.spawnTimer = std::max(nest.spawnTimer - dt, 0.0f);
+    }
+    if (nest.alive && hasRemainingSpawns && nest.spawnTimer <= 0.0f &&
+        activeEnemyCount < kMaxActiveEnemies) {
+      const int targetIndex = findEnemyTarget(nest);
+      const auto slot = std::find_if(
+          enemies_.begin(), enemies_.end(), [&](const Enemy &enemy) {
+            return enemy.nestIndex == nestIndex && !enemy.alive;
+          });
+      if (slot != enemies_.end() && targetIndex >= 0) {
+        slot->position = slot->spawnPosition;
+        slot->targetReflektorIndex = static_cast<std::size_t>(targetIndex);
+        slot->alive = true;
+        slot->latched = false;
+        slot->hitFlash = 0.0f;
+        nest.spawnTimer = nest.spawnInterval;
+        ++nest.spawnedCount;
+        ++activeEnemyCount;
+      }
+    }
+    const float charge = nest.alive && hasRemainingSpawns
+                             ? 1.0f - std::clamp(nest.spawnTimer /
+                                                    nest.spawnInterval,
+                                                0.0f, 1.0f)
+                             : 0.0f;
+    Deflektorish::setEnemyNestParams(nest.node, elapsed_, charge, nest.alive,
+                                     1.0f - nest.health, beamHit);
+  }
+
+  for (Enemy &enemy : enemies_) {
+    if (!enemy.alive || !isCurrentRoom(enemy.roomIndex)) {
+      continue;
+    }
+
+    const bool beamHit =
+        std::any_of(result.segments.begin(), result.segments.end(),
+                    [&](const Deflektorish::BeamSegment &segment) {
+                      return distanceToSegment(enemy.position, segment.start,
+                                               segment.end) <=
+                             kEnemyHitRadiusPixels;
+                    });
+    if (beamHit) {
+      enemy.alive = false;
+      if (enemy.latched && enemy.targetReflektorIndex < reflektors_.size()) {
+        Reflektor &target = reflektors_[enemy.targetReflektorIndex];
+        target.latchedEnemyCount = std::max(target.latchedEnemyCount - 1, 0);
+      }
+      Deflektorish::setEnemyCrawlerParams(enemy.node, elapsed_, 0.0f, 1.0f,
+                                          false, enemy.latched);
+      spawnExplosion(enemy.position, 1.25f);
+      campaign_.addScore(kEnemyClearScore);
+      Deflektorish::addBeamEnergy(beamEnergy_, beamEnergyConfig_,
+                                  kEnemyKillEnergyGain);
+      scoreHudPulse_ = 1.0f;
+      if (soundCallback_) {
+        soundCallback_(Deflektorish::Sound::TargetDestroyed, enemy.position,
+                       1.25f);
+      }
+      continue;
+    }
+
+    if (enemy.targetReflektorIndex >= reflektors_.size()) {
+      continue;
+    }
+    Reflektor &target = reflektors_[enemy.targetReflektorIndex];
+    const glm::vec2 delta = target.position - enemy.position;
+    const float distance = glm::length(delta);
+    if (!enemy.latched && distance <= kEnemyLatchRadiusPixels) {
+      enemy.latched = true;
+      enemy.position = target.position;
+      ++target.latchedEnemyCount;
+      if (selectedReflektor_ ==
+          static_cast<int>(enemy.targetReflektorIndex)) {
+        selectedReflektor_ = findNextManualReflektor(selectedReflektor_);
+      }
+    } else if (!enemy.latched && distance > kEpsilon) {
+      const glm::vec2 direction = delta / distance;
+      enemy.position += direction * std::min(enemy.speed * dt, distance);
+      if (enemy.node != nullptr) {
+        enemy.node->setLocalRotation(glm::quat(glm::vec3(
+            0.0f, 0.0f, std::atan2(direction.y, direction.x))));
+      }
+    }
+    if (enemy.node != nullptr) {
+      const glm::vec2 world = toWorld(enemy.position);
+      enemy.node->setLocalPosition({world.x, world.y, 0.14f});
+    }
+    const float danger = 1.0f - std::clamp(distance / 220.0f, 0.0f, 1.0f);
+    enemy.hitFlash = std::max(enemy.hitFlash - dt * 8.0f, 0.0f);
+    Deflektorish::setEnemyCrawlerParams(
+        enemy.node, elapsed_, danger, enemy.hitFlash, true, enemy.latched);
+  }
+}
+
+int DeflektorishScene::findEnemyTarget(const EnemyNest &nest) const {
+  if (reflektors_.empty()) {
+    return -1;
+  }
+  for (std::size_t offset = 0; offset < reflektors_.size(); ++offset) {
+    const std::size_t index =
+        (nest.targetReflektorIndex + offset) % reflektors_.size();
+    const Reflektor &candidate = reflektors_[index];
+    if (candidate.automatic || candidate.roomIndex != nest.roomIndex ||
+        candidate.latchedEnemyCount > 0) {
+      continue;
+    }
+    const bool alreadyPursued =
+        std::any_of(enemies_.begin(), enemies_.end(), [&](const Enemy &enemy) {
+          return enemy.alive && !enemy.latched &&
+                 enemy.targetReflektorIndex == index;
+        });
+    if (!alreadyPursued) {
+      return static_cast<int>(index);
+    }
+  }
+  return -1;
 }
 
 void DeflektorishScene::updateTargetVisuals() {
@@ -2247,6 +2506,7 @@ int DeflektorishScene::findNextManualReflektor(int startIndex) const {
     const int index = (startIndex + static_cast<int>(offset)) %
                       static_cast<int>(reflektors_.size());
     if (!reflektors_[index].automatic &&
+        reflektors_[index].latchedEnemyCount == 0 &&
         isCurrentRoom(reflektors_[index].roomIndex)) {
       return index;
     }

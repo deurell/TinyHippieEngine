@@ -28,6 +28,13 @@ float sdBox(vec2 p, vec2 halfSize) {
     return length(max(d, vec2(0.0))) + min(max(d.x, d.y), 0.0);
 }
 
+float sdSegment(vec2 p, vec2 a, vec2 b) {
+    vec2 pa = p - a;
+    vec2 ba = b - a;
+    float h = clamp(dot(pa, ba) / max(dot(ba, ba), 0.0001), 0.0, 1.0);
+    return length(pa - ba * h);
+}
+
 float electroNoise(vec2 p, float t) {
     float n = 0.0;
     n += sin(p.x * 11.0 + t * 1.4) * 0.50;
@@ -632,6 +639,106 @@ vec4 shadeParallaxBackground(vec2 uv) {
     return vec4(color, 1.0);
 }
 
+vec4 shadeEnemyCrawler(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    float t = proceduralParams.x;
+    float danger = clamp(proceduralParams.y, 0.0, 1.0);
+    float hit = clamp(proceduralParams.z, 0.0, 1.0);
+    float enabled = clamp(proceduralParams.w, 0.0, 1.0);
+    float latched = clamp(proceduralParams2.x, 0.0, 1.0);
+    float gait = sin(t * 12.0);
+    float body = 1.0 - smoothstep(0.0, 0.08,
+        sdBox(p, vec2(0.42, 0.28)) - 0.12);
+    float shell = ring(length(p * vec2(1.0, 1.35)), 0.40, 0.10);
+    float core = 1.0 - smoothstep(0.0, 0.22, length(p));
+    float legs = 0.0;
+    for (int side = -1; side <= 1; side += 2) {
+        float s = float(side);
+        legs = max(legs, 1.0 - smoothstep(0.055, 0.11,
+            sdSegment(p, vec2(-0.28, s * 0.20),
+                      vec2(-0.72, s * (0.48 + gait * 0.07)))));
+        legs = max(legs, 1.0 - smoothstep(0.055, 0.11,
+            sdSegment(p, vec2(0.22, s * 0.20),
+                      vec2(0.66, s * (0.50 - gait * 0.07)))));
+    }
+    float antennae = max(
+        1.0 - smoothstep(0.035, 0.075,
+            sdSegment(p, vec2(0.36, 0.14), vec2(0.82, 0.38))),
+        1.0 - smoothstep(0.035, 0.075,
+            sdSegment(p, vec2(0.36, -0.14), vec2(0.82, -0.38))));
+    float clamps = ring(length(p), 0.67 + sin(t * 8.0) * 0.03, 0.08) * latched;
+    float pulse = 0.5 + 0.5 * sin(t * 7.0);
+    vec3 cyan = vec3(0.30, 0.90, 1.0);
+    vec3 warning = vec3(1.0, 0.22, 0.08);
+    vec3 color = vec3(0.035, 0.055, 0.075) * body;
+    color += mix(cyan, warning, max(danger, latched)) * shell * 0.85;
+    color += mix(cyan, warning, max(danger, latched)) *
+             (legs + antennae + clamps) * (0.72 + pulse * 0.28);
+    color += mix(vec3(0.82, 0.98, 1.0), warning,
+                 max(danger, latched)) * core * (1.2 + pulse * 0.7);
+    color += vec3(1.0) * hit * (body + core) * 2.5;
+    float alpha = clamp(body + shell + legs + antennae + clamps, 0.0, 1.0);
+    return vec4(color, alpha * enabled);
+}
+
+vec4 shadeEnemyNest(vec2 uv) {
+    vec2 p = uv * 2.0 - 1.0;
+    float t = proceduralParams.x;
+    float charge = clamp(proceduralParams.y, 0.0, 1.0);
+    float powered = clamp(proceduralParams.z, 0.0, 1.0);
+    float damage = clamp(proceduralParams.w, 0.0, 1.0);
+    float beamContact = clamp(proceduralParams2.x, 0.0, 1.0);
+    float health = 1.0 - damage;
+    float d = length(p);
+    float angle = atan(p.y, p.x);
+    float shell = ring(d, 0.68, 0.085);
+    float inner = ring(d, 0.39, 0.055);
+    float countdown = step(angle, -3.14159 + charge * 6.28318) *
+                      ring(d, 0.72, 0.115);
+    float healthMeter = step(angle, -3.14159 + health * 6.28318) *
+                        ring(d, 0.96, 0.125);
+    float aperture = 1.0 - smoothstep(0.0, 0.31, d);
+    float swirl = 0.5 + 0.5 * sin(angle * 3.0 - t * 2.2 + d * 10.0);
+    float pulse = 0.5 + 0.5 * sin(t * 5.0 + charge * 4.0);
+    float impactPulse = 0.5 + 0.5 * sin(t * 18.0);
+    float impactRing = ring(d, 0.26 + impactPulse * 0.22, 0.11) *
+                       beamContact;
+    float impactCore = (1.0 - smoothstep(0.0, 0.34, d)) * beamContact;
+    float crackA = (1.0 - smoothstep(0.025, 0.075,
+        abs(p.y - abs(p.x) * 0.42 + 0.04))) *
+        smoothstep(0.16, 0.64, d) * damage;
+    float crackB = (1.0 - smoothstep(0.020, 0.065,
+        abs(p.y + p.x * 0.55 - 0.12))) *
+        smoothstep(0.20, 0.58, d) * smoothstep(0.32, 0.72, damage);
+    vec3 cyan = vec3(0.28, 0.88, 1.0);
+    vec3 warning = vec3(1.0, 0.25, 0.07);
+    vec3 dormant = vec3(0.09, 0.13, 0.16);
+    vec3 energy = mix(cyan, warning, charge * charge);
+    vec3 healthColor = mix(warning, cyan, health);
+    vec3 color = vec3(0.015, 0.022, 0.035) *
+                 (1.0 - smoothstep(0.48, 0.72, d));
+    color += mix(dormant, cyan, powered * 0.58) * shell *
+             (0.9 + pulse * powered * 0.18);
+    color += energy * inner * powered * (0.58 + pulse * 0.30);
+    color += energy * countdown * powered * (1.18 + pulse * 0.48);
+    color += healthColor * healthMeter * powered * (1.22 + pulse * 0.28);
+    color += energy * aperture * swirl * powered * (0.32 + charge * 0.42);
+    color += cyan * (1.0 - smoothstep(0.42, 0.88, d)) * powered * 0.08;
+    color += vec3(1.0, 0.56, 0.20) * (crackA + crackB) *
+             (0.75 + pulse * 0.55);
+    color += vec3(0.72, 0.96, 1.0) * impactRing *
+             (1.35 + impactPulse * 0.65);
+    color += vec3(1.0, 0.98, 0.90) * impactCore *
+             (1.10 + impactPulse * 0.90);
+    color += vec3(0.62, 0.92, 1.0) * shell * beamContact * 0.85;
+    float alpha = clamp((1.0 - smoothstep(0.52, 0.74, d)) * 0.82 +
+                        shell * 0.28 + countdown * powered * 0.78 +
+                        healthMeter * powered * 0.88 + impactRing * 0.72 +
+                        impactCore * 0.42,
+                        0.0, 1.0);
+    return vec4(color, alpha);
+}
+
 void main() {
     vec4 color = baseColor;
     if (proceduralStyle == 1) {
@@ -666,6 +773,10 @@ void main() {
         color = shadeIntroTransition(TexCoord);
     } else if (proceduralStyle == 16) {
         color = shadeParallaxBackground(TexCoord);
+    } else if (proceduralStyle == 17) {
+        color = shadeEnemyCrawler(TexCoord);
+    } else if (proceduralStyle == 18) {
+        color = shadeEnemyNest(TexCoord);
     }
 
     color *= baseColor;

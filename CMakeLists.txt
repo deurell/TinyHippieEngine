@@ -16,6 +16,8 @@ include(FetchContent)
 
 option(TINY_ENGINE_ENABLE_IMGUI "Build with ImGui debug UI" ON)
 option(TINY_ENGINE_ENABLE_PHYSICS "Build physics support with Box3D" OFF)
+option(TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS
+       "Build Deflektorish level-jump and presentation debug keys" ON)
 
 set(PLATFORM_LIBS "")
 
@@ -156,6 +158,10 @@ add_library(deflektorish_game STATIC
 )
 target_link_libraries(deflektorish_game PUBLIC tiny_hippie_runtime)
 target_include_directories(deflektorish_game PRIVATE ${CMAKE_SOURCE_DIR}/source)
+if (TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS)
+    target_compile_definitions(deflektorish_game PRIVATE
+            TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS=1)
+endif ()
 
 add_library(tiny_hippie_app STATIC
         include/app.h

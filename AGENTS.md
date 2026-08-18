@@ -118,6 +118,8 @@ scripts/tiny_hippie_validate.py Resources/Scenes/*.scene.json
 Build flags (CMake options):
 - `TINY_ENGINE_ENABLE_IMGUI` (default ON) — debug UI; disables `USE_IMGUI` define when OFF.
 - `TINY_ENGINE_ENABLE_PHYSICS` (default OFF) — Box3D wrapper sources; keep OFF unless the project needs physics.
+- `TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS` (default ON) — Deflektorish
+  level jumps and presentation shortcuts; set OFF for release builds.
 
 Tests:
 

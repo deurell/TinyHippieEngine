@@ -23,7 +23,9 @@ balancing data.
 For rapid crawler iteration, press `F4` through `F10` in the game scene to
 rebuild the campaign runtime and jump directly to the matching level. Pressing
 the same key again fully restarts that level, including enemy spawn timers and
-latch state.
+latch state. These shortcuts, `V` victory skip, and `B` background toggle are
+compiled out with
+`-DTINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS=OFF`.
 
 Top-level fields:
 

@@ -29,10 +29,12 @@ constexpr float kVictoryBlastStartDelay = 0.18f;
 constexpr float kVictoryTextFadeDuration = 0.62f;
 constexpr float kVictoryPostWaveDelay = 0.12f;
 constexpr int kMinExplosionPoolSize = 28;
+#ifdef TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS
 constexpr int kDebugVictoryKey = 86;
 constexpr int kDebugFirstLevelKey = 293;
 constexpr int kDebugLastLevelKey = 299;
 constexpr int kBackgroundToggleKey = 66;
+#endif
 constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
 constexpr float kCampaignCompleteReturnDelay = 4.5f;
@@ -181,6 +183,7 @@ void DeflektorishScene::onClick(double x, double y) {
 }
 
 void DeflektorishScene::onKey(int key) {
+#ifdef TINY_ENGINE_ENABLE_DEFLEKTORISH_DEBUG_KEYS
   if (key >= kDebugFirstLevelKey && key <= kDebugLastLevelKey) {
     const std::size_t roomIndex =
         static_cast<std::size_t>(key - kDebugFirstLevelKey + 3);
@@ -201,6 +204,9 @@ void DeflektorishScene::onKey(int key) {
     debugVictoryTriggered_ = true;
     startVictoryCelebration();
   }
+#else
+  (void)key;
+#endif
 }
 
 void DeflektorishScene::onScreenSizeChanged(glm::vec2 size) {

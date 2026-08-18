@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <limits>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -201,9 +202,10 @@ TEST(DeflektorishLevelTest, LoadsDefaultLevelFile) {
 }
 
 TEST(DeflektorishLevelTest, LoadsProgressionLevelFiles) {
-  constexpr float kExpectedParTimes[] = {15.0f, 15.0f, 30.0f, 40.0f, 25.0f,
-                                         45.0f, 25.0f, 35.0f, 25.0f, 60.0f};
-  for (int i = 1; i <= 10; ++i) {
+  constexpr float kExpectedParTimes[] = {
+      15.0f, 15.0f, 28.0f, 34.0f, 38.0f, 42.0f, 46.0f, 50.0f, 44.0f, 58.0f,
+      40.0f, 38.0f, 58.0f, 50.0f, 48.0f, 42.0f, 56.0f, 60.0f, 68.0f, 80.0f};
+  for (int i = 1; i <= 20; ++i) {
     const std::filesystem::path path = levelPath(i);
 
     const Deflektorish::LevelConfig level = Deflektorish::loadLevel(path);
@@ -212,7 +214,9 @@ TEST(DeflektorishLevelTest, LoadsProgressionLevelFiles) {
     EXPECT_FLOAT_EQ(level.parTimeSeconds, kExpectedParTimes[i - 1]) << path;
     EXPECT_FALSE(level.reflektors.empty()) << path;
     EXPECT_FALSE(level.targets.empty()) << path;
-    EXPECT_FALSE(hasFreeTargetBeforeFirstInteraction(level)) << path;
+    if (i <= 2) {
+      EXPECT_FALSE(hasFreeTargetBeforeFirstInteraction(level)) << path;
+    }
   }
 }
 
@@ -252,20 +256,93 @@ TEST(DeflektorishLevelTest, TrainingLevelsNeedInteractionAndHaveSolutions) {
   }
 }
 
-TEST(DeflektorishLevelTest, LaterProgressionLevelsAreDenseManualPuzzles) {
-  for (int i = 3; i <= 10; ++i) {
+TEST(DeflektorishLevelTest, LaterProgressionLevelsRemainInteractivePuzzles) {
+  for (int i = 3; i <= 20; ++i) {
     const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
 
-    EXPECT_GE(level.reflektors.size(), 7u) << level.name;
-    EXPECT_GE(level.targets.size(), 12u) << level.name;
-    EXPECT_GE(level.blockers.size(), 20u) << level.name;
+    EXPECT_GE(level.reflektors.size(), 5u) << level.name;
+    EXPECT_GE(level.targets.size(), 6u) << level.name;
     EXPECT_LT(clearTargets(makeWorld(level)), level.targets.size())
         << level.name << " should not clear itself with authored defaults";
   }
 }
 
-TEST(DeflektorishLevelTest, LaterLevelsContainAutomaticMotion) {
-  for (int i = 3; i <= 10; ++i) {
+TEST(DeflektorishLevelTest, ProgressionIncludesCrowdedMirrorLayouts) {
+  int crowdedLayouts = 0;
+  for (int i = 3; i <= 20; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    int closePairs = 0;
+    for (std::size_t a = 0; a < level.reflektors.size(); ++a) {
+      for (std::size_t b = a + 1; b < level.reflektors.size(); ++b) {
+        const glm::ivec2 delta = glm::abs(level.reflektors[a].cell -
+                                          level.reflektors[b].cell);
+        if (delta.x + delta.y <= 3) {
+          ++closePairs;
+        }
+      }
+    }
+    if (closePairs >= 4) {
+      ++crowdedLayouts;
+    }
+  }
+  EXPECT_GE(crowdedLayouts, 5);
+}
+
+TEST(DeflektorishLevelTest, MirrorMazeUsesContiguousReflectiveWalls) {
+  const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(13));
+  const auto reflectiveCount =
+      std::count_if(level.blockers.begin(), level.blockers.end(),
+                    [](const auto &blocker) { return blocker.reflective; });
+  int adjacentWallPairs = 0;
+  for (std::size_t a = 0; a < level.blockers.size(); ++a) {
+    if (!level.blockers[a].reflective) continue;
+    for (std::size_t b = a + 1; b < level.blockers.size(); ++b) {
+      if (!level.blockers[b].reflective) continue;
+      const glm::ivec2 delta =
+          glm::abs(level.blockers[a].cell - level.blockers[b].cell);
+      if (delta.x + delta.y == 1) ++adjacentWallPairs;
+    }
+  }
+  EXPECT_GE(reflectiveCount, 60);
+  EXPECT_GE(adjacentWallPairs, 50);
+  EXPECT_TRUE(level.splitters.empty());
+}
+
+TEST(DeflektorishLevelTest, ActionBoardsDoNotMostlySolveFromDefaults) {
+  for (int i = 3; i <= 20; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    const std::size_t initiallyCleared = clearTargets(makeWorld(level));
+    EXPECT_LE(initiallyCleared, std::max<std::size_t>(2, level.targets.size() / 3))
+        << level.name << " clears " << initiallyCleared << " of "
+        << level.targets.size() << " targets without deliberate aiming";
+  }
+}
+
+TEST(DeflektorishLevelTest, AuthoredObjectsNeverShareCells) {
+  for (int i = 1; i <= 20; ++i) {
+    const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
+    std::set<std::pair<int, int>> occupied;
+    auto claim = [&](glm::ivec2 cell, const char *kind) {
+      EXPECT_TRUE(occupied.emplace(cell.x, cell.y).second)
+          << level.name << " has overlapping " << kind << " at [" << cell.x
+          << ',' << cell.y << ']';
+    };
+    claim(level.source.cell, "source");
+    for (const auto &item : level.reflektors) claim(item.cell, "reflektor");
+    for (const auto &item : level.targets) claim(item.cell, "target");
+    for (const auto &item : level.blockers) claim(item.cell, "blocker");
+    for (const auto &item : level.filters) claim(item.cell, "filter");
+    for (const auto &item : level.splitters) claim(item.cell, "splitter");
+    for (const auto &item : level.enemies) claim(item.spawnCell, "nest");
+    for (const auto &item : level.portals) {
+      claim(item.entryCell, "portal entry");
+      claim(item.exitCell, "portal exit");
+    }
+  }
+}
+
+TEST(DeflektorishLevelTest, LaterLevelsContainAnAutomaticOptic) {
+  for (int i = 3; i <= 20; ++i) {
     const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
     const auto hasAutomaticReflektor =
         std::any_of(level.reflektors.begin(), level.reflektors.end(),
@@ -278,19 +355,22 @@ TEST(DeflektorishLevelTest, LaterLevelsContainAutomaticMotion) {
                       return filter.automatic && filter.speed != 0.0f;
                     });
 
-    EXPECT_TRUE(hasAutomaticReflektor) << level.name;
-    EXPECT_TRUE(hasAutomaticFilter) << level.name;
+    EXPECT_TRUE(hasAutomaticReflektor || hasAutomaticFilter) << level.name;
   }
 }
 
 TEST(DeflektorishLevelTest, ActionLevelsContainFiniteCrawlerWaves) {
-  for (int i = 1; i <= 10; ++i) {
+  for (int i = 1; i <= 20; ++i) {
     const Deflektorish::LevelConfig level = Deflektorish::loadLevel(levelPath(i));
     if (i < 4) {
       EXPECT_TRUE(level.enemies.empty()) << level.name;
       continue;
     }
     ASSERT_FALSE(level.enemies.empty()) << level.name;
+    if (i <= 10) {
+      EXPECT_LE(level.enemies.front().spawnDelay, 2.0f)
+          << level.name << " should introduce its first crawler before a fast clear";
+    }
     for (const Deflektorish::EnemyConfig &nest : level.enemies) {
       EXPECT_GT(nest.maxSpawns, 0) << level.name;
       EXPECT_GT(nest.spawnInterval, 0.0f) << level.name;

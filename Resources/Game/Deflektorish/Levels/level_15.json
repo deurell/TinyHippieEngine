@@ -1,6 +1,6 @@
 {
-  "name": "level_07_portal_islands",
-  "parTimeSeconds": 46,
+  "name": "level_15_crowded_house",
+  "parTimeSeconds": 48,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -11,131 +11,200 @@
   "source": {
     "cell": [
       3,
-      12
+      13
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
-        9,
-        12
+        8,
+        13
       ],
       "angleDegrees": -14,
       "automatic": false
     },
     {
       "cell": [
-        9,
-        20
+        12,
+        10
       ],
       "angleDegrees": 21,
       "automatic": false
     },
     {
       "cell": [
-        20,
-        20
+        12,
+        12
       ],
       "angleDegrees": -8,
       "automatic": false
     },
     {
       "cell": [
-        20,
-        6
+        12,
+        14
       ],
       "angleDegrees": 18,
       "automatic": false
     },
     {
       "cell": [
-        31,
-        6
+        12,
+        16
       ],
       "angleDegrees": -11,
       "automatic": false
     },
     {
       "cell": [
-        31,
-        18
+        15,
+        9
+      ],
+      "angleDegrees": 24,
+      "automatic": true,
+      "speed": 0.22
+    },
+    {
+      "cell": [
+        15,
+        11
+      ],
+      "angleDegrees": -14,
+      "automatic": false
+    },
+    {
+      "cell": [
+        15,
+        13
+      ],
+      "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        15,
+        15
+      ],
+      "angleDegrees": -8,
+      "automatic": false
+    },
+    {
+      "cell": [
+        15,
+        17
+      ],
+      "angleDegrees": 18,
+      "automatic": false
+    },
+    {
+      "cell": [
+        18,
+        10
+      ],
+      "angleDegrees": -11,
+      "automatic": true,
+      "speed": -0.24
+    },
+    {
+      "cell": [
+        18,
+        12
       ],
       "angleDegrees": 24,
       "automatic": false
     },
     {
       "cell": [
-        42,
-        18
+        18,
+        14
       ],
       "angleDegrees": -14,
-      "automatic": true,
-      "speed": -0.2
+      "automatic": false
     },
     {
       "cell": [
-        42,
-        10
+        18,
+        16
       ],
       "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        24,
+        13
+      ],
+      "angleDegrees": -8,
       "automatic": false
     }
   ],
   "targets": [
     {
       "cell": [
-        9,
-        16
+        7,
+        13
       ]
     },
     {
       "cell": [
-        14,
-        20
-      ]
-    },
-    {
-      "cell": [
-        20,
-        15
-      ]
-    },
-    {
-      "cell": [
-        20,
+        10,
         9
       ]
     },
     {
       "cell": [
-        25,
-        6
-      ]
-    },
-    {
-      "cell": [
-        31,
-        11
-      ]
-    },
-    {
-      "cell": [
-        31,
+        10,
         17
       ]
     },
     {
       "cell": [
-        36,
+        14,
+        7
+      ]
+    },
+    {
+      "cell": [
+        14,
+        19
+      ]
+    },
+    {
+      "cell": [
+        17,
+        8
+      ]
+    },
+    {
+      "cell": [
+        17,
         18
       ]
     },
     {
       "cell": [
-        42,
-        14
+        21,
+        10
+      ]
+    },
+    {
+      "cell": [
+        21,
+        13
+      ]
+    },
+    {
+      "cell": [
+        21,
+        16
+      ]
+    },
+    {
+      "cell": [
+        27,
+        13
       ]
     }
   ],
@@ -145,174 +214,147 @@
         5,
         19
       ],
-      "targetReflektorIndex": 1,
-      "spawnDelay": 2,
-      "spawnInterval": 8,
-      "speed": 26,
-      "destroySeconds": 8,
-      "maxSpawns": 6
+      "targetReflektorIndex": 2,
+      "spawnDelay": 3,
+      "spawnInterval": 7,
+      "speed": 30,
+      "destroySeconds": 10,
+      "maxSpawns": 8
     },
     {
       "spawnCell": [
-        40,
-        5
+        27,
+        4
       ],
-      "targetReflektorIndex": 7,
-      "spawnDelay": 5,
-      "spawnInterval": 9,
-      "speed": 27,
-      "destroySeconds": 8,
-      "maxSpawns": 5
+      "targetReflektorIndex": 12,
+      "spawnDelay": 8,
+      "spawnInterval": 8,
+      "speed": 32,
+      "destroySeconds": 10,
+      "maxSpawns": 7
     }
   ],
   "blockers": [
     {
       "cell": [
-        12,
-        8
+        8,
+        6
       ],
       "reflective": true
     },
     {
       "cell": [
-        13,
-        8
+        9,
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
-        17,
-        18
+        10,
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
-        18,
-        18
+        20,
+        6
       ],
       "reflective": true
     },
     {
       "cell": [
-        23,
-        4
+        21,
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
-        24,
-        4
+        22,
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
-        28,
+        8,
         20
       ],
       "reflective": true
     },
     {
       "cell": [
-        29,
+        9,
         20
       ],
       "reflective": false
     },
     {
       "cell": [
-        35,
-        16
+        10,
+        20
       ],
       "reflective": false
     },
     {
       "cell": [
-        36,
-        16
+        20,
+        20
       ],
       "reflective": true
     },
     {
       "cell": [
-        39,
-        8
+        21,
+        20
       ],
       "reflective": false
     },
     {
       "cell": [
-        40,
-        8
+        22,
+        20
       ],
       "reflective": false
     }
   ],
-  "portals": [
-    {
-      "entryCell": [
-        12,
-        20
-      ],
-      "exitCell": [
-        17,
-        6
-      ],
-      "phase": 0.1
-    },
-    {
-      "entryCell": [
-        23,
-        6
-      ],
-      "exitCell": [
-        28,
-        18
-      ],
-      "phase": 0.44
-    },
-    {
-      "entryCell": [
-        34,
-        18
-      ],
-      "exitCell": [
-        39,
-        10
-      ],
-      "phase": 0.78
-    }
-  ],
+  "portals": [],
   "filters": [
     {
       "cell": [
-        15,
-        14
+        21,
+        11
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": 0.2
+      "speed": 0.3
     },
     {
       "cell": [
-        26,
-        13
+        21,
+        15
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": -0.2
-    },
-    {
-      "cell": [
-        37,
-        12
-      ],
-      "angleDegrees": 90,
-      "automatic": false
+      "speed": -0.3
     }
   ],
-  "splitters": []
+  "splitters": [
+    {
+      "cell": [
+        9,
+        13
+      ],
+      "angleDegrees": 28
+    },
+    {
+      "cell": [
+        20,
+        13
+      ],
+      "angleDegrees": -28
+    }
+  ]
 }

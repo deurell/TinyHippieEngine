@@ -1,123 +1,333 @@
 {
-  "name": "level_08_machine_room",
-  "parTimeSeconds": 35,
+  "name": "level_08_spiral",
+  "parTimeSeconds": 50,
   "grid": {
     "tileSize": 32,
-    "origin": [16, 16]
+    "origin": [
+      16,
+      16
+    ]
   },
   "source": {
-    "cell": [3, 13],
+    "cell": [
+      3,
+      13
+    ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 48,
+  "explosionPoolSize": 56,
   "reflektors": [
-    { "cell": [8, 13], "angleDegrees": 12, "automatic": false },
-    { "cell": [8, 21], "angleDegrees": 18, "automatic": false },
-    { "cell": [15, 21], "angleDegrees": -16, "automatic": true, "speed": 0.20 },
-    { "cell": [15, 7], "angleDegrees": -18, "automatic": false },
-    { "cell": [23, 7], "angleDegrees": 20, "automatic": false },
-    { "cell": [23, 21], "angleDegrees": -24, "automatic": false },
-    { "cell": [31, 21], "angleDegrees": 18, "automatic": true, "speed": -0.24 },
-    { "cell": [31, 9], "angleDegrees": -22, "automatic": false },
-    { "cell": [38, 9], "angleDegrees": 16, "automatic": false },
-    { "cell": [38, 17], "angleDegrees": -12, "automatic": true, "speed": 0.18 }
+    {
+      "cell": [
+        9,
+        13
+      ],
+      "angleDegrees": -14,
+      "automatic": false
+    },
+    {
+      "cell": [
+        9,
+        21
+      ],
+      "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        25,
+        21
+      ],
+      "angleDegrees": -8,
+      "automatic": false
+    },
+    {
+      "cell": [
+        25,
+        5
+      ],
+      "angleDegrees": 18,
+      "automatic": false
+    },
+    {
+      "cell": [
+        13,
+        5
+      ],
+      "angleDegrees": -11,
+      "automatic": false
+    },
+    {
+      "cell": [
+        13,
+        17
+      ],
+      "angleDegrees": 24,
+      "automatic": false
+    },
+    {
+      "cell": [
+        21,
+        17
+      ],
+      "angleDegrees": -14,
+      "automatic": true,
+      "speed": -0.2
+    },
+    {
+      "cell": [
+        21,
+        9
+      ],
+      "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        17,
+        9
+      ],
+      "angleDegrees": -8,
+      "automatic": false
+    },
+    {
+      "cell": [
+        17,
+        13
+      ],
+      "angleDegrees": 18,
+      "automatic": false
+    }
   ],
   "targets": [
-    { "cell": [8, 16] },
-    { "cell": [8, 20] },
-    { "cell": [12, 21] },
-    { "cell": [15, 17] },
-    { "cell": [15, 12] },
-    { "cell": [15, 8] },
-    { "cell": [19, 7] },
-    { "cell": [23, 11] },
-    { "cell": [23, 16] },
-    { "cell": [23, 20] },
-    { "cell": [27, 21] },
-    { "cell": [31, 18] },
-    { "cell": [31, 14] },
-    { "cell": [31, 10] },
-    { "cell": [35, 9] },
-    { "cell": [38, 13] },
-    { "cell": [38, 16] }
+    {
+      "cell": [
+        9,
+        17
+      ]
+    },
+    {
+      "cell": [
+        15,
+        21
+      ]
+    },
+    {
+      "cell": [
+        21,
+        21
+      ]
+    },
+    {
+      "cell": [
+        25,
+        15
+      ]
+    },
+    {
+      "cell": [
+        25,
+        9
+      ]
+    },
+    {
+      "cell": [
+        19,
+        5
+      ]
+    },
+    {
+      "cell": [
+        14,
+        5
+      ]
+    },
+    {
+      "cell": [
+        13,
+        11
+      ]
+    },
+    {
+      "cell": [
+        13,
+        16
+      ]
+    },
+    {
+      "cell": [
+        17,
+        17
+      ]
+    },
+    {
+      "cell": [
+        21,
+        13
+      ]
+    },
+    {
+      "cell": [
+        21,
+        10
+      ]
+    },
+    {
+      "cell": [
+        19,
+        9
+      ]
+    },
+    {
+      "cell": [
+        17,
+        11
+      ]
+    }
   ],
   "enemies": [
-    { "spawnCell": [3, 24], "targetReflektorIndex": 1,
-      "spawnDelay": 3, "spawnInterval": 7, "speed": 30,
-      "destroySeconds": 4, "maxSpawns": 6 },
-    { "spawnCell": [42, 4], "targetReflektorIndex": 8,
-      "spawnDelay": 7, "spawnInterval": 8, "speed": 29,
-      "destroySeconds": 4, "maxSpawns": 6 }
+    {
+      "spawnCell": [
+        5,
+        20
+      ],
+      "targetReflektorIndex": 1,
+      "spawnDelay": 1.5,
+      "spawnInterval": 8,
+      "speed": 28,
+      "destroySeconds": 8,
+      "maxSpawns": 6
+    },
+    {
+      "spawnCell": [
+        24,
+        6
+      ],
+      "targetReflektorIndex": 3,
+      "spawnDelay": 5,
+      "spawnInterval": 9,
+      "speed": 29,
+      "destroySeconds": 9,
+      "maxSpawns": 5
+    }
   ],
   "blockers": [
-    { "cell": [6, 11], "reflective": false },
-    { "cell": [7, 11], "reflective": false },
-    { "cell": [6, 12], "reflective": false },
-    { "cell": [11, 13], "reflective": false },
-    { "cell": [12, 13], "reflective": false },
-    { "cell": [12, 14], "reflective": true },
-    { "cell": [12, 15], "reflective": true },
-    { "cell": [12, 18], "reflective": true },
-    { "cell": [13, 18], "reflective": true },
-    { "cell": [16, 18], "reflective": true },
-    { "cell": [17, 18], "reflective": true },
-    { "cell": [17, 9], "reflective": true },
-    { "cell": [18, 9], "reflective": true },
-    { "cell": [18, 10], "reflective": true },
-    { "cell": [19, 10], "reflective": true },
-    { "cell": [19, 21], "reflective": false },
-    { "cell": [20, 21], "reflective": false },
-    { "cell": [20, 13], "reflective": true },
-    { "cell": [21, 13], "reflective": true },
-    { "cell": [24, 13], "reflective": true },
-    { "cell": [25, 13], "reflective": true },
-    { "cell": [25, 14], "reflective": true },
-    { "cell": [26, 21], "reflective": false },
-    { "cell": [27, 18], "reflective": false },
-    { "cell": [27, 22], "reflective": false },
-    { "cell": [28, 22], "reflective": false },
-    { "cell": [29, 10], "reflective": false },
-    { "cell": [30, 10], "reflective": false },
-    { "cell": [34, 12], "reflective": true },
-    { "cell": [35, 12], "reflective": true },
-    { "cell": [35, 6], "reflective": false },
-    { "cell": [36, 6], "reflective": false },
-    { "cell": [36, 7], "reflective": false },
-    { "cell": [36, 19], "reflective": false },
-    { "cell": [37, 19], "reflective": false },
-    { "cell": [5, 20], "reflective": false },
-    { "cell": [6, 20], "reflective": false },
-    { "cell": [6, 21], "reflective": false },
-    { "cell": [14, 5], "reflective": true },
-    { "cell": [16, 5], "reflective": true },
-    { "cell": [22, 23], "reflective": true },
-    { "cell": [23, 23], "reflective": true },
-    { "cell": [30, 23], "reflective": true },
-    { "cell": [32, 23], "reflective": true },
-    { "cell": [39, 5], "reflective": true },
-    { "cell": [40, 5], "reflective": true },
-    { "cell": [4, 15], "reflective": true },
-    { "cell": [4, 16], "reflective": true },
-    { "cell": [22, 5], "reflective": true },
-    { "cell": [40, 19], "reflective": true },
-    { "cell": [41, 19], "reflective": true },
-    { "cell": [41, 9], "reflective": true }
+    {
+      "cell": [
+        11,
+        7
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        12,
+        7
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        15,
+        7
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        16,
+        7
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        19,
+        15
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        20,
+        15
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        23,
+        15
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        24,
+        15
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        15,
+        11
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        19,
+        11
+      ],
+      "reflective": true
+    }
   ],
-  "portals": [
-    { "entryCell": [18, 21], "exitCell": [20, 7], "phase": 0.2 },
-    { "entryCell": [34, 21], "exitCell": [35, 9], "phase": 0.62 }
-  ],
+  "portals": [],
   "filters": [
-    { "cell": [8, 18], "angleDegrees": 90, "automatic": false },
-    { "cell": [15, 15], "angleDegrees": 90, "automatic": true, "speed": 0.16 },
-    { "cell": [19, 16], "angleDegrees": 90, "automatic": true, "speed": -0.25 },
-    { "cell": [23, 14], "angleDegrees": 90, "automatic": true, "speed": 0.21 },
-    { "cell": [27, 16], "angleDegrees": 90, "automatic": true, "speed": 0.28 },
-    { "cell": [31, 16], "angleDegrees": 90, "automatic": true, "speed": -0.20 },
-    { "cell": [38, 14], "angleDegrees": 90, "automatic": true, "speed": 0.2 }
+    {
+      "cell": [
+        17,
+        21
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": 0.22
+    },
+    {
+      "cell": [
+        25,
+        13
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": -0.24
+    },
+    {
+      "cell": [
+        17,
+        5
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": 0.25
+    },
+    {
+      "cell": [
+        18,
+        17
+      ],
+      "angleDegrees": 90,
+      "automatic": false
+    }
   ],
   "splitters": [
-    { "cell": [15, 19], "angleDegrees": 0 },
-    { "cell": [31, 12], "angleDegrees": 0 }
+    {
+      "cell": [
+        9,
+        18
+      ],
+      "angleDegrees": 20
+    }
   ]
 }

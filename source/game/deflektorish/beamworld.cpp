@@ -476,9 +476,11 @@ BeamSolveResult solveBeamWorld(const BeamWorld &world,
         if (ray.depth < 3) {
           const float nextEnergy = std::min(ray.energy + 0.5f, 3.0f);
           const glm::vec2 branchA =
-              glm::normalize(rotateVec(ray.rayDir, kSplitterBranchAngle));
+              glm::normalize(rotateVec(
+                  ray.rayDir, splitter.angle + kSplitterBranchAngle));
           const glm::vec2 branchB =
-              glm::normalize(rotateVec(ray.rayDir, -kSplitterBranchAngle));
+              glm::normalize(rotateVec(
+                  ray.rayDir, splitter.angle - kSplitterBranchAngle));
           BeamRay a{nearest.point + branchA * kHitGap,
                     nearest.point,
                     branchA,

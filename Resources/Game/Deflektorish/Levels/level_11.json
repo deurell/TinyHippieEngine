@@ -1,6 +1,6 @@
 {
-  "name": "level_04_first_contact",
-  "parTimeSeconds": 34,
+  "name": "level_11_mirror_gallery",
+  "parTimeSeconds": 40,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -15,35 +15,84 @@
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
-        8,
-        13
+        10,
+        8
       ],
       "angleDegrees": -14,
       "automatic": false
     },
     {
       "cell": [
-        13,
-        9
+        12,
+        8
       ],
       "angleDegrees": 21,
       "automatic": false
     },
     {
       "cell": [
-        17,
-        13
+        14,
+        8
       ],
       "angleDegrees": -8,
       "automatic": false
     },
     {
       "cell": [
-        13,
+        10,
+        11
+      ],
+      "angleDegrees": 18,
+      "automatic": false
+    },
+    {
+      "cell": [
+        12,
+        11
+      ],
+      "angleDegrees": -11,
+      "automatic": false
+    },
+    {
+      "cell": [
+        14,
+        11
+      ],
+      "angleDegrees": 24,
+      "automatic": true,
+      "speed": 0.22
+    },
+    {
+      "cell": [
+        10,
+        14
+      ],
+      "angleDegrees": -14,
+      "automatic": false
+    },
+    {
+      "cell": [
+        12,
+        14
+      ],
+      "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        14,
+        14
+      ],
+      "angleDegrees": -8,
+      "automatic": false
+    },
+    {
+      "cell": [
+        10,
         17
       ],
       "angleDegrees": 18,
@@ -51,10 +100,19 @@
     },
     {
       "cell": [
-        23,
-        13
+        12,
+        17
       ],
       "angleDegrees": -11,
+      "automatic": true,
+      "speed": -0.24
+    },
+    {
+      "cell": [
+        14,
+        17
+      ],
+      "angleDegrees": 24,
       "automatic": false
     }
   ],
@@ -67,38 +125,32 @@
     },
     {
       "cell": [
-        11,
-        11
+        18,
+        7
       ]
     },
     {
       "cell": [
-        15,
-        11
+        18,
+        10
       ]
     },
     {
       "cell": [
-        11,
-        15
-      ]
-    },
-    {
-      "cell": [
-        15,
-        15
-      ]
-    },
-    {
-      "cell": [
-        20,
+        18,
         13
       ]
     },
     {
       "cell": [
-        26,
-        13
+        18,
+        16
+      ]
+    },
+    {
+      "cell": [
+        18,
+        19
       ]
     }
   ],
@@ -108,53 +160,53 @@
         5,
         18
       ],
-      "targetReflektorIndex": 1,
-      "spawnDelay": 1.5,
-      "spawnInterval": 7,
-      "speed": 26,
-      "destroySeconds": 6,
-      "maxSpawns": 4
+      "targetReflektorIndex": 0,
+      "spawnDelay": 7,
+      "spawnInterval": 10,
+      "speed": 24,
+      "destroySeconds": 8,
+      "maxSpawns": 5
     }
   ],
   "blockers": [
     {
       "cell": [
-        10,
-        7
+        8,
+        6
       ],
       "reflective": true
     },
     {
       "cell": [
-        11,
-        7
+        9,
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
         15,
-        7
+        6
       ],
       "reflective": false
     },
     {
       "cell": [
         16,
-        7
+        6
       ],
       "reflective": true
     },
     {
       "cell": [
-        10,
+        8,
         19
       ],
       "reflective": false
     },
     {
       "cell": [
-        11,
+        9,
         19
       ],
       "reflective": false
@@ -178,21 +230,30 @@
   "filters": [
     {
       "cell": [
-        13,
-        13
+        20,
+        10
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": 0.14
+      "speed": 0.18
+    },
+    {
+      "cell": [
+        20,
+        16
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": -0.2
     }
   ],
   "splitters": [
     {
       "cell": [
-        9,
+        8,
         13
       ],
-      "angleDegrees": -18
+      "angleDegrees": 18
     }
   ]
 }

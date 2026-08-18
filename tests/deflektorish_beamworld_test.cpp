@@ -38,6 +38,20 @@ TEST(DeflektorishBeamWorldTest, SplitterCreatesTwoBranches) {
   EXPECT_LT(result.segments[2].end.y, 0.0f);
 }
 
+TEST(DeflektorishBeamWorldTest, SplitterOrientationRotatesBothBranches) {
+  Deflektorish::BeamWorld world;
+  world.sourcePosition = {0.0f, 0.0f};
+  world.sourceAngle = 0.0f;
+  world.splitters.push_back({{50.0f, 0.0f}, 3.1415926535f * 0.5f});
+
+  const Deflektorish::BeamSolveResult result =
+      Deflektorish::solveBeamWorld(world, 4);
+
+  ASSERT_EQ(result.segments.size(), 3u);
+  EXPECT_GT(result.segments[1].end.y, 0.0f);
+  EXPECT_GT(result.segments[2].end.y, 0.0f);
+}
+
 TEST(DeflektorishBeamWorldTest, PassingFilterCanHitTargetInsideFilter) {
   Deflektorish::BeamWorld world;
   world.sourcePosition = {0.0f, 0.0f};

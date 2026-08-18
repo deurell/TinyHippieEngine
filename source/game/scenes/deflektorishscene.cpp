@@ -33,6 +33,8 @@ constexpr int kMinExplosionPoolSize = 28;
 constexpr int kDebugVictoryKey = 86;
 constexpr int kDebugFirstLevelKey = 293;
 constexpr int kDebugLastLevelKey = 299;
+constexpr int kDebugLevelElevenKey = 49;
+constexpr int kDebugLevelTwentyKey = 48;
 constexpr int kBackgroundToggleKey = 66;
 #endif
 constexpr float kGameOverReturnDelay = 3.2f;
@@ -111,7 +113,7 @@ DeflektorishScene::DeflektorishScene(
       postBumpCallback_(std::move(postBumpCallback)),
       soundCallback_(std::move(soundCallback)),
       gameOverCallback_(std::move(gameOverCallback)) {
-  campaign_.loadDefaultLevelPaths(kLevelRoot, 10);
+  campaign_.loadDefaultLevelPaths(kLevelRoot, 20);
 }
 
 void DeflektorishScene::init() {
@@ -187,6 +189,17 @@ void DeflektorishScene::onKey(int key) {
   if (key >= kDebugFirstLevelKey && key <= kDebugLastLevelKey) {
     const std::size_t roomIndex =
         static_cast<std::size_t>(key - kDebugFirstLevelKey + 3);
+    if (rooms_.size() > roomIndex) {
+      loadCampaign();
+      activateRoom(roomIndex, false);
+      return;
+    }
+  }
+  if ((key >= kDebugLevelElevenKey && key <= 57) ||
+      key == kDebugLevelTwentyKey) {
+    const std::size_t roomIndex = key == kDebugLevelTwentyKey
+                                      ? 19u
+                                      : static_cast<std::size_t>(key - 39);
     if (rooms_.size() > roomIndex) {
       loadCampaign();
       activateRoom(roomIndex, false);
@@ -310,9 +323,11 @@ void DeflektorishScene::addBackground(const RoomRuntime &room,
   flatBack->config.color = {0.025f, 0.030f, 0.047f, 1.0f};
   flatBack->setRenderLayer(-32);
   flatBack->setLocalPosition({center.x, center.y, -0.10f});
-  flatBack->setLocalScale({backHalfSize.x, backHalfSize.y, 1.0f});
-  flatBack->setVisible(!backgroundEffectsEnabled_);
-  flatBackgrounds_.push_back(flatBack.get());
+  flatBack->setLocalScale({std::max(backHalfSize.x, 10.0f),
+                           std::max(backHalfSize.y, 6.0f), 1.0f});
+  // This is an always-on dark safety plate. Narrow/portrait playfields can
+  // expose the corners of their procedural quad at wide window aspects.
+  flatBack->setVisible(true);
   addChild(std::move(flatBack));
 
   auto flatField = std::make_unique<DL::ShaderPlaneNode>(

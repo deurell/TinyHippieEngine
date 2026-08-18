@@ -1,135 +1,252 @@
 {
-  "name": "level_09_overload_grid",
-  "parTimeSeconds": 25,
+  "name": "level_09_open_crossfire",
+  "parTimeSeconds": 44,
   "grid": {
     "tileSize": 32,
-    "origin": [16, 16]
+    "origin": [
+      16,
+      16
+    ]
   },
   "source": {
-    "cell": [3, 9],
+    "cell": [
+      3,
+      13
+    ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 50,
+  "explosionPoolSize": 56,
   "reflektors": [
-    { "cell": [8, 9], "angleDegrees": 16, "automatic": false },
-    { "cell": [8, 22], "angleDegrees": 18, "automatic": false },
-    { "cell": [14, 22], "angleDegrees": -14, "automatic": true, "speed": 0.18 },
-    { "cell": [14, 5], "angleDegrees": -18, "automatic": false },
-    { "cell": [22, 5], "angleDegrees": 24, "automatic": false },
-    { "cell": [22, 22], "angleDegrees": -20, "automatic": true, "speed": -0.22 },
-    { "cell": [30, 22], "angleDegrees": 18, "automatic": false },
-    { "cell": [30, 6], "angleDegrees": -24, "automatic": false },
-    { "cell": [38, 6], "angleDegrees": 20, "automatic": true, "speed": 0.26 },
-    { "cell": [38, 20], "angleDegrees": -20, "automatic": false },
-    { "cell": [44, 20], "angleDegrees": 16, "automatic": true, "speed": -0.16 }
+    {
+      "cell": [
+        10,
+        13
+      ],
+      "angleDegrees": -14,
+      "automatic": false
+    },
+    {
+      "cell": [
+        18,
+        7
+      ],
+      "angleDegrees": 21,
+      "automatic": false
+    },
+    {
+      "cell": [
+        18,
+        19
+      ],
+      "angleDegrees": -8,
+      "automatic": false
+    },
+    {
+      "cell": [
+        27,
+        13
+      ],
+      "angleDegrees": 18,
+      "automatic": false
+    },
+    {
+      "cell": [
+        35,
+        7
+      ],
+      "angleDegrees": -11,
+      "automatic": false
+    },
+    {
+      "cell": [
+        35,
+        19
+      ],
+      "angleDegrees": 24,
+      "automatic": false
+    }
   ],
   "targets": [
-    { "cell": [8, 12] },
-    { "cell": [8, 16] },
-    { "cell": [8, 21] },
-    { "cell": [11, 22] },
-    { "cell": [14, 18] },
-    { "cell": [14, 13] },
-    { "cell": [14, 6] },
-    { "cell": [18, 5] },
-    { "cell": [22, 9] },
-    { "cell": [22, 14] },
-    { "cell": [22, 21] },
-    { "cell": [26, 22] },
-    { "cell": [30, 18] },
-    { "cell": [30, 12] },
-    { "cell": [30, 7] },
-    { "cell": [34, 6] },
-    { "cell": [38, 10] },
-    { "cell": [38, 15] },
-    { "cell": [38, 19] },
-    { "cell": [41, 20] }
+    {
+      "cell": [
+        14,
+        13
+      ]
+    },
+    {
+      "cell": [
+        18,
+        10
+      ]
+    },
+    {
+      "cell": [
+        18,
+        16
+      ]
+    },
+    {
+      "cell": [
+        23,
+        13
+      ]
+    },
+    {
+      "cell": [
+        31,
+        13
+      ]
+    },
+    {
+      "cell": [
+        35,
+        10
+      ]
+    },
+    {
+      "cell": [
+        35,
+        16
+      ]
+    },
+    {
+      "cell": [
+        40,
+        13
+      ]
+    }
   ],
   "enemies": [
-    { "spawnCell": [3, 25], "targetReflektorIndex": 1,
-      "spawnDelay": 4, "spawnInterval": 7, "speed": 20,
-      "destroySeconds": 10, "maxSpawns": 8 },
-    { "spawnCell": [44, 3], "targetReflektorIndex": 7,
-      "spawnDelay": 8, "spawnInterval": 6, "speed": 31,
-      "destroySeconds": 7, "maxSpawns": 8 }
+    {
+      "spawnCell": [
+        5,
+        4
+      ],
+      "targetReflektorIndex": 1,
+      "spawnDelay": 1.5,
+      "spawnInterval": 8,
+      "speed": 30,
+      "destroySeconds": 9,
+      "maxSpawns": 7
+    },
+    {
+      "spawnCell": [
+        6,
+        20
+      ],
+      "targetReflektorIndex": 2,
+      "spawnDelay": 4,
+      "spawnInterval": 8,
+      "speed": 30,
+      "destroySeconds": 9,
+      "maxSpawns": 7
+    },
+    {
+      "spawnCell": [
+        39,
+        13
+      ],
+      "targetReflektorIndex": 5,
+      "spawnDelay": 7,
+      "spawnInterval": 9,
+      "speed": 31,
+      "destroySeconds": 9,
+      "maxSpawns": 6
+    }
   ],
   "blockers": [
-    { "cell": [6, 7], "reflective": false },
-    { "cell": [7, 7], "reflective": false },
-    { "cell": [6, 8], "reflective": false },
-    { "cell": [11, 9], "reflective": false },
-    { "cell": [12, 9], "reflective": false },
-    { "cell": [11, 10], "reflective": true },
-    { "cell": [11, 11], "reflective": true },
-    { "cell": [11, 15], "reflective": true },
-    { "cell": [12, 15], "reflective": true },
-    { "cell": [15, 15], "reflective": true },
-    { "cell": [16, 15], "reflective": true },
-    { "cell": [16, 8], "reflective": true },
-    { "cell": [17, 8], "reflective": true },
-    { "cell": [17, 9], "reflective": true },
-    { "cell": [18, 9], "reflective": true },
-    { "cell": [18, 22], "reflective": false },
-    { "cell": [19, 22], "reflective": false },
-    { "cell": [19, 13], "reflective": true },
-    { "cell": [20, 13], "reflective": true },
-    { "cell": [23, 13], "reflective": true },
-    { "cell": [24, 13], "reflective": true },
-    { "cell": [24, 14], "reflective": true },
-    { "cell": [25, 21], "reflective": false },
-    { "cell": [26, 21], "reflective": false },
-    { "cell": [26, 20], "reflective": false },
-    { "cell": [26, 18], "reflective": false },
-    { "cell": [27, 18], "reflective": false },
-    { "cell": [28, 8], "reflective": false },
-    { "cell": [29, 8], "reflective": false },
-    { "cell": [32, 8], "reflective": false },
-    { "cell": [33, 8], "reflective": false },
-    { "cell": [34, 11], "reflective": true },
-    { "cell": [35, 11], "reflective": true },
-    { "cell": [35, 12], "reflective": true },
-    { "cell": [35, 17], "reflective": true },
-    { "cell": [36, 17], "reflective": true },
-    { "cell": [39, 17], "reflective": true },
-    { "cell": [40, 17], "reflective": true },
-    { "cell": [5, 20], "reflective": false },
-    { "cell": [6, 20], "reflective": false },
-    { "cell": [6, 21], "reflective": false },
-    { "cell": [13, 3], "reflective": true },
-    { "cell": [15, 3], "reflective": true },
-    { "cell": [21, 24], "reflective": true },
-    { "cell": [22, 24], "reflective": true },
-    { "cell": [29, 24], "reflective": true },
-    { "cell": [31, 24], "reflective": true },
-    { "cell": [37, 4], "reflective": true },
-    { "cell": [39, 4], "reflective": true },
-    { "cell": [44, 6], "reflective": true },
-    { "cell": [45, 6], "reflective": true },
-    { "cell": [4, 11], "reflective": true },
-    { "cell": [4, 12], "reflective": true },
-    { "cell": [29, 4], "reflective": true },
-    { "cell": [42, 22], "reflective": true },
-    { "cell": [43, 22], "reflective": true },
-    { "cell": [46, 14], "reflective": true }
+    {
+      "cell": [
+        12,
+        5
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        13,
+        5
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        23,
+        5
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        24,
+        5
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        30,
+        21
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        31,
+        21
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        39,
+        21
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        40,
+        21
+      ],
+      "reflective": false
+    }
   ],
-  "portals": [
-    { "entryCell": [17, 22], "exitCell": [18, 5], "phase": 0.12 },
-    { "entryCell": [33, 22], "exitCell": [34, 6], "phase": 0.5 },
-    { "entryCell": [41, 6], "exitCell": [42, 20], "phase": 0.78 }
-  ],
+  "portals": [],
   "filters": [
-    { "cell": [8, 18], "angleDegrees": 90, "automatic": true, "speed": 0.14 },
-    { "cell": [14, 15], "angleDegrees": 90, "automatic": true, "speed": -0.18 },
-    { "cell": [18, 16], "angleDegrees": 90, "automatic": true, "speed": 0.25 },
-    { "cell": [22, 12], "angleDegrees": 90, "automatic": false },
-    { "cell": [26, 16], "angleDegrees": 90, "automatic": true, "speed": -0.28 },
-    { "cell": [30, 15], "angleDegrees": 90, "automatic": true, "speed": 0.22 },
-    { "cell": [34, 14], "angleDegrees": 90, "automatic": true, "speed": 0.30 },
-    { "cell": [38, 13], "angleDegrees": 90, "automatic": true, "speed": -0.24 }
+    {
+      "cell": [
+        23,
+        9
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": 0.28
+    },
+    {
+      "cell": [
+        31,
+        17
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": -0.28
+    }
   ],
   "splitters": [
-    { "cell": [8, 19], "angleDegrees": 0 },
-    { "cell": [22, 17], "angleDegrees": 0 },
-    { "cell": [38, 17], "angleDegrees": 0 }
+    {
+      "cell": [
+        13,
+        13
+      ],
+      "angleDegrees": 24
+    },
+    {
+      "cell": [
+        30,
+        13
+      ],
+      "angleDegrees": -24
+    }
   ]
 }

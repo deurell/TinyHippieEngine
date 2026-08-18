@@ -1,6 +1,6 @@
 {
-  "name": "level_07_portal_islands",
-  "parTimeSeconds": 46,
+  "name": "level_12_pinball",
+  "parTimeSeconds": 38,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -11,24 +11,24 @@
   "source": {
     "cell": [
       3,
-      12
+      13
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
-        9,
-        12
+        10,
+        13
       ],
       "angleDegrees": -14,
       "automatic": false
     },
     {
       "cell": [
-        9,
-        20
+        15,
+        8
       ],
       "angleDegrees": 21,
       "automatic": false
@@ -36,131 +36,103 @@
     {
       "cell": [
         20,
-        20
+        13
       ],
       "angleDegrees": -8,
       "automatic": false
     },
     {
       "cell": [
-        20,
-        6
+        15,
+        18
       ],
       "angleDegrees": 18,
       "automatic": false
     },
     {
       "cell": [
-        31,
-        6
+        24,
+        8
       ],
       "angleDegrees": -11,
       "automatic": false
     },
     {
       "cell": [
-        31,
+        24,
         18
       ],
       "angleDegrees": 24,
-      "automatic": false
-    },
-    {
-      "cell": [
-        42,
-        18
-      ],
-      "angleDegrees": -14,
       "automatic": true,
-      "speed": -0.2
-    },
-    {
-      "cell": [
-        42,
-        10
-      ],
-      "angleDegrees": 21,
-      "automatic": false
+      "speed": 0.22
     }
   ],
   "targets": [
     {
       "cell": [
-        9,
+        13,
+        10
+      ]
+    },
+    {
+      "cell": [
+        17,
+        10
+      ]
+    },
+    {
+      "cell": [
+        13,
         16
       ]
     },
     {
       "cell": [
-        14,
-        20
+        17,
+        16
       ]
     },
     {
       "cell": [
-        20,
-        15
+        22,
+        10
       ]
     },
     {
       "cell": [
-        20,
-        9
+        22,
+        16
       ]
     },
     {
       "cell": [
-        25,
-        6
-      ]
-    },
-    {
-      "cell": [
-        31,
-        11
-      ]
-    },
-    {
-      "cell": [
-        31,
-        17
-      ]
-    },
-    {
-      "cell": [
-        36,
-        18
-      ]
-    },
-    {
-      "cell": [
-        42,
-        14
+        27,
+        13
       ]
     }
   ],
   "enemies": [
     {
       "spawnCell": [
-        5,
-        19
+        6,
+        18
       ],
-      "targetReflektorIndex": 1,
-      "spawnDelay": 2,
-      "spawnInterval": 8,
-      "speed": 26,
+      "targetReflektorIndex": 3,
+      "spawnDelay": 5,
+      "spawnInterval": 9,
+      "speed": 27,
       "destroySeconds": 8,
       "maxSpawns": 6
     },
     {
       "spawnCell": [
-        40,
-        5
+        26,
+        8
       ],
-      "targetReflektorIndex": 7,
-      "spawnDelay": 5,
-      "spawnInterval": 9,
-      "speed": 27,
+      "targetReflektorIndex": 4,
+      "spawnDelay": 10,
+      "spawnInterval": 10,
+      "speed": 29,
       "destroySeconds": 8,
       "maxSpawns": 5
     }
@@ -168,151 +140,101 @@
   "blockers": [
     {
       "cell": [
-        12,
-        8
+        9,
+        7
       ],
       "reflective": true
     },
     {
       "cell": [
-        13,
-        8
+        10,
+        7
       ],
       "reflective": false
     },
     {
       "cell": [
-        17,
-        18
+        20,
+        7
       ],
       "reflective": false
     },
     {
       "cell": [
-        18,
-        18
+        21,
+        7
       ],
       "reflective": true
     },
     {
       "cell": [
-        23,
-        4
+        9,
+        19
       ],
       "reflective": false
     },
     {
       "cell": [
-        24,
-        4
+        10,
+        19
       ],
       "reflective": false
     },
     {
       "cell": [
-        28,
-        20
+        20,
+        19
       ],
       "reflective": true
     },
     {
       "cell": [
-        29,
-        20
+        21,
+        19
       ],
       "reflective": false
     },
     {
       "cell": [
-        35,
-        16
+        14,
+        12
       ],
       "reflective": false
     },
     {
       "cell": [
-        36,
-        16
+        16,
+        14
       ],
       "reflective": true
-    },
-    {
-      "cell": [
-        39,
-        8
-      ],
-      "reflective": false
-    },
-    {
-      "cell": [
-        40,
-        8
-      ],
-      "reflective": false
     }
   ],
-  "portals": [
-    {
-      "entryCell": [
-        12,
-        20
-      ],
-      "exitCell": [
-        17,
-        6
-      ],
-      "phase": 0.1
-    },
-    {
-      "entryCell": [
-        23,
-        6
-      ],
-      "exitCell": [
-        28,
-        18
-      ],
-      "phase": 0.44
-    },
-    {
-      "entryCell": [
-        34,
-        18
-      ],
-      "exitCell": [
-        39,
-        10
-      ],
-      "phase": 0.78
-    }
-  ],
+  "portals": [],
   "filters": [
     {
       "cell": [
         15,
-        14
-      ],
-      "angleDegrees": 90,
-      "automatic": true,
-      "speed": 0.2
-    },
-    {
-      "cell": [
-        26,
         13
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": -0.2
+      "speed": 0.28
+    }
+  ],
+  "splitters": [
+    {
+      "cell": [
+        12,
+        13
+      ],
+      "angleDegrees": -18
     },
     {
       "cell": [
-        37,
-        12
+        22,
+        13
       ],
-      "angleDegrees": 90,
-      "automatic": false
+      "angleDegrees": 24
     }
-  ],
-  "splitters": []
+  ]
 }

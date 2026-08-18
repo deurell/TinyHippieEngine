@@ -1,6 +1,6 @@
 {
-  "name": "level_06_twin_loops",
-  "parTimeSeconds": 42,
+  "name": "level_20_kaleidoscope",
+  "parTimeSeconds": 80,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -15,7 +15,7 @@
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
@@ -35,7 +35,7 @@
     },
     {
       "cell": [
-        18,
+        17,
         8
       ],
       "angleDegrees": -8,
@@ -43,7 +43,7 @@
     },
     {
       "cell": [
-        22,
+        21,
         13
       ],
       "angleDegrees": 18,
@@ -51,7 +51,7 @@
     },
     {
       "cell": [
-        18,
+        17,
         18
       ],
       "angleDegrees": -11,
@@ -63,37 +63,37 @@
         18
       ],
       "angleDegrees": 24,
+      "automatic": true,
+      "speed": 0.22
+    },
+    {
+      "cell": [
+        27,
+        6
+      ],
+      "angleDegrees": -14,
       "automatic": false
     },
     {
       "cell": [
-        28,
-        13
-      ],
-      "angleDegrees": -14,
-      "automatic": true,
-      "speed": -0.2
-    },
-    {
-      "cell": [
-        33,
-        8
+        31,
+        10
       ],
       "angleDegrees": 21,
       "automatic": false
     },
     {
       "cell": [
-        38,
-        8
+        27,
+        14
       ],
       "angleDegrees": -8,
       "automatic": false
     },
     {
       "cell": [
-        42,
-        13
+        31,
+        18
       ],
       "angleDegrees": 18,
       "automatic": false
@@ -101,17 +101,34 @@
     {
       "cell": [
         38,
-        18
+        8
       ],
       "angleDegrees": -11,
+      "automatic": true,
+      "speed": -0.24
+    },
+    {
+      "cell": [
+        42,
+        13
+      ],
+      "angleDegrees": 24,
       "automatic": false
     },
     {
       "cell": [
-        33,
+        38,
         18
       ],
-      "angleDegrees": 24,
+      "angleDegrees": -14,
+      "automatic": false
+    },
+    {
+      "cell": [
+        48,
+        13
+      ],
+      "angleDegrees": 21,
       "automatic": false
     }
   ],
@@ -130,13 +147,13 @@
     },
     {
       "cell": [
-        20,
+        19,
         10
       ]
     },
     {
       "cell": [
-        20,
+        19,
         16
       ]
     },
@@ -154,18 +171,48 @@
     },
     {
       "cell": [
-        31,
+        24,
+        13
+      ]
+    },
+    {
+      "cell": [
+        27,
         10
       ]
     },
     {
       "cell": [
-        35,
+        29,
         8
       ]
     },
     {
       "cell": [
+        31,
+        13
+      ]
+    },
+    {
+      "cell": [
+        29,
+        18
+      ]
+    },
+    {
+      "cell": [
+        27,
+        16
+      ]
+    },
+    {
+      "cell": [
+        35,
+        10
+      ]
+    },
+    {
+      "cell": [
         40,
         10
       ]
@@ -179,13 +226,19 @@
     {
       "cell": [
         35,
-        18
+        16
       ]
     },
     {
       "cell": [
-        31,
-        16
+        45,
+        13
+      ]
+    },
+    {
+      "cell": [
+        51,
+        13
       ]
     }
   ],
@@ -193,98 +246,115 @@
     {
       "spawnCell": [
         5,
-        18
+        20
       ],
       "targetReflektorIndex": 4,
       "spawnDelay": 2,
-      "spawnInterval": 8,
-      "speed": 28,
-      "destroySeconds": 7,
-      "maxSpawns": 5
+      "spawnInterval": 6,
+      "speed": 37,
+      "destroySeconds": 13,
+      "maxSpawns": 10
+    },
+    {
+      "spawnCell": [
+        50,
+        5
+      ],
+      "targetReflektorIndex": 13,
+      "spawnDelay": 6,
+      "spawnInterval": 6,
+      "speed": 41,
+      "destroySeconds": 14,
+      "maxSpawns": 10
+    },
+    {
+      "spawnCell": [
+        28,
+        20
+      ],
+      "targetReflektorIndex": 9,
+      "spawnDelay": 11,
+      "spawnInterval": 7,
+      "speed": 38,
+      "destroySeconds": 13,
+      "maxSpawns": 9
     }
   ],
   "blockers": [
     {
       "cell": [
         12,
-        6
+        5
       ],
       "reflective": true
     },
     {
       "cell": [
         13,
-        6
+        5
       ],
       "reflective": false
     },
     {
       "cell": [
         18,
-        6
+        5
       ],
       "reflective": false
     },
     {
       "cell": [
         19,
-        6
+        5
       ],
       "reflective": true
     },
     {
       "cell": [
         12,
-        20
+        21
       ],
       "reflective": false
     },
     {
       "cell": [
         13,
-        20
+        21
       ],
       "reflective": false
     },
     {
       "cell": [
         18,
-        20
+        21
       ],
       "reflective": true
     },
     {
       "cell": [
         19,
-        20
+        21
       ],
       "reflective": false
     },
     {
       "cell": [
-        32,
-        6
+        26,
+        4
       ],
       "reflective": false
     },
     {
       "cell": [
-        33,
-        6
+        27,
+        4
       ],
       "reflective": true
     },
     {
       "cell": [
-        38,
-        6
-      ],
-      "reflective": false
-    },
-    {
-      "cell": [
-        39,
-        6
+        31,
+        20
       ],
       "reflective": false
     },
@@ -293,61 +363,127 @@
         32,
         20
       ],
-      "reflective": true
+      "reflective": false
     },
     {
       "cell": [
-        33,
-        20
+        37,
+        5
       ],
-      "reflective": false
+      "reflective": true
     },
     {
       "cell": [
         38,
-        20
+        5
       ],
       "reflective": false
     },
     {
       "cell": [
-        39,
-        20
+        42,
+        21
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        43,
+        21
       ],
       "reflective": true
+    },
+    {
+      "cell": [
+        47,
+        9
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        48,
+        9
+      ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        47,
+        17
+      ],
+      "reflective": true
+    },
+    {
+      "cell": [
+        48,
+        17
+      ],
+      "reflective": false
     }
   ],
   "portals": [
     {
       "entryCell": [
-        24,
+        22,
         13
       ],
       "exitCell": [
-        27,
-        13
+        28,
+        6
+      ],
+      "phase": 0.14
+    },
+    {
+      "entryCell": [
+        32,
+        18
+      ],
+      "exitCell": [
+        39,
+        8
       ],
       "phase": 0.5
+    },
+    {
+      "entryCell": [
+        42,
+        18
+      ],
+      "exitCell": [
+        46,
+        13
+      ],
+      "phase": 0.82
     }
   ],
   "filters": [
     {
       "cell": [
-        18,
+        17,
         13
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": 0.18
+      "speed": 0.36
     },
     {
       "cell": [
-        38,
+        29,
         13
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": -0.18
+      "speed": -0.42
+    },
+    {
+      "cell": [
+        40,
+        13
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": 0.38
     }
   ],
   "splitters": [
@@ -356,14 +492,28 @@
         9,
         13
       ],
-      "angleDegrees": 20
+      "angleDegrees": 15
     },
     {
       "cell": [
-        29,
+        23,
         13
       ],
       "angleDegrees": -20
+    },
+    {
+      "cell": [
+        35,
+        13
+      ],
+      "angleDegrees": 25
+    },
+    {
+      "cell": [
+        44,
+        13
+      ],
+      "angleDegrees": -30
     }
   ]
 }

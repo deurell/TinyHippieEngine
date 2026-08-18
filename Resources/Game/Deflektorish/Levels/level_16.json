@@ -1,6 +1,6 @@
 {
-  "name": "level_04_first_contact",
-  "parTimeSeconds": 34,
+  "name": "level_16_open_season",
+  "parTimeSeconds": 42,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -15,11 +15,11 @@
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
-        8,
+        10,
         13
       ],
       "angleDegrees": -14,
@@ -27,77 +27,92 @@
     },
     {
       "cell": [
-        13,
-        9
+        18,
+        7
       ],
       "angleDegrees": 21,
       "automatic": false
     },
     {
       "cell": [
-        17,
-        13
+        18,
+        19
       ],
       "angleDegrees": -8,
       "automatic": false
     },
     {
       "cell": [
-        13,
-        17
+        27,
+        13
       ],
       "angleDegrees": 18,
       "automatic": false
     },
     {
       "cell": [
-        23,
-        13
+        35,
+        7
       ],
       "angleDegrees": -11,
       "automatic": false
+    },
+    {
+      "cell": [
+        35,
+        19
+      ],
+      "angleDegrees": 24,
+      "automatic": true,
+      "speed": 0.22
     }
   ],
   "targets": [
     {
       "cell": [
-        7,
+        14,
         13
       ]
     },
     {
       "cell": [
-        11,
-        11
+        18,
+        10
       ]
     },
     {
       "cell": [
-        15,
-        11
+        18,
+        16
       ]
     },
     {
       "cell": [
-        11,
-        15
-      ]
-    },
-    {
-      "cell": [
-        15,
-        15
-      ]
-    },
-    {
-      "cell": [
-        20,
+        23,
         13
       ]
     },
     {
       "cell": [
-        26,
+        31,
+        13
+      ]
+    },
+    {
+      "cell": [
+        35,
+        10
+      ]
+    },
+    {
+      "cell": [
+        35,
+        16
+      ]
+    },
+    {
+      "cell": [
+        40,
         13
       ]
     }
@@ -106,70 +121,94 @@
     {
       "spawnCell": [
         5,
-        18
+        4
       ],
       "targetReflektorIndex": 1,
-      "spawnDelay": 1.5,
+      "spawnDelay": 2,
       "spawnInterval": 7,
-      "speed": 26,
-      "destroySeconds": 6,
-      "maxSpawns": 4
+      "speed": 34,
+      "destroySeconds": 9,
+      "maxSpawns": 8
+    },
+    {
+      "spawnCell": [
+        6,
+        20
+      ],
+      "targetReflektorIndex": 2,
+      "spawnDelay": 6,
+      "spawnInterval": 7,
+      "speed": 34,
+      "destroySeconds": 9,
+      "maxSpawns": 8
+    },
+    {
+      "spawnCell": [
+        39,
+        13
+      ],
+      "targetReflektorIndex": 5,
+      "spawnDelay": 11,
+      "spawnInterval": 8,
+      "speed": 36,
+      "destroySeconds": 10,
+      "maxSpawns": 7
     }
   ],
   "blockers": [
     {
       "cell": [
-        10,
-        7
+        12,
+        5
       ],
       "reflective": true
     },
     {
       "cell": [
-        11,
-        7
+        13,
+        5
       ],
       "reflective": false
     },
     {
       "cell": [
-        15,
-        7
+        23,
+        5
       ],
       "reflective": false
     },
     {
       "cell": [
-        16,
-        7
+        24,
+        5
       ],
       "reflective": true
     },
     {
       "cell": [
-        10,
-        19
+        30,
+        21
       ],
       "reflective": false
     },
     {
       "cell": [
-        11,
-        19
+        31,
+        21
       ],
       "reflective": false
     },
     {
       "cell": [
-        15,
-        19
+        39,
+        21
       ],
       "reflective": true
     },
     {
       "cell": [
-        16,
-        19
+        40,
+        21
       ],
       "reflective": false
     }
@@ -178,21 +217,37 @@
   "filters": [
     {
       "cell": [
-        13,
-        13
+        23,
+        9
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": 0.14
+      "speed": 0.34
+    },
+    {
+      "cell": [
+        31,
+        17
+      ],
+      "angleDegrees": 90,
+      "automatic": true,
+      "speed": -0.32
     }
   ],
   "splitters": [
     {
       "cell": [
-        9,
+        13,
         13
       ],
-      "angleDegrees": -18
+      "angleDegrees": 20
+    },
+    {
+      "cell": [
+        30,
+        13
+      ],
+      "angleDegrees": -20
     }
   ]
 }

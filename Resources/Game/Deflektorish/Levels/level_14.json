@@ -1,6 +1,6 @@
 {
-  "name": "level_07_portal_islands",
-  "parTimeSeconds": 46,
+  "name": "level_14_four_islands",
+  "parTimeSeconds": 50,
   "grid": {
     "tileSize": 32,
     "origin": [
@@ -15,7 +15,7 @@
     ],
     "angleDegrees": 0
   },
-  "explosionPoolSize": 56,
+  "explosionPoolSize": 64,
   "reflektors": [
     {
       "cell": [
@@ -51,7 +51,7 @@
     },
     {
       "cell": [
-        31,
+        32,
         6
       ],
       "angleDegrees": -11,
@@ -59,24 +59,24 @@
     },
     {
       "cell": [
-        31,
+        32,
         18
       ],
       "angleDegrees": 24,
+      "automatic": true,
+      "speed": 0.22
+    },
+    {
+      "cell": [
+        43,
+        18
+      ],
+      "angleDegrees": -14,
       "automatic": false
     },
     {
       "cell": [
-        42,
-        18
-      ],
-      "angleDegrees": -14,
-      "automatic": true,
-      "speed": -0.2
-    },
-    {
-      "cell": [
-        42,
+        43,
         10
       ],
       "angleDegrees": 21,
@@ -110,31 +110,31 @@
     },
     {
       "cell": [
-        25,
+        26,
         6
       ]
     },
     {
       "cell": [
-        31,
+        32,
         11
       ]
     },
     {
       "cell": [
-        31,
+        32,
         17
       ]
     },
     {
       "cell": [
-        36,
+        38,
         18
       ]
     },
     {
       "cell": [
-        42,
+        43,
         14
       ]
     }
@@ -146,23 +146,23 @@
         19
       ],
       "targetReflektorIndex": 1,
-      "spawnDelay": 2,
-      "spawnInterval": 8,
-      "speed": 26,
-      "destroySeconds": 8,
+      "spawnDelay": 6,
+      "spawnInterval": 9,
+      "speed": 28,
+      "destroySeconds": 9,
       "maxSpawns": 6
     },
     {
       "spawnCell": [
-        40,
+        42,
         5
       ],
       "targetReflektorIndex": 7,
-      "spawnDelay": 5,
+      "spawnDelay": 11,
       "spawnInterval": 9,
-      "speed": 27,
-      "destroySeconds": 8,
-      "maxSpawns": 5
+      "speed": 30,
+      "destroySeconds": 9,
+      "maxSpawns": 6
     }
   ],
   "blockers": [
@@ -196,13 +196,6 @@
     },
     {
       "cell": [
-        23,
-        4
-      ],
-      "reflective": false
-    },
-    {
-      "cell": [
         24,
         4
       ],
@@ -210,22 +203,22 @@
     },
     {
       "cell": [
-        28,
-        20
+        25,
+        4
       ],
-      "reflective": true
+      "reflective": false
     },
     {
       "cell": [
         29,
         20
       ],
-      "reflective": false
+      "reflective": true
     },
     {
       "cell": [
-        35,
-        16
+        30,
+        20
       ],
       "reflective": false
     },
@@ -234,18 +227,25 @@
         36,
         16
       ],
+      "reflective": false
+    },
+    {
+      "cell": [
+        37,
+        16
+      ],
       "reflective": true
     },
     {
       "cell": [
-        39,
+        40,
         8
       ],
       "reflective": false
     },
     {
       "cell": [
-        40,
+        41,
         8
       ],
       "reflective": false
@@ -269,21 +269,21 @@
         6
       ],
       "exitCell": [
-        28,
+        29,
         18
       ],
-      "phase": 0.44
+      "phase": 0.42
     },
     {
       "entryCell": [
-        34,
+        35,
         18
       ],
       "exitCell": [
-        39,
+        40,
         10
       ],
-      "phase": 0.78
+      "phase": 0.76
     }
   ],
   "filters": [
@@ -298,16 +298,16 @@
     },
     {
       "cell": [
-        26,
+        27,
         13
       ],
       "angleDegrees": 90,
       "automatic": true,
-      "speed": -0.2
+      "speed": -0.24
     },
     {
       "cell": [
-        37,
+        38,
         12
       ],
       "angleDegrees": 90,

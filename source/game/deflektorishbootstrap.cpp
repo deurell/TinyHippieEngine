@@ -27,7 +27,7 @@ float randomRange(float minValue, float maxValue) {
 class DeflektorishBootstrap final : public DL::AppBootstrap {
 public:
   void configure(DL::App &app) override {
-    campaign_.loadDefaultLevelPaths("Resources/Game/Deflektorish/Levels/", 10);
+    campaign_.loadDefaultLevelPaths("Resources/Game/Deflektorish/Levels/", 20);
     Deflektorish::loadHighScores(campaign_);
     app.addPostProcessEffect(
         "Deflektor Bump", "Shaders/deflektorish_post.frag",

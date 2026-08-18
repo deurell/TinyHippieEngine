@@ -13,13 +13,22 @@ TEST(DeflektorishCampaignTest, BuildsDefaultLevelPaths) {
   EXPECT_TRUE(campaign.hasLevels());
 }
 
-TEST(DeflektorishCampaignTest, WrapsCurrentLevelIndex) {
+TEST(DeflektorishCampaignTest, ClampsCurrentLevelIndexAtCampaignEnd) {
   Deflektorish::Campaign campaign;
   campaign.loadDefaultLevelPaths("Levels/", 3);
 
   campaign.setCurrentLevelIndex(4, campaign.levelPaths().size());
 
-  EXPECT_EQ(campaign.currentLevelIndex(), 1u);
+  EXPECT_EQ(campaign.currentLevelIndex(), 2u);
+}
+
+TEST(DeflektorishCampaignTest, ReportsWhetherAnotherLevelExists) {
+  Deflektorish::Campaign campaign;
+  campaign.loadDefaultLevelPaths("Levels/", 3);
+
+  EXPECT_TRUE(campaign.hasNextLevel(campaign.levelPaths().size()));
+  campaign.setCurrentLevelIndex(2, campaign.levelPaths().size());
+  EXPECT_FALSE(campaign.hasNextLevel(campaign.levelPaths().size()));
 }
 
 TEST(DeflektorishCampaignTest, TracksNonNegativeScore) {

@@ -33,6 +33,8 @@ constexpr int kDebugVictoryKey = 86;
 constexpr int kBackgroundToggleKey = 66;
 constexpr float kGameOverReturnDelay = 3.2f;
 constexpr float kGameOverSkipDelay = 0.8f;
+constexpr float kCampaignCompleteReturnDelay = 4.5f;
+constexpr float kCampaignCompleteSkipDelay = 1.0f;
 constexpr int kMaxEnergyBonus = 5000;
 constexpr float kTimeBonusPerSecond = 100.0f;
 constexpr int kTargetClearScore = 75;
@@ -138,6 +140,7 @@ void DeflektorishScene::update(const DL::FrameContext &ctx) {
   applyGameEvents();
   updateTargetVisuals();
   updateExplosions(ctx.delta_time);
+  updateCampaignComplete(ctx.delta_time, fireDown);
   updateGameOver(ctx.delta_time, fireDown);
   updateScoreHud(ctx.delta_time);
   updateParallaxBackgrounds();
@@ -161,6 +164,7 @@ void DeflektorishScene::onKey(int key) {
   if (key == kDebugVictoryKey &&
       completionPhase_ != CompletionPhase::Celebration &&
       completionPhase_ != CompletionPhase::FadeOut &&
+      completionPhase_ != CompletionPhase::CampaignComplete &&
       completionPhase_ != CompletionPhase::GameOver) {
     debugVictoryTriggered_ = true;
     startVictoryCelebration();
@@ -370,6 +374,7 @@ void DeflektorishScene::resetLevelRuntime() {
   previousSelectNextDown_ = false;
   previousGameOverFireDown_ = false;
   gameOverCallbackDispatched_ = false;
+  campaignComplete_ = false;
   debugVictoryTriggered_ = false;
   rotateInput_ = 0.0f;
   sourcePulse_ = 0.0f;
@@ -393,6 +398,7 @@ void DeflektorishScene::resetLevelRuntime() {
   completionFadeTime_ = 0.0f;
   gameOverTime_ = 0.0f;
   gameOverRankFlash_ = 0.0f;
+  campaignCompleteTime_ = 0.0f;
   gameOverScore_ = 0;
   entryTransition_ = Deflektorish::FadeTransition{};
   completionPhase_ = CompletionPhase::Playing;
@@ -1579,6 +1585,16 @@ void DeflektorishScene::updateEntryTransition(float dt) {
 
 void DeflektorishScene::startVictoryCelebration() {
   resetBonusTally();
+  campaignComplete_ =
+      !campaign_.hasNextLevel(rooms_.size());
+  if (completionTitle_ != nullptr) {
+    completionTitle_->setText(campaignComplete_ ? "CAMPAIGN COMPLETE"
+                                                : "LEVEL COMPLETE");
+  }
+  if (completionSubtitle_ != nullptr) {
+    completionSubtitle_->setText(campaignComplete_ ? "ALL CIRCUITS CLEARED"
+                                                   : "ALL TARGETS CLEARED");
+  }
   victoryCelebrationStarted_ = true;
   victoryCelebrationComplete_ = false;
   victoryBlastTimer_ = kVictoryBlastStartDelay;
@@ -1753,7 +1769,7 @@ void DeflektorishScene::startBonusTally() {
   bonusScoreTickTimer_ = 0.0f;
   bonusTallyPhase_ = BonusTallyPhase::Energy;
   updateBonusText();
-  if (rooms_.size() > 1) {
+  if (campaign_.hasNextLevel(rooms_.size())) {
     activateRoom(campaign_.currentLevelIndex() + 1, true, true);
   }
 }
@@ -1791,7 +1807,6 @@ void DeflektorishScene::updateBonusTally(float dt) {
     bonusFadeTime_ += dt;
     if (bonusFadeTime_ >= kBonusFadeDuration) {
       bonusTallyPhase_ = BonusTallyPhase::Done;
-      completionPhase_ = CompletionPhase::Playing;
       victoryCelebrationStarted_ = false;
       victoryCelebrationComplete_ = false;
       Deflektorish::setCompletionOverlayParams(
@@ -1803,6 +1818,11 @@ void DeflektorishScene::updateBonusTally(float dt) {
       if (completionSubtitle_ != nullptr) {
         completionSubtitle_->setTextColor({1.0f, 0.72f, 0.28f, 0.0f});
         completionSubtitle_->setShadowColor({0.0f, 0.02f, 0.05f, 0.0f});
+      }
+      if (campaignComplete_) {
+        startCampaignComplete();
+      } else {
+        completionPhase_ = CompletionPhase::Playing;
       }
     }
     break;
@@ -1943,6 +1963,57 @@ void DeflektorishScene::updateBonusText() {
     bonusTotal_->setShadowColor(
         {0.0f, 0.02f, 0.05f, showTotal ? alpha * 0.72f : 0.0f});
   }
+}
+
+void DeflektorishScene::startCampaignComplete() {
+  completionPhase_ = CompletionPhase::CampaignComplete;
+  campaignCompleteTime_ = 0.0f;
+  previousGameOverFireDown_ = true;
+  gameOverCallbackDispatched_ = false;
+  if (completionTitle_ != nullptr) {
+    completionTitle_->setText("CAMPAIGN COMPLETE");
+  }
+  if (completionSubtitle_ != nullptr) {
+    completionSubtitle_->setText("FINAL SCORE  " + scoreDigits(campaign_.score()));
+  }
+}
+
+void DeflektorishScene::updateCampaignComplete(float dt, bool fireDown) {
+  if (completionPhase_ != CompletionPhase::CampaignComplete) {
+    return;
+  }
+
+  campaignCompleteTime_ += dt;
+  const float intro = std::clamp(campaignCompleteTime_ / 0.34f, 0.0f, 1.0f);
+  const float alpha = intro * intro * (3.0f - 2.0f * intro);
+  const float pulse = 0.5f + 0.5f * std::sin(elapsed_ * 8.0f);
+  if (completionOverlay_ != nullptr) {
+    Deflektorish::setCompletionOverlayParams(
+        completionOverlay_, campaignCompleteTime_, 0.62f + pulse * 0.08f,
+        1.0f, 1.0f, 1.0f, 0.76f, 0.28f, -0.12f);
+  }
+  if (completionTitle_ != nullptr) {
+    completionTitle_->setTextColor(
+        {0.64f + pulse * 0.12f, 0.96f, 1.0f, alpha});
+    completionTitle_->setShadowColor({0.0f, 0.02f, 0.05f, alpha * 0.72f});
+  }
+  if (completionSubtitle_ != nullptr) {
+    completionSubtitle_->setTextColor(
+        {1.0f, 0.72f + pulse * 0.08f, 0.28f, alpha});
+    completionSubtitle_->setShadowColor({0.0f, 0.02f, 0.05f, alpha * 0.68f});
+  }
+
+  const bool canSkip = campaignCompleteTime_ > kCampaignCompleteSkipDelay;
+  const bool shouldLeave =
+      campaignCompleteTime_ >= kCampaignCompleteReturnDelay ||
+      (canSkip && fireDown && !previousGameOverFireDown_);
+  if (shouldLeave && !gameOverCallbackDispatched_) {
+    gameOverCallbackDispatched_ = true;
+    if (gameOverCallback_) {
+      gameOverCallback_(campaign_.score());
+    }
+  }
+  previousGameOverFireDown_ = fireDown;
 }
 
 void DeflektorishScene::startGameOver() {

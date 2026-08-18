@@ -39,6 +39,9 @@ public:
     return currentLevelIndex_;
   }
   [[nodiscard]] int score() const { return score_; }
+  [[nodiscard]] bool hasNextLevel(std::size_t levelCount) const {
+    return currentLevelIndex_ + 1 < levelCount;
+  }
   [[nodiscard]] const std::vector<HighScoreEntry> &highScores() const {
     return highScores_;
   }
@@ -68,7 +71,8 @@ public:
   }
 
   void setCurrentLevelIndex(std::size_t levelIndex, std::size_t levelCount) {
-    currentLevelIndex_ = levelCount > 0 ? levelIndex % levelCount : 0;
+    currentLevelIndex_ =
+        levelCount > 0 ? std::min(levelIndex, levelCount - 1) : 0;
   }
 
   void resetScore() { score_ = 0; }

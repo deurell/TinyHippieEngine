@@ -48,6 +48,7 @@ private:
     Celebration,
     FadeOut,
     BonusPending,
+    CampaignComplete,
     GameOver,
   };
 
@@ -224,6 +225,8 @@ private:
   void startBonusTally();
   void updateBonusTally(float dt);
   void updateBonusText();
+  void startCampaignComplete();
+  void updateCampaignComplete(float dt, bool fireDown);
   void startGameOver();
   void updateGameOver(float dt, bool fireDown);
   void updateGameOverText();
@@ -290,6 +293,7 @@ private:
   bool backgroundEffectsEnabled_ = true;
   bool previousGameOverFireDown_ = false;
   bool gameOverCallbackDispatched_ = false;
+  bool campaignComplete_ = false;
   bool debugVictoryTriggered_ = false;
   float rotateInput_ = 0.0f;
   float sourcePulse_ = 0.0f;
@@ -334,6 +338,7 @@ private:
   float bonusTotalFlash_ = 0.0f;
   float gameOverTime_ = 0.0f;
   float gameOverRankFlash_ = 0.0f;
+  float campaignCompleteTime_ = 0.0f;
   int energyBonus_ = 0;
   int timeBonus_ = 0;
   int totalBonus_ = 0;
